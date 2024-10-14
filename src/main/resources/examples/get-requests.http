@@ -1,0 +1,18 @@
+### 带有请求头
+GET https://www.baidu.com
+Accept: application/json
+
+### 带有url请求参数
+GET https://www.baidu.com?show_env=1
+Accept: application/json
+
+### 引用变量
+GET {{host}}/get?show_env={{show_env}}
+Accept: application/json
+
+### 带有cookie
+GET https://www.baidu.com
+Cookie: uid=123456789
+
+### 带有内置变量
+GET https://www.baidu.com?id={{$random.uuid}}&ts={{$timestamp}}

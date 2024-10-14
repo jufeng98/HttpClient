@@ -1,0 +1,43 @@
+### 带有json入参
+POST https://miao.baidu.com/abdr
+Content-Type: application/json
+
+{
+  "id": 999,
+  "value": "content"
+}
+
+### 请求体内引用变量
+POST https://miao.baidu.com/abdr
+Content-Type: application/json
+
+{
+  "uuid": "{{$random.uuid}}",
+  "price": {{$random.integer()}},
+  "price1": {{$random.integer(1,10)}},
+  "price2": {{$randomInt}},
+  "desc": "{{$random.alphabetic(10)}}",
+  "desc1": "{{$random.alphanumeric(10)}}",
+  "desc2": "{{$random.numeric(10)}}",
+  "base64": "{{$imageToBase64(E:\\image\\test.jpg)}}",
+  "ts": {{$timestamp}},
+  "value": "content"
+}
+
+### 复杂multipart请求
+POST https://miao.baidu.com/abdr
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="first"; filename="input.txt"
+
+< ./input.txt
+--boundary
+Content-Disposition: form-data; name="second"; filename="input-second.txt"
+
+Text
+--boundary
+Content-Disposition: form-data; name="third";
+
+< ./input.txt
+--boundary--

@@ -1,0 +1,8 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <psi.referenceContributor language="http"
+                                  implementation="org.javamaster.httpclient.reference.HttpReferenceContributor"/>
+        <gotoDeclarationHandler id="JsonGotoDeclarationHandler"
+                                implementation="org.javamaster.httpclient.reference.JsonGotoDeclarationHandler"/>
+    </extensions>
+</idea-plugin>

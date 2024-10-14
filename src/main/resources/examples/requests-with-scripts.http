@@ -1,0 +1,49 @@
+### 发起请求前设置全局变量
+> {%
+    client.global.clearAll();
+    client.global.set('globalName', 'jufeng98');
+    request.variables.set('requestName', 'jufeng9878');
+%}
+### 使用变量
+POST https://ijhttp-examples.jetbrains.com/post
+Content-Type: application/json
+
+{
+    "my-temp-variable1": "{{globalName}}",
+    "my-temp-variable2": "{{requestName}}"
+}
+
+> {%
+    client.global.set("my-temp-variable", "I will not deleted!");
+    request.variables.set("my-temp-variable", "I will be deleted soon!");
+%}
+# 保存响应到文件
+>> result.html
+### 后置js处理器
+GET https://ijhttp-examples.jetbrains.com/status/200
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.log('content-type:' + response.headers['content-type'])
+    });
+%}
+
+### 检查响应体
+GET https://ijhttp-examples.jetbrains.com/get
+
+> {%
+    client.test("Headers option exists", function () {
+        client.assert(response.body.hasOwnProperty("data"), "Cannot find 'data' option in response");
+    });
+%}
+
+### 检查 Content-Type from headers
+GET https://ijhttp-examples.jetbrains.com/get
+
+> {%
+    client.test("Content-Type is application/json", function () {
+        var contentType = response.headers["content-type"];
+        client.assert(contentType == "application/json", "Expected Content-Type is application/json, but actual is " + contentType);
+    })
+%}

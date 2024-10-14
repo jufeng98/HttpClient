@@ -1,0 +1,73 @@
+<idea-plugin>
+    <id>org.javamaster.HttpClient</id>
+    <name>HttpClient</name>
+
+    <vendor email="375709770@qq.com" url="https://www.zhihu.com/people/liang-yu-dong-44">
+        梁煜东
+    </vendor>
+
+    <description><![CDATA[
+        提供从 IDEA Editor 编写和执行 HTTP 请求的能力：<br>
+        <ul>
+            <li>支持发起 GET、POST 等请求</li>
+            <li>支持发起 WebSocket 请求</li>
+            <li>支持环境变量、内置变量和内置方法</li>
+            <li>支持从 url 跳转到 Spring 控制器(依赖Cool Request插件)</li>
+            <li>支持从 json 属性跳转到 Spring Bean 字段(依赖Cool Request插件)</li>
+            <li>支持 JavaScript 语法的前置处理器和后置处理器</li>
+            <li>支持从文件读取内容作为请求体</li>
+            <li>支持保存响应到文件</li>
+            <li>支持预览图片</li>
+        </ul>
+  ]]></description>
+
+    <depends>com.intellij.java</depends>
+    <depends>com.intellij.modules.vcs</depends>
+    <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="httpclient-cool-request.xml">com.hxl.plugin.cool-request</depends>
+
+    <projectListeners>
+        <listener topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"
+                  class="org.javamaster.httpclient.listener.HttpEditorListener"/>
+    </projectListeners>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="HttpClient.STICKY_BALLOON"
+                           isLogByDefault="true"
+                           displayType="STICKY_BALLOON"/>
+
+        <fileType
+                name="HTTP"
+                implementationClass="org.javamaster.httpclient.HttpFileType"
+                fieldName="INSTANCE"
+                language="http"
+                extensions="http"/>
+        <lang.parserDefinition
+                language="http"
+                implementationClass="org.javamaster.httpclient.parser.HttpParserDefinition"/>
+        <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.HttpASTFactory"/>
+        <lang.syntaxHighlighterFactory
+                language="http"
+                implementationClass="org.javamaster.httpclient.highlight.HttpSyntaxHighlighterFactory"/>
+        <multiHostInjector
+                implementation="org.javamaster.httpclient.inject.HttpInjectionContributor"/>
+        <runLineMarkerContributor language="http"
+                                  implementationClass="org.javamaster.httpclient.gutter.HttpRunLineMarkerContributor"/>
+        <psi.referenceContributor language="http"
+                                  implementation="org.javamaster.httpclient.reference.HttpVariableReferenceContributor"/>
+        <toolWindow id="Http Execution"
+                    icon="org.javamaster.httpclient.HttpIcons.FILE"
+                    anchor="right"
+                    canCloseContents="true"
+                    factoryClass="org.javamaster.httpclient.ui.HttpExecutionConsoleToolWindowFactory"/>
+        <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
+        <runDashboardCustomizer implementation="org.javamaster.httpclient.dashboard.HttpRunDashboardCustomizer"
+                                id="httpRunDashboardCustomizer"/>
+
+        <highlightErrorFilter implementation="org.javamaster.httpclient.suppress.MyHighlightErrorFilter"/>
+        <lang.inspectionSuppressor language="JAVA"
+                                   implementationClass="org.javamaster.httpclient.suppress.JavaInspectionSuppressor"/>
+        <lang.inspectionSuppressor language="JSON"
+                                   implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>
+    </extensions>
+</idea-plugin>

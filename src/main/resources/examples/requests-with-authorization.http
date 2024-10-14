@@ -1,0 +1,15 @@
+### 带有授权头
+GET https://www.baidu.com
+Authorization: Basic user passwd
+
+### 请求头引用变量
+GET https://www.baidu.com
+Authorization: Basic {{username}} {{password}}
+
+### 带有token的json入参
+POST https://miao.baidu.com/abdr
+Content-Type: application/json
+
+{
+  "token": "my-secret-token"
+}
