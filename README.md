@@ -35,3 +35,14 @@
 ![preview-img.png](https://github.com/jufeng98/HttpClient/blob/master/images/preview-img.png)
 #### multipart请求
 ![multipart.png](https://github.com/jufeng98/HttpClient/blob/master/images/multipart.png)
+
+## 作者信息
+- 作者博客：[知乎](https://www.zhihu.com/people/liang-yu-dong-44)
+- 作者邮箱：375709770@qq.com
+- github 地址：https://github.com/jufeng98
+## 捐赠
+如果项目帮到了您，请作者喝杯咖啡吧！
+![donate](https://github.com/jufeng98/HttpClient/blob/master/images/donate.png)
+## 技术支持
+微信记得备注 ```HttpClient```，共同进步。
+![wechat](https://github.com/jufeng98/HttpClient/blob/master/images/wechat.png)
