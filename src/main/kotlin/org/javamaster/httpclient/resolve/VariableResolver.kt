@@ -4,8 +4,8 @@ import com.cool.request.utils.Base64Utils
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import org.apache.commons.io.FileUtils
-import org.apache.commons.lang.math.RandomUtils
 import org.apache.commons.lang3.RandomStringUtils
+import org.apache.commons.lang3.RandomUtils
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsScriptExecutor
 import org.javamaster.httpclient.psi.HttpGlobalVariableDefinition
@@ -97,18 +97,18 @@ class VariableResolver(private val project: Project) {
         }
 
         if (variable == "\$randomInt") {
-            return RandomUtils.nextInt(1000).toString()
+            return RandomUtils.nextInt(0, 1000).toString()
         }
 
         if (variable.startsWith("\$random.integer")) {
             val split = variable.split(",")
             if (split.size == 1) {
-                return RandomUtils.nextInt(1000).toString()
+                return RandomUtils.nextInt(0, 1000).toString()
             }
 
             val start = patternNotNumber.matcher(split[0]).replaceAll("")
             val end = patternNotNumber.matcher(split[1]).replaceAll("")
-            return (start.toInt() + RandomUtils.nextInt(end.toInt())).toString()
+            return (start.toInt() + RandomUtils.nextInt(0, end.toInt())).toString()
         }
 
         if (variable.startsWith("\$random.alphabetic")) {
