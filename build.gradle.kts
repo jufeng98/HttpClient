@@ -32,7 +32,6 @@ intellij {
             "com.hxl.plugin.cool-request:2024.8.1",
         )
     )
-    intellij.updateSinceUntilBuild.set(false)
 }
 
 tasks {
