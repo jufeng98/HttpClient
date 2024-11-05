@@ -88,24 +88,30 @@ class WsRequest(
 }
 
 class WsListener(private val wsRequest: WsRequest) : WebSocket.Listener {
-    override fun onText(webSocket: WebSocket?, data: CharSequence?, last: Boolean): CompletionStage<*> {
+    override fun onText(webSocket: WebSocket, data: CharSequence?, last: Boolean): CompletionStage<*> {
+        webSocket.request(1)
+
         LOG.warn("收到ws消息:$data")
         wsRequest.returnResMsg("收到ws文本数据:$data\r\n")
         return CompletableFuture<Void>()
     }
 
-    override fun onBinary(webSocket: WebSocket?, data: ByteBuffer?, last: Boolean): CompletionStage<*> {
+    override fun onBinary(webSocket: WebSocket, data: ByteBuffer?, last: Boolean): CompletionStage<*> {
+        webSocket.request(1)
+
         LOG.warn("收到ws二进制消息:$data")
         wsRequest.returnResMsg("收到ws二进制数据:$data\r\n")
         return CompletableFuture<Void>()
     }
 
-    override fun onOpen(webSocket: WebSocket?) {
+    override fun onOpen(webSocket: WebSocket) {
+        webSocket.request(1)
+
         LOG.warn("打开ws连接:$webSocket")
         wsRequest.returnResMsg("ws连接成功:$webSocket\r\n")
     }
 
-    override fun onClose(webSocket: WebSocket?, statusCode: Int, reason: String?): CompletionStage<*> {
+    override fun onClose(webSocket: WebSocket, statusCode: Int, reason: String?): CompletionStage<*> {
         LOG.warn("ws连接closed:$webSocket,$statusCode,$reason")
         wsRequest.returnResMsg("ws连接已关闭:$webSocket,statusCode:$statusCode,reason:$reason\r\n")
         return CompletableFuture<Void>()
