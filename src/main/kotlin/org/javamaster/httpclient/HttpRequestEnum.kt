@@ -1,12 +1,13 @@
 package org.javamaster.httpclient
 
-import com.intellij.credentialStore.LOG
 import com.intellij.psi.util.PsiUtilCore
 import org.javamaster.httpclient.js.JsScriptExecutor
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.utils.HttpUtils.convertToResHeaderDescList
 import org.javamaster.httpclient.utils.HttpUtils.convertToResPair
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpClient.Version
@@ -106,6 +107,8 @@ enum class HttpRequestEnum {
     },
     ;
 
+    private val logger: Logger = LoggerFactory.getLogger(javaClass)
+
     fun execute(
         url: String,
         version: Version,
@@ -130,7 +133,7 @@ enum class HttpRequestEnum {
             }
 
             else -> {
-                LOG.warn("未知类型:${reqBody?.javaClass}")
+                logger.warn("未知类型:${reqBody?.javaClass}")
             }
         }
 

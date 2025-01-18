@@ -15,7 +15,7 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 class HttpAction(private val httpMethod: HttpMethod) : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
-        val component = e.inputEvent.component as EditorGutterComponentEx
+        val component = e.inputEvent!!.component as EditorGutterComponentEx
         val navigationHandler = HttpGutterIconClickHandler(httpMethod)
 
         val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(httpMethod.project)

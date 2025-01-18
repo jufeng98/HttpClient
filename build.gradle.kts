@@ -2,8 +2,8 @@ import java.net.URI
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.20"
-    id("org.jetbrains.intellij") version "1.16.0"
+    id("org.jetbrains.kotlin.jvm") version "1.9.21"
+    id("org.jetbrains.intellij") version "1.16.1"
 }
 
 group = "org.javamaster"
@@ -23,25 +23,26 @@ dependencies {
 sourceSets["main"].java.srcDirs("src/main/gen")
 
 intellij {
-    version.set("2022.1.2")
+    version.set("2024.3")
     type.set("IC")
     plugins.set(
         listOf(
             "tasks",
             "com.intellij.java",
-            "com.hxl.plugin.cool-request:2024.8.1",
+            "com.intellij.modules.json",
+            "com.hxl.plugin.cool-request:2024.12.1",
         )
     )
 }
 
 tasks {
     withType<JavaCompile> {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
         options.encoding = "UTF-8"
     }
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "17"
     }
 
     jar {
@@ -50,8 +51,8 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("221")
-        untilBuild.set("241.*")
+        sinceBuild.set("222.*")
+        untilBuild.set("243.*")
     }
 
     signPlugin {

@@ -1,9 +1,9 @@
 <idea-plugin>
-    <id>org.javamaster.HttpClient</id>
-    <name>HttpClient</name>
+    <id>org.javamaster.HttpRequest</id>
+    <name>HttpRequest</name>
 
     <vendor email="375709770@qq.com" url="https://www.zhihu.com/people/liang-yu-dong-44">
-        梁煜东
+        jufeng98
     </vendor>
 
     <description><![CDATA[
@@ -40,7 +40,7 @@
   ]]></description>
 
     <depends>com.intellij.java</depends>
-    <depends>com.intellij.modules.vcs</depends>
+    <depends>com.intellij.modules.json</depends>
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="httpclient-cool-request.xml">com.hxl.plugin.cool-request</depends>
 

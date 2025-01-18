@@ -1,1 +1,1 @@
-rootProject.name = "HttpClient"
+rootProject.name = "HttpRequest"

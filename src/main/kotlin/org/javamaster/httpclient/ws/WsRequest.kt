@@ -1,12 +1,13 @@
 package org.javamaster.httpclient.ws
 
-import com.intellij.codeInspection.ui.actions.LOG
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runWriteActionAndWait
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import org.apache.commons.lang3.exception.ExceptionUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket
@@ -27,6 +28,7 @@ class WsRequest(
     val project: Project,
     parentDisposer: Disposable,
 ) : Disposable {
+    private val logger: Logger = LoggerFactory.getLogger(javaClass)
     private var webSocket: WebSocket? = null
     lateinit var consumer: Consumer<String>
 
@@ -60,7 +62,7 @@ class WsRequest(
 
     fun abortConnect() {
         webSocket?.abort()
-        LOG.warn("abort ws连接\r\n")
+        logger.warn("abort ws连接\r\n")
         returnResMsg("中断ws连接:$webSocket\r\n")
     }
 
@@ -88,31 +90,32 @@ class WsRequest(
 }
 
 class WsListener(private val wsRequest: WsRequest) : WebSocket.Listener {
+    private val logger: Logger = LoggerFactory.getLogger(javaClass)
     override fun onText(webSocket: WebSocket?, data: CharSequence?, last: Boolean): CompletionStage<*> {
-        LOG.warn("收到ws消息:$data")
+        logger.warn("收到ws消息:$data")
         wsRequest.returnResMsg("收到ws文本数据:$data\r\n")
         return CompletableFuture<Void>()
     }
 
     override fun onBinary(webSocket: WebSocket?, data: ByteBuffer?, last: Boolean): CompletionStage<*> {
-        LOG.warn("收到ws二进制消息:$data")
+        logger.warn("收到ws二进制消息:$data")
         wsRequest.returnResMsg("收到ws二进制数据:$data\r\n")
         return CompletableFuture<Void>()
     }
 
     override fun onOpen(webSocket: WebSocket?) {
-        LOG.warn("打开ws连接:$webSocket")
+        logger.warn("打开ws连接:$webSocket")
         wsRequest.returnResMsg("ws连接成功:$webSocket\r\n")
     }
 
     override fun onClose(webSocket: WebSocket?, statusCode: Int, reason: String?): CompletionStage<*> {
-        LOG.warn("ws连接closed:$webSocket,$statusCode,$reason")
+        logger.warn("ws连接closed:$webSocket,$statusCode,$reason")
         wsRequest.returnResMsg("ws连接已关闭:$webSocket,statusCode:$statusCode,reason:$reason\r\n")
         return CompletableFuture<Void>()
     }
 
     override fun onError(webSocket: WebSocket?, error: Throwable?) {
-        LOG.warn("连接ws异常:$webSocket", error)
+        logger.warn("连接ws异常:$webSocket", error)
         wsRequest.returnResMsg("连接ws异常:$webSocket,${error?.message}\r\n")
     }
 }
