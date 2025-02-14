@@ -44,11 +44,6 @@
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="httpclient-cool-request.xml">com.hxl.plugin.cool-request</depends>
 
-    <projectListeners>
-        <listener topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"
-                  class="org.javamaster.httpclient.listener.HttpEditorListener"/>
-    </projectListeners>
-
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="HttpClient.STICKY_BALLOON"
                            isLogByDefault="true"
@@ -64,28 +59,10 @@
                 language="http"
                 implementationClass="org.javamaster.httpclient.parser.HttpParserDefinition"/>
         <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.HttpASTFactory"/>
-        <lang.syntaxHighlighterFactory
-                language="http"
-                implementationClass="org.javamaster.httpclient.highlight.HttpSyntaxHighlighterFactory"/>
-        <multiHostInjector
-                implementation="org.javamaster.httpclient.inject.HttpInjectionContributor"/>
-        <runLineMarkerContributor language="http"
-                                  implementationClass="org.javamaster.httpclient.gutter.HttpRunLineMarkerContributor"/>
-        <psi.referenceContributor language="http"
-                                  implementation="org.javamaster.httpclient.reference.HttpVariableReferenceContributor"/>
         <toolWindow id="Http Execution"
                     icon="org.javamaster.httpclient.HttpIcons.FILE"
                     anchor="right"
                     canCloseContents="true"
                     factoryClass="org.javamaster.httpclient.ui.HttpExecutionConsoleToolWindowFactory"/>
-        <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
-        <runDashboardCustomizer implementation="org.javamaster.httpclient.dashboard.HttpRunDashboardCustomizer"
-                                id="httpRunDashboardCustomizer"/>
-
-        <highlightErrorFilter implementation="org.javamaster.httpclient.suppress.MyHighlightErrorFilter"/>
-        <lang.inspectionSuppressor language="JAVA"
-                                   implementationClass="org.javamaster.httpclient.suppress.JavaInspectionSuppressor"/>
-        <lang.inspectionSuppressor language="JSON"
-                                   implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>
     </extensions>
 </idea-plugin>

@@ -1,12 +1,6 @@
-### 发起请求前设置全局变量
-> {%
-    client.global.clearAll();
-    client.global.set('globalName', 'jufeng98');
-    request.variables.set('requestName', 'jufeng9878');
-%}
 ### 使用变量
-POST https://ijhttp-examples.jetbrains.com/post
-Content-Type: application/json
+POST https://ijhttp-examples.jetbrains.com:80/post/aes?name=yu&age=23
+Content-Type: ap:plication/json
 
 {
     "my-temp-variable1": "{{globalName}}",
