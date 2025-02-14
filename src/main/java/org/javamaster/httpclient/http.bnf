@@ -1,0 +1,110 @@
+{
+  parserClass="org.javamaster.httpclient.parser.HttpParser"
+  parserUtilClass="org.javamaster.httpclient.parser.HttpParserUtil"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Http"
+  psiImplClassSuffix="Impl"
+  psiPackage="org.javamaster.httpclient.psi"
+  psiImplPackage="org.javamaster.httpclient.psi.impl"
+
+  elementTypeHolderClass="org.javamaster.httpclient.psi.HttpTypes"
+  elementTypeClass="org.javamaster.httpclient.psi.HttpElementType"
+  tokenTypeClass="org.javamaster.httpclient.psi.HttpTokenType"
+  psiImplUtilClass="org.javamaster.httpclient.psi.impl.HttpPsiImplUtil"
+
+  tokens=[
+    LINE_COMMENT='regexp://.*'
+    REQUEST_COMMENT='regexp:###.*'
+
+    HTTP='http'
+    HTTPS='https'
+    SCHEMA_SEPARATE='://'
+    COLON=':'
+
+    SLASH='/'
+    QUESTION='?'
+    EQUALS='='
+    AND='&'
+    HASH='#'
+
+//    SEPARATOR='regexp:\s+'
+//    FIELD_NAME='regexp:\s+'
+//    FIELD_VALUE='regexp:\s+'
+//    IDENTIFIER='regexp:\s+'
+//    DYNAMIC_SIGN='$'
+//    INTERMEDIATE_WHITESPACE='regexp:\s+'
+//    INPUT_FILE_PATH='regexp:\s+'
+//    HANDLER_FILE_PATH='regexp:\s+'
+//    DIFFERENCE_FILE_PATH='regexp:\s+'
+//    OUTPUT_FILE_PATH_PART='regexp:\s+'
+//    INPUT_SIGN='regexp:\s+'
+//    OUTPUT_SIGN='regexp:\s+'
+//    START_SCRIPT_BRACE='regexp:\s+'
+//    END_SCRIPT_BRACE='regexp:\s+'
+//    REQUEST_SEPARATOR='regexp:\s+'
+//    DIFFERENCE_SIGN='regexp:\s+'
+//    OUTPUT_FILE_SIGN='regexp:\s+'
+//    PROTOCOL='regexp:\s+'
+//    FORCE_OUTPUT_FILE_SIGN='regexp:\s+'
+//    LBRACES='{{'
+//    RBRACES='}}'
+//    SEMICOLON=';'
+
+//    GET='GET'
+//    POST='POST'
+//    PUT='PUT'
+//    DELETE='DELETE'
+//    HEAD='HEAD'
+//    OPTIONS='OPTIONS'
+//    WEBSOCKET='WEBSOCKET'
+//    DUBBO='DUBBO'
+  ]
+}
+
+httpFile ::= request_block*
+request_block ::= request
+request ::= method requestTarget headerField* {
+    methods = [
+        getContentType
+        getContentTypeBoundary
+        getContentLength
+        getHttpVersion
+        getHttpHost
+    ]
+}
+
+method ::= REQUEST_METHOD {
+    mixin = "org.javamaster.httpclient.psi.impl.HttpMethodBase"
+}
+
+requestTarget ::= schema SCHEMA_SEPARATE host port? pathAbsolute? (QUESTION query)? (HASH fragment)? version? {
+    methods = [
+        getHttpUrl
+        getReferences
+    ]
+}
+schema ::= SCHEMA_PART
+host ::= HOST_VALUE
+port ::= COLON PORT_SEGMENT
+pathAbsolute ::= (SLASH SEGMENT)+
+query ::= queryParameter (AND queryParameter)*
+queryParameter ::= QueryParameterKey EQUALS QueryParameterValue?
+QueryParameterKey ::= QUERY_NAME
+QueryParameterValue ::= QUERY_VALUE
+fragment ::= FRAGMENT_PART
+version ::= HTTP_VERSION
+
+headerField ::= headerFieldName COLON headerFieldValue? {
+    methods = [
+        getName
+        getValue
+    ]
+}
+headerFieldName ::= FIELD_NAME
+headerFieldValue ::= FIELD_VALUE {
+    methods = [
+        getReferences
+    ]
+}
