@@ -29,8 +29,8 @@
     AND='&'
     HASH='#'
 
-    OUTPUT_SIGN='>'
-    OUTPUT_FILE_SIGN='>>'
+    INPUT_SIGN='< '
+    OUTPUT_FILE_SIGN='>> '
     START_SCRIPT_BRACE='> {%'
     END_SCRIPT_BRACE='%}'
   ]
@@ -46,6 +46,7 @@ request ::= method requestTarget headerField* requestMessagesGroup? responseHand
         getHttpVersion
         getHttpHost
     ]
+    pin = 1
 }
 
 method ::= REQUEST_METHOD {
@@ -57,15 +58,18 @@ requestTarget ::= schema SCHEMA_SEPARATE host port? pathAbsolute? (QUESTION quer
         getHttpUrl
         getReferences
     ]
+    pin = 1
 }
 schema ::= SCHEMA_PART
 host ::= HOST_VALUE
 port ::= COLON PORT_SEGMENT
 pathAbsolute ::= (SLASH SEGMENT)+
 query ::= queryParameter (AND queryParameter)*
-queryParameter ::= QueryParameterKey EQUALS QueryParameterValue?
-QueryParameterKey ::= QUERY_NAME
-QueryParameterValue ::= QUERY_VALUE
+queryParameter ::= queryParameterKey EQUALS queryParameterValue? {
+    pin = 1
+}
+queryParameterKey ::= QUERY_NAME
+queryParameterValue ::= QUERY_VALUE
 fragment ::= FRAGMENT_PART
 version ::= HTTP_VERSION
 
@@ -74,6 +78,7 @@ headerField ::= headerFieldName COLON headerFieldValue? {
         getName
         getValue
     ]
+    pin = 1
 }
 headerFieldName ::= FIELD_NAME
 headerFieldValue ::= FIELD_VALUE {
@@ -87,8 +92,10 @@ messageBody ::= exMessageBody {
     mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
 }
 external exMessageBody ::= message_text
-inputFile ::= filePath
-filePath ::= OUTPUT_FILE_PATH_PART {
+inputFile ::= INPUT_SIGN filePath {
+    pin = 1
+}
+filePath ::= INPUT_FILE_PATH_PART {
     methods = [
         getReferences
     ]
@@ -99,7 +106,9 @@ responseHandler ::= responseScript {
         getResponseScriptHolder
     ]
 }
-responseScript ::= START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE
+responseScript ::= START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
+    pin = 1
+}
 scriptBody ::= exScriptBody {
   mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
 }

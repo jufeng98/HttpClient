@@ -12,7 +12,6 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 
 %{
     private boolean queryNameFlag = true;
-    int nextState;
     StringBuilder body = new StringBuilder();
 
     public _HttpLexer() {
@@ -36,7 +35,8 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %unicode
 %debug
 %state IN_HTTP_REQUEST, IN_DOMAIN, IN_PORT, IN_PATH, IN_QUERY, IN_FRAGMENT
-%state IN_HEADER, IN_HEADER_FIELD_VALUE, IN_BODY, IN_RES_SCRIPT, IN_RES_SCRIPT_END, IN_RES_SCRIPT_BODY
+%state IN_HEADER, IN_HEADER_FIELD_VALUE, IN_BODY, IN_BODY_REAL, IN_RES_SCRIPT, IN_RES_SCRIPT_END, IN_RES_SCRIPT_BODY
+%state IN_FILE_PATH
 
 EOL=\R
 EOL_MULTI=(\R|[ ])+
@@ -54,6 +54,7 @@ FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
 FIELD_NAME=[a-zA-Z0-9\-]+
 FIELD_VALUE=[^\r\n ]*
+INPUT_FILE_PATH_PART=[^\r\n ]*
 
 %%
 
@@ -116,14 +117,24 @@ FIELD_VALUE=[^\r\n ]*
 }
 
 <IN_HEADER_FIELD_VALUE> {
-  {FIELD_VALUE}        { yybegin(IN_HEADER); return FIELD_VALUE; }
-  {ONLY_SPACE}         { return WHITE_SPACE; }
+  {FIELD_VALUE}              { yybegin(IN_HEADER); return FIELD_VALUE; }
+  {ONLY_SPACE}               { return WHITE_SPACE; }
 }
 
 <IN_BODY> {
-  [^\r\n]+            { body.append(yytext()); }
-  {WHITE_SPACE}       { body.append(yytext()); }
-  "> {%"{EOL}         { yypushback(yylength()); yybegin(IN_HTTP_REQUEST); return LexerUtils.createMessageText(body); }
+  "< "                { yybegin(IN_FILE_PATH); return INPUT_SIGN; }
+  [^]                 { yypushback(yylength()); yybegin(IN_BODY_REAL); }
+}
+
+<IN_BODY_REAL> {
+  [^\r\n]+              { body.append(yytext()); }
+  {WHITE_SPACE}         { body.append(yytext()); }
+  "> {%"{EOL}           { yypushback(yylength()); yybegin(IN_HTTP_REQUEST); return LexerUtils.createMessageText(body); }
+}
+
+<IN_FILE_PATH> {
+  {INPUT_FILE_PATH_PART}     { return INPUT_FILE_PATH_PART; }
+  {WHITE_SPACE}              { yybegin(IN_HTTP_REQUEST); return WHITE_SPACE; }
 }
 
 <IN_RES_SCRIPT> {
