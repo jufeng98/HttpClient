@@ -1,7 +1,7 @@
 package org.javamaster.httpclient;
 
 import com.intellij.psi.tree.IElementType;
-import com.intellij.lexer.FlexLexer;
+import org.javamaster.httpclient.utils.LexerUtils;
 
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
 import static com.intellij.psi.TokenType.WHITE_SPACE;
@@ -11,27 +11,35 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %%
 
 %{
-  private boolean queryNameFlag = true;
-  public _HttpLexer() {
-    this((java.io.Reader)null);
-  }
+    private boolean queryNameFlag = true;
+    int nextState;
+    StringBuilder body = new StringBuilder();
 
-  private static String zzToPrintable(CharSequence str) {
-      return zzToPrintable(str.toString());
-  }
+    public _HttpLexer() {
+      this((java.io.Reader)null);
+    }
+
+    private static String zzToPrintable(CharSequence str) {
+        return zzToPrintable(str.toString());
+    }
+
+    private static boolean moreTwo(CharSequence str) {
+        return LexerUtils.moreTwoLineBreak(str);
+    }
 %}
 
 %public
 %class _HttpLexer
-%implements FlexLexer
+%implements com.intellij.lexer.FlexLexer
 %function advance
 %type IElementType
 %unicode
 %debug
 %state IN_HTTP_REQUEST, IN_DOMAIN, IN_PORT, IN_PATH, IN_QUERY, IN_FRAGMENT
-%state IN_HEADER, IN_HEADER_FIELD_VALUE, IN_HEADER_END
+%state IN_HEADER, IN_HEADER_FIELD_VALUE, IN_BODY, IN_RES_SCRIPT, IN_RES_SCRIPT_END, IN_RES_SCRIPT_BODY
 
 EOL=\R
+EOL_MULTI=(\R|[ ])+
 ONLY_SPACE=[ ]+
 WHITE_SPACE=\s+
 LINE_COMMENT="//".*
@@ -60,7 +68,9 @@ FIELD_VALUE=[^\r\n ]*
   {SCHEMA_PART}        { return SCHEMA_PART; }
   "://"                { yybegin(IN_DOMAIN); return SCHEMA_SEPARATE; }
   {HTTP_VERSION}       { return HTTP_VERSION; }
+  "> {%"{EOL}          { yybegin(IN_RES_SCRIPT); return START_SCRIPT_BRACE; }
   {EOL}                { yybegin(IN_HEADER); return WHITE_SPACE; }
+  {EOL_MULTI}          { if(moreTwo(yytext())) yybegin(IN_BODY); return WHITE_SPACE; }
   {WHITE_SPACE}        { return WHITE_SPACE; }
 }
 
@@ -82,7 +92,7 @@ FIELD_VALUE=[^\r\n ]*
   [^?#/\s]+            { return SEGMENT; }
   "?"                  { yybegin(IN_QUERY); return QUESTION; }
   "#"                  { yybegin(IN_FRAGMENT); return HASH; }
-  {WHITE_SPACE}       { yypushback(yylength()); yybegin(IN_HTTP_REQUEST); }
+  {WHITE_SPACE}        { yypushback(yylength()); yybegin(IN_HTTP_REQUEST); }
 }
 
 <IN_QUERY> {
@@ -101,7 +111,7 @@ FIELD_VALUE=[^\r\n ]*
 <IN_HEADER> {
   {FIELD_NAME}        { return FIELD_NAME; }
   ":"                 { yybegin(IN_HEADER_FIELD_VALUE); return COLON; }
-  {EOL}               { if(yylength() >= 2) { yybegin(IN_HEADER_END); return WHITE_SPACE; } else { yybegin(IN_HEADER); return WHITE_SPACE; } }
+  {EOL_MULTI}         { if(moreTwo(yytext())) yybegin(IN_BODY); else yybegin(IN_HEADER); return WHITE_SPACE; }
   {ONLY_SPACE}        { return WHITE_SPACE; }
 }
 
@@ -110,8 +120,23 @@ FIELD_VALUE=[^\r\n ]*
   {ONLY_SPACE}         { return WHITE_SPACE; }
 }
 
-<IN_HEADER_END> {
-  .*                   {  }
+<IN_BODY> {
+  [^\r\n]+            { body.append(yytext()); }
+  {WHITE_SPACE}       { body.append(yytext()); }
+  "> {%"{EOL}         { yypushback(yylength()); yybegin(IN_HTTP_REQUEST); return LexerUtils.createMessageText(body); }
 }
+
+<IN_RES_SCRIPT> {
+  "%}"                      { yypushback(yylength()); yybegin(IN_RES_SCRIPT_END); return LexerUtils.createScriptBody(body); }
+  [^%]+                     { body.append(yytext()); }
+  "%"                       { body.append(yytext()); }
+  {WHITE_SPACE}             { body.append(yytext()); }
+}
+
+<IN_RES_SCRIPT_END> {
+  "%}"                      { yybegin(IN_HTTP_REQUEST); return END_SCRIPT_BRACE; }
+}
+
+
 
 [^]                    { return BAD_CHARACTER; }

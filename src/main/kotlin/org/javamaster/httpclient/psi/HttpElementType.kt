@@ -7,4 +7,6 @@ import org.jetbrains.annotations.NonNls
 /**
  * @author yudong
  */
-class HttpElementType(debugName: @NonNls String) : IElementType(debugName, HttpLanguage.INSTANCE)
+class HttpElementType(debugName: @NonNls String) : IElementType(debugName, HttpLanguage.INSTANCE) {
+    constructor(debugName: String, text: String) : this(debugName)
+}
