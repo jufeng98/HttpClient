@@ -9,6 +9,7 @@ import org.javamaster.httpclient.psi.impl.*;
 public interface HttpTypes {
 
   IElementType COMMENT = new HttpElementType("COMMENT");
+  IElementType DYNAMIC_VARIABLE = new HttpElementType("DYNAMIC_VARIABLE");
   IElementType FILE_PATH = new HttpElementType("FILE_PATH");
   IElementType FRAGMENT = new HttpElementType("FRAGMENT");
   IElementType GLOBAL_HANDLER = new HttpElementType("GLOBAL_HANDLER");
@@ -45,13 +46,17 @@ public interface HttpTypes {
 
   IElementType AND = new HttpTokenType("&");
   IElementType COLON = new HttpTokenType(":");
+  IElementType DIFFERENCE_FILE = new HttpTokenType("DIFFERENCE_FILE");
   IElementType DOLLAR = new HttpTokenType("$");
+  IElementType DUBBO = new HttpTokenType("DUBBO");
+  IElementType DYNAMIC_SIGN = new HttpTokenType("DYNAMIC_SIGN");
   IElementType END_SCRIPT_BRACE = new HttpTokenType("%}");
   IElementType END_VARIABLE_BRACE = new HttpTokenType("}}");
   IElementType EQUALS = new HttpTokenType("=");
   IElementType FIELD_NAME = new HttpTokenType("FIELD_NAME");
   IElementType FIELD_VALUE = new HttpTokenType("FIELD_VALUE");
   IElementType FRAGMENT_PART = new HttpTokenType("FRAGMENT_PART");
+  IElementType GET = new HttpTokenType("GET");
   IElementType GLOBAL_START_SCRIPT_BRACE = new HttpTokenType("<! {%");
   IElementType HASH = new HttpTokenType("#");
   IElementType HOST_VALUE = new HttpTokenType("HOST_VALUE");
@@ -64,10 +69,13 @@ public interface HttpTypes {
   IElementType IN_START_SCRIPT_BRACE = new HttpTokenType("< {%");
   IElementType LINE_COMMENT = new HttpTokenType("LINE_COMMENT");
   IElementType MESSAGE_BOUNDARY = new HttpTokenType("MESSAGE_BOUNDARY");
+  IElementType MESSAGE_SEPARATOR = new HttpTokenType("MESSAGE_SEPARATOR");
+  IElementType MESSAGE_TEXT = new HttpTokenType("MESSAGE_TEXT");
   IElementType OUTPUT_FILE_PATH_PART = new HttpTokenType("OUTPUT_FILE_PATH_PART");
   IElementType OUTPUT_FILE_SIGN = new HttpTokenType(">> ");
   IElementType OUT_START_SCRIPT_BRACE = new HttpTokenType("> {%");
   IElementType PORT_SEGMENT = new HttpTokenType("PORT_SEGMENT");
+  IElementType POST = new HttpTokenType("POST");
   IElementType QUERY_NAME = new HttpTokenType("QUERY_NAME");
   IElementType QUERY_VALUE = new HttpTokenType("QUERY_VALUE");
   IElementType QUESTION = new HttpTokenType("?");
@@ -75,15 +83,20 @@ public interface HttpTypes {
   IElementType REQUEST_METHOD = new HttpTokenType("REQUEST_METHOD");
   IElementType SCHEMA_PART = new HttpTokenType("SCHEMA_PART");
   IElementType SCHEMA_SEPARATE = new HttpTokenType("://");
+  IElementType SCHEME_SEPARATOR = new HttpTokenType("SCHEME_SEPARATOR");
   IElementType SEGMENT = new HttpTokenType("SEGMENT");
   IElementType SLASH = new HttpTokenType("/");
   IElementType SRTART_VARIABLE_BRACE = new HttpTokenType("{{");
+  IElementType WEBSOCKET = new HttpTokenType("WEBSOCKET");
 
   class Factory {
     public static PsiElement createElement(ASTNode node) {
       IElementType type = node.getElementType();
       if (type == COMMENT) {
         return new HttpCommentImpl(node);
+      }
+      else if (type == DYNAMIC_VARIABLE) {
+        return new HttpDynamicVariableImpl(node);
       }
       else if (type == FILE_PATH) {
         return new HttpFilePathImpl(node);

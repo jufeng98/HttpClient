@@ -7,7 +7,7 @@ import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.impl.source.tree.LeafElement
 
 /**
- * 为 HttpOrdinaryContent 元素添加注入功能支持
+ * 为元素添加注入功能支持
  *
  * @author yudong
  */
@@ -18,8 +18,12 @@ open class HttpPsiLanguageInjectionHost(node: ASTNode) : ASTWrapperPsiElement(no
 
     override fun updateText(text: String): PsiLanguageInjectionHost {
         val valueNode = node.firstChildNode
-        assert(valueNode is LeafElement)
+        val leafElement = valueNode is LeafElement
+
+        assert(leafElement)
+
         (valueNode as LeafElement).replaceWithText(text)
+
         return this
     }
 

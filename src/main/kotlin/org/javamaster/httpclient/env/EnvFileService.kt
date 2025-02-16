@@ -2,10 +2,16 @@ package org.javamaster.httpclient.env
 
 import com.intellij.json.psi.*
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtil
+import com.intellij.util.indexing.FileBasedIndex
+import org.javamaster.httpclient.index.HttpEnvironmentIndex.Companion.INDEX_ID
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
 
 
@@ -84,7 +90,7 @@ class EnvFileService(val project: Project) {
             }
 
             is JsonNumberLiteral -> {
-                innerJsonValue.value.toString()
+                "" + innerJsonValue.value
             }
 
             is JsonBooleanLiteral -> {
@@ -105,6 +111,94 @@ class EnvFileService(val project: Project) {
 
         fun getService(project: Project): EnvFileService {
             return project.getService(EnvFileService::class.java)
+        }
+
+        private fun getEnvVariablesFromIndex(project: Project, selectedEnv: String?): MutableMap<String, String>? {
+            if (selectedEnv == null) return null
+
+            val selectedEditor = FileEditorManager.getInstance(project).selectedEditor ?: return null
+
+            val module = ModuleUtilCore.findModuleForFile(selectedEditor.file, project) ?: return null
+
+            val scope = GlobalSearchScope.moduleScope(module)
+
+            val fileBasedIndex = FileBasedIndex.getInstance()
+
+            val map = mutableMapOf<String, String>()
+
+            val list1 = fileBasedIndex.getValues(INDEX_ID, selectedEnv, scope)
+            list1.forEach { map.putAll(it) }
+
+            val list2 = fileBasedIndex.getValues(INDEX_ID, COMMON_ENV_NAME, scope)
+            list2.forEach { map.putAll(it) }
+
+            if (map.isEmpty()) {
+                return null
+            }
+
+            return map
+        }
+
+        fun getEnvVariables(project: Project): MutableMap<String, String> {
+            val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
+            val httpFileParentPath = HttpEditorTopForm.getHttpFileParentPath()
+
+            val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv)
+            if (mapFromIndex != null) {
+                return mapFromIndex
+            }
+
+            val map = linkedMapOf<String, String>()
+
+            map.putAll(getEnvVariables(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
+
+            map.putAll(getEnvVariables(selectedEnv, httpFileParentPath, ENV_FILE_NAME, project))
+
+            map.putAll(getEnvVariables(COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
+
+            map.putAll(getEnvVariables(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project))
+
+            return map
+        }
+
+        private fun getEnvVariables(
+            selectedEnv: String?,
+            httpFileParentPath: String,
+            envFileName: String,
+            project: Project,
+        ): Map<String, String> {
+            val env = selectedEnv ?: COMMON_ENV_NAME
+            val fileName = "$httpFileParentPath/$envFileName"
+
+            val virtualFile = VfsUtil.findFileByIoFile(File(fileName), true) ?: return mapOf()
+
+            val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+            if (psiFile !is JsonFile) {
+                throw IllegalArgumentException("*.json后缀文件未关联到JSON文件类型,请在 Settings -> Editor -> File Types 先设置!")
+            }
+
+            val topLevelValue = psiFile.topLevelValue
+            if (topLevelValue !is JsonObject) {
+                throw IllegalArgumentException("配置文件:${fileName}外层格式不符合规范!")
+            }
+
+            val envProperty = topLevelValue.findProperty(env) ?: return mapOf()
+            val jsonValue = envProperty.value
+            if (jsonValue !is JsonObject) {
+                throw IllegalArgumentException("配置文件:${fileName}内层格式不符合规范!")
+            }
+
+            val envFileService = getService(project)
+
+            val map = linkedMapOf<String, String>()
+
+            jsonValue.propertyList
+                .forEach {
+                    val envValue = envFileService.getEnvValue(it.name, selectedEnv, httpFileParentPath)
+                    map[it.name] = envValue ?: "<null>"
+                }
+
+            return map
         }
 
         fun getEnvEle(
@@ -144,8 +238,11 @@ class EnvFileService(val project: Project) {
             val virtualFile = VfsUtil.findFileByIoFile(File(fileName), true) ?: return null
 
             val psiFile = PsiUtil.getPsiFile(project, virtualFile)
-            val jsonFile = psiFile as JsonFile
-            val topLevelValue = jsonFile.topLevelValue
+            if (psiFile !is JsonFile) {
+                throw IllegalArgumentException("*.json后缀文件未关联到JSON文件类型,请在 Settings -> Editor -> File Types 先设置!")
+            }
+
+            val topLevelValue = psiFile.topLevelValue
             if (topLevelValue !is JsonObject) {
                 throw IllegalArgumentException("配置文件:${fileName}外层格式不符合规范!")
             }

@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class HttpRequestTargetImpl extends ASTWrapperPsiElement implements HttpRequestTarget {
 
@@ -73,6 +74,18 @@ public class HttpRequestTargetImpl extends ASTWrapperPsiElement implements HttpR
   @Nullable
   public HttpVersion getVersion() {
     return findChildByClass(HttpVersion.class);
+  }
+
+  @Override
+  @NotNull
+  public String getHttpUrl() {
+    return HttpPsiImplUtil.getHttpUrl(this);
+  }
+
+  @Override
+  @NotNull
+  public PsiReference[] getReferences() {
+    return HttpPsiImplUtil.getReferences(this);
   }
 
 }

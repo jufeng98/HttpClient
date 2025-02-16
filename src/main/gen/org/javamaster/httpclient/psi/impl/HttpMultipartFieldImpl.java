@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
+import org.apache.http.entity.ContentType;
 
 public class HttpMultipartFieldImpl extends ASTWrapperPsiElement implements HttpMultipartField {
 
@@ -37,6 +38,12 @@ public class HttpMultipartFieldImpl extends ASTWrapperPsiElement implements Http
   @NotNull
   public HttpRequestMessagesGroup getRequestMessagesGroup() {
     return findNotNullChildByClass(HttpRequestMessagesGroup.class);
+  }
+
+  @Override
+  @Nullable
+  public ContentType getContentType() {
+    return HttpPsiImplUtil.getContentType(this);
   }
 
 }

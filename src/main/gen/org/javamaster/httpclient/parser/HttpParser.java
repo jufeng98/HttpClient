@@ -48,6 +48,13 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  public static boolean dynamicVariable(PsiBuilder b, int l) {
+    Marker m = enter_section_(b);
+    exit_section_(b, m, DYNAMIC_VARIABLE, true);
+    return true;
+  }
+
+  /* ********************************************************** */
   // INPUT_FILE_PATH_PART
   public static boolean filePath(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "filePath")) return false;

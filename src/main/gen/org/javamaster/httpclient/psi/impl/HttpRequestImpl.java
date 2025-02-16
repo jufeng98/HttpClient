@@ -10,6 +10,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
+import java.net.http.HttpClient.Version;
+import org.apache.http.entity.ContentType;
 
 public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest {
 
@@ -67,6 +69,36 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   @Nullable
   public HttpResponseHandler getResponseHandler() {
     return findChildByClass(HttpResponseHandler.class);
+  }
+
+  @Override
+  @Nullable
+  public ContentType getContentType() {
+    return HttpPsiImplUtil.getContentType(this);
+  }
+
+  @Override
+  @Nullable
+  public String getContentTypeBoundary() {
+    return HttpPsiImplUtil.getContentTypeBoundary(this);
+  }
+
+  @Override
+  @Nullable
+  public Integer getContentLength() {
+    return HttpPsiImplUtil.getContentLength(this);
+  }
+
+  @Override
+  @NotNull
+  public Version getHttpVersion() {
+    return HttpPsiImplUtil.getHttpVersion(this);
+  }
+
+  @Override
+  @NotNull
+  public String getHttpHost() {
+    return HttpPsiImplUtil.getHttpHost(this);
   }
 
 }

@@ -4,6 +4,8 @@ package org.javamaster.httpclient.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import java.net.http.HttpClient.Version;
+import org.apache.http.entity.ContentType;
 
 public interface HttpRequest extends PsiElement {
 
@@ -28,24 +30,19 @@ public interface HttpRequest extends PsiElement {
   @Nullable
   HttpResponseHandler getResponseHandler();
 
-  //WARNING: getContentType(...) is skipped
-  //matching getContentType(HttpRequest, ...)
-  //methods are not found in HttpPsiImplUtil
+  @Nullable
+  ContentType getContentType();
 
-  //WARNING: getContentTypeBoundary(...) is skipped
-  //matching getContentTypeBoundary(HttpRequest, ...)
-  //methods are not found in HttpPsiImplUtil
+  @Nullable
+  String getContentTypeBoundary();
 
-  //WARNING: getContentLength(...) is skipped
-  //matching getContentLength(HttpRequest, ...)
-  //methods are not found in HttpPsiImplUtil
+  @Nullable
+  Integer getContentLength();
 
-  //WARNING: getHttpVersion(...) is skipped
-  //matching getHttpVersion(HttpRequest, ...)
-  //methods are not found in HttpPsiImplUtil
+  @NotNull
+  Version getHttpVersion();
 
-  //WARNING: getHttpHost(...) is skipped
-  //matching getHttpHost(HttpRequest, ...)
-  //methods are not found in HttpPsiImplUtil
+  @NotNull
+  String getHttpHost();
 
 }

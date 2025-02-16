@@ -4,6 +4,7 @@ package org.javamaster.httpclient.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import org.apache.http.entity.ContentType;
 
 public interface HttpMultipartField extends PsiElement {
 
@@ -13,8 +14,7 @@ public interface HttpMultipartField extends PsiElement {
   @NotNull
   HttpRequestMessagesGroup getRequestMessagesGroup();
 
-  //WARNING: getContentType(...) is skipped
-  //matching getContentType(HttpMultipartField, ...)
-  //methods are not found in HttpPsiImplUtil
+  @Nullable
+  ContentType getContentType();
 
 }

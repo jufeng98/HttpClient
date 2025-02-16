@@ -11,6 +11,10 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitDynamicVariable(@NotNull HttpDynamicVariable o) {
+    visitPsiElement(o);
+  }
+
   public void visitFilePath(@NotNull HttpFilePath o) {
     visitPsiElement(o);
   }

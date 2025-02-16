@@ -1,43 +1,68 @@
+--- 全局前置处理器
+
+< {%
+    client.global.clearAll();
+    client.global.set('globalName', 'jufeng98');
+    request.variables.set('requestName', 'jufeng9878');
+
+    const secret = "RHDcnjfmkES"
+    const signSource = secret + request.body.string() + secret;
+    // 使用内置的 CryptoJS 对象
+    const sign = CryptoJS.MD5(signSource)
+    request.variables.set('sign', sign);
+
+    // 执行自定义的 js 文件
+    const global = require('./myUtils.js');
+    const res = global.MyUtils.isBlank('hello');
+    client.log(`结果:${res}`);
+%}
+
+###
+--- 全局变量
+@url={{baseUrl}}
+@tokenAdmin={{token}}
+
 ### 使用变量
-POST https://ijhttp-examples.jetbrains.com:80/post/aes?name=yu&age=23
-Content-Type: ap:plication/json
+POST https://miao.baidu.com/abdr
+Content-Type: application/json
 
 {
     "my-temp-variable1": "{{globalName}}",
-    "my-temp-variable2": "{{requestName}}"
+    "my-temp-variable2": "{{requestName}}",
+    "sign": "{{sign}}"
 }
 
 > {%
     client.global.set("my-temp-variable", "I will not deleted!");
     request.variables.set("my-temp-variable", "I will be deleted soon!");
 %}
-# 保存响应到文件
+
 >> result.html
 ### 后置js处理器
-GET https://ijhttp-examples.jetbrains.com/status/200
+GET https://miao.baidu.com/abdr
 
 > {%
-    client.test("Request executed successfully", function () {
+    client.test("Request executed successfully", () => {
         client.assert(response.status === 200, "Response status is not 200");
         client.log('content-type:' + response.headers['content-type'])
     });
 %}
 
 ### 检查响应体
-GET https://ijhttp-examples.jetbrains.com/get
+GET https://miao.baidu.com/abdr
 
 > {%
-    client.test("Headers option exists", function () {
+    client.test("Headers option exists", () => {
         client.assert(response.body.hasOwnProperty("data"), "Cannot find 'data' option in response");
     });
 %}
 
 ### 检查 Content-Type from headers
-GET https://ijhttp-examples.jetbrains.com/get
+GET https://miao.baidu.com/abdr
 
 > {%
-    client.test("Content-Type is application/json", function () {
-        var contentType = response.headers["content-type"];
-        client.assert(contentType == "application/json", "Expected Content-Type is application/json, but actual is " + contentType);
+    client.test("Content-Type is application/json", () => {
+        const contentType = response.headers["content-type"];
+        client.assert(contentType === "application/json", `Expected Content-Type is application/json, but actual is  ${contentType}`);
     })
 %}

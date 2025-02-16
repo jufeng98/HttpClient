@@ -43,6 +43,12 @@
     <depends>com.intellij.modules.json</depends>
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="httpclient-cool-request.xml">com.hxl.plugin.cool-request</depends>
+    <depends optional="true" config-file="httpclient-web-calm.xml">ris58h.webcalm</depends>
+
+    <projectListeners>
+        <listener topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"
+                  class="org.javamaster.httpclient.listener.HttpEditorListener"/>
+    </projectListeners>
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="HttpClient.STICKY_BALLOON"
@@ -61,5 +67,40 @@
         <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.HttpASTFactory"/>
         <editorHighlighterProvider filetype="HTTP"
                                    implementationClass="org.javamaster.httpclient.highlighting.HttpRequestHighlighterProvider"/>
+        <fileBasedIndex implementation="org.javamaster.httpclient.index.HttpEnvironmentIndex"/>
+        <multiHostInjector
+                implementation="org.javamaster.httpclient.inject.HttpInjectionContributor"/>
+        <runLineMarkerContributor language="http"
+                                  implementationClass="org.javamaster.httpclient.gutter.HttpRunLineMarkerContributor"/>
+        <psi.referenceContributor language="http"
+                                  implementation="org.javamaster.httpclient.reference.HttpReferenceContributor"/>
+        <lang.elementManipulator forClass="com.intellij.httpClient.http.request.psi.HttpFilePath"
+                                 implementationClass="org.javamaster.httpclient.manipulator.HttpFilePathManipulator"/>
+        <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
+        <runDashboardDefaultTypesProvider
+                implementation="org.javamaster.httpclient.dashboard.HttpDashboardDefaultTypesProvider"/>
+        <runDashboardCustomizer implementation="org.javamaster.httpclient.dashboard.HttpRunDashboardCustomizer"
+                                id="httpRunDashboardCustomizer"/>
+        <executor implementation="org.javamaster.httpclient.dashboard.HttpExecutor" order="first" id="httpExecutor"/>
+        <programRunner implementation="org.javamaster.httpclient.dashboard.HttpProgramRunner"/>
+        <highlightErrorFilter implementation="org.javamaster.httpclient.suppress.MyHighlightErrorFilter"/>
+        <lang.inspectionSuppressor language="JSON"
+                                   implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>
+        <gotoDeclarationHandler id="JsonValueGotoDeclarationHandler"
+                                implementation="org.javamaster.httpclient.reference.JsonValueGotoDeclarationHandler"/>
+        <completion.contributor language="JSON" id="HttpCompletionContributor" order="last"
+                                implementationClass="org.javamaster.httpclient.completion.HttpJsonCompletionContributor"/>
+        <completion.contributor language="http" id="HttpRequestCompletionContributor" order="last"
+                                implementationClass="org.javamaster.httpclient.completion.HttpRequestCompletionContributor"/>
+        <typedHandler implementation="org.javamaster.httpclient.typeHandler.HttpTypedHandler"/>
+        <braceMatcher filetype="http"
+                      implementationClass="org.javamaster.httpclient.braceMatcher.HttpRequestBraceMatcher"/>
+        <lang.foldingBuilder language="http"
+                             implementationClass="org.javamaster.httpclient.folding.HttpFoldingBuilder"/>
+        <lang.psiStructureViewFactory language="http"
+                                      implementationClass="org.javamaster.httpclient.structure.HttpRequestStructureViewFactory"/>
+        <defaultLiveTemplates file="liveTemplates/request.xml"/>
+        <liveTemplateContext contextId="REQUEST"
+                             implementation="org.javamaster.httpclient.liveTemplates.HttpTemplateContextType"/>
     </extensions>
 </idea-plugin>

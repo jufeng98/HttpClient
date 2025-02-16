@@ -1,14 +1,16 @@
 package org.javamaster.httpclient
 
+import org.javamaster.httpclient.enums.SimpleTypeEnum
+
 /**
  * @author yudong
  */
 data class HttpInfo(
     val httpReqDescList: MutableList<String>,
     val httpResDescList: MutableList<String>,
-    val type: String?,
+    val type: SimpleTypeEnum?,
     val byteArray: ByteArray?,
-    val httpException: Exception?,
+    val httpException: Throwable?,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -19,7 +21,11 @@ data class HttpInfo(
         if (httpReqDescList != other.httpReqDescList) return false
         if (httpResDescList != other.httpResDescList) return false
         if (type != other.type) return false
-        if (!byteArray.contentEquals(other.byteArray)) return false
+        if (byteArray != null) {
+            if (other.byteArray == null) return false
+            if (!byteArray.contentEquals(other.byteArray)) return false
+        } else if (other.byteArray != null) return false
+        if (httpException != other.httpException) return false
 
         return true
     }
@@ -27,8 +33,10 @@ data class HttpInfo(
     override fun hashCode(): Int {
         var result = httpReqDescList.hashCode()
         result = 31 * result + httpResDescList.hashCode()
-        result = 31 * result + type.hashCode()
-        result = 31 * result + byteArray.contentHashCode()
+        result = 31 * result + (type?.hashCode() ?: 0)
+        result = 31 * result + (byteArray?.contentHashCode() ?: 0)
+        result = 31 * result + (httpException?.hashCode() ?: 0)
         return result
     }
+
 }

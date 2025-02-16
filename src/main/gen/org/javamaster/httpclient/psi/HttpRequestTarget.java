@@ -4,6 +4,7 @@ package org.javamaster.httpclient.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 
 public interface HttpRequestTarget extends PsiElement {
 
@@ -31,12 +32,10 @@ public interface HttpRequestTarget extends PsiElement {
   @Nullable
   HttpVersion getVersion();
 
-  //WARNING: getHttpUrl(...) is skipped
-  //matching getHttpUrl(HttpRequestTarget, ...)
-  //methods are not found in HttpPsiImplUtil
+  @NotNull
+  String getHttpUrl();
 
-  //WARNING: getReferences(...) is skipped
-  //matching getReferences(HttpRequestTarget, ...)
-  //methods are not found in HttpPsiImplUtil
+  @NotNull
+  PsiReference[] getReferences();
 
 }

@@ -4,15 +4,14 @@ package org.javamaster.httpclient.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 
 public interface HttpVariable extends PsiElement {
 
-  //WARNING: getName(...) is skipped
-  //matching getName(HttpVariable, ...)
-  //methods are not found in HttpPsiImplUtil
+  @NotNull
+  String getName();
 
-  //WARNING: getReferences(...) is skipped
-  //matching getReferences(HttpVariable, ...)
-  //methods are not found in HttpPsiImplUtil
+  @NotNull
+  PsiReference[] getReferences();
 
 }

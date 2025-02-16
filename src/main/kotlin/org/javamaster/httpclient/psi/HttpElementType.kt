@@ -9,4 +9,7 @@ import org.jetbrains.annotations.NonNls
  */
 class HttpElementType(debugName: @NonNls String) : IElementType(debugName, HttpLanguage.INSTANCE) {
     constructor(debugName: String, text: String) : this(debugName)
+
+    val name: String
+        get() = debugName
 }

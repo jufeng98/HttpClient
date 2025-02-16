@@ -16,7 +16,11 @@ repositories {
 }
 
 dependencies {
-    implementation("org.openjdk.nashorn:nashorn-core:15.4")
+    implementation("org.mozilla:rhino:1.7.15")
+    implementation("com.github.javafaker:javafaker:1.0.2")
+    implementation("com.alibaba:dubbo:2.6.12")
+    implementation("org.apache.curator:curator-client:4.0.1")
+    implementation("org.apache.curator:curator-framework:4.0.1")
     testImplementation("junit:junit:4.13.1")
 }
 
@@ -30,6 +34,7 @@ intellij {
             "tasks",
             "com.intellij.java",
             "com.intellij.modules.json",
+            "ris58h.webcalm:0.11.1",
             "com.hxl.plugin.cool-request:2024.12.1",
         )
     )
