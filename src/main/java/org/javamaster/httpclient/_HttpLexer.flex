@@ -35,8 +35,8 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %unicode
 %debug
 %state IN_HTTP_REQUEST, IN_DOMAIN, IN_PORT, IN_PATH, IN_QUERY, IN_FRAGMENT
-%state IN_HEADER, IN_HEADER_FIELD_VALUE, IN_BODY, IN_BODY_REAL, IN_RES_SCRIPT, IN_RES_SCRIPT_END, IN_RES_SCRIPT_BODY
-%state IN_FILE_PATH
+%state IN_HEADER, IN_HEADER_FIELD_VALUE, IN_CONTENT, IN_BODY, IN_RES_SCRIPT, IN_RES_SCRIPT_END, IN_RES_SCRIPT_BODY
+%state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE_PATH
 
 EOL=\R
 EOL_MULTI=(\R|[ ])+
@@ -54,7 +54,7 @@ FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
 FIELD_NAME=[a-zA-Z0-9\-]+
 FIELD_VALUE=[^\r\n ]*
-INPUT_FILE_PATH_PART=[^\r\n ]*
+FILE_PATH_PART=[^\r\n ]*
 
 %%
 
@@ -71,7 +71,7 @@ INPUT_FILE_PATH_PART=[^\r\n ]*
   {HTTP_VERSION}       { return HTTP_VERSION; }
   "> {%"{EOL}          { yybegin(IN_RES_SCRIPT); return START_SCRIPT_BRACE; }
   {EOL}                { yybegin(IN_HEADER); return WHITE_SPACE; }
-  {EOL_MULTI}          { if(moreTwo(yytext())) yybegin(IN_BODY); return WHITE_SPACE; }
+  {EOL_MULTI}          { if(moreTwo(yytext())) yybegin(IN_CONTENT); return WHITE_SPACE; }
   {WHITE_SPACE}        { return WHITE_SPACE; }
 }
 
@@ -110,9 +110,10 @@ INPUT_FILE_PATH_PART=[^\r\n ]*
 }
 
 <IN_HEADER> {
+  ">> "               { yybegin(IN_OUTPUT_FILE_PATH); return OUTPUT_FILE_SIGN; }
   {FIELD_NAME}        { return FIELD_NAME; }
   ":"                 { yybegin(IN_HEADER_FIELD_VALUE); return COLON; }
-  {EOL_MULTI}         { if(moreTwo(yytext())) yybegin(IN_BODY); else yybegin(IN_HEADER); return WHITE_SPACE; }
+  {EOL_MULTI}         { if(moreTwo(yytext())) yybegin(IN_CONTENT); else yybegin(IN_HEADER); return WHITE_SPACE; }
   {ONLY_SPACE}        { return WHITE_SPACE; }
 }
 
@@ -121,20 +122,26 @@ INPUT_FILE_PATH_PART=[^\r\n ]*
   {ONLY_SPACE}               { return WHITE_SPACE; }
 }
 
-<IN_BODY> {
-  "< "                { yybegin(IN_FILE_PATH); return INPUT_SIGN; }
-  [^]                 { yypushback(yylength()); yybegin(IN_BODY_REAL); }
+<IN_CONTENT> {
+  "< "                { yybegin(IN_INPUT_FILE_PATH); return INPUT_SIGN; }
+  ">> "               { yybegin(IN_OUTPUT_FILE_PATH); return OUTPUT_FILE_SIGN; }
+  [^]                 { yypushback(yylength()); yybegin(IN_BODY); }
 }
 
-<IN_BODY_REAL> {
+<IN_BODY> {
   [^\r\n]+              { body.append(yytext()); }
   {WHITE_SPACE}         { body.append(yytext()); }
   "> {%"{EOL}           { yypushback(yylength()); yybegin(IN_HTTP_REQUEST); return LexerUtils.createMessageText(body); }
 }
 
-<IN_FILE_PATH> {
-  {INPUT_FILE_PATH_PART}     { return INPUT_FILE_PATH_PART; }
+<IN_INPUT_FILE_PATH> {
+  {FILE_PATH_PART}           { return INPUT_FILE_PATH_PART; }
   {WHITE_SPACE}              { yybegin(IN_HTTP_REQUEST); return WHITE_SPACE; }
+}
+
+<IN_OUTPUT_FILE_PATH> {
+  {FILE_PATH_PART}            { return OUTPUT_FILE_PATH_PART; }
+  {WHITE_SPACE}               { yybegin(IN_HTTP_REQUEST); return WHITE_SPACE; }
 }
 
 <IN_RES_SCRIPT> {

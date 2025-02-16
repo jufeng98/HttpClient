@@ -38,7 +38,7 @@
 
 httpFile ::= request_block*
 request_block ::= request
-request ::= method requestTarget headerField* requestMessagesGroup? responseHandler? {
+request ::= method requestTarget headerField* requestMessagesGroup? responseHandler? outputFile? {
     methods = [
         getContentType
         getContentTypeBoundary
@@ -113,3 +113,11 @@ scriptBody ::= exScriptBody {
   mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
 }
 external exScriptBody ::= script_body
+
+outputFile ::= OUTPUT_FILE_SIGN outputFilePath
+outputFilePath ::= OUTPUT_FILE_PATH_PART {
+    methods = [
+        getReferences
+    ]
+    implements = "org.javamaster.httpclient.psi.HttpFilePath"
+}
