@@ -5,13 +5,13 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface HttpHeaderFieldValue extends PsiElement {
+public interface HttpResponseHandler extends PsiElement {
 
   @NotNull
-  List<HttpVariable> getVariableList();
+  HttpResponseScript getResponseScript();
 
-  //WARNING: getReferences(...) is skipped
-  //matching getReferences(HttpHeaderFieldValue, ...)
+  //WARNING: getResponseScriptHolder(...) is skipped
+  //matching getResponseScriptHolder(HttpResponseHandler, ...)
   //methods are not found in HttpPsiImplUtil
 
 }

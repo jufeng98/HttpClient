@@ -34,9 +34,9 @@ public class HttpRequestTargetImpl extends ASTWrapperPsiElement implements HttpR
   }
 
   @Override
-  @NotNull
+  @Nullable
   public HttpHost getHost() {
-    return findNotNullChildByClass(HttpHost.class);
+    return findChildByClass(HttpHost.class);
   }
 
   @Override
@@ -58,9 +58,15 @@ public class HttpRequestTargetImpl extends ASTWrapperPsiElement implements HttpR
   }
 
   @Override
-  @NotNull
+  @Nullable
   public HttpSchema getSchema() {
-    return findNotNullChildByClass(HttpSchema.class);
+    return findChildByClass(HttpSchema.class);
+  }
+
+  @Override
+  @Nullable
+  public HttpVariable getVariable() {
+    return findChildByClass(HttpVariable.class);
   }
 
   @Override

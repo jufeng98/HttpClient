@@ -36,26 +36,26 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // QUERY_NAME
-  public static boolean QueryParameterKey(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "QueryParameterKey")) return false;
-    if (!nextTokenIs(b, QUERY_NAME)) return false;
+  // REQUEST_COMMENT
+  public static boolean comment(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "comment")) return false;
+    if (!nextTokenIs(b, REQUEST_COMMENT)) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeToken(b, QUERY_NAME);
-    exit_section_(b, m, QUERY_PARAMETER_KEY, r);
+    r = consumeToken(b, REQUEST_COMMENT);
+    exit_section_(b, m, COMMENT, r);
     return r;
   }
 
   /* ********************************************************** */
-  // QUERY_VALUE
-  public static boolean QueryParameterValue(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "QueryParameterValue")) return false;
-    if (!nextTokenIs(b, QUERY_VALUE)) return false;
+  // INPUT_FILE_PATH_PART
+  public static boolean filePath(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "filePath")) return false;
+    if (!nextTokenIs(b, INPUT_FILE_PATH_PART)) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeToken(b, QUERY_VALUE);
-    exit_section_(b, m, QUERY_PARAMETER_VALUE, r);
+    r = consumeToken(b, INPUT_FILE_PATH_PART);
+    exit_section_(b, m, FILE_PATH, r);
     return r;
   }
 
@@ -72,17 +72,45 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // globalScript
+  public static boolean globalHandler(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalHandler")) return false;
+    if (!nextTokenIs(b, GLOBAL_START_SCRIPT_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = globalScript(b, l + 1);
+    exit_section_(b, m, GLOBAL_HANDLER, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE
+  public static boolean globalScript(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalScript")) return false;
+    if (!nextTokenIs(b, GLOBAL_START_SCRIPT_BRACE)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, GLOBAL_SCRIPT, null);
+    r = consumeToken(b, GLOBAL_START_SCRIPT_BRACE);
+    p = r; // pin = 1
+    r = r && report_error_(b, scriptBody(b, l + 1));
+    r = p && consumeToken(b, END_SCRIPT_BRACE) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // headerFieldName COLON headerFieldValue?
   public static boolean headerField(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "headerField")) return false;
     if (!nextTokenIs(b, FIELD_NAME)) return false;
-    boolean r;
-    Marker m = enter_section_(b);
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, HEADER_FIELD, null);
     r = headerFieldName(b, l + 1);
-    r = r && consumeToken(b, COLON);
-    r = r && headerField_2(b, l + 1);
-    exit_section_(b, m, HEADER_FIELD, r);
-    return r;
+    p = r; // pin = 1
+    r = r && report_error_(b, consumeToken(b, COLON));
+    r = p && headerField_2(b, l + 1) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   // headerFieldValue?
@@ -105,39 +133,123 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // FIELD_VALUE
+  // (FIELD_VALUE | variable | FIELD_VALUE variable | variable FIELD_VALUE)+
   public static boolean headerFieldValue(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "headerFieldValue")) return false;
-    if (!nextTokenIs(b, FIELD_VALUE)) return false;
+    if (!nextTokenIs(b, "<header field value>", FIELD_VALUE, SRTART_VARIABLE_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, HEADER_FIELD_VALUE, "<header field value>");
+    r = headerFieldValue_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!headerFieldValue_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "headerFieldValue", c)) break;
+    }
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // FIELD_VALUE | variable | FIELD_VALUE variable | variable FIELD_VALUE
+  private static boolean headerFieldValue_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "headerFieldValue_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, FIELD_VALUE);
-    exit_section_(b, m, HEADER_FIELD_VALUE, r);
+    if (!r) r = variable(b, l + 1);
+    if (!r) r = headerFieldValue_0_2(b, l + 1);
+    if (!r) r = headerFieldValue_0_3(b, l + 1);
+    exit_section_(b, m, null, r);
     return r;
   }
 
-  /* ********************************************************** */
-  // HOST_VALUE
-  public static boolean host(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "host")) return false;
-    if (!nextTokenIs(b, HOST_VALUE)) return false;
+  // FIELD_VALUE variable
+  private static boolean headerFieldValue_0_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "headerFieldValue_0_2")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeToken(b, HOST_VALUE);
-    exit_section_(b, m, HOST, r);
+    r = consumeToken(b, FIELD_VALUE);
+    r = r && variable(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // variable FIELD_VALUE
+  private static boolean headerFieldValue_0_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "headerFieldValue_0_3")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = variable(b, l + 1);
+    r = r && consumeToken(b, FIELD_VALUE);
+    exit_section_(b, m, null, r);
     return r;
   }
 
   /* ********************************************************** */
-  // request_block*
+  // HOST_VALUE | variable
+  public static boolean host(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "host")) return false;
+    if (!nextTokenIs(b, "<host>", HOST_VALUE, SRTART_VARIABLE_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, HOST, "<host>");
+    r = consumeToken(b, HOST_VALUE);
+    if (!r) r = variable(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // globalHandler? request_block*
   static boolean httpFile(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "httpFile")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = httpFile_0(b, l + 1);
+    r = r && httpFile_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // globalHandler?
+  private static boolean httpFile_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "httpFile_0")) return false;
+    globalHandler(b, l + 1);
+    return true;
+  }
+
+  // request_block*
+  private static boolean httpFile_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "httpFile_1")) return false;
     while (true) {
       int c = current_position_(b);
       if (!request_block(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "httpFile", c)) break;
+      if (!empty_element_parsed_guard_(b, "httpFile_1", c)) break;
     }
     return true;
+  }
+
+  /* ********************************************************** */
+  // INPUT_SIGN filePath
+  public static boolean inputFile(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "inputFile")) return false;
+    if (!nextTokenIs(b, INPUT_SIGN)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, INPUT_FILE, null);
+    r = consumeToken(b, INPUT_SIGN);
+    p = r; // pin = 1
+    r = r && filePath(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // exMessageBody
+  public static boolean messageBody(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "messageBody")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, MESSAGE_BODY, "<message body>");
+    r = message_text(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   /* ********************************************************** */
@@ -153,7 +265,95 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (SLASH SEGMENT)+
+  // headerField+ requestMessagesGroup
+  public static boolean multipartField(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "multipartField")) return false;
+    if (!nextTokenIs(b, FIELD_NAME)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = multipartField_0(b, l + 1);
+    r = r && requestMessagesGroup(b, l + 1);
+    exit_section_(b, m, MULTIPART_FIELD, r);
+    return r;
+  }
+
+  // headerField+
+  private static boolean multipartField_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "multipartField_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = headerField(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!headerField(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "multipartField_0", c)) break;
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (MESSAGE_BOUNDARY multipartField?)+
+  public static boolean multipartMessage(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "multipartMessage")) return false;
+    if (!nextTokenIs(b, MESSAGE_BOUNDARY)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = multipartMessage_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!multipartMessage_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "multipartMessage", c)) break;
+    }
+    exit_section_(b, m, MULTIPART_MESSAGE, r);
+    return r;
+  }
+
+  // MESSAGE_BOUNDARY multipartField?
+  private static boolean multipartMessage_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "multipartMessage_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, MESSAGE_BOUNDARY);
+    r = r && multipartMessage_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // multipartField?
+  private static boolean multipartMessage_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "multipartMessage_0_1")) return false;
+    multipartField(b, l + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
+  // OUTPUT_FILE_SIGN outputFilePath
+  public static boolean outputFile(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "outputFile")) return false;
+    if (!nextTokenIs(b, OUTPUT_FILE_SIGN)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, OUTPUT_FILE_SIGN);
+    r = r && outputFilePath(b, l + 1);
+    exit_section_(b, m, OUTPUT_FILE, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // OUTPUT_FILE_PATH_PART
+  public static boolean outputFilePath(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "outputFilePath")) return false;
+    if (!nextTokenIs(b, OUTPUT_FILE_PATH_PART)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, OUTPUT_FILE_PATH_PART);
+    exit_section_(b, m, OUTPUT_FILE_PATH, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (SLASH (SEGMENT | variable))+
   public static boolean pathAbsolute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "pathAbsolute")) return false;
     if (!nextTokenIs(b, SLASH)) return false;
@@ -169,13 +369,23 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // SLASH SEGMENT
+  // SLASH (SEGMENT | variable)
   private static boolean pathAbsolute_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "pathAbsolute_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeTokens(b, 0, SLASH, SEGMENT);
+    r = consumeToken(b, SLASH);
+    r = r && pathAbsolute_0_1(b, l + 1);
     exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // SEGMENT | variable
+  private static boolean pathAbsolute_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "pathAbsolute_0_1")) return false;
+    boolean r;
+    r = consumeToken(b, SEGMENT);
+    if (!r) r = variable(b, l + 1);
     return r;
   }
 
@@ -192,15 +402,42 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // preRequestScript
+  public static boolean preRequestHandler(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "preRequestHandler")) return false;
+    if (!nextTokenIs(b, IN_START_SCRIPT_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = preRequestScript(b, l + 1);
+    exit_section_(b, m, PRE_REQUEST_HANDLER, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE
+  public static boolean preRequestScript(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "preRequestScript")) return false;
+    if (!nextTokenIs(b, IN_START_SCRIPT_BRACE)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, PRE_REQUEST_SCRIPT, null);
+    r = consumeToken(b, IN_START_SCRIPT_BRACE);
+    p = r; // pin = 1
+    r = r && report_error_(b, scriptBody(b, l + 1));
+    r = p && consumeToken(b, END_SCRIPT_BRACE) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // queryParameter (AND queryParameter)*
   public static boolean query(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "query")) return false;
-    if (!nextTokenIs(b, QUERY_NAME)) return false;
+    if (!nextTokenIs(b, "<query>", QUERY_NAME, SRTART_VARIABLE_BRACE)) return false;
     boolean r;
-    Marker m = enter_section_(b);
+    Marker m = enter_section_(b, l, _NONE_, QUERY, "<query>");
     r = queryParameter(b, l + 1);
     r = r && query_1(b, l + 1);
-    exit_section_(b, m, QUERY, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -227,38 +464,77 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // QueryParameterKey EQUALS QueryParameterValue?
+  // queryParameterKey EQUALS? queryParameterValue?
   public static boolean queryParameter(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "queryParameter")) return false;
-    if (!nextTokenIs(b, QUERY_NAME)) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = QueryParameterKey(b, l + 1);
-    r = r && consumeToken(b, EQUALS);
-    r = r && queryParameter_2(b, l + 1);
-    exit_section_(b, m, QUERY_PARAMETER, r);
-    return r;
+    if (!nextTokenIs(b, "<query parameter>", QUERY_NAME, SRTART_VARIABLE_BRACE)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, QUERY_PARAMETER, "<query parameter>");
+    r = queryParameterKey(b, l + 1);
+    p = r; // pin = 1
+    r = r && report_error_(b, queryParameter_1(b, l + 1));
+    r = p && queryParameter_2(b, l + 1) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
-  // QueryParameterValue?
+  // EQUALS?
+  private static boolean queryParameter_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "queryParameter_1")) return false;
+    consumeToken(b, EQUALS);
+    return true;
+  }
+
+  // queryParameterValue?
   private static boolean queryParameter_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "queryParameter_2")) return false;
-    QueryParameterValue(b, l + 1);
+    queryParameterValue(b, l + 1);
     return true;
   }
 
   /* ********************************************************** */
-  // method requestTarget headerField*
+  // QUERY_NAME | variable
+  public static boolean queryParameterKey(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "queryParameterKey")) return false;
+    if (!nextTokenIs(b, "<query parameter key>", QUERY_NAME, SRTART_VARIABLE_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, QUERY_PARAMETER_KEY, "<query parameter key>");
+    r = consumeToken(b, QUERY_NAME);
+    if (!r) r = variable(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // QUERY_VALUE | variable
+  public static boolean queryParameterValue(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "queryParameterValue")) return false;
+    if (!nextTokenIs(b, "<query parameter value>", QUERY_VALUE, SRTART_VARIABLE_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, QUERY_PARAMETER_VALUE, "<query parameter value>");
+    r = consumeToken(b, QUERY_VALUE);
+    if (!r) r = variable(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // method requestTarget headerField* requestMessagesGroup? multipartMessage? responseHandler? outputFile?
   public static boolean request(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request")) return false;
     if (!nextTokenIs(b, REQUEST_METHOD)) return false;
-    boolean r;
-    Marker m = enter_section_(b);
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, REQUEST, null);
     r = method(b, l + 1);
-    r = r && requestTarget(b, l + 1);
-    r = r && request_2(b, l + 1);
-    exit_section_(b, m, REQUEST, r);
-    return r;
+    p = r; // pin = 1
+    r = r && report_error_(b, requestTarget(b, l + 1));
+    r = p && report_error_(b, request_2(b, l + 1)) && r;
+    r = p && report_error_(b, request_3(b, l + 1)) && r;
+    r = p && report_error_(b, request_4(b, l + 1)) && r;
+    r = p && report_error_(b, request_5(b, l + 1)) && r;
+    r = p && request_6(b, l + 1) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   // headerField*
@@ -272,49 +548,117 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return true;
   }
 
+  // requestMessagesGroup?
+  private static boolean request_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_3")) return false;
+    requestMessagesGroup(b, l + 1);
+    return true;
+  }
+
+  // multipartMessage?
+  private static boolean request_4(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_4")) return false;
+    multipartMessage(b, l + 1);
+    return true;
+  }
+
+  // responseHandler?
+  private static boolean request_5(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_5")) return false;
+    responseHandler(b, l + 1);
+    return true;
+  }
+
+  // outputFile?
+  private static boolean request_6(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_6")) return false;
+    outputFile(b, l + 1);
+    return true;
+  }
+
   /* ********************************************************** */
-  // schema SCHEMA_SEPARATE host port? pathAbsolute? (QUESTION query)? (HASH fragment)? version?
+  // inputFile | messageBody
+  public static boolean requestMessagesGroup(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestMessagesGroup")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, REQUEST_MESSAGES_GROUP, "<request messages group>");
+    r = inputFile(b, l + 1);
+    if (!r) r = messageBody(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? (QUESTION query)? (HASH fragment)? version?
   public static boolean requestTarget(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "requestTarget")) return false;
-    if (!nextTokenIs(b, SCHEMA_PART)) return false;
+    if (!nextTokenIs(b, "<request target>", SCHEMA_PART, SRTART_VARIABLE_BRACE)) return false;
     boolean r;
-    Marker m = enter_section_(b);
-    r = schema(b, l + 1);
-    r = r && consumeToken(b, SCHEMA_SEPARATE);
-    r = r && host(b, l + 1);
+    Marker m = enter_section_(b, l, _NONE_, REQUEST_TARGET, "<request target>");
+    r = requestTarget_0(b, l + 1);
+    r = r && requestTarget_1(b, l + 1);
+    r = r && requestTarget_2(b, l + 1);
     r = r && requestTarget_3(b, l + 1);
     r = r && requestTarget_4(b, l + 1);
     r = r && requestTarget_5(b, l + 1);
     r = r && requestTarget_6(b, l + 1);
-    r = r && requestTarget_7(b, l + 1);
-    exit_section_(b, m, REQUEST_TARGET, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
+  // variable | schema SCHEMA_SEPARATE
+  private static boolean requestTarget_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = variable(b, l + 1);
+    if (!r) r = requestTarget_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // schema SCHEMA_SEPARATE
+  private static boolean requestTarget_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_0_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = schema(b, l + 1);
+    r = r && consumeToken(b, SCHEMA_SEPARATE);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // host?
+  private static boolean requestTarget_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_1")) return false;
+    host(b, l + 1);
+    return true;
+  }
+
   // port?
-  private static boolean requestTarget_3(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "requestTarget_3")) return false;
+  private static boolean requestTarget_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_2")) return false;
     port(b, l + 1);
     return true;
   }
 
   // pathAbsolute?
-  private static boolean requestTarget_4(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "requestTarget_4")) return false;
+  private static boolean requestTarget_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_3")) return false;
     pathAbsolute(b, l + 1);
     return true;
   }
 
   // (QUESTION query)?
-  private static boolean requestTarget_5(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "requestTarget_5")) return false;
-    requestTarget_5_0(b, l + 1);
+  private static boolean requestTarget_4(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_4")) return false;
+    requestTarget_4_0(b, l + 1);
     return true;
   }
 
   // QUESTION query
-  private static boolean requestTarget_5_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "requestTarget_5_0")) return false;
+  private static boolean requestTarget_4_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_4_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, QUESTION);
@@ -324,15 +668,15 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   // (HASH fragment)?
-  private static boolean requestTarget_6(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "requestTarget_6")) return false;
-    requestTarget_6_0(b, l + 1);
+  private static boolean requestTarget_5(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_5")) return false;
+    requestTarget_5_0(b, l + 1);
     return true;
   }
 
   // HASH fragment
-  private static boolean requestTarget_6_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "requestTarget_6_0")) return false;
+  private static boolean requestTarget_5_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_5_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, HASH);
@@ -342,22 +686,73 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   // version?
-  private static boolean requestTarget_7(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "requestTarget_7")) return false;
+  private static boolean requestTarget_6(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestTarget_6")) return false;
     version(b, l + 1);
     return true;
   }
 
   /* ********************************************************** */
-  // request
+  // comment+ preRequestHandler? request
   public static boolean request_block(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request_block")) return false;
-    if (!nextTokenIs(b, REQUEST_METHOD)) return false;
+    if (!nextTokenIs(b, REQUEST_COMMENT)) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = request(b, l + 1);
+    r = request_block_0(b, l + 1);
+    r = r && request_block_1(b, l + 1);
+    r = r && request(b, l + 1);
     exit_section_(b, m, REQUEST_BLOCK, r);
     return r;
+  }
+
+  // comment+
+  private static boolean request_block_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_block_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = comment(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!comment(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "request_block_0", c)) break;
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // preRequestHandler?
+  private static boolean request_block_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_block_1")) return false;
+    preRequestHandler(b, l + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
+  // responseScript
+  public static boolean responseHandler(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "responseHandler")) return false;
+    if (!nextTokenIs(b, OUT_START_SCRIPT_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = responseScript(b, l + 1);
+    exit_section_(b, m, RESPONSE_HANDLER, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // OUT_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE
+  public static boolean responseScript(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "responseScript")) return false;
+    if (!nextTokenIs(b, OUT_START_SCRIPT_BRACE)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, RESPONSE_SCRIPT, null);
+    r = consumeToken(b, OUT_START_SCRIPT_BRACE);
+    p = r; // pin = 1
+    r = r && report_error_(b, scriptBody(b, l + 1));
+    r = p && consumeToken(b, END_SCRIPT_BRACE) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */
@@ -370,6 +765,39 @@ public class HttpParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, SCHEMA_PART);
     exit_section_(b, m, SCHEMA, r);
     return r;
+  }
+
+  /* ********************************************************** */
+  // exScriptBody
+  public static boolean scriptBody(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "scriptBody")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, SCRIPT_BODY, "<script body>");
+    r = script_body(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // SRTART_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE
+  public static boolean variable(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "variable")) return false;
+    if (!nextTokenIs(b, SRTART_VARIABLE_BRACE)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, VARIABLE, null);
+    r = consumeToken(b, SRTART_VARIABLE_BRACE);
+    p = r; // pin = 1
+    r = r && report_error_(b, variable_1(b, l + 1));
+    r = p && report_error_(b, consumeTokens(b, -1, IDENTIFIER, END_VARIABLE_BRACE)) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // DOLLAR?
+  private static boolean variable_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "variable_1")) return false;
+    consumeToken(b, DOLLAR);
+    return true;
   }
 
   /* ********************************************************** */

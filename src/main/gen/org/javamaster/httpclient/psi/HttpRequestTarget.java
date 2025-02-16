@@ -10,7 +10,7 @@ public interface HttpRequestTarget extends PsiElement {
   @Nullable
   HttpFragment getFragment();
 
-  @NotNull
+  @Nullable
   HttpHost getHost();
 
   @Nullable
@@ -22,8 +22,11 @@ public interface HttpRequestTarget extends PsiElement {
   @Nullable
   HttpQuery getQuery();
 
-  @NotNull
+  @Nullable
   HttpSchema getSchema();
+
+  @Nullable
+  HttpVariable getVariable();
 
   @Nullable
   HttpVersion getVersion();

@@ -13,8 +13,20 @@ public interface HttpRequest extends PsiElement {
   @NotNull
   HttpMethod getMethod();
 
-  @NotNull
+  @Nullable
+  HttpMultipartMessage getMultipartMessage();
+
+  @Nullable
+  HttpOutputFile getOutputFile();
+
+  @Nullable
+  HttpRequestMessagesGroup getRequestMessagesGroup();
+
+  @Nullable
   HttpRequestTarget getRequestTarget();
+
+  @Nullable
+  HttpResponseHandler getResponseHandler();
 
   //WARNING: getContentType(...) is skipped
   //matching getContentType(HttpRequest, ...)

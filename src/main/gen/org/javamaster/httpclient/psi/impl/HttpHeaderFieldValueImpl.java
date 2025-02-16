@@ -27,4 +27,10 @@ public class HttpHeaderFieldValueImpl extends ASTWrapperPsiElement implements Ht
     else super.accept(visitor);
   }
 
+  @Override
+  @NotNull
+  public List<HttpVariable> getVariableList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpVariable.class);
+  }
+
 }

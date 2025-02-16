@@ -27,4 +27,10 @@ public class HttpQueryParameterKeyImpl extends ASTWrapperPsiElement implements H
     else super.accept(visitor);
   }
 
+  @Override
+  @Nullable
+  public HttpVariable getVariable() {
+    return findChildByClass(HttpVariable.class);
+  }
+
 }

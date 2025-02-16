@@ -7,4 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface HttpPathAbsolute extends PsiElement {
 
+  @NotNull
+  List<HttpVariable> getVariableList();
+
 }

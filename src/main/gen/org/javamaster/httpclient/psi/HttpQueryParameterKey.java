@@ -7,4 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface HttpQueryParameterKey extends PsiElement {
 
+  @Nullable
+  HttpVariable getVariable();
+
 }

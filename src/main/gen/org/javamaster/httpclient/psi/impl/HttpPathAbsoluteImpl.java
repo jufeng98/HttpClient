@@ -27,4 +27,10 @@ public class HttpPathAbsoluteImpl extends ASTWrapperPsiElement implements HttpPa
     else super.accept(visitor);
   }
 
+  @Override
+  @NotNull
+  public List<HttpVariable> getVariableList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpVariable.class);
+  }
+
 }

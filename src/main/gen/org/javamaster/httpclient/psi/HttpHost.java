@@ -7,4 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface HttpHost extends PsiElement {
 
+  @Nullable
+  HttpVariable getVariable();
+
 }

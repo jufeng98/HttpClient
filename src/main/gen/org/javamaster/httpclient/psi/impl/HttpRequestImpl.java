@@ -40,9 +40,33 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   }
 
   @Override
-  @NotNull
+  @Nullable
+  public HttpMultipartMessage getMultipartMessage() {
+    return findChildByClass(HttpMultipartMessage.class);
+  }
+
+  @Override
+  @Nullable
+  public HttpOutputFile getOutputFile() {
+    return findChildByClass(HttpOutputFile.class);
+  }
+
+  @Override
+  @Nullable
+  public HttpRequestMessagesGroup getRequestMessagesGroup() {
+    return findChildByClass(HttpRequestMessagesGroup.class);
+  }
+
+  @Override
+  @Nullable
   public HttpRequestTarget getRequestTarget() {
-    return findNotNullChildByClass(HttpRequestTarget.class);
+    return findChildByClass(HttpRequestTarget.class);
+  }
+
+  @Override
+  @Nullable
+  public HttpResponseHandler getResponseHandler() {
+    return findChildByClass(HttpResponseHandler.class);
   }
 
 }

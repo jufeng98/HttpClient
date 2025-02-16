@@ -5,13 +5,14 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface HttpHeaderFieldValue extends PsiElement {
+public interface HttpVariable extends PsiElement {
 
-  @NotNull
-  List<HttpVariable> getVariableList();
+  //WARNING: getName(...) is skipped
+  //matching getName(HttpVariable, ...)
+  //methods are not found in HttpPsiImplUtil
 
   //WARNING: getReferences(...) is skipped
-  //matching getReferences(HttpHeaderFieldValue, ...)
+  //matching getReferences(HttpVariable, ...)
   //methods are not found in HttpPsiImplUtil
 
 }

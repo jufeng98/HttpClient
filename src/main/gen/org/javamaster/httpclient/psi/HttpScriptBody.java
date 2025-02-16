@@ -5,9 +5,6 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface HttpQueryParameterValue extends PsiElement {
-
-  @Nullable
-  HttpVariable getVariable();
+public interface HttpScriptBody extends PsiElement {
 
 }

@@ -27,4 +27,10 @@ public class HttpHostImpl extends ASTWrapperPsiElement implements HttpHost {
     else super.accept(visitor);
   }
 
+  @Override
+  @Nullable
+  public HttpVariable getVariable() {
+    return findChildByClass(HttpVariable.class);
+  }
+
 }
