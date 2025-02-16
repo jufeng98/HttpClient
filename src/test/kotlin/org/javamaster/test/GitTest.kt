@@ -1,18 +1,16 @@
 package org.javamaster.test
 
 import org.junit.Test
-import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 
 class GitTest {
-    private val logger = LoggerFactory.getLogger(GitTest::class.java)
 
     @Test
     fun push() {
         val file = File("")
-        logger.warn(file.absolutePath)
+        println(file.absolutePath)
 
         execCommand("cmd /c git push")
     }
@@ -20,7 +18,7 @@ class GitTest {
     @Test
     fun pull() {
         val file = File("")
-        logger.warn(file.absolutePath)
+        println(file.absolutePath)
 
         execCommand("cmd /c git pull")
     }
@@ -30,7 +28,7 @@ class GitTest {
         process.waitFor()
 
         val res = getRes(process)
-        logger.warn("result:$res")
+        println("result:$res")
 
         if (res.contains("fatal")) {
             execCommand(command)
