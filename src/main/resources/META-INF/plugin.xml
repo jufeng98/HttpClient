@@ -59,10 +59,7 @@
                 language="http"
                 implementationClass="org.javamaster.httpclient.parser.HttpParserDefinition"/>
         <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.HttpASTFactory"/>
-        <toolWindow id="Http Execution"
-                    icon="org.javamaster.httpclient.HttpIcons.FILE"
-                    anchor="right"
-                    canCloseContents="true"
-                    factoryClass="org.javamaster.httpclient.ui.HttpExecutionConsoleToolWindowFactory"/>
+        <editorHighlighterProvider filetype="HTTP"
+                                   implementationClass="org.javamaster.httpclient.highlighting.HttpRequestHighlighterProvider"/>
     </extensions>
 </idea-plugin>

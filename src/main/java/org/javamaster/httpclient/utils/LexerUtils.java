@@ -6,11 +6,7 @@ import org.javamaster.httpclient.psi.HttpElementType;
 public class LexerUtils {
 
     public static boolean moreTwoLineBreak(CharSequence str) {
-        if (str.equals(" ")) {
-            return false;
-        }
-
-        if (str.equals("\r\n")) {
+        if (str.length() < 2) {
             return false;
         }
 
