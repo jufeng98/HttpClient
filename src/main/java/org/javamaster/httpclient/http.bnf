@@ -28,13 +28,17 @@
     EQUALS='='
     AND='&'
     HASH='#'
+    DOLLAR='$'
 
+    IDENTIFIER='IDENTIFIER'
     INPUT_SIGN='< '
     OUTPUT_FILE_SIGN='>> '
     GLOBAL_START_SCRIPT_BRACE='<! {%'
     IN_START_SCRIPT_BRACE='< {%'
     OUT_START_SCRIPT_BRACE='> {%'
     END_SCRIPT_BRACE='%}'
+    SRTART_VARIABLE_BRACE='{{'
+    END_VARIABLE_BRACE='}}'
   ]
 }
 
@@ -44,8 +48,8 @@ globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-request_block ::= preRequestHandler? request
-
+request_block ::=  comment+ preRequestHandler? request
+comment ::= REQUEST_COMMENT
 preRequestHandler ::= preRequestScript
 preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
@@ -66,23 +70,31 @@ method ::= REQUEST_METHOD {
     mixin = "org.javamaster.httpclient.psi.impl.HttpMethodBase"
 }
 
-requestTarget ::= schema SCHEMA_SEPARATE host port? pathAbsolute? (QUESTION query)? (HASH fragment)? version? {
+requestTarget ::= (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? (QUESTION query)? (HASH fragment)? version? {
     methods = [
         getHttpUrl
         getReferences
     ]
-    pin = 1
 }
 schema ::= SCHEMA_PART
-host ::= HOST_VALUE
-port ::= COLON PORT_SEGMENT
-pathAbsolute ::= (SLASH SEGMENT)+
-query ::= queryParameter (AND queryParameter)*
-queryParameter ::= queryParameterKey EQUALS queryParameterValue? {
+host ::= HOST_VALUE | variable
+
+variable ::= SRTART_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE {
+    methods = [
+        getName
+        getReferences
+    ]
     pin = 1
 }
-queryParameterKey ::= QUERY_NAME
-queryParameterValue ::= QUERY_VALUE
+
+port ::= COLON PORT_SEGMENT
+pathAbsolute ::= (SLASH (SEGMENT | variable))+
+query ::= queryParameter (AND queryParameter)*
+queryParameter ::= queryParameterKey EQUALS? queryParameterValue? {
+    pin = 1
+}
+queryParameterKey ::= QUERY_NAME | variable
+queryParameterValue ::= QUERY_VALUE | variable
 fragment ::= FRAGMENT_PART
 version ::= HTTP_VERSION
 
@@ -94,7 +106,7 @@ headerField ::= headerFieldName COLON headerFieldValue? {
     pin = 1
 }
 headerFieldName ::= FIELD_NAME
-headerFieldValue ::= FIELD_VALUE {
+headerFieldValue ::= (FIELD_VALUE | variable | FIELD_VALUE variable | variable FIELD_VALUE)+ {
     methods = [
         getReferences
     ]

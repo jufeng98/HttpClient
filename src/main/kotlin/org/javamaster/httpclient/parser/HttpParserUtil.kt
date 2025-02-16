@@ -2,6 +2,7 @@ package org.javamaster.httpclient.parser
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.parser.GeneratedParserUtilBase
+import org.javamaster.httpclient.psi.HttpTypes
 
 /**
  * @author yudong
@@ -12,6 +13,10 @@ object HttpParserUtil : GeneratedParserUtilBase() {
     @JvmStatic
     fun message_text(psiBuilder: PsiBuilder, level: Int): Boolean {
         val tokenType = psiBuilder.tokenType
+        if (tokenType == HttpTypes.MESSAGE_BOUNDARY) {
+            return false
+        }
+
         consumeToken(psiBuilder, tokenType)
         return true
     }
@@ -22,4 +27,5 @@ object HttpParserUtil : GeneratedParserUtilBase() {
         consumeToken(psiBuilder, tokenType)
         return true
     }
+
 }

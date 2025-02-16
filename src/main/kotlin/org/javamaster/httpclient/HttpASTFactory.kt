@@ -17,7 +17,7 @@ class HttpASTFactory : ASTFactory() {
     )
 
     override fun createLeaf(type: IElementType, text: CharSequence): LeafElement {
-        if (type == HttpTypes.LINE_COMMENT || type == HttpTypes.REQUEST_COMMENT) {
+        if (type == HttpTypes.LINE_COMMENT) {
             return myDefaultASTFactory.createComment(type, text)
         }
 
