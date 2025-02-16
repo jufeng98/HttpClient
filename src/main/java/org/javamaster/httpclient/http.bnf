@@ -31,14 +31,27 @@
 
     INPUT_SIGN='< '
     OUTPUT_FILE_SIGN='>> '
-    START_SCRIPT_BRACE='> {%'
+    GLOBAL_START_SCRIPT_BRACE='<! {%'
+    IN_START_SCRIPT_BRACE='< {%'
+    OUT_START_SCRIPT_BRACE='> {%'
     END_SCRIPT_BRACE='%}'
   ]
 }
 
-httpFile ::= request_block*
-request_block ::= request
-request ::= method requestTarget headerField* requestMessagesGroup? responseHandler? outputFile? {
+httpFile ::= globalHandler? request_block*
+
+globalHandler ::= globalScript
+globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
+    pin = 1
+}
+request_block ::= preRequestHandler? request
+
+preRequestHandler ::= preRequestScript
+preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
+    pin = 1
+}
+
+request ::= method requestTarget headerField* requestMessagesGroup? multipartMessage? responseHandler? outputFile? {
     methods = [
         getContentType
         getContentTypeBoundary
@@ -88,10 +101,7 @@ headerFieldValue ::= FIELD_VALUE {
 }
 
 requestMessagesGroup ::= inputFile | messageBody
-messageBody ::= exMessageBody {
-    mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
-}
-external exMessageBody ::= message_text
+
 inputFile ::= INPUT_SIGN filePath {
     pin = 1
 }
@@ -100,13 +110,24 @@ filePath ::= INPUT_FILE_PATH_PART {
         getReferences
     ]
 }
+messageBody ::= exMessageBody {
+    mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
+}
+external exMessageBody ::= message_text
+
+multipartMessage ::= (MESSAGE_BOUNDARY multipartField?)+
+multipartField ::= headerField+ requestMessagesGroup {
+    methods = [
+        getContentType
+    ]
+}
 
 responseHandler ::= responseScript {
     methods = [
         getResponseScriptHolder
     ]
 }
-responseScript ::= START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
+responseScript ::= OUT_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
 scriptBody ::= exScriptBody {
