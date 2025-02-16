@@ -1,0 +1,16 @@
+### 使用变量1
+POST {{$url1}}/post/{{url2}}/aes?{{$url3}}
+Authorization: {Basic {{username}} name {{password}}
+
+{
+    "my-temp-variable1": "{{ra}}",
+    "my-temp-variable2": "{{requestName}}"
+}
+### 使用变量2
+POST {{$url1}}/post/{{url2}}/aes?{{$url3}}
+Authorization: {Basic {{username}} name {{password}}
+
+{
+    "my-temp-variable1": "{{ra}}",
+    "my-temp-variable2": "{{requestName}}"
+}
