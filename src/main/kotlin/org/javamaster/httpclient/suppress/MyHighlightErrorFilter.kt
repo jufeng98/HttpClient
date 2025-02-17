@@ -4,10 +4,8 @@ import com.intellij.codeInsight.highlighting.HighlightErrorFilter
 import com.intellij.json.JsonLanguage
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.psi.PsiErrorElement
-import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.psi.HttpScriptBody
 
 /**
  * @author yudong

@@ -343,13 +343,14 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // exMessageBody
+  // MESSAGE_TEXT
   public static boolean messageBody(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "messageBody")) return false;
+    if (!nextTokenIs(b, MESSAGE_TEXT)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, MESSAGE_BODY, "<message body>");
-    r = message_text(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
+    Marker m = enter_section_(b);
+    r = consumeToken(b, MESSAGE_TEXT);
+    exit_section_(b, m, MESSAGE_BODY, r);
     return r;
   }
 
@@ -690,6 +691,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   // inputFile | messageBody
   public static boolean requestMessagesGroup(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "requestMessagesGroup")) return false;
+    if (!nextTokenIs(b, "<request messages group>", INPUT_SIGN, MESSAGE_TEXT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, REQUEST_MESSAGES_GROUP, "<request messages group>");
     r = inputFile(b, l + 1);

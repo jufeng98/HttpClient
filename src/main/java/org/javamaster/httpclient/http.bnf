@@ -147,10 +147,9 @@ filePath ::= INPUT_FILE_PATH_PART {
         getReferences
     ]
 }
-messageBody ::= exMessageBody {
+messageBody ::= MESSAGE_TEXT {
     mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
 }
-external exMessageBody ::= message_text
 
 multipartMessage ::= (MESSAGE_BOUNDARY multipartField?)+
 multipartField ::= headerField+ requestMessagesGroup {

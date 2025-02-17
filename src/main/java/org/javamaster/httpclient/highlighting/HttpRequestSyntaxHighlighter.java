@@ -30,7 +30,7 @@ public class HttpRequestSyntaxHighlighter extends SyntaxHighlighterBase {
     public static final TextAttributesKey HTTP_REQUEST_DIFFERENCE_SIGN;
     public static final TextAttributesKey HTTP_REQUEST_DIFFERENCE_FILE;
     public static final TextAttributesKey HTTP_REQUEST_MULTIPART_BOUNDARY;
-    public static final TextAttributesKey HTTP_REQUEST_ENVIRONMENT_VARIABLE;
+    public static final TextAttributesKey HTTP_IDENTIFIER;
     public static final TextAttributesKey HTTP_REQUEST_VARIABLE_BRACES;
     public static final TextAttributesKey HTTP_REQUEST_DOC_COMMENT_TAG;
     public static final TextAttributesKey HTTP_REQUEST_NAME;
@@ -55,7 +55,7 @@ public class HttpRequestSyntaxHighlighter extends SyntaxHighlighterBase {
         HTTP_REQUEST_DIFFERENCE_SIGN = TextAttributesKey.createTextAttributesKey("HTTP_REQUEST_DIFFERENCE_SIGN", DefaultLanguageHighlighterColors.OPERATION_SIGN);
         HTTP_REQUEST_DIFFERENCE_FILE = TextAttributesKey.createTextAttributesKey("HTTP_REQUEST_DIFFERENCE_FILE", DefaultLanguageHighlighterColors.STATIC_METHOD);
         HTTP_REQUEST_MULTIPART_BOUNDARY = TextAttributesKey.createTextAttributesKey("HTTP_REQUEST_MULTIPART_BOUNDARY", DefaultLanguageHighlighterColors.DOC_COMMENT_TAG_VALUE);
-        HTTP_REQUEST_ENVIRONMENT_VARIABLE = TextAttributesKey.createTextAttributesKey("HTTP_REQUEST_ENVIRONMENT_VARIABLE", DefaultLanguageHighlighterColors.GLOBAL_VARIABLE);
+        HTTP_IDENTIFIER = TextAttributesKey.createTextAttributesKey("HTTP_IDENTIFIER", DefaultLanguageHighlighterColors.LOCAL_VARIABLE);
         HTTP_REQUEST_VARIABLE_BRACES = TextAttributesKey.createTextAttributesKey("HTTP_REQUEST_VARIABLE_BRACES", DefaultLanguageHighlighterColors.BRACES);
         HTTP_REQUEST_DOC_COMMENT_TAG = TextAttributesKey.createTextAttributesKey("HTTP_REQUEST_DOC_COMMENT_TAG", DefaultLanguageHighlighterColors.DOC_COMMENT_TAG);
         HTTP_REQUEST_NAME = TextAttributesKey.createTextAttributesKey("HTTP_REQUEST_NAME", DefaultLanguageHighlighterColors.METADATA);
@@ -70,7 +70,7 @@ public class HttpRequestSyntaxHighlighter extends SyntaxHighlighterBase {
         fillMap(ATTRIBUTES, HTTP_REQUEST_INPUT_SIGN, HttpTypes.INPUT_SIGN, HttpTypes.OUTPUT_FILE_SIGN);
         fillMap(ATTRIBUTES, HTTP_REQUEST_INPUT_FILE, HttpTypes.INPUT_FILE_PATH_PART, HttpTypes.OUTPUT_FILE_PATH_PART);
         fillMap(ATTRIBUTES, HTTP_REQUEST_MULTIPART_BOUNDARY, HttpTypes.MESSAGE_BOUNDARY);
-        fillMap(ATTRIBUTES, HTTP_REQUEST_ENVIRONMENT_VARIABLE, HttpTypes.IDENTIFIER);
+        fillMap(ATTRIBUTES, HTTP_IDENTIFIER, HttpTypes.IDENTIFIER);
         fillMap(ATTRIBUTES, HttpTypeSets.VARIABLE_BRACES, HTTP_REQUEST_VARIABLE_BRACES);
     }
 }

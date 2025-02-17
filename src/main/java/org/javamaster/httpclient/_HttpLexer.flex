@@ -45,7 +45,7 @@ WHITE_SPACE=\s+
 LINE_COMMENT="//".*
 REQUEST_COMMENT=###.*
 REQUEST_METHOD=[A-Z]+
-SCHEMA_PART=https|wss|http|ws
+SCHEMA_PART=https|wss|http|ws|dubbo
 HOST_VALUE=[a-zA-Z0-9\-.]+
 PORT_SEGMENT=[0-9]+
 SEGMENT=[a-zA-Z_0-9]+
@@ -56,7 +56,7 @@ FIELD_NAME=[a-zA-Z0-9\-]+
 FIELD_VALUE=[^\r\n ]*
 FILE_PATH_PART=[^\r\n<> ]+
 MESSAGE_BOUNDARY=--[a-zA-Z\-]+
-VARIABLE_NAME=[[a-zA-Z0-9\-]--[$}= ]]+
+VARIABLE_NAME=[[a-zA-Z0-9_\-]--[$}= ]]+
 GLOBAL_VARIABLE_PART=[^\r\n={}]+
 DIRECTION_PART=[^\r\n ]+
 %%
@@ -238,7 +238,7 @@ DIRECTION_PART=[^\r\n ]+
 }
 
 <IN_MULTIPART> {
-  {MESSAGE_BOUNDARY}{EOL_MULTI}     { yybegin(detectState(yytext())); return MESSAGE_BOUNDARY; }
+  {MESSAGE_BOUNDARY}{EOL_MULTI}     { yybegin(detectBoundaryState(yytext())); return MESSAGE_BOUNDARY; }
 }
 
 <IN_OUTPUT_FILE> {
