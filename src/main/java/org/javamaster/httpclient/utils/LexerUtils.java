@@ -1,39 +1,44 @@
 package org.javamaster.httpclient.utils;
 
+import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
-import org.javamaster.httpclient.psi.HttpElementType;
+import org.javamaster.httpclient._HttpLexer;
+import org.javamaster.httpclient.psi.HttpTypes;
 
 public class LexerUtils {
 
-    public static boolean moreTwoLineBreak(CharSequence str) {
-        if (str.length() < 2) {
-            return false;
+    public static int detectState(CharSequence matchText) {
+        int length = matchText.length();
+        if (length < 3) {
+            return _HttpLexer.IN_HEADER;
         }
 
-        int times1 = 0;
-        int times2 = 0;
-        int length = str.length();
-        for (int i = 0; i < length; i++) {
-            char c = str.charAt(i);
-            if (c == '\r') {
-                times1++;
-            } else if (c == '\n') {
-                times2++;
+        int idx = 0;
+        for (int i = length; i > 0; i--) {
+            int index = i - 1;
+            char c = matchText.charAt(index);
+            if (c == '\r' || c == '\n') {
+                continue;
             }
+
+            idx = index;
+            break;
         }
 
-        return times1 >= 2 || times2 >= 2;
+        if (matchText.charAt(idx) == '-') {
+            return _HttpLexer.IN_BODY;
+        } else {
+            return _HttpLexer.IN_HEADER;
+        }
     }
 
-    public static IElementType createMessageText(StringBuilder body) {
-        String text = body.toString();
-        body.setLength(0);
-        return new HttpElementType("MESSAGE_TEXT",text);
-    }
-
-    public static IElementType createScriptBody(StringBuilder body) {
-        String text = body.toString();
-        body.setLength(0);
-        return new HttpElementType("SCRIPT_BODY",text);
+    public static IElementType detectBodyType(_HttpLexer lexer) {
+        int bodyLength = lexer.matchTimes;
+        lexer.matchTimes = 0;
+        if (bodyLength > 0) {
+            return HttpTypes.MESSAGE_TEXT;
+        } else {
+            return TokenType.WHITE_SPACE;
+        }
     }
 }

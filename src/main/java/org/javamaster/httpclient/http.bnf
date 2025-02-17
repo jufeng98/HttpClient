@@ -16,7 +16,6 @@
 
   tokens=[
     LINE_COMMENT='regexp://.*'
-    REQUEST_COMMENT='regexp:###.*'
 
     HTTP='http'
     HTTPS='https'
@@ -29,7 +28,10 @@
     AND='&'
     HASH='#'
     DOLLAR='$'
+    AT='@'
 
+    MESSAGE_TEXT='MESSAGE_TEXT'
+    DIRECTION_COMMENT_START='# @'
     POST='POST'
     GET='GET'
     WEBSOCKET='WEBSOCKET'
@@ -37,34 +39,44 @@
     DIFFERENCE_FILE='DIFFERENCE_FILE'
     MESSAGE_SEPARATOR='MESSAGE_SEPARATOR'
     MESSAGE_TEXT='MESSAGE_TEXT'
-    DYNAMIC_SIGN='DYNAMIC_SIGN'
     SCHEME_SEPARATOR='SCHEME_SEPARATOR'
-    IDENTIFIER='IDENTIFIER'
     INPUT_SIGN='< '
     OUTPUT_FILE_SIGN='>> '
     GLOBAL_START_SCRIPT_BRACE='<! {%'
     IN_START_SCRIPT_BRACE='< {%'
     OUT_START_SCRIPT_BRACE='> {%'
     END_SCRIPT_BRACE='%}'
-    SRTART_VARIABLE_BRACE='{{'
+    START_VARIABLE_BRACE='{{'
     END_VARIABLE_BRACE='}}'
   ]
 }
 
-httpFile ::= globalHandler? request_block*
+httpFile ::= globalVariable? globalHandler? request_block*
 
+globalVariable::= globalVariableName globalVariableValue? {
+    pin = 1
+}
+globalVariableName ::= AT GLOBAL_NAME {
+    pin = 1
+}
+globalVariableValue ::= GLOBAL_VALUE | variable
 globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-request_block ::=  comment+ preRequestHandler? request
+request_block ::=  comment directionComment* preRequestHandler? request
 comment ::= REQUEST_COMMENT
+directionComment ::= DIRECT_COMMENT_START directionName directionValue? {
+    pin = 1
+}
+directionName ::= DIRECTION_NAME_PART
+directionValue ::= DIRECTION_VALUE_PART
 preRequestHandler ::= preRequestScript
 preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
 
-request ::= method requestTarget headerField* requestMessagesGroup? multipartMessage? responseHandler? outputFile? {
+request ::= method requestTarget version? headerField* requestMessagesGroup? multipartMessage? responseHandler? outputFile? {
     methods = [
         getContentType
         getContentTypeBoundary
@@ -79,23 +91,22 @@ method ::= REQUEST_METHOD {
     mixin = "org.javamaster.httpclient.psi.impl.HttpMethodBase"
 }
 
-requestTarget ::= (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? (QUESTION query)? (HASH fragment)? version? {
+requestTarget ::= (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? (QUESTION query)? (HASH fragment)?  {
     methods = [
-        getHttpUrl
+        getUrl
         getReferences
     ]
 }
 schema ::= SCHEMA_PART
 host ::= HOST_VALUE | variable
 
-variable ::= SRTART_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE {
+variable ::= START_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE {
     methods = [
         getName
         getReferences
     ]
     pin = 1
 }
-dynamicVariable ::=
 
 port ::= COLON PORT_SEGMENT
 pathAbsolute ::= (SLASH (SEGMENT | variable))+
@@ -106,7 +117,11 @@ queryParameter ::= queryParameterKey EQUALS? queryParameterValue? {
 queryParameterKey ::= QUERY_NAME | variable
 queryParameterValue ::= QUERY_VALUE | variable
 fragment ::= FRAGMENT_PART
-version ::= HTTP_VERSION
+version ::= HTTP_VERSION {
+    methods = [
+        getVersion
+    ]
+}
 
 headerField ::= headerFieldName COLON headerFieldValue? {
     methods = [
@@ -144,20 +159,17 @@ multipartField ::= headerField+ requestMessagesGroup {
     ]
 }
 
-responseHandler ::= responseScript {
-    methods = [
-        getResponseScriptHolder
-    ]
-}
+responseHandler ::= responseScript
 responseScript ::= OUT_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-scriptBody ::= exScriptBody {
+scriptBody ::= SCRIPT_BODY_PAET {
   mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
 }
-external exScriptBody ::= script_body
 
-outputFile ::= OUTPUT_FILE_SIGN outputFilePath
+outputFile ::= OUTPUT_FILE_SIGN outputFilePath {
+    pin = 1
+}
 outputFilePath ::= OUTPUT_FILE_PATH_PART {
     methods = [
         getReferences
