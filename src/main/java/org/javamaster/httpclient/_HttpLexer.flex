@@ -214,7 +214,7 @@ DIRECTION_PART=[^\r\n ]+
   "< "                               { yybegin(IN_INPUT_FILE_PATH); return INPUT_SIGN; }
   ">> "                              { yypushback(yylength()); yybegin(IN_OUTPUT_FILE_PATH); return detectBodyType(this); }
   "> {%"{EOL_MULTI}                  { yypushback(yylength()); yybegin(IN_POST_SCRIPT); return detectBodyType(this); }
-  {MESSAGE_BOUNDARY}{EOL_MULTI}      { yypushback(yylength()); yybegin(IN_MULTIPART); return detectBodyType(this); }
+  {MESSAGE_BOUNDARY}\s*              { yypushback(yylength()); yybegin(IN_MULTIPART); return detectBodyType(this); }
   {REQUEST_COMMENT}{EOL}             { yypushback(yylength()); yybegin(YYINITIAL); return detectBodyType(this); }
   <<EOF>>                            { yypushback(yylength()); yybegin(YYINITIAL); return detectBodyType(this); }
 }
@@ -227,19 +227,18 @@ DIRECTION_PART=[^\r\n ]+
 
 <IN_POST_SCRIPT> {
   "> {%"                    { return OUT_START_SCRIPT_BRACE; }
-  "%}"{EOL_MULTI}           { yypushback(yylength()); yybegin(IN_POST_SCRIPT_END); return SCRIPT_BODY_PAET; }
-  <<EOF>>                   { yybegin(YYINITIAL); return SCRIPT_BODY_PAET; }
+  "%}"\s*                   { yypushback(yylength()); yybegin(IN_POST_SCRIPT_END); return SCRIPT_BODY_PAET; }
   [^%]+                     {  }
   "%"                       {  }
   {WHITE_SPACE}             {  }
 }
 
 <IN_POST_SCRIPT_END> {
-  "%}"{EOL_MULTI}              { yybegin(IN_OUTPUT_FILE); return END_SCRIPT_BRACE; }
+  "%}"\s*                   { yybegin(IN_OUTPUT_FILE); return END_SCRIPT_BRACE; }
 }
 
 <IN_MULTIPART> {
-  {MESSAGE_BOUNDARY}{EOL_MULTI}     { yybegin(detectBoundaryState(yytext())); return MESSAGE_BOUNDARY; }
+  {MESSAGE_BOUNDARY}\s*     { yybegin(detectBoundaryState(yytext())); return MESSAGE_BOUNDARY; }
 }
 
 <IN_OUTPUT_FILE> {

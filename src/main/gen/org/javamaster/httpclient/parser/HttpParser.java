@@ -179,15 +179,24 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // GLOBAL_VALUE | variable
+  // EQUALS (GLOBAL_VALUE | variable)
   public static boolean globalVariableValue(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariableValue")) return false;
-    if (!nextTokenIs(b, "<global variable value>", GLOBAL_VALUE, START_VARIABLE_BRACE)) return false;
+    if (!nextTokenIs(b, EQUALS)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_VALUE, "<global variable value>");
+    Marker m = enter_section_(b);
+    r = consumeToken(b, EQUALS);
+    r = r && globalVariableValue_1(b, l + 1);
+    exit_section_(b, m, GLOBAL_VARIABLE_VALUE, r);
+    return r;
+  }
+
+  // GLOBAL_VALUE | variable
+  private static boolean globalVariableValue_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalVariableValue_1")) return false;
+    boolean r;
     r = consumeToken(b, GLOBAL_VALUE);
     if (!r) r = variable(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -291,7 +300,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // globalVariable? globalHandler? request_block*
+  // globalHandler? globalVariable* request_block*
   static boolean httpFile(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "httpFile")) return false;
     boolean r;
@@ -303,17 +312,21 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // globalVariable?
+  // globalHandler?
   private static boolean httpFile_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "httpFile_0")) return false;
-    globalVariable(b, l + 1);
+    globalHandler(b, l + 1);
     return true;
   }
 
-  // globalHandler?
+  // globalVariable*
   private static boolean httpFile_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "httpFile_1")) return false;
-    globalHandler(b, l + 1);
+    while (true) {
+      int c = current_position_(b);
+      if (!globalVariable(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "httpFile_1", c)) break;
+    }
     return true;
   }
 

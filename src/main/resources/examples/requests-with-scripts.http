@@ -17,17 +17,18 @@
 %}
 
 // 全局变量
-@url={{baseUrl}}
 @tokenAdmin={{token}}
 @name=jufeng
 
 ### 使用变量
 POST https://miao.baidu.com/abdr
 Content-Type: application/json
+Name: {{name}}
 
 {
     "my-temp-variable1": "{{globalName}}",
     "my-temp-variable2": "{{requestName}}",
+    "my-temp-variable3": "{{tokenAdmin}}",
     "sign": "{{sign}}"
 }
 
