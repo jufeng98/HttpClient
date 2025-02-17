@@ -51,7 +51,7 @@
   ]
 }
 
-httpFile ::= globalVariable? globalHandler? request_block*
+httpFile ::= globalHandler? globalVariable* request_block*
 
 globalVariable::= globalVariableName globalVariableValue? {
     pin = 1
@@ -59,7 +59,7 @@ globalVariable::= globalVariableName globalVariableValue? {
 globalVariableName ::= AT GLOBAL_NAME {
     pin = 1
 }
-globalVariableValue ::= GLOBAL_VALUE | variable
+globalVariableValue ::= EQUALS (GLOBAL_VALUE | variable)
 globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1

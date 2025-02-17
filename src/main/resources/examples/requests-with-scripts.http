@@ -19,6 +19,7 @@
 // 全局变量
 @url={{baseUrl}}
 @tokenAdmin={{token}}
+@name=jufeng
 
 ### 使用变量
 POST https://miao.baidu.com/abdr

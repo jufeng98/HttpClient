@@ -228,6 +228,7 @@ DIRECTION_PART=[^\r\n ]+
 <IN_POST_SCRIPT> {
   "> {%"                    { return OUT_START_SCRIPT_BRACE; }
   "%}"{EOL_MULTI}           { yypushback(yylength()); yybegin(IN_POST_SCRIPT_END); return SCRIPT_BODY_PAET; }
+  <<EOF>>                   { yybegin(YYINITIAL); return SCRIPT_BODY_PAET; }
   [^%]+                     {  }
   "%"                       {  }
   {WHITE_SPACE}             {  }
