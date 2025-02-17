@@ -76,7 +76,7 @@ class JsScriptExecutor {
             return arrayListOf()
         }
 
-        val resList = mutableListOf("# 前置js执行结果:\r\n")
+        val resList = mutableListOf("// 前置js执行结果:\r\n")
 
         val list = beforeJsScripts
             .map { evalJsInAnonymousFun(it) }

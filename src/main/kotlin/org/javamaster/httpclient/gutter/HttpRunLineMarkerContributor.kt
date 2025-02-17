@@ -21,7 +21,10 @@ class HttpRunLineMarkerContributor : RunLineMarkerContributor() {
             return null
         }
 
-        val parent = element.parent as HttpMethod
+        val parent = element.parent
+        if (parent !is HttpMethod) {
+            return null
+        }
 
         val virtualFile = PsiUtil.getVirtualFile(element)
         if (HttpUtils.isFileInIdeaDir(virtualFile)) {

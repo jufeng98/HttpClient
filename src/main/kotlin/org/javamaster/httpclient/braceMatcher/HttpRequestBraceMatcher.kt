@@ -12,7 +12,7 @@ class HttpRequestBraceMatcher : PairedBraceMatcherAdapter(MyPairedBraceMatcher()
 
     private class MyPairedBraceMatcher : PairedBraceMatcher {
         private val pairs = arrayOf(
-            BracePair(HttpTypes.SRTART_VARIABLE_BRACE, HttpTypes.END_VARIABLE_BRACE, true),
+            BracePair(HttpTypes.START_VARIABLE_BRACE, HttpTypes.END_VARIABLE_BRACE, true),
             BracePair(HttpTypes.OUT_START_SCRIPT_BRACE, HttpTypes.END_SCRIPT_BRACE, true),
             BracePair(HttpTypes.GLOBAL_START_SCRIPT_BRACE, HttpTypes.END_SCRIPT_BRACE, true),
             BracePair(HttpTypes.IN_START_SCRIPT_BRACE, HttpTypes.END_SCRIPT_BRACE, true)

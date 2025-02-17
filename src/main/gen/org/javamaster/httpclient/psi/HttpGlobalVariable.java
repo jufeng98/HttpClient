@@ -5,6 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface HttpHttpDynamicVariable extends PsiElement {
+public interface HttpGlobalVariable extends PsiElement {
+
+  @NotNull
+  HttpGlobalVariableName getGlobalVariableName();
+
+  @Nullable
+  HttpGlobalVariableValue getGlobalVariableValue();
 
 }

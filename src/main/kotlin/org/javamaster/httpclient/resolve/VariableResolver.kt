@@ -1,7 +1,5 @@
 package org.javamaster.httpclient.resolve
 
-import com.intellij.httpClient.http.request.psi.HttpFileVariable
-import com.intellij.httpClient.http.request.psi.HttpRequest
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
@@ -9,6 +7,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsScriptExecutor
+import org.javamaster.httpclient.psi.HttpGlobalVariable
+import org.javamaster.httpclient.psi.HttpRequest
 import java.util.regex.Pattern
 
 /**
@@ -25,11 +25,20 @@ class VariableResolver(private val project: Project) {
         selectedEnv: String?,
         httpFileParentPath: String,
     ) {
-        val httpFileVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpFileVariable::class.java)
+        val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
 
-        httpFileVariables.forEach {
-            val result = resolve(it.fileVariableValue.text, selectedEnv, httpFileParentPath)
-            fileScopeVariableMap[it.fileVariableName.text] = result
+        globalVariables.forEach {
+            val name = it.globalVariableName.text
+            val globalVariableValue = it.globalVariableValue ?: return@forEach
+
+            val variable = globalVariableValue.variable
+            val value = if (variable != null) {
+                resolveVariable(variable.name, selectedEnv, httpFileParentPath)
+            } else {
+                globalVariableValue.text
+            }
+
+            fileScopeVariableMap[name] = value
         }
 
         val httpRequests = PsiTreeUtil.findChildrenOfType(httpFile, HttpRequest::class.java)
@@ -125,6 +134,6 @@ class VariableResolver(private val project: Project) {
             return project.getService(VariableResolver::class.java)
         }
 
-        val VARIABLE_PATTERN: Pattern = Pattern.compile("(\\{\\{[^{]+}})")
+        val VARIABLE_PATTERN: Pattern = Pattern.compile("(\\{\\{[^{}]+}})")
     }
 }

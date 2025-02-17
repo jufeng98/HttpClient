@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface HttpOutputFile extends PsiElement {
 
-  @NotNull
+  @Nullable
   HttpOutputFilePath getOutputFilePath();
 
 }

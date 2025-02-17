@@ -71,15 +71,9 @@ public class HttpRequestTargetImpl extends ASTWrapperPsiElement implements HttpR
   }
 
   @Override
-  @Nullable
-  public HttpVersion getVersion() {
-    return findChildByClass(HttpVersion.class);
-  }
-
-  @Override
   @NotNull
-  public String getHttpUrl() {
-    return HttpPsiImplUtil.getHttpUrl(this);
+  public String getUrl() {
+    return HttpPsiImplUtil.getUrl(this);
   }
 
   @Override

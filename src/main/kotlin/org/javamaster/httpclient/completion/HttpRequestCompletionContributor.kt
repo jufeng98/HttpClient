@@ -294,7 +294,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
     private val identifierPredecessor = TokenSet.create(
         HttpTypes.IDENTIFIER,
-        HttpTypes.SRTART_VARIABLE_BRACE,
+        HttpTypes.START_VARIABLE_BRACE,
     )
 
     private fun isDummyIdentifierCanExtendMessageBody(
@@ -368,15 +368,6 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         if (parent is HttpVariable) {
             val toReplace = parent.getFirstChild()
             return toReplace ?: parent.getFirstChild()
-        } else if (parent is HttpDynamicVariable) {
-            val toReplace = parent.getFirstChild()
-            return toReplace ?: parent.getFirstChild().nextSibling
-        } else if (element != null && HttpRequestPsiUtils.isOfTypes(
-                element,
-                TokenSet.create(HttpTypes.IDENTIFIER, HttpTypes.DYNAMIC_SIGN)
-            )
-        ) {
-            return element
         } else {
             if (context.startOffset > 0) {
                 val prevElement = context.file.findElementAt(context.startOffset - 1)

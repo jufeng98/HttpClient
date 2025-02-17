@@ -75,7 +75,7 @@ object DubboUtils {
             return virtualFile
         }
 
-        val tabName = getTabName(httpRequest.method!!)
+        val tabName = getTabName(httpRequest.method)
 
         val runManager = RunManager.getInstance(httpRequest.project)
         val configurationSettings = runManager.allSettings

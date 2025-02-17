@@ -3,7 +3,6 @@ package org.javamaster.httpclient.reference
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.psi.HttpDynamicVariable
 import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.showTip
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 
@@ -14,10 +13,6 @@ class HttpVariableFakePsiElement(private val element: PsiElement, private val va
     ASTWrapperPsiElement(element.node) {
 
     override fun navigate(requestFocus: Boolean) {
-        if (element is HttpDynamicVariable) {
-            return
-        }
-
         if (variableName.startsWith("$")) {
             return
         }

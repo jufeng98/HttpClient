@@ -6,7 +6,6 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunnerAndConfigurationSettings
-import com.intellij.httpClient.http.request.psi.*
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
@@ -14,15 +13,13 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
-import org.apache.commons.lang3.StringUtils
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.psi.HttpHeaderField
+import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
@@ -85,15 +82,8 @@ object HttpUtils {
     }
 
     fun getTabName(httpMethod: HttpMethod): String {
-        val commentTxt = getReqCommentTxt(httpMethod)
-        val str = commentTxt.replace("#", "").trim()
-        return StringUtils.defaultIfBlank(str, "http-client")
-    }
-
-    private fun getReqCommentTxt(httpMethod: HttpMethod): String {
-        val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)
-        val psiComment = PsiTreeUtil.getPrevSiblingOfType(request, PsiComment::class.java) ?: return ""
-        return psiComment.text
+        val requestBlock = PsiTreeUtil.getParentOfType(httpMethod, HttpRequestBlock::class.java)!!
+        return requestBlock.comment.text.replace("#", "").trim()
     }
 
     fun convertToReqHeaderMap(
@@ -108,21 +98,21 @@ object HttpUtils {
 
         httpHeaderFields.stream()
             .forEach {
-                val key = it.headerFieldName.text
-                val value = it.headerFieldValue?.text ?: ""
-                map[key] = variableResolver.resolve(value, selectedEnv, httpFileParentPath)
+                val headerName = it.headerFieldName.text
+                val headerValue = it.headerFieldValue?.text ?: ""
+                map[headerName] = variableResolver.resolve(headerValue, selectedEnv, httpFileParentPath)
             }
 
         return map
     }
 
     fun convertToReqBody(
-        httpRequest: HttpRequest,
+        request: HttpRequest,
         variableResolver: VariableResolver,
         selectedEnv: String?,
         httpFileParentPath: String,
     ): Any? {
-        val requestMessagesGroups = PsiTreeUtil.getChildOfType(httpRequest, HttpRequestMessagesGroup::class.java)
+        val requestMessagesGroups = PsiTreeUtil.getChildOfType(request, HttpRequestMessagesGroup::class.java)
         if (requestMessagesGroups != null) {
             return handleOrdinaryContent(
                 requestMessagesGroups,
@@ -132,9 +122,10 @@ object HttpUtils {
             )
         }
 
-        val httpMultipartMessage = PsiTreeUtil.getChildOfType(httpRequest, HttpMultipartMessage::class.java)
+        val httpMultipartMessage = PsiTreeUtil.getChildOfType(request, HttpMultipartMessage::class.java)
         if (httpMultipartMessage != null) {
-            val boundary = httpRequest.contentTypeBoundary!!
+            val boundary =
+                request.contentTypeBoundary ?: throw IllegalArgumentException("Content-Type 请求头缺少 boundary!")
             return constructMultipartBody(
                 boundary,
                 httpMultipartMessage,
@@ -162,7 +153,7 @@ object HttpUtils {
 
         val messageBody = requestMessagesGroup.messageBody
         if (messageBody != null) {
-            reqStr = variableResolver.resolve(messageBody.text, selectedEnv, httpFileParentPath)
+            reqStr = variableResolver.resolve(messageBody.text.trim(), selectedEnv, httpFileParentPath)
         }
 
         val inputFile = requestMessagesGroup.inputFile
@@ -209,10 +200,17 @@ object HttpUtils {
 
                 it.headerFieldList
                     .forEach { innerIt ->
-                        val tmpByteArray =
-                            variableResolver.resolve(innerIt.text + "\r\n", selectedEnv, httpFileParentPath)
-                                .toByteArray(StandardCharsets.UTF_8)
-                        byteArrays.add(tmpByteArray)
+                        val headerName = innerIt.headerFieldName.text
+                        val headerValue = innerIt.headerFieldValue?.text
+
+                        val value = if (headerValue.isNullOrEmpty()) {
+                            ""
+                        } else {
+                            variableResolver.resolve(headerValue + "\r\n", selectedEnv, httpFileParentPath)
+                        }
+
+                        val header = "$headerName: $value"
+                        byteArrays.add(header.toByteArray(StandardCharsets.UTF_8))
                     }
 
                 byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
@@ -295,20 +293,33 @@ object HttpUtils {
             return null
         }
 
-        return httpResponseHandler.responseScript?.scriptBody?.text
+        return httpResponseHandler.responseScript.scriptBody?.text
     }
 
-    fun collectBeforeJsScripts(httpFile: PsiFile): List<String> {
-        val preRequestHandlers = PsiTreeUtil.findChildrenOfType(httpFile, HttpRequestMessagesGroup::class.java)
-        return preRequestHandlers
-            .filter {
-                it.firstChild.text == SCRIPT_INPUT_SIGN
-            }
-            .map {
-                val text = it.text
-                text.substring(4, text.length - 2)
-            }
+    fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<String> {
+        val scripts = mutableListOf<String>()
 
+        val globalScript = getGlobalJsScript(httpFile)
+        if (globalScript != null) {
+            scripts.add(globalScript)
+        }
+
+        val preJsScript = getPreJsScript(httpRequestBlock)
+        if (preJsScript != null) {
+            scripts.add(preJsScript)
+        }
+
+        return scripts
+    }
+
+    private fun getGlobalJsScript(httpFile: PsiFile): String? {
+        val globalHandler = PsiTreeUtil.getChildOfType(httpFile, HttpGlobalHandler::class.java) ?: return null
+        return globalHandler.globalScript.scriptBody?.text ?: return null
+    }
+
+    private fun getPreJsScript(httpRequestBlock: HttpRequestBlock): String? {
+        val preRequestHandler = httpRequestBlock.preRequestHandler ?: return null
+        return preRequestHandler.preRequestScript.scriptBody?.text ?: return null
     }
 
     fun getOriginalFile(requestTarget: HttpRequestTarget): VirtualFile? {

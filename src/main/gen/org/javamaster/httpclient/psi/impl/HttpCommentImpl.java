@@ -27,10 +27,4 @@ public class HttpCommentImpl extends ASTWrapperPsiElement implements HttpComment
     else super.accept(visitor);
   }
 
-  @Override
-  @NotNull
-  public PsiElement getRequestComment() {
-    return findNotNullChildByType(REQUEST_COMMENT);
-  }
-
 }

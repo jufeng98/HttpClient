@@ -5,6 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface HttpComment extends PsiElement {
+public interface HttpGlobalVariableValue extends PsiElement {
+
+  @Nullable
+  HttpVariable getVariable();
 
 }

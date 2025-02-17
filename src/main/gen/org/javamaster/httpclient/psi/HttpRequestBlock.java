@@ -8,7 +8,10 @@ import com.intellij.psi.PsiElement;
 public interface HttpRequestBlock extends PsiElement {
 
   @NotNull
-  List<HttpComment> getCommentList();
+  HttpComment getComment();
+
+  @NotNull
+  List<HttpDirectionComment> getDirectionCommentList();
 
   @Nullable
   HttpPreRequestHandler getPreRequestHandler();

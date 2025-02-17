@@ -9,7 +9,6 @@ import com.intellij.openapi.util.Disposer.newDisposable
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.HttpInfo
@@ -29,6 +28,7 @@ import org.javamaster.httpclient.ws.WsRequest
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.OutputStream
+import java.net.http.HttpClient.Version
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.concurrent.CancellationException
@@ -39,23 +39,29 @@ class HttpProcessHandler(
     private val httpMethod: HttpMethod,
     private val selectedEnv: String?,
 ) : ProcessHandler() {
-    var tabName = HttpUtils.getTabName(httpMethod)
+    val tabName = HttpUtils.getTabName(httpMethod)
     val project = httpMethod.project
-    private val httpFile: PsiFile = httpMethod.containingFile
+
+    private val httpFile = httpMethod.containingFile
     private val parentPath = httpFile.virtualFile.parent.path
     private val jsScriptExecutor = JsScriptExecutor.getService(project)
     private val variableResolver = VariableResolver.getService(project)
-    private val loadingRemover: Runnable? = httpMethod.getUserData(HttpUtils.gutterIconLoadingKey)
+    private val loadingRemover = httpMethod.getUserData(HttpUtils.gutterIconLoadingKey)
     private val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
-    private val httpRequest = PsiTreeUtil.getParentOfType(requestTarget, HttpRequest::class.java)!!
+    private val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
+    private val requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
     private val methodType = httpMethod.text
-    private val version = httpRequest.httpVersion
-    private val httpResponseHandler = PsiTreeUtil.getChildOfType(httpRequest, HttpResponseHandler::class.java)
-    private val jsResponseScriptStr = getJsScript(httpResponseHandler)
+    private val responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
+
+    private val jsBeforeJsScripts = HttpUtils.getAllPreJsScripts(httpFile, requestBlock)
+
+    private val jsAfterScriptStr = getJsScript(responseHandler)
 
     private val httpDashboardForm = HttpDashboardForm()
 
+    private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
+
     var hasError = false
 
     fun getComponent(): JPanel {
@@ -80,28 +86,26 @@ class HttpProcessHandler(
         jsScriptExecutor.parentPath = parentPath
         jsScriptExecutor.prepareJsRequestObj()
 
-        if (httpRequest.contentLength != null) {
+        if (request.contentLength != null) {
             throw IllegalArgumentException("不能有 Content-Length 请求头!")
         }
 
         variableResolver.addFileScopeVariables(httpFile, selectedEnv, parentPath)
 
-        val reqBody: Any? = HttpUtils.convertToReqBody(httpRequest, variableResolver, selectedEnv, parentPath)
+        val reqBody: Any? = HttpUtils.convertToReqBody(request, variableResolver, selectedEnv, parentPath)
 
         if (reqBody != null) {
             jsScriptExecutor.initJsRequestBody(reqBody)
         }
 
-        val beforeJsScripts = HttpUtils.collectBeforeJsScripts(httpFile)
+        val beforeJsResList = jsScriptExecutor.evalJsBeforeRequest(jsBeforeJsScripts)
 
-        val beforeJsResList = jsScriptExecutor.evalJsBeforeRequest(beforeJsScripts)
-
-        val httpReqDescList: MutableList<String> = mutableListOf()
+        val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
 
-        val url: String = variableResolver.resolve(requestTarget.httpUrl, selectedEnv, parentPath)
+        val url: String = variableResolver.resolve(requestTarget.url, selectedEnv, parentPath)
 
-        val httpHeaderFields = httpRequest.headerFieldList
+        val httpHeaderFields = request.headerFieldList
         val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver, selectedEnv, parentPath)
 
         if (methodType == (HttpTypes.WEBSOCKET as HttpTokenType).name) {
@@ -161,7 +165,7 @@ class HttpProcessHandler(
                 val httpResDescList = mutableListOf("# 耗时: ${consumeTimes}ms,大小:${byteArray.size / 1024.0}kb\r\n")
 
                 val evalJsRes = jsScriptExecutor.evalJsAfterRequest(
-                    jsResponseScriptStr,
+                    jsAfterScriptStr,
                     Pair(SimpleTypeEnum.JSON, byteArray),
                     200,
                     mutableMapOf()
@@ -218,10 +222,10 @@ class HttpProcessHandler(
                 val resPair = convertToResPair(response)
 
                 val httpResDescList =
-                    mutableListOf("# status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: ${size}kb\r\n")
+                    mutableListOf("// status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: $size KB\r\n")
 
                 val evalJsRes = jsScriptExecutor.evalJsAfterRequest(
-                    jsResponseScriptStr,
+                    jsAfterScriptStr,
                     resPair,
                     response.statusCode(),
                     response.headers().map()
@@ -261,7 +265,7 @@ class HttpProcessHandler(
         var outPutFileName: String? = null
         val httpOutputFile = PsiTreeUtil.getChildOfType(httpRequest, HttpOutputFile::class.java)
         if (httpOutputFile != null) {
-            outPutFileName = httpOutputFile.outputFilePath.text
+            outPutFileName = httpOutputFile.outputFilePath!!.text
         }
 
         val saveResult = saveResToFile(outPutFileName, parentPath, httpInfo.byteArray)

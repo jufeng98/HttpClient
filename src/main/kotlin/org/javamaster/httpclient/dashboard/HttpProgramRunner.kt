@@ -40,12 +40,17 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         val project = httpMethod.project
 
         val tabName = HttpUtils.getTabName(httpMethod)
+        if (tabName.isEmpty()) {
+            NotifyUtil.notifyWarn(project, "请求名称不能为空!")
+            loadingRemover?.run()
+            return
+        }
 
         try {
             // tabName会用作文件名,因此需要检测下
             Path.of(tabName)
         } catch (e: InvalidPathException) {
-            NotifyUtil.notifyError(project, "参数非法,请修改:" + e.message)
+            NotifyUtil.notifyError(project, "包含不合法参数,请修改:" + e.message)
             loadingRemover?.run()
             return
         }

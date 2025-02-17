@@ -5,6 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface HttpDynamicVariable extends PsiElement {
+public interface HttpDirectionComment extends PsiElement {
+
+  @Nullable
+  HttpDirectionName getDirectionName();
+
+  @Nullable
+  HttpDirectionValue getDirectionValue();
 
 }

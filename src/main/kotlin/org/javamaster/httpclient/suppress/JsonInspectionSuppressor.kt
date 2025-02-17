@@ -2,9 +2,9 @@ package org.javamaster.httpclient.suppress
 
 import com.intellij.codeInspection.InspectionSuppressor
 import com.intellij.codeInspection.SuppressQuickFix
-import com.intellij.httpClient.http.request.psi.HttpMessageBody
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.psi.PsiElement
+import org.javamaster.httpclient.psi.HttpMessageBody
 
 /**
  * @author yudong

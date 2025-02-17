@@ -1,10 +1,5 @@
 package org.javamaster.httpclient.structure
 
-import com.intellij.httpClient.http.request.HttpRequestPsiUtils
-import com.intellij.httpClient.http.request.psi.HttpHeaderField
-import com.intellij.httpClient.http.request.psi.HttpRequest
-import com.intellij.httpClient.http.request.psi.HttpRequestElementType
-import com.intellij.httpClient.http.request.psi.HttpRequestElementTypes
 import com.intellij.icons.AllIcons
 import com.intellij.ide.structureView.StructureViewTreeElement
 import com.intellij.ide.structureView.impl.common.PsiTreeElementBase
@@ -21,6 +16,7 @@ import com.intellij.util.SmartList
 import com.intellij.util.containers.ContainerUtil
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.parser.HttpFile
+import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.utils.HttpUtils.getTabName
 import java.util.function.Consumer
 import javax.swing.Icon
@@ -43,22 +39,20 @@ class HttpRequestStructureViewElement private constructor(
                 val request = block.request
                 val originalHost = request.httpHost
                 val target = request.requestTarget
-                val path = target?.httpUrl
+                val path = target?.url
 
                 val location = StringBuilder()
                 location.append(StringUtil.notNullize(path, "<not defined>"))
 
-                var tabName = "httpClient"
+                var tabName: String
                 val method = request.method
-                if (method != null) {
-                    tabName = getTabName(method)
-                }
+                tabName = getTabName(method)
 
                 var icon = AllIcons.Actions.Annotate
-                val type = method?.text
-                if (type == (HttpRequestElementTypes.GET as HttpRequestElementType).name) {
+                val type = method.text
+                if (type == (HttpTypes.GET as HttpTokenType).name) {
                     icon = HttpIcons.GET
-                } else if (type == (HttpRequestElementTypes.POST as HttpRequestElementType).name) {
+                } else if (type == (HttpTypes.POST as HttpTokenType).name) {
                     icon = HttpIcons.POST
                 }
 
@@ -67,7 +61,7 @@ class HttpRequestStructureViewElement private constructor(
                 )
             }
             return children
-        } else if (element is HttpRequest) {
+        } else if (element is HttpRequestBlock) {
             return getChildren(element)
         }
 
@@ -95,9 +89,6 @@ class HttpRequestStructureViewElement private constructor(
     }
 
     companion object {
-        private const val GRAPHQL_QUERY = "query"
-        private const val GRAPHQL_MUTATION = "mutation"
-        private const val GRAPHQL_SUBSCRIPTION = "subscription"
 
         fun create(element: PsiElement, text: String?, icon: Icon?): StructureViewTreeElement {
             return create(element, text, null, icon)
@@ -120,14 +111,14 @@ class HttpRequestStructureViewElement private constructor(
             return HttpRequestStructureViewElement(element, text, location, icon, isValid)
         }
 
-        private fun getChildren(element: HttpRequest): List<StructureViewTreeElement> {
+        private fun getChildren(element: HttpRequestBlock): List<StructureViewTreeElement> {
             val elements = SmartList<StructureViewTreeElement>()
             val preRequestHandler = element.preRequestHandler
             if (preRequestHandler != null) {
                 elements.add(create(preRequestHandler, "Pre request handler", AllIcons.Actions.Play_first))
             }
 
-            val headers = element.headerFieldList
+            val headers = element.request.headerFieldList
             if (headers.isNotEmpty()) {
                 headers.forEach(Consumer { header: HttpHeaderField ->
                     val headerElement = create(
@@ -138,10 +129,10 @@ class HttpRequestStructureViewElement private constructor(
                 })
             }
 
-            val messagesGroup = element.requestMessagesGroup
+            val messagesGroup = element.request.requestMessagesGroup
             if (messagesGroup != null) {
                 var mimeType = "<not defined>"
-                val contentType = element.contentType
+                val contentType = element.request.contentType
                 if (contentType != null) {
                     mimeType = contentType.mimeType
                 }
@@ -159,18 +150,10 @@ class HttpRequestStructureViewElement private constructor(
                     }
                 }
 
-                val method = element.method
-                if (method != null && method.text.equals("GRAPHQL", ignoreCase = true)) {
-                    val methodType = graphQlMethodType(messagesGroup.text)
-                    if (methodType != null) {
-                        elements.add(create(messagesGroup, methodType, icon))
-                    }
-                } else {
-                    elements.add(create(messagesGroup, "Request body $mimeType", icon))
-                }
+                elements.add(create(messagesGroup, "Request body $mimeType", icon))
             }
 
-            val responseHandler = element.responseHandler
+            val responseHandler = element.request.responseHandler
             if (responseHandler != null) {
                 elements.add(create(responseHandler, "Response handler", AllIcons.Actions.Play_last))
             }
@@ -178,15 +161,5 @@ class HttpRequestStructureViewElement private constructor(
             return if (elements.isEmpty()) ContainerUtil.emptyList() else elements
         }
 
-        private fun graphQlMethodType(body: String): String? {
-            val trimmedBody = body.trim { it <= ' ' }
-            return if (trimmedBody.startsWith(GRAPHQL_QUERY)) {
-                GRAPHQL_QUERY
-            } else if (trimmedBody.startsWith(GRAPHQL_MUTATION)) {
-                GRAPHQL_MUTATION
-            } else {
-                if (trimmedBody.startsWith(GRAPHQL_SUBSCRIPTION)) GRAPHQL_SUBSCRIPTION else null
-            }
-        }
     }
 }

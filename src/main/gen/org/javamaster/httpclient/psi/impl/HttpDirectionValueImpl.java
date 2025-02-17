@@ -11,26 +11,20 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpOutputFileImpl extends ASTWrapperPsiElement implements HttpOutputFile {
+public class HttpDirectionValueImpl extends ASTWrapperPsiElement implements HttpDirectionValue {
 
-  public HttpOutputFileImpl(@NotNull ASTNode node) {
+  public HttpDirectionValueImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitOutputFile(this);
+    visitor.visitDirectionValue(this);
   }
 
   @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof HttpVisitor) accept((HttpVisitor)visitor);
     else super.accept(visitor);
-  }
-
-  @Override
-  @Nullable
-  public HttpOutputFilePath getOutputFilePath() {
-    return findChildByClass(HttpOutputFilePath.class);
   }
 
 }

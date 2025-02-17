@@ -31,6 +31,9 @@ public interface HttpRequest extends PsiElement {
   HttpResponseHandler getResponseHandler();
 
   @Nullable
+  HttpVersion getVersion();
+
+  @Nullable
   ContentType getContentType();
 
   @Nullable

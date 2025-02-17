@@ -9,11 +9,16 @@ import org.javamaster.httpclient.psi.impl.*;
 public interface HttpTypes {
 
   IElementType COMMENT = new HttpElementType("COMMENT");
-  IElementType DYNAMIC_VARIABLE = new HttpElementType("DYNAMIC_VARIABLE");
+  IElementType DIRECTION_COMMENT = new HttpElementType("DIRECTION_COMMENT");
+  IElementType DIRECTION_NAME = new HttpElementType("DIRECTION_NAME");
+  IElementType DIRECTION_VALUE = new HttpElementType("DIRECTION_VALUE");
   IElementType FILE_PATH = new HttpElementType("FILE_PATH");
   IElementType FRAGMENT = new HttpElementType("FRAGMENT");
   IElementType GLOBAL_HANDLER = new HttpElementType("GLOBAL_HANDLER");
   IElementType GLOBAL_SCRIPT = new HttpElementType("GLOBAL_SCRIPT");
+  IElementType GLOBAL_VARIABLE = new HttpElementType("GLOBAL_VARIABLE");
+  IElementType GLOBAL_VARIABLE_NAME = new HttpElementType("GLOBAL_VARIABLE_NAME");
+  IElementType GLOBAL_VARIABLE_VALUE = new HttpElementType("GLOBAL_VARIABLE_VALUE");
   IElementType HEADER_FIELD = new HttpElementType("HEADER_FIELD");
   IElementType HEADER_FIELD_NAME = new HttpElementType("HEADER_FIELD_NAME");
   IElementType HEADER_FIELD_VALUE = new HttpElementType("HEADER_FIELD_VALUE");
@@ -45,11 +50,15 @@ public interface HttpTypes {
   IElementType VERSION = new HttpElementType("VERSION");
 
   IElementType AND = new HttpTokenType("&");
+  IElementType AT = new HttpTokenType("@");
   IElementType COLON = new HttpTokenType(":");
   IElementType DIFFERENCE_FILE = new HttpTokenType("DIFFERENCE_FILE");
+  IElementType DIRECTION_COMMENT_START = new HttpTokenType("# @");
+  IElementType DIRECTION_NAME_PART = new HttpTokenType("DIRECTION_NAME_PART");
+  IElementType DIRECTION_VALUE_PART = new HttpTokenType("DIRECTION_VALUE_PART");
+  IElementType DIRECT_COMMENT_START = new HttpTokenType("DIRECT_COMMENT_START");
   IElementType DOLLAR = new HttpTokenType("$");
   IElementType DUBBO = new HttpTokenType("DUBBO");
-  IElementType DYNAMIC_SIGN = new HttpTokenType("DYNAMIC_SIGN");
   IElementType END_SCRIPT_BRACE = new HttpTokenType("%}");
   IElementType END_VARIABLE_BRACE = new HttpTokenType("}}");
   IElementType EQUALS = new HttpTokenType("=");
@@ -57,7 +66,9 @@ public interface HttpTypes {
   IElementType FIELD_VALUE = new HttpTokenType("FIELD_VALUE");
   IElementType FRAGMENT_PART = new HttpTokenType("FRAGMENT_PART");
   IElementType GET = new HttpTokenType("GET");
+  IElementType GLOBAL_NAME = new HttpTokenType("GLOBAL_NAME");
   IElementType GLOBAL_START_SCRIPT_BRACE = new HttpTokenType("<! {%");
+  IElementType GLOBAL_VALUE = new HttpTokenType("GLOBAL_VALUE");
   IElementType HASH = new HttpTokenType("#");
   IElementType HOST_VALUE = new HttpTokenType("HOST_VALUE");
   IElementType HTTP = new HttpTokenType("http");
@@ -84,9 +95,10 @@ public interface HttpTypes {
   IElementType SCHEMA_PART = new HttpTokenType("SCHEMA_PART");
   IElementType SCHEMA_SEPARATE = new HttpTokenType("://");
   IElementType SCHEME_SEPARATOR = new HttpTokenType("SCHEME_SEPARATOR");
+  IElementType SCRIPT_BODY_PAET = new HttpTokenType("SCRIPT_BODY_PAET");
   IElementType SEGMENT = new HttpTokenType("SEGMENT");
   IElementType SLASH = new HttpTokenType("/");
-  IElementType SRTART_VARIABLE_BRACE = new HttpTokenType("{{");
+  IElementType START_VARIABLE_BRACE = new HttpTokenType("{{");
   IElementType WEBSOCKET = new HttpTokenType("WEBSOCKET");
 
   class Factory {
@@ -95,8 +107,14 @@ public interface HttpTypes {
       if (type == COMMENT) {
         return new HttpCommentImpl(node);
       }
-      else if (type == DYNAMIC_VARIABLE) {
-        return new HttpDynamicVariableImpl(node);
+      else if (type == DIRECTION_COMMENT) {
+        return new HttpDirectionCommentImpl(node);
+      }
+      else if (type == DIRECTION_NAME) {
+        return new HttpDirectionNameImpl(node);
+      }
+      else if (type == DIRECTION_VALUE) {
+        return new HttpDirectionValueImpl(node);
       }
       else if (type == FILE_PATH) {
         return new HttpFilePathImpl(node);
@@ -109,6 +127,15 @@ public interface HttpTypes {
       }
       else if (type == GLOBAL_SCRIPT) {
         return new HttpGlobalScriptImpl(node);
+      }
+      else if (type == GLOBAL_VARIABLE) {
+        return new HttpGlobalVariableImpl(node);
+      }
+      else if (type == GLOBAL_VARIABLE_NAME) {
+        return new HttpGlobalVariableNameImpl(node);
+      }
+      else if (type == GLOBAL_VARIABLE_VALUE) {
+        return new HttpGlobalVariableValueImpl(node);
       }
       else if (type == HEADER_FIELD) {
         return new HttpHeaderFieldImpl(node);

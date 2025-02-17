@@ -109,6 +109,7 @@ enum class HttpRequestEnum {
         tabName: String,
     ): CompletableFuture<HttpResponse<ByteArray>> {
         try {
+            var multipartLength = 0L
             var bodyPublisher: HttpRequest.BodyPublisher? = null
             when (reqBody) {
                 is String -> {
@@ -122,6 +123,7 @@ enum class HttpRequestEnum {
                 is List<*> -> {
                     @Suppress("UNCHECKED_CAST")
                     bodyPublisher = BodyPublishers.ofByteArrays(reqBody as MutableIterable<ByteArray>)
+                    reqBody.forEach { multipartLength += it.size }
                 }
 
                 else -> {
@@ -148,7 +150,14 @@ enum class HttpRequestEnum {
                 }
 
             if (bodyPublisher != null) {
-                httpReqDescList.add("Content-Length: " + bodyPublisher.contentLength() + "\r\n")
+                val tmpLength = bodyPublisher.contentLength()
+                val contentLength = if (tmpLength != -1L) {
+                    tmpLength
+                } else {
+                    multipartLength
+                }
+                val contentLengthKb = contentLength / 1024.0
+                httpReqDescList.add("Content-Length: $contentLength // $contentLengthKb KB\r\n")
             }
             httpReqDescList.add("\r\n")
 

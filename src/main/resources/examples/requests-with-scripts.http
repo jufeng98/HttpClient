@@ -1,6 +1,5 @@
---- 全局前置处理器
-
-< {%
+// 全局前置处理器
+<! {%
     client.global.clearAll();
     client.global.set('globalName', 'jufeng98');
     request.variables.set('requestName', 'jufeng9878');
@@ -17,8 +16,7 @@
     client.log(`结果:${res}`);
 %}
 
-###
---- 全局变量
+// 全局变量
 @url={{baseUrl}}
 @tokenAdmin={{token}}
 

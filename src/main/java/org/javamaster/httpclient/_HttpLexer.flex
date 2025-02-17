@@ -203,6 +203,7 @@ DIRECTION_PART=[^\r\n ]+
   {ONLY_SPACE}                          {return WHITE_SPACE; }
 }
 
+// 未找到办法处理 body 开头和结尾的空白
 <IN_BODY> {
   [^\r\n><\-#]+                      { matchTimes++; }
   "<"                                { matchTimes++; }

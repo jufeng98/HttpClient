@@ -1,8 +1,6 @@
 package org.javamaster.httpclient.typeHandler
 
 import com.intellij.codeInsight.editorActions.TypedHandlerDelegate
-import com.intellij.httpClient.http.request.psi.HttpHeaderField
-import com.intellij.httpClient.http.request.psi.HttpRequestBlock
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorModificationUtil
@@ -14,6 +12,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import org.javamaster.httpclient.parser.HttpFile
+import org.javamaster.httpclient.psi.HttpHeaderField
+import org.javamaster.httpclient.psi.HttpRequestBlock
 
 
 class HttpTypedHandler : TypedHandlerDelegate() {

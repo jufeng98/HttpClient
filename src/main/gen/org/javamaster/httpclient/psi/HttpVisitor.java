@@ -11,7 +11,15 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitDynamicVariable(@NotNull HttpDynamicVariable o) {
+  public void visitDirectionComment(@NotNull HttpDirectionComment o) {
+    visitPsiElement(o);
+  }
+
+  public void visitDirectionName(@NotNull HttpDirectionName o) {
+    visitPsiElement(o);
+  }
+
+  public void visitDirectionValue(@NotNull HttpDirectionValue o) {
     visitPsiElement(o);
   }
 
@@ -28,6 +36,18 @@ public class HttpVisitor extends PsiElementVisitor {
   }
 
   public void visitGlobalScript(@NotNull HttpGlobalScript o) {
+    visitPsiElement(o);
+  }
+
+  public void visitGlobalVariable(@NotNull HttpGlobalVariable o) {
+    visitPsiElement(o);
+  }
+
+  public void visitGlobalVariableName(@NotNull HttpGlobalVariableName o) {
+    visitPsiElement(o);
+  }
+
+  public void visitGlobalVariableValue(@NotNull HttpGlobalVariableValue o) {
     visitPsiElement(o);
   }
 

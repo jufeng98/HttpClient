@@ -11,20 +11,32 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpHttpDynamicVariableImpl extends ASTWrapperPsiElement implements HttpHttpDynamicVariable {
+public class HttpDirectionCommentImpl extends ASTWrapperPsiElement implements HttpDirectionComment {
 
-  public HttpHttpDynamicVariableImpl(@NotNull ASTNode node) {
+  public HttpDirectionCommentImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitHttpDynamicVariable(this);
+    visitor.visitDirectionComment(this);
   }
 
   @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof HttpVisitor) accept((HttpVisitor)visitor);
     else super.accept(visitor);
+  }
+
+  @Override
+  @Nullable
+  public HttpDirectionName getDirectionName() {
+    return findChildByClass(HttpDirectionName.class);
+  }
+
+  @Override
+  @Nullable
+  public HttpDirectionValue getDirectionValue() {
+    return findChildByClass(HttpDirectionValue.class);
   }
 
 }

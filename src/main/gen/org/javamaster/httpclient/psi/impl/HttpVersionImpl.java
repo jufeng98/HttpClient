@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
+import java.net.http.HttpClient.Version;
 
 public class HttpVersionImpl extends ASTWrapperPsiElement implements HttpVersion {
 
@@ -25,6 +26,12 @@ public class HttpVersionImpl extends ASTWrapperPsiElement implements HttpVersion
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof HttpVisitor) accept((HttpVisitor)visitor);
     else super.accept(visitor);
+  }
+
+  @Override
+  @NotNull
+  public Version getVersion() {
+    return HttpPsiImplUtil.getVersion(this);
   }
 
 }

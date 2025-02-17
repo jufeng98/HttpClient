@@ -3,7 +3,7 @@
 var client = {
     fullMsg: '',
     log: function(msg) {
-        this.fullMsg = this.fullMsg + '# ' + msg + '\r\n';
+        this.fullMsg = this.fullMsg + '// ' + msg + '\r\n';
     },
     global: {
         dataHolder: {},

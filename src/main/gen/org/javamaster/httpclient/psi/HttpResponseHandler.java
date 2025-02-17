@@ -10,8 +10,4 @@ public interface HttpResponseHandler extends PsiElement {
   @NotNull
   HttpResponseScript getResponseScript();
 
-  //WARNING: getResponseScriptHolder(...) is skipped
-  //matching getResponseScriptHolder(HttpResponseHandler, ...)
-  //methods are not found in HttpPsiImplUtil
-
 }

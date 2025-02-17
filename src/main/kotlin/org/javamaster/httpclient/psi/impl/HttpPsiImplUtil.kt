@@ -8,12 +8,22 @@ import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.elementType
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.psi.*
-import java.net.http.HttpClient
+import java.net.http.HttpClient.Version
 
 /**
  * @author yudong
  */
 object HttpPsiImplUtil {
+
+    @JvmStatic
+    fun getVersion(httpVersion: HttpVersion): Version {
+        val text = httpVersion.text
+        return if (text.contains("1.1")) {
+            Version.HTTP_1_1
+        } else {
+            Version.HTTP_2
+        }
+    }
 
     @JvmStatic
     fun getName(httpVariable: HttpVariable): String {
@@ -25,7 +35,7 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
-    fun getHttpUrl(httpRequestTarget: HttpRequestTarget): String {
+    fun getUrl(httpRequestTarget: HttpRequestTarget): String {
         return httpRequestTarget.text
     }
 
@@ -77,15 +87,15 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
-    fun getHttpVersion(request: HttpRequest): HttpClient.Version {
+    fun getHttpVersion(request: HttpRequest): Version {
         val psiElement =
             HttpRequestPsiUtils.getNextSiblingByType(request.firstChild, HttpTypes.HTTP, false)
-                ?: return HttpClient.Version.HTTP_1_1
+                ?: return Version.HTTP_1_1
         val text = psiElement.text
         return if (text.contains("2.0")) {
-            HttpClient.Version.HTTP_2
+            Version.HTTP_2
         } else {
-            HttpClient.Version.HTTP_1_1
+            Version.HTTP_1_1
         }
     }
 
@@ -113,8 +123,9 @@ object HttpPsiImplUtil {
             return null
         }
 
-        val headerFieldValue = first.headerFieldValue?.firstChild?.text
-        return ContentType.getByMimeType(headerFieldValue)
+        val headerFieldValue = first.headerFieldValue?.firstChild?.text ?: return null
+        val value = headerFieldValue.split(";")[0]
+        return ContentType.getByMimeType(value)
     }
 
     @JvmStatic

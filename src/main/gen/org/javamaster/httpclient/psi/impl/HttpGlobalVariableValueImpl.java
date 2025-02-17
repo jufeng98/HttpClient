@@ -11,14 +11,14 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpRequestBlockImpl extends ASTWrapperPsiElement implements HttpRequestBlock {
+public class HttpGlobalVariableValueImpl extends ASTWrapperPsiElement implements HttpGlobalVariableValue {
 
-  public HttpRequestBlockImpl(@NotNull ASTNode node) {
+  public HttpGlobalVariableValueImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitRequestBlock(this);
+    visitor.visitGlobalVariableValue(this);
   }
 
   @Override
@@ -28,27 +28,9 @@ public class HttpRequestBlockImpl extends ASTWrapperPsiElement implements HttpRe
   }
 
   @Override
-  @NotNull
-  public HttpComment getComment() {
-    return findNotNullChildByClass(HttpComment.class);
-  }
-
-  @Override
-  @NotNull
-  public List<HttpDirectionComment> getDirectionCommentList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpDirectionComment.class);
-  }
-
-  @Override
   @Nullable
-  public HttpPreRequestHandler getPreRequestHandler() {
-    return findChildByClass(HttpPreRequestHandler.class);
-  }
-
-  @Override
-  @NotNull
-  public HttpRequest getRequest() {
-    return findNotNullChildByClass(HttpRequest.class);
+  public HttpVariable getVariable() {
+    return findChildByClass(HttpVariable.class);
   }
 
 }
