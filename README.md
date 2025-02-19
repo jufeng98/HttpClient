@@ -23,11 +23,23 @@
 
 #### GET 请求
 
-![get.png](./images/get.png)
+![get.png](./images/get.jpg)
 
 #### POST 请求
 
 ![post.png](./images/post.png)
+
+#### DUBBO 请求(针对项目中存在 Dubbo 接口类情况)
+
+![dubbo-1.png](./images/dubbo-1.jpg)
+
+#### DUBBO 请求(针对项目中不存在 Dubbo 接口类情况)
+
+![dubbo-2.png](./images/dubbo-2.jpg)
+
+#### WebSocket 请求
+
+![websocket.png](./images/websocket.jpg)
 
 #### 环境变量跳转
 
@@ -47,15 +59,15 @@
 
 #### 保存响应到文件
 
-![save-response.png](./images/save-response.png)
+![save-response.png](./images/res-to-file.jpg)
 
 #### 预览图片
 
-![preview-img.png](./images/preview-img.png)
+![preview-img.png](./images/preview-image.jpg)
 
 #### multipart请求
 
-![multipart.png](./images/multipart.png)
+![multipart.png](./images/multipart.jpg)
 
 ## 作者信息
 
@@ -66,9 +78,9 @@
 ## 捐赠
 
 如果项目帮到了您，请作者喝杯咖啡吧！
-![donate](./images/donate.png)
+![donate](./images/donate.jpg)
 
 ## 技术支持
 
 微信记得备注 ```HttpClient```，共同进步。
-![wechat](./images/wechat.png)
+![wechat](./images/wechat.jpg)
