@@ -156,8 +156,10 @@ enum class HttpRequestEnum {
                 } else {
                     multipartLength
                 }
+                httpReqDescList.add("Content-Length: $contentLength\r\n")
+
                 val contentLengthKb = contentLength / 1024.0
-                httpReqDescList.add("Content-Length: $contentLength // $contentLengthKb KB\r\n")
+                httpReqDescList.add(0, "// 大小: $contentLengthKb KB\r\n")
             }
             httpReqDescList.add("\r\n")
 

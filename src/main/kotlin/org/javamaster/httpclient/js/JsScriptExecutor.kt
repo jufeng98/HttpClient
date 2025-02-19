@@ -128,13 +128,17 @@ class JsScriptExecutor {
             val js = "(function(){'use strict';${jsScript}}())"
             context.evaluateString(global, js, "dummy.js", 0, null)
         } catch (e: Exception) {
-            return "# " + e.message + "\r\n"
+            return "// " + e.message + "\r\n"
         }
 
         return ScriptableObject.callMethod(global, "getLog", arrayOf()) as String
     }
 
     fun getRequestVariable(key: String): String? {
+        if (!ScriptableObject.hasProperty(global, "request")) {
+            return null
+        }
+
         val hasKey = ScriptableObject.callMethod(global, "hasRequestVariableKey", arrayOf(key)) as Boolean
         if (!hasKey) {
             return null
@@ -154,7 +158,7 @@ class JsScriptExecutor {
         return res.toString()
     }
 
-    fun getGlobalVariables(): Map<String, String> {
+    fun getJsGlobalVariables(): Map<String, String> {
         val dataHolder = context.evaluateString(
             global, "client.global.dataHolder", "dummy.js",
             1, null

@@ -61,7 +61,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
                         PsiErrorElement::class.java
                     ),
                     PlatformPatterns.psiElement(TokenType.BAD_CHARACTER)
-                ), PlatformPatterns.psiElement(HttpTypes.MESSAGE_SEPARATOR)
+                ), PlatformPatterns.psiElement(HttpTypes.MESSAGE_BOUNDARY)
             ),
             HttpMessageBodySeparatorOptionsCompletion()
         )
@@ -71,7 +71,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         super.beforeCompletion(context)
 
         val psiElement = context.file.findElementAt(context.startOffset)
-        if (psiElement != null && HttpRequestPsiUtils.isOfType(psiElement, HttpTypes.FIELD_VALUE)) {
+        if (psiElement != null && HttpPsiUtils.isOfType(psiElement, HttpTypes.FIELD_VALUE)) {
             val startOffset = psiElement.textRange.startOffset
             val separator = psiElement.text.indexOf(",", context.startOffset - startOffset)
             context.replacementOffset = if (separator < 0) psiElement.textRange.endOffset else startOffset + separator
@@ -98,7 +98,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
                     }
                 }
             } else {
-                val toReplace = getReplacedIdentifier(context, psiElement, parent)
+                val toReplace = getReplacedIdentifier(context, parent)
                 if (toReplace != null) {
                     context.replacementOffset = toReplace.textRange.endOffset
                 }
@@ -160,8 +160,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
             )
             if (request != null && target != null) {
                 val currentStartOffset = parameters.position.textRange.startOffset
-                return request.textRange.startOffset == currentStartOffset || request.method == null
-                        && target.textRange.startOffset == currentStartOffset
+                return request.textRange.startOffset == currentStartOffset
             } else {
                 return false
             }
@@ -306,7 +305,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         }
 
         val prevLeaf = PsiTreeUtil.prevLeaf(element)
-        if (prevLeaf != null && HttpRequestPsiUtils.isOfType(prevLeaf, HttpTypes.MESSAGE_TEXT)) {
+        if (prevLeaf != null && HttpPsiUtils.isOfType(prevLeaf, HttpTypes.MESSAGE_TEXT)) {
             val document = context.editor.document
             return document.getLineNumber(prevLeaf.textRange.endOffset) != document.getLineNumber(context.startOffset)
         }
@@ -344,13 +343,13 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
     private fun getSchemeReplacementOffset(scheme: PsiElement): Int {
         val possibleSeparator = scheme.nextSibling
-        if (possibleSeparator != null && HttpRequestPsiUtils.isOfType(
+        if (possibleSeparator != null && HttpPsiUtils.isOfType(
                 possibleSeparator,
-                HttpTypes.SCHEME_SEPARATOR
+                HttpTypes.MESSAGE_BOUNDARY
             )
         ) {
             val possibleHost = possibleSeparator.nextSibling
-            return if (possibleHost != null && HttpRequestPsiUtils.isOfType(
+            return if (possibleHost != null && HttpPsiUtils.isOfType(
                     possibleHost,
                     HttpTypes.HOST
                 )
@@ -362,7 +361,6 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
     private fun getReplacedIdentifier(
         context: CompletionInitializationContext,
-        element: PsiElement?,
         parent: PsiElement?,
     ): PsiElement? {
         if (parent is HttpVariable) {
@@ -371,7 +369,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         } else {
             if (context.startOffset > 0) {
                 val prevElement = context.file.findElementAt(context.startOffset - 1)
-                if (prevElement != null && HttpRequestPsiUtils.isOfTypes(prevElement, identifierPredecessor)) {
+                if (prevElement != null && HttpPsiUtils.isOfTypes(prevElement, identifierPredecessor)) {
                     return prevElement
                 }
             }

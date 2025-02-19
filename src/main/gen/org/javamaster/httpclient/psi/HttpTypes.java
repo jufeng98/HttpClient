@@ -52,11 +52,9 @@ public interface HttpTypes {
   IElementType AND = new HttpTokenType("&");
   IElementType AT = new HttpTokenType("@");
   IElementType COLON = new HttpTokenType(":");
-  IElementType DIFFERENCE_FILE = new HttpTokenType("DIFFERENCE_FILE");
-  IElementType DIRECTION_COMMENT_START = new HttpTokenType("# @");
+  IElementType DIRECTION_COMMENT_START = new HttpTokenType("DIRECTION_COMMENT_START");
   IElementType DIRECTION_NAME_PART = new HttpTokenType("DIRECTION_NAME_PART");
   IElementType DIRECTION_VALUE_PART = new HttpTokenType("DIRECTION_VALUE_PART");
-  IElementType DIRECT_COMMENT_START = new HttpTokenType("DIRECT_COMMENT_START");
   IElementType DOLLAR = new HttpTokenType("$");
   IElementType DUBBO = new HttpTokenType("DUBBO");
   IElementType END_SCRIPT_BRACE = new HttpTokenType("%}");
@@ -76,11 +74,10 @@ public interface HttpTypes {
   IElementType HTTP_VERSION = new HttpTokenType("HTTP_VERSION");
   IElementType IDENTIFIER = new HttpTokenType("IDENTIFIER");
   IElementType INPUT_FILE_PATH_PART = new HttpTokenType("INPUT_FILE_PATH_PART");
-  IElementType INPUT_SIGN = new HttpTokenType("< ");
+  IElementType INPUT_FILE_SIGN = new HttpTokenType("< ");
   IElementType IN_START_SCRIPT_BRACE = new HttpTokenType("< {%");
   IElementType LINE_COMMENT = new HttpTokenType("LINE_COMMENT");
   IElementType MESSAGE_BOUNDARY = new HttpTokenType("MESSAGE_BOUNDARY");
-  IElementType MESSAGE_SEPARATOR = new HttpTokenType("MESSAGE_SEPARATOR");
   IElementType MESSAGE_TEXT = new HttpTokenType("MESSAGE_TEXT");
   IElementType OUTPUT_FILE_PATH_PART = new HttpTokenType("OUTPUT_FILE_PATH_PART");
   IElementType OUTPUT_FILE_SIGN = new HttpTokenType(">> ");
@@ -94,7 +91,6 @@ public interface HttpTypes {
   IElementType REQUEST_METHOD = new HttpTokenType("REQUEST_METHOD");
   IElementType SCHEMA_PART = new HttpTokenType("SCHEMA_PART");
   IElementType SCHEMA_SEPARATE = new HttpTokenType("://");
-  IElementType SCHEME_SEPARATOR = new HttpTokenType("SCHEME_SEPARATOR");
   IElementType SCRIPT_BODY_PAET = new HttpTokenType("SCRIPT_BODY_PAET");
   IElementType SEGMENT = new HttpTokenType("SEGMENT");
   IElementType SLASH = new HttpTokenType("/");

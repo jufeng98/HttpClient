@@ -8,7 +8,7 @@ import com.intellij.psi.tree.IElementType
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.psi.HttpTypes
 
-class HttpRequestBraceMatcher : PairedBraceMatcherAdapter(MyPairedBraceMatcher(), HttpLanguage.INSTANCE) {
+class HttpBraceMatcher : PairedBraceMatcherAdapter(MyPairedBraceMatcher(), HttpLanguage.INSTANCE) {
 
     private class MyPairedBraceMatcher : PairedBraceMatcher {
         private val pairs = arrayOf(

@@ -29,7 +29,7 @@ class HttpRequestStructureViewElement private constructor(
     override fun getChildrenBase(): Collection<StructureViewTreeElement> {
         val element = this.element
         if (element is HttpFile) {
-            val blocks = HttpRequestPsiUtils.getRequestBlocks(element as PsiFile)
+            val blocks = HttpPsiUtils.getRequestBlocks(element as PsiFile)
             if (ArrayUtil.isEmpty(blocks)) {
                 return ContainerUtil.emptyList()
             }

@@ -9,9 +9,9 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
 import org.javamaster.httpclient.HttpLanguage
-import org.javamaster.httpclient.highlighting.HttpRequestSyntaxHighlighter
+import org.javamaster.httpclient.highlighting.HttpSyntaxHighlighter
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.psi.HttpRequestPsiUtils
+import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpTypes
 
 class HttpTemplateContextType : TemplateContextType("Http request") {
@@ -33,7 +33,7 @@ class HttpTemplateContextType : TemplateContextType("Http request") {
     }
 
     private fun inContext(element: PsiElement): Boolean {
-        if (!HttpRequestPsiUtils.isOfType(element, HttpTypes.HOST_VALUE)) {
+        if (!HttpPsiUtils.isOfType(element, HttpTypes.HOST_VALUE)) {
             return false
         }
 
@@ -46,6 +46,6 @@ class HttpTemplateContextType : TemplateContextType("Http request") {
     }
 
     override fun createHighlighter(): SyntaxHighlighter {
-        return HttpRequestSyntaxHighlighter()
+        return HttpSyntaxHighlighter()
     }
 }

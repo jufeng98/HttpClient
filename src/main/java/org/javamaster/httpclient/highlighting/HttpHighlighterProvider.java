@@ -9,10 +9,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HttpRequestHighlighterProvider implements EditorHighlighterProvider {
+public class HttpHighlighterProvider implements EditorHighlighterProvider {
 
     public EditorHighlighter getEditorHighlighter(@Nullable Project project, @NotNull FileType fileType,
                                                   @Nullable VirtualFile virtualFile, @NotNull EditorColorsScheme colors) {
-        return new HttpRequestHighlighter(colors, project, virtualFile);
+        return new HttpHighlighter(colors);
     }
 }

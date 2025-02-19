@@ -30,9 +30,9 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %function advance
 %type IElementType
 %unicode
-%debug
+//%debug
 %state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_COMMENT
-%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_PATH, IN_QUERY, IN_FRAGMENT, IN_BODY
+%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_PATH, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END, IN_RES_SCRIPT_BODY_PAET
 %state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION
@@ -42,7 +42,7 @@ EOL=\R
 EOL_MULTI=[ ]*\R+
 ONLY_SPACE=[ ]+
 WHITE_SPACE=\s+
-LINE_COMMENT="//".*
+LINE_COMMENT=\s*"//".*
 REQUEST_COMMENT=###.*
 REQUEST_METHOD=[A-Z]+
 SCHEMA_PART=https|wss|http|ws|dubbo
@@ -53,15 +53,13 @@ QUERY_PART=[^#&=/{\s]+
 FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
 FIELD_NAME=[a-zA-Z0-9\-]+
-FIELD_VALUE=[^\r\n ]*
+FIELD_VALUE=[^\r\n{ ]+
 FILE_PATH_PART=[^\r\n<> ]+
-MESSAGE_BOUNDARY=--[a-zA-Z\-]+
+MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
 VARIABLE_NAME=[[a-zA-Z0-9_\-]--[$}= ]]+
-GLOBAL_VARIABLE_PART=[^\r\n={}]+
+GLOBAL_VARIABLE_PART=[^\r\n={} ]+
 DIRECTION_PART=[^\r\n ]+
 %%
-
-  {LINE_COMMENT}{EOL}         { yypushback(1); return LINE_COMMENT; }
 
 <YYINITIAL> {
   {REQUEST_COMMENT}{EOL}      { return REQUEST_COMMENT; }
@@ -199,11 +197,13 @@ DIRECTION_PART=[^\r\n ]+
 }
 
 <IN_HEADER_FIELD_VALUE_NO_SPACE> {
-  {FIELD_VALUE}                         { yybegin(IN_HEADER_FIELD_VALUE); return FIELD_VALUE; }
-  {ONLY_SPACE}                          {return WHITE_SPACE; }
+  {FIELD_VALUE}                         { }
+  "{"                                   { }
+  {ONLY_SPACE}                          { }
+  "{{"                                  { yypushback(yylength()); yybegin(IN_HEADER_FIELD_VALUE); return FIELD_VALUE; }
+  [ ]*{EOL}                             { yypushback(yylength()); yybegin(IN_HEADER_FIELD_VALUE); return FIELD_VALUE; }
 }
 
-// 未找到办法处理 body 开头和结尾的空白
 <IN_BODY> {
   [^\r\n><\-#]+                      { matchTimes++; }
   "<"                                { matchTimes++; }
@@ -211,12 +211,21 @@ DIRECTION_PART=[^\r\n ]+
   "-"                                { matchTimes++; }
   "#"                                { matchTimes++; }
   {WHITE_SPACE}                      { matchTimes++; }
-  "< "                               { yybegin(IN_INPUT_FILE_PATH); return INPUT_SIGN; }
-  ">> "                              { yypushback(yylength()); yybegin(IN_OUTPUT_FILE_PATH); return detectBodyType(this); }
-  "> {%"{EOL_MULTI}                  { yypushback(yylength()); yybegin(IN_POST_SCRIPT); return detectBodyType(this); }
-  {MESSAGE_BOUNDARY}{EOL_MULTI}      { yypushback(yylength()); yybegin(IN_MULTIPART); return detectBodyType(this); }
-  {REQUEST_COMMENT}{EOL}             { yypushback(yylength()); yybegin(YYINITIAL); return detectBodyType(this); }
-  <<EOF>>                            { yypushback(yylength()); yybegin(YYINITIAL); return detectBodyType(this); }
+  "< "                               { yybegin(IN_INPUT_FILE_PATH); return INPUT_FILE_SIGN; }
+  {EOL_MULTI}">> "                   { nextState = IN_OUTPUT_FILE_PATH; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  ">> "                              { nextState = IN_OUTPUT_FILE_PATH; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {EOL_MULTI}"> {%"{EOL_MULTI}       { nextState = IN_POST_SCRIPT; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  "> {%"{EOL_MULTI}                  { nextState = IN_POST_SCRIPT; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {EOL_MULTI}{MESSAGE_BOUNDARY}\s*   { nextState = IN_MULTIPART; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {MESSAGE_BOUNDARY}\s*              { nextState = IN_MULTIPART; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {EOL_MULTI}{REQUEST_COMMENT}{EOL}  { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {REQUEST_COMMENT}{EOL}             { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  <<EOF>>                            { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+}
+
+<IN_TRIM_PREFIX_SPACE> {
+  \s*                         { return WHITE_SPACE; }
+  [^]                         { yypushback(yylength()); yybegin(nextState); }
 }
 
 <IN_INPUT_FILE_PATH> {
@@ -226,20 +235,20 @@ DIRECTION_PART=[^\r\n ]+
 }
 
 <IN_POST_SCRIPT> {
-  "> {%"                    { return OUT_START_SCRIPT_BRACE; }
-  "%}"{EOL_MULTI}           { yypushback(yylength()); yybegin(IN_POST_SCRIPT_END); return SCRIPT_BODY_PAET; }
-  <<EOF>>                   { yybegin(YYINITIAL); return SCRIPT_BODY_PAET; }
-  [^%]+                     {  }
-  "%"                       {  }
-  {WHITE_SPACE}             {  }
+  "> {%"{EOL_MULTI}                { return OUT_START_SCRIPT_BRACE; }
+  "%}"\s*                          { yypushback(yylength()); yybegin(IN_POST_SCRIPT_END); return SCRIPT_BODY_PAET; }
+  <<EOF>>                          { yybegin(YYINITIAL); return SCRIPT_BODY_PAET; }
+  [^%]+                            {  }
+  "%"                              {  }
+  {WHITE_SPACE}                    {  }
 }
 
 <IN_POST_SCRIPT_END> {
-  "%}"{EOL_MULTI}              { yybegin(IN_OUTPUT_FILE); return END_SCRIPT_BRACE; }
+  "%}"\s*                   { yybegin(IN_OUTPUT_FILE); return END_SCRIPT_BRACE; }
 }
 
 <IN_MULTIPART> {
-  {MESSAGE_BOUNDARY}{EOL_MULTI}     { yybegin(detectBoundaryState(yytext())); return MESSAGE_BOUNDARY; }
+  {MESSAGE_BOUNDARY}\s*     { yybegin(detectBoundaryState(yytext())); return MESSAGE_BOUNDARY; }
 }
 
 <IN_OUTPUT_FILE> {
@@ -254,5 +263,7 @@ DIRECTION_PART=[^\r\n ]+
   {ONLY_SPACE}               { return WHITE_SPACE; }
   {EOL_MULTI}                { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
+
+  {LINE_COMMENT}{EOL}         { yypushback(1); return LINE_COMMENT; }
 
 [^]                    { return BAD_CHARACTER; }

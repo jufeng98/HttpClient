@@ -9,10 +9,10 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HttpRequestPsiUtils {
-    public static @Nullable PsiElement getNextSiblingByType(@Nullable PsiElement element, @NotNull IElementType type, boolean strict) {
-        PsiElement sibling;
-        sibling = element != null && strict ? element.getNextSibling() : element;
+public class HttpPsiUtils {
+    public static @Nullable PsiElement getNextSiblingByType(@Nullable PsiElement element,
+                                                            @NotNull IElementType type, boolean strict) {
+        PsiElement sibling = element != null && strict ? element.getNextSibling() : element;
         while (sibling != null && !isOfType(sibling, type)) {
             sibling = sibling.getNextSibling();
         }

@@ -23,6 +23,7 @@ import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
 import java.net.URI
 import java.net.http.HttpResponse
@@ -153,7 +154,7 @@ object HttpUtils {
 
         val messageBody = requestMessagesGroup.messageBody
         if (messageBody != null) {
-            reqStr = variableResolver.resolve(messageBody.text.trim(), selectedEnv, httpFileParentPath)
+            reqStr = variableResolver.resolve(messageBody.text, selectedEnv, httpFileParentPath)
         }
 
         val inputFile = requestMessagesGroup.inputFile
@@ -365,7 +366,8 @@ object HttpUtils {
             bracketIdx + 2
         } else {
             val envFileService = EnvFileService.getService(project)
-            val contextPath = envFileService.getEnvValue("contextPath", null, httpFileParentPath)
+            val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
+            val contextPath = envFileService.getEnvValue("contextPath", selectedEnv, httpFileParentPath)
 
             val tmpIdx: Int
             val uri: URI

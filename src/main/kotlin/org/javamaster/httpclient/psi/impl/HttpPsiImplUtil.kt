@@ -27,7 +27,7 @@ object HttpPsiImplUtil {
 
     @JvmStatic
     fun getName(httpVariable: HttpVariable): String {
-        val identifier = HttpRequestPsiUtils.getNextSiblingByType(
+        val identifier = HttpPsiUtils.getNextSiblingByType(
             httpVariable.firstChild,
             HttpTypes.IDENTIFIER, false
         )
@@ -59,9 +59,11 @@ object HttpPsiImplUtil {
         while (child != null) {
             if (child.elementType == HttpTypes.FIELD_VALUE) {
                 val text = child.text
-
-                if (text.startsWith("boundary")) {
-                    return text.split("=")[1]
+                val split = text.split(";")
+                split.forEach {
+                    if (it.contains("boundary")) {
+                        return text.split("=")[1]
+                    }
                 }
             }
 
@@ -89,7 +91,7 @@ object HttpPsiImplUtil {
     @JvmStatic
     fun getHttpVersion(request: HttpRequest): Version {
         val psiElement =
-            HttpRequestPsiUtils.getNextSiblingByType(request.firstChild, HttpTypes.HTTP, false)
+            HttpPsiUtils.getNextSiblingByType(request.firstChild, HttpTypes.HTTP, false)
                 ?: return Version.HTTP_1_1
         val text = psiElement.text
         return if (text.contains("2.0")) {
