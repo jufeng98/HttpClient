@@ -3,11 +3,11 @@ package org.javamaster.httpclient.psi.impl;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.tree.IElementType;
-import org.javamaster.httpclient.psi.HttpRequestCompositeElement;
+import org.javamaster.httpclient.psi.HttpCompositeElement;
 import org.jetbrains.annotations.NotNull;
 
-public class HttpRequestCompositeElementImpl extends ASTWrapperPsiElement implements HttpRequestCompositeElement {
-    public HttpRequestCompositeElementImpl(@NotNull ASTNode node) {
+public class HttpCompositeElementImpl extends ASTWrapperPsiElement implements HttpCompositeElement {
+    public HttpCompositeElementImpl(@NotNull ASTNode node) {
         super(node);
     }
 

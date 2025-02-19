@@ -39,9 +39,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         )
 
         this.extend(
-            CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.HOST_VALUE).withParent(
-                HttpHost::class.java
-            ),
+            CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.REQUEST_METHOD),
             HttpMethodsProvider()
         )
 
@@ -61,7 +59,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
                         PsiErrorElement::class.java
                     ),
                     PlatformPatterns.psiElement(TokenType.BAD_CHARACTER)
-                ), PlatformPatterns.psiElement(HttpTypes.MESSAGE_SEPARATOR)
+                ), PlatformPatterns.psiElement(HttpTypes.MESSAGE_BOUNDARY)
             ),
             HttpMessageBodySeparatorOptionsCompletion()
         )
@@ -71,7 +69,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         super.beforeCompletion(context)
 
         val psiElement = context.file.findElementAt(context.startOffset)
-        if (psiElement != null && HttpRequestPsiUtils.isOfType(psiElement, HttpTypes.FIELD_VALUE)) {
+        if (psiElement != null && HttpPsiUtils.isOfType(psiElement, HttpTypes.FIELD_VALUE)) {
             val startOffset = psiElement.textRange.startOffset
             val separator = psiElement.text.indexOf(",", context.startOffset - startOffset)
             context.replacementOffset = if (separator < 0) psiElement.textRange.endOffset else startOffset + separator
@@ -98,7 +96,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
                     }
                 }
             } else {
-                val toReplace = getReplacedIdentifier(context, psiElement, parent)
+                val toReplace = getReplacedIdentifier(context, parent)
                 if (toReplace != null) {
                     context.replacementOffset = toReplace.textRange.endOffset
                 }
@@ -114,11 +112,13 @@ class HttpRequestCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet,
         ) {
-            if (!isRequestStart(parameters)) return
+            if (!isRequestStart(parameters)) {
+                return
+            }
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.POST as HttpElementType).name)
+                    LookupElementBuilder.create((HttpTypes.POST as HttpTokenType).name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -126,7 +126,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.GET as HttpElementType).name)
+                    LookupElementBuilder.create((HttpTypes.GET as HttpTokenType).name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -134,7 +134,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.WEBSOCKET as HttpElementType).name)
+                    LookupElementBuilder.create((HttpTypes.DELETE as HttpTokenType).name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -142,7 +142,23 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.DUBBO as HttpElementType).name)
+                    LookupElementBuilder.create((HttpTypes.PUT as HttpTokenType).name)
+                        .withBoldness(true)
+                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+                )
+            )
+
+            result.addElement(
+                PrioritizedLookupElement.withPriority(
+                    LookupElementBuilder.create((HttpTypes.WEBSOCKET as HttpTokenType).name)
+                        .withBoldness(true)
+                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+                )
+            )
+
+            result.addElement(
+                PrioritizedLookupElement.withPriority(
+                    LookupElementBuilder.create((HttpTypes.DUBBO as HttpTokenType).name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -150,21 +166,8 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         }
 
         private fun isRequestStart(parameters: CompletionParameters): Boolean {
-            val request = PsiTreeUtil.getParentOfType(
-                parameters.position,
-                HttpRequest::class.java
-            )
-            val target = PsiTreeUtil.getParentOfType(
-                parameters.position,
-                HttpRequestTarget::class.java
-            )
-            if (request != null && target != null) {
-                val currentStartOffset = parameters.position.textRange.startOffset
-                return request.textRange.startOffset == currentStartOffset || request.method == null
-                        && target.textRange.startOffset == currentStartOffset
-            } else {
-                return false
-            }
+            val parent = parameters.position.parent
+            return parent is PsiErrorElement || parent is HttpMethod
         }
     }
 
@@ -306,7 +309,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         }
 
         val prevLeaf = PsiTreeUtil.prevLeaf(element)
-        if (prevLeaf != null && HttpRequestPsiUtils.isOfType(prevLeaf, HttpTypes.MESSAGE_TEXT)) {
+        if (prevLeaf != null && HttpPsiUtils.isOfType(prevLeaf, HttpTypes.MESSAGE_TEXT)) {
             val document = context.editor.document
             return document.getLineNumber(prevLeaf.textRange.endOffset) != document.getLineNumber(context.startOffset)
         }
@@ -344,13 +347,13 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
     private fun getSchemeReplacementOffset(scheme: PsiElement): Int {
         val possibleSeparator = scheme.nextSibling
-        if (possibleSeparator != null && HttpRequestPsiUtils.isOfType(
+        if (possibleSeparator != null && HttpPsiUtils.isOfType(
                 possibleSeparator,
-                HttpTypes.SCHEME_SEPARATOR
+                HttpTypes.MESSAGE_BOUNDARY
             )
         ) {
             val possibleHost = possibleSeparator.nextSibling
-            return if (possibleHost != null && HttpRequestPsiUtils.isOfType(
+            return if (possibleHost != null && HttpPsiUtils.isOfType(
                     possibleHost,
                     HttpTypes.HOST
                 )
@@ -362,7 +365,6 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
     private fun getReplacedIdentifier(
         context: CompletionInitializationContext,
-        element: PsiElement?,
         parent: PsiElement?,
     ): PsiElement? {
         if (parent is HttpVariable) {
@@ -371,7 +373,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         } else {
             if (context.startOffset > 0) {
                 val prevElement = context.file.findElementAt(context.startOffset - 1)
-                if (prevElement != null && HttpRequestPsiUtils.isOfTypes(prevElement, identifierPredecessor)) {
+                if (prevElement != null && HttpPsiUtils.isOfTypes(prevElement, identifierPredecessor)) {
                     return prevElement
                 }
             }

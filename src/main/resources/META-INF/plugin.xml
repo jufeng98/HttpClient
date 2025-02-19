@@ -66,10 +66,10 @@
                 implementationClass="org.javamaster.httpclient.parser.HttpParserDefinition"/>
         <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.HttpASTFactory"/>
         <editorHighlighterProvider filetype="HTTP"
-                                   implementationClass="org.javamaster.httpclient.highlighting.HttpRequestHighlighterProvider"/>
+                                   implementationClass="org.javamaster.httpclient.highlighting.HttpHighlighterProvider"/>
         <fileBasedIndex implementation="org.javamaster.httpclient.index.HttpEnvironmentIndex"/>
         <multiHostInjector
-                implementation="org.javamaster.httpclient.inject.HttpInjectionContributor"/>
+                implementation="org.javamaster.httpclient.inject.MessageBodyInjectionContributor"/>
         <runLineMarkerContributor language="http"
                                   implementationClass="org.javamaster.httpclient.gutter.HttpRunLineMarkerContributor"/>
         <psi.referenceContributor language="http"
@@ -94,7 +94,7 @@
                                 implementationClass="org.javamaster.httpclient.completion.HttpRequestCompletionContributor"/>
         <typedHandler implementation="org.javamaster.httpclient.typeHandler.HttpTypedHandler"/>
         <braceMatcher filetype="http"
-                      implementationClass="org.javamaster.httpclient.braceMatcher.HttpRequestBraceMatcher"/>
+                      implementationClass="org.javamaster.httpclient.braceMatcher.HttpBraceMatcher"/>
         <lang.foldingBuilder language="http"
                              implementationClass="org.javamaster.httpclient.folding.HttpFoldingBuilder"/>
         <lang.psiStructureViewFactory language="http"
@@ -102,5 +102,7 @@
         <defaultLiveTemplates file="liveTemplates/request.xml"/>
         <liveTemplateContext contextId="REQUEST"
                              implementation="org.javamaster.httpclient.liveTemplates.HttpTemplateContextType"/>
+        <multiHostInjector
+                implementation="org.javamaster.httpclient.inject.ScriptBodyInjectionBackupContributor"/>
     </extensions>
 </idea-plugin>

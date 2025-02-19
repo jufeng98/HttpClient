@@ -48,13 +48,13 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // DIRECT_COMMENT_START directionName directionValue?
+  // DIRECTION_COMMENT_START directionName directionValue?
   public static boolean directionComment(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "directionComment")) return false;
-    if (!nextTokenIs(b, DIRECT_COMMENT_START)) return false;
+    if (!nextTokenIs(b, DIRECTION_COMMENT_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, DIRECTION_COMMENT, null);
-    r = consumeToken(b, DIRECT_COMMENT_START);
+    r = consumeToken(b, DIRECTION_COMMENT_START);
     p = r; // pin = 1
     r = r && report_error_(b, directionName(b, l + 1));
     r = p && directionComment_2(b, l + 1) && r;
@@ -342,13 +342,13 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // INPUT_SIGN filePath
+  // INPUT_FILE_SIGN filePath
   public static boolean inputFile(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "inputFile")) return false;
-    if (!nextTokenIs(b, INPUT_SIGN)) return false;
+    if (!nextTokenIs(b, INPUT_FILE_SIGN)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, INPUT_FILE, null);
-    r = consumeToken(b, INPUT_SIGN);
+    r = consumeToken(b, INPUT_FILE_SIGN);
     p = r; // pin = 1
     r = r && filePath(b, l + 1);
     exit_section_(b, l, m, r, p, null);
@@ -704,7 +704,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   // inputFile | messageBody
   public static boolean requestMessagesGroup(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "requestMessagesGroup")) return false;
-    if (!nextTokenIs(b, "<request messages group>", INPUT_SIGN, MESSAGE_TEXT)) return false;
+    if (!nextTokenIs(b, "<request messages group>", INPUT_FILE_SIGN, MESSAGE_TEXT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, REQUEST_MESSAGES_GROUP, "<request messages group>");
     r = inputFile(b, l + 1);

@@ -99,7 +99,7 @@ class DubboRequest(
         }
 
         if (registry.isNullOrBlank()) {
-            reference.url = "dubbo://$url"
+            reference.url = url
         } else {
             val registryConfig = RegistryConfig()
             registryConfig.address = registry

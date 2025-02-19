@@ -30,17 +30,13 @@
     DOLLAR='$'
     AT='@'
 
-    MESSAGE_TEXT='MESSAGE_TEXT'
-    DIRECTION_COMMENT_START='# @'
     POST='POST'
     GET='GET'
+    DELETE='DELETE'
+    PUT='PUT'
     WEBSOCKET='WEBSOCKET'
     DUBBO='DUBBO'
-    DIFFERENCE_FILE='DIFFERENCE_FILE'
-    MESSAGE_SEPARATOR='MESSAGE_SEPARATOR'
-    MESSAGE_TEXT='MESSAGE_TEXT'
-    SCHEME_SEPARATOR='SCHEME_SEPARATOR'
-    INPUT_SIGN='< '
+    INPUT_FILE_SIGN='< '
     OUTPUT_FILE_SIGN='>> '
     GLOBAL_START_SCRIPT_BRACE='<! {%'
     IN_START_SCRIPT_BRACE='< {%'
@@ -64,9 +60,9 @@ globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-request_block ::=  comment directionComment* preRequestHandler? request
+request_block ::= comment directionComment* preRequestHandler? request
 comment ::= REQUEST_COMMENT
-directionComment ::= DIRECT_COMMENT_START directionName directionValue? {
+directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1
 }
 directionName ::= DIRECTION_NAME_PART
@@ -139,7 +135,7 @@ headerFieldValue ::= (FIELD_VALUE | variable | FIELD_VALUE variable | variable F
 
 requestMessagesGroup ::= inputFile | messageBody
 
-inputFile ::= INPUT_SIGN filePath {
+inputFile ::= INPUT_FILE_SIGN filePath {
     pin = 1
 }
 filePath ::= INPUT_FILE_PATH_PART {

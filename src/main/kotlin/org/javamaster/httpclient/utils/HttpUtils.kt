@@ -23,6 +23,7 @@ import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
 import java.net.URI
 import java.net.http.HttpResponse
@@ -39,7 +40,6 @@ object HttpUtils {
         .create()
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
-    const val SCRIPT_INPUT_SIGN = "< {%"
     const val VARIABLE_SIGN_START = "{{"
     private const val VARIABLE_SIGN_END = "}}"
     val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
@@ -153,7 +153,7 @@ object HttpUtils {
 
         val messageBody = requestMessagesGroup.messageBody
         if (messageBody != null) {
-            reqStr = variableResolver.resolve(messageBody.text.trim(), selectedEnv, httpFileParentPath)
+            reqStr = variableResolver.resolve(messageBody.text, selectedEnv, httpFileParentPath)
         }
 
         val inputFile = requestMessagesGroup.inputFile
@@ -365,7 +365,8 @@ object HttpUtils {
             bracketIdx + 2
         } else {
             val envFileService = EnvFileService.getService(project)
-            val contextPath = envFileService.getEnvValue("contextPath", null, httpFileParentPath)
+            val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
+            val contextPath = envFileService.getEnvValue("contextPath", selectedEnv, httpFileParentPath)
 
             val tmpIdx: Int
             val uri: URI

@@ -8,7 +8,8 @@ import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsScriptExecutor
 import org.javamaster.httpclient.psi.HttpGlobalVariable
-import org.javamaster.httpclient.psi.HttpRequest
+import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
+import org.javamaster.httpclient.psi.HttpTypes
 import java.util.regex.Pattern
 
 /**
@@ -20,47 +21,41 @@ import java.util.regex.Pattern
 class VariableResolver(private val project: Project) {
     private val fileScopeVariableMap: MutableMap<String, String> = mutableMapOf()
 
-    fun addFileScopeVariables(
+    fun initFileScopeVariables(
         httpFile: PsiFile,
         selectedEnv: String?,
         httpFileParentPath: String,
     ) {
+        val map = getFileGlobalVariables(httpFile, selectedEnv, httpFileParentPath)
+        fileScopeVariableMap.putAll(map)
+    }
+
+    fun getFileGlobalVariables(
+        httpFile: PsiFile,
+        selectedEnv: String?,
+        httpFileParentPath: String,
+    ): LinkedHashMap<String, String> {
+        val map = LinkedHashMap<String, String>()
+
         val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
 
         globalVariables.forEach {
-            val name = it.globalVariableName.text
+            val name =
+                getNextSiblingByType(it.globalVariableName.firstChild, HttpTypes.GLOBAL_NAME, false)?.text
+                    ?: return@forEach
             val globalVariableValue = it.globalVariableValue ?: return@forEach
 
             val variable = globalVariableValue.variable
             val value = if (variable != null) {
                 resolveVariable(variable.name, selectedEnv, httpFileParentPath)
             } else {
-                globalVariableValue.text
+                getNextSiblingByType(globalVariableValue.firstChild, HttpTypes.GLOBAL_VALUE, false)?.text ?: ""
             }
 
-            fileScopeVariableMap[name] = value
+            map[name] = value
         }
 
-        val httpRequests = PsiTreeUtil.findChildrenOfType(httpFile, HttpRequest::class.java)
-        httpRequests
-            .filter {
-                val text = it.firstChild.text
-                text.startsWith("---")
-            }.map {
-                it.text
-            }.forEach { text ->
-                text.split("\n")
-                    .forEach {
-                        val split = it.split("=")
-                        if (split.size == 2) {
-                            val variableName = split[0].replace("@", "")
-                            val result = resolve(split[1], selectedEnv, httpFileParentPath)
-                            fileScopeVariableMap[variableName] = result
-                        }
-
-                    }
-            }
-
+        return map
     }
 
     fun clearFileScopeVariables() {
@@ -113,9 +108,9 @@ class VariableResolver(private val project: Project) {
         return variable
     }
 
-    fun getVariables(): LinkedHashMap<String, String> {
+    fun getJsGlobalVariables(): LinkedHashMap<String, String> {
         val jsScriptExecutor = JsScriptExecutor.getService(project)
-        val globalVariables = jsScriptExecutor.getGlobalVariables()
+        val globalVariables = jsScriptExecutor.getJsGlobalVariables()
 
         val map = linkedMapOf<String, String>()
         map.putAll(globalVariables)

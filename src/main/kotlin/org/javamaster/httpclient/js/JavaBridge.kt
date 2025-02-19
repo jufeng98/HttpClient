@@ -1,11 +1,13 @@
 package org.javamaster.httpclient.js
 
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.readText
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.utils.HttpUtils
 import org.mozilla.javascript.ScriptableObject
 import java.io.File
+
 
 @Suppress("unused")
 class JavaBridge(private val jsScriptExecutor: JsScriptExecutor) {
@@ -14,12 +16,12 @@ class JavaBridge(private val jsScriptExecutor: JsScriptExecutor) {
     fun require(path: String): ScriptableObject {
         val filePath = HttpUtils.constructFilePath(path, jsScriptExecutor.parentPath)
         val file = File(filePath)
-        if (!file.exists()) {
-            throw IllegalArgumentException("js文件不存在:${file.normalize()}")
-        }
 
-        val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
-        val jsStr = virtualFile.readText()
+        val virtualFile = VfsUtil.findFileByIoFile(file, true)
+            ?: throw IllegalArgumentException("js文件不存在:${file.normalize()}")
+
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
+        val jsStr = document?.text ?: virtualFile.readText()
 
         jsScriptExecutor.context.evaluateString(jsScriptExecutor.global, jsStr, file.name, 1, null)
 

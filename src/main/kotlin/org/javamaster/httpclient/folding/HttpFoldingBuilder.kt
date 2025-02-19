@@ -7,12 +7,10 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.FoldingGroup
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
-import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.containers.toArray
 import org.javamaster.httpclient.psi.HttpMultipartField
-import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getMultipartFieldDescription
@@ -105,10 +103,6 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
 
             collectScriptPart(requestNode, descriptors)
 
-            collectDifferenceFiles(requestNode, descriptors)
-
-            collectGraphQLQueryFolding(requestNode, descriptors)
-
             if (requestNode.findChildByType(HttpTypes.METHOD) != null) {
                 descriptors.add(FoldingDescriptor(requestNode, requestNode.textRange))
             }
@@ -148,43 +142,6 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         descriptors.add(FoldingDescriptor(responseHandlerNode, responseHandlerNode.textRange))
     }
 
-    private fun collectDifferenceFiles(node: ASTNode, descriptors: MutableList<FoldingDescriptor>) {
-        val differenceFiles = node.getChildren(TokenSet.create(HttpTypes.DIFFERENCE_FILE))
-
-        if (differenceFiles.size <= DIFFERENCE_FILES_LIMIT) return
-
-        descriptors.add(DifferenceFilesFoldingDescriptor(node, differenceFiles, DIFFERENCE_FILES_LIMIT))
-    }
-
-    private fun collectGraphQLQueryFolding(node: ASTNode, descriptors: MutableList<FoldingDescriptor>) {
-        val method = node.findChildByType(HttpTypes.METHOD) ?: return
-
-        if (!method.psi.textMatches("GRAPHQL")) return
-
-        val requestPsi = node.psi
-        if (requestPsi !is HttpRequest) return
-
-        val body = requestPsi.requestMessagesGroup!!
-
-        val messageBody = body.messageBody
-        val contentRange = messageBody!!.textRange
-        val messageText = contentRange.substring(messageBody.text)
-        val graphQLEnd = messageText.length
-        val graphQLText = messageText.substring(0, graphQLEnd)
-        val placeholder = StringUtil.shortenTextWithEllipsis(
-            StringUtil.collapseWhiteSpace(graphQLText),
-            GRAPHQL_PLACEHOLDER_LIMIT,
-            0
-        )
-        descriptors.add(
-            FoldingDescriptor(
-                messageBody.node, TextRange.create(0, graphQLEnd)
-                    .shiftRight(messageBody.textOffset + contentRange.startOffset),
-                null, placeholder, false, setOf()
-            )
-        )
-    }
-
     private fun skipCommentsAndWhitespaces(node: ASTNode): ASTNode? {
         var curNode: ASTNode?
         curNode = node.treePrev
@@ -204,8 +161,4 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         return getHeaderFieldOption(headerFieldValue, "name")
     }
 
-    companion object {
-        private const val DIFFERENCE_FILES_LIMIT: Int = 3
-        private const val GRAPHQL_PLACEHOLDER_LIMIT = 30
-    }
 }

@@ -90,7 +90,7 @@ class HttpProcessHandler(
             throw IllegalArgumentException("不能有 Content-Length 请求头!")
         }
 
-        variableResolver.addFileScopeVariables(httpFile, selectedEnv, parentPath)
+        variableResolver.initFileScopeVariables(httpFile, selectedEnv, parentPath)
 
         val reqBody: Any? = HttpUtils.convertToReqBody(request, variableResolver, selectedEnv, parentPath)
 
@@ -162,7 +162,7 @@ class HttpProcessHandler(
                 val byteArray = pair.first
                 val consumeTimes = pair.second
 
-                val httpResDescList = mutableListOf("# 耗时: ${consumeTimes}ms,大小:${byteArray.size / 1024.0}kb\r\n")
+                val httpResDescList = mutableListOf("// 耗时: ${consumeTimes}ms,大小:${byteArray.size / 1024.0}kb\r\n")
 
                 val evalJsRes = jsScriptExecutor.evalJsAfterRequest(
                     jsAfterScriptStr,
@@ -171,7 +171,7 @@ class HttpProcessHandler(
                     mutableMapOf()
                 )
                 if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("# 后置js执行结果:\r\n")
+                    httpResDescList.add("// 后置js执行结果:\r\n")
                     httpResDescList.add("$evalJsRes")
                 }
 
@@ -231,7 +231,7 @@ class HttpProcessHandler(
                     response.headers().map()
                 )
                 if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("# 后置js执行结果:\r\n")
+                    httpResDescList.add("// 后置js执行结果:\r\n")
                     httpResDescList.add("$evalJsRes")
                 }
 
@@ -312,7 +312,7 @@ class HttpProcessHandler(
             try {
                 Files.delete(file.toPath())
             } catch (e: Exception) {
-                return "# 保存失败, ${e.message?.trim()}\r\n"
+                return "// 保存失败, ${e.message?.trim()}\r\n"
             }
         }
 
@@ -321,7 +321,7 @@ class HttpProcessHandler(
 
         VirtualFileManager.getInstance().asyncRefresh(null)
 
-        return "# 响应已保存到 ${file.normalize().absolutePath}\r\n"
+        return "// 响应已保存到 ${file.normalize().absolutePath}\r\n"
     }
 
     private fun cancelFutureIfTerminated(future: CompletableFuture<*>) {

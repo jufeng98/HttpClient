@@ -13,14 +13,12 @@ import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.psi.HttpScriptBody
+import org.javamaster.httpclient.utils.InjectionUtils
 
 /**
- * 根据元素类型注入相应的语言
- *
  * @author yudong
  */
-class HttpInjectionContributor : MultiHostInjector {
+class MessageBodyInjectionContributor : MultiHostInjector {
 
     override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
         var language: Language? = null
@@ -49,7 +47,7 @@ class HttpInjectionContributor : MultiHostInjector {
                 }
             }
 
-            textRange = innerRange(context)
+            textRange = InjectionUtils.innerRange(context)
         }
 
         if (language == null || textRange == null) {
@@ -62,17 +60,8 @@ class HttpInjectionContributor : MultiHostInjector {
     }
 
     override fun elementsToInjectIn(): MutableList<out Class<out PsiElement>> {
-        return mutableListOf(HttpMessageBody::class.java, HttpScriptBody::class.java)
+        return mutableListOf(HttpMessageBody::class.java)
     }
 
-    private fun innerRange(context: PsiElement): TextRange? {
-        val textRange = context.textRange
-        val textRangeTmp = textRange.shiftLeft(textRange.startOffset)
-        if (textRangeTmp.endOffset == 0) {
-            return null
-        }
-
-        return textRangeTmp
-    }
 
 }

@@ -7,7 +7,7 @@ import com.intellij.openapi.util.UserDataHolderBase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HttpMethodBase extends HttpRequestCompositeElementImpl implements UserDataHolder {
+public class HttpMethodBase extends HttpCompositeElementImpl implements UserDataHolder {
     private final UserDataHolderBase userDataHolderBase = new UserDataHolderBase();
 
     public HttpMethodBase(@NotNull ASTNode node) {
