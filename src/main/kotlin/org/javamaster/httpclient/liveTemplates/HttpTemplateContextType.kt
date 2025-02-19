@@ -6,11 +6,9 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.highlighting.HttpSyntaxHighlighter
-import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpTypes
 
@@ -33,16 +31,7 @@ class HttpTemplateContextType : TemplateContextType("Http request") {
     }
 
     private fun inContext(element: PsiElement): Boolean {
-        if (!HttpPsiUtils.isOfType(element, HttpTypes.HOST_VALUE)) {
-            return false
-        }
-
-        val request = PsiTreeUtil.getParentOfType(
-            element,
-            HttpRequest::class.java
-        )
-
-        return request != null && request.textRange.startOffset == element.textRange.startOffset
+        return HttpPsiUtils.isOfType(element, HttpTypes.REQUEST_METHOD)
     }
 
     override fun createHighlighter(): SyntaxHighlighter {

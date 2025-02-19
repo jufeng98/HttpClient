@@ -27,19 +27,43 @@ class HttpRequestStructureViewElement private constructor(
 ) : PsiTreeElementBase<PsiElement?>(element),
     ColoredItemPresentation {
     override fun getChildrenBase(): Collection<StructureViewTreeElement> {
-        val element = this.element
+        val element = element
         if (element is HttpFile) {
             val blocks = HttpPsiUtils.getRequestBlocks(element as PsiFile)
             if (ArrayUtil.isEmpty(blocks)) {
-                return ContainerUtil.emptyList()
+                return emptyList()
             }
 
-            val children: MutableList<StructureViewTreeElement> = ArrayList(blocks.size)
+            val children: MutableList<StructureViewTreeElement> = mutableListOf()
+            val globalHandler = element.getGlobalHandler()
+            if (globalHandler != null) {
+                children.add(create(globalHandler, "Global handler", AllIcons.Actions.Play_first))
+            }
+
+            val globalVariables = element.getGlobalVariables()
+            globalVariables.forEach {
+                children.add(
+                    create(
+                        it,
+                        "Global Variable",
+                        it.text,
+                        AllIcons.General.InlineVariables,
+                        true
+                    )
+                )
+            }
+
             for (block in blocks) {
                 val request = block.request
                 val originalHost = request.httpHost
                 val target = request.requestTarget
                 val path = target?.url
+
+
+                val preRequestHandler = block.preRequestHandler
+                if (preRequestHandler != null) {
+                    children.add(create(preRequestHandler, "Pre request handler", AllIcons.Actions.Play_first))
+                }
 
                 val location = StringBuilder()
                 location.append(StringUtil.notNullize(path, "<not defined>"))
@@ -57,15 +81,20 @@ class HttpRequestStructureViewElement private constructor(
                 }
 
                 children.add(
-                    createRequest(request, tabName, location.toString(), icon, StringUtil.isNotEmpty(originalHost))
+                    create(request, tabName, location.toString(), icon, StringUtil.isNotEmpty(originalHost))
                 )
+
+                val responseHandler = request.responseHandler
+                if (responseHandler != null) {
+                    children.add(create(responseHandler, "Response handler", AllIcons.Actions.Play_last))
+                }
             }
             return children
         } else if (element is HttpRequestBlock) {
             return getChildren(element)
         }
 
-        return ContainerUtil.emptyList()
+        return emptyList()
     }
 
     override fun getLocationString(): String? {
@@ -104,7 +133,7 @@ class HttpRequestStructureViewElement private constructor(
             )
         }
 
-        fun createRequest(
+        fun create(
             element: PsiElement, text: String,
             location: String?, icon: Icon, isValid: Boolean,
         ): StructureViewTreeElement {

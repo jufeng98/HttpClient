@@ -106,8 +106,7 @@ object HttpPsiImplUtil {
         val target = request.requestTarget
         val host = target?.host
         if (host == null) {
-            val field = request.headerFieldList.firstOrNull { it.headerFieldName.text == "Host" }
-            return if (field != null) field.headerFieldValue?.text ?: "" else ""
+            return target?.pathAbsolute?.text ?: ""
         } else {
             val port = target.getPort()
             return host.text + (if (port != null) ":${port.text}" else "")

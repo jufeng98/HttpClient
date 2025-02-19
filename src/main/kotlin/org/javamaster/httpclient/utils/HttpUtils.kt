@@ -40,7 +40,6 @@ object HttpUtils {
         .create()
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
-    const val SCRIPT_INPUT_SIGN = "< {%"
     const val VARIABLE_SIGN_START = "{{"
     private const val VARIABLE_SIGN_END = "}}"
     val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")

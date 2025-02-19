@@ -69,6 +69,7 @@ DIRECTION_PART=[^\r\n ]+
   "@"                         { nameFlag = true; yybegin(IN_GLOBAL_VARIABLE); return AT; }
   {REQUEST_METHOD}            { yybegin(IN_FIRST_LINE); return REQUEST_METHOD; }
   {WHITE_SPACE}               { return WHITE_SPACE; }
+  [a-z]                       { return HOST_VALUE; }
 }
 
 <IN_GLOBAL_SCRIPT> {
