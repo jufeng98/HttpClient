@@ -23,39 +23,39 @@
 
 #### GET 请求
 
-![get.png](https://github.com/jufeng98/HttpClient/blob/master/images/get.png)
+![get.png](./images/get.png)
 
 #### POST 请求
 
-![post.png](https://github.com/jufeng98/HttpClient/blob/master/images/post.png)
+![post.png](./images/post.png)
 
 #### 环境变量跳转
 
-![variable-jump.gif](https://github.com/jufeng98/HttpClient/blob/master/images/variable-jump.gif)
+![variable-jump.gif](./images/variable-jump.gif)
 
 #### url跳转 Spring 控制器
 
-![controller-jump.gif](https://github.com/jufeng98/HttpClient/blob/master/images/controller-jump.gif)
+![controller-jump.gif](./images/controller-jump.gif)
 
 #### json 属性跳转 Spring 控制器方法出入参 Bean 字段
 
-![field-jump.gif](https://github.com/jufeng98/HttpClient/blob/master/images/field-jump.gif)
+![field-jump.gif](./images/field-jump.gif)
 
 #### js处理器和全局变量
 
-![js-handler.png](https://github.com/jufeng98/HttpClient/blob/master/images/js-handler.png)
+![js-handler.png](./images/js-handler.png)
 
 #### 保存响应到文件
 
-![save-response.png](https://github.com/jufeng98/HttpClient/blob/master/images/save-response.png)
+![save-response.png](./images/save-response.png)
 
 #### 预览图片
 
-![preview-img.png](https://github.com/jufeng98/HttpClient/blob/master/images/preview-img.png)
+![preview-img.png](./images/preview-img.png)
 
 #### multipart请求
 
-![multipart.png](https://github.com/jufeng98/HttpClient/blob/master/images/multipart.png)
+![multipart.png](./images/multipart.png)
 
 ## 作者信息
 
@@ -66,9 +66,9 @@
 ## 捐赠
 
 如果项目帮到了您，请作者喝杯咖啡吧！
-![donate](https://github.com/jufeng98/HttpClient/blob/master/images/donate.png)
+![donate](./images/donate.png)
 
 ## 技术支持
 
 微信记得备注 ```HttpClient```，共同进步。
-![wechat](https://github.com/jufeng98/HttpClient/blob/master/images/wechat.png)
+![wechat](./images/wechat.png)
