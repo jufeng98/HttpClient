@@ -1,6 +1,6 @@
 package org.javamaster.httpclient;
 
-import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.IElementType;import org.javamaster.httpclient.utils.LexerUtils;
 import static org.javamaster.httpclient.utils.LexerUtils.*;
 
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
@@ -14,6 +14,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
         private boolean nameFlag = true;
         int nextState;
         public int matchTimes = 0;
+        public CharSequence lastMatch = "";
 
         public _HttpLexer() {
           this((java.io.Reader)null);
@@ -42,7 +43,7 @@ EOL=\R
 EOL_MULTI=[ ]*\R+
 ONLY_SPACE=[ ]+
 WHITE_SPACE=\s+
-LINE_COMMENT=\s*"//".*
+LINE_COMMENT="//".*
 REQUEST_COMMENT=###.*
 REQUEST_METHOD=[A-Z]+
 SCHEMA_PART=https|wss|http|ws|dubbo
@@ -207,21 +208,23 @@ DIRECTION_PART=[^\r\n ]+
 }
 
 <IN_BODY> {
-  [^\r\n><\-#]+                      { matchTimes++; }
-  "<"                                { matchTimes++; }
-  ">"                                { matchTimes++; }
-  "-"                                { matchTimes++; }
-  "#"                                { matchTimes++; }
-  {WHITE_SPACE}                      { matchTimes++; }
+  [^\r\n><\-#]+                      { lastMatch = yytext(); matchTimes++; }
+  "<"                                { lastMatch = yytext(); matchTimes++; }
+  ">"                                { lastMatch = yytext(); matchTimes++; }
+  "-"                                { lastMatch = yytext(); matchTimes++; }
+  "#"                                { lastMatch = yytext(); matchTimes++; }
+  {WHITE_SPACE}                      { lastMatch = yytext(); matchTimes++; }
   "< "                               { yybegin(IN_INPUT_FILE_PATH); return INPUT_FILE_SIGN; }
   {EOL_MULTI}">> "                   { nextState = IN_OUTPUT_FILE_PATH; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
   ">> "                              { nextState = IN_OUTPUT_FILE_PATH; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
   {EOL_MULTI}"> {%"{EOL_MULTI}       { nextState = IN_POST_SCRIPT; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
-  "> {%"{EOL_MULTI}                  { nextState = IN_POST_SCRIPT; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  "> {%"{EOL_MULTI}                  { if(LexerUtils.endsWithLineBreak(this)) { nextState = IN_POST_SCRIPT; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); } }
   {EOL_MULTI}{MESSAGE_BOUNDARY}\s*   { nextState = IN_MULTIPART; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
-  {MESSAGE_BOUNDARY}\s*              { nextState = IN_MULTIPART; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {MESSAGE_BOUNDARY}\s*              { if(LexerUtils.endsWithLineBreak(this)) { nextState = IN_MULTIPART; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); } }
   {EOL_MULTI}{REQUEST_COMMENT}{EOL}  { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
-  {REQUEST_COMMENT}{EOL}             { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {REQUEST_COMMENT}{EOL}             { if(LexerUtils.endsWithLineBreak(this)) { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); } }
+  {EOL_MULTI}{LINE_COMMENT}{EOL}     { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {LINE_COMMENT}{EOL}                { if(LexerUtils.endsWithLineBreak(this)) { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); } }
   <<EOF>>                            { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
 }
 

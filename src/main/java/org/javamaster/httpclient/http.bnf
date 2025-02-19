@@ -60,7 +60,7 @@ globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-request_block ::= comment directionComment* preRequestHandler? request
+request_block ::= directionComment* comment preRequestHandler? request
 comment ::= REQUEST_COMMENT
 directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1

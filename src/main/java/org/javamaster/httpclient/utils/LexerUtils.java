@@ -33,12 +33,31 @@ public class LexerUtils {
     }
 
     public static IElementType detectBodyType(_HttpLexer lexer) {
-        int bodyLength = lexer.matchTimes;
+        int matchTimes = lexer.matchTimes;
+
         lexer.matchTimes = 0;
-        if (bodyLength > 0) {
+
+        if (matchTimes > 0) {
             return HttpTypes.MESSAGE_TEXT;
         } else {
             return TokenType.WHITE_SPACE;
         }
+    }
+
+    public static boolean endsWithLineBreak(_HttpLexer lexer) {
+        CharSequence lastMatch = lexer.lastMatch;
+        int length = lastMatch.length();
+        if (length == 0) {
+            return true;
+        }
+
+        char c = lastMatch.charAt(length - 1);
+        boolean b = c == '\r' || c == '\n';
+
+        if (b) {
+            lexer.lastMatch = "";
+        }
+
+        return b;
     }
 }
