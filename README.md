@@ -23,7 +23,7 @@
 
 #### GET 请求
 
-![get.png](./images/get.jpg)
+![get.png](./images/get.png)
 
 #### POST 请求
 
