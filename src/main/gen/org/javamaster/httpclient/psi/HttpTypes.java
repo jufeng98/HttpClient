@@ -52,6 +52,7 @@ public interface HttpTypes {
   IElementType AND = new HttpTokenType("&");
   IElementType AT = new HttpTokenType("@");
   IElementType COLON = new HttpTokenType(":");
+  IElementType DELETE = new HttpTokenType("DELETE");
   IElementType DIRECTION_COMMENT_START = new HttpTokenType("DIRECTION_COMMENT_START");
   IElementType DIRECTION_NAME_PART = new HttpTokenType("DIRECTION_NAME_PART");
   IElementType DIRECTION_VALUE_PART = new HttpTokenType("DIRECTION_VALUE_PART");
@@ -84,6 +85,7 @@ public interface HttpTypes {
   IElementType OUT_START_SCRIPT_BRACE = new HttpTokenType("> {%");
   IElementType PORT_SEGMENT = new HttpTokenType("PORT_SEGMENT");
   IElementType POST = new HttpTokenType("POST");
+  IElementType PUT = new HttpTokenType("PUT");
   IElementType QUERY_NAME = new HttpTokenType("QUERY_NAME");
   IElementType QUERY_VALUE = new HttpTokenType("QUERY_VALUE");
   IElementType QUESTION = new HttpTokenType("?");

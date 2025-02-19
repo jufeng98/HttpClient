@@ -39,9 +39,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         )
 
         this.extend(
-            CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.HOST_VALUE).withParent(
-                HttpHost::class.java
-            ),
+            CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.REQUEST_METHOD),
             HttpMethodsProvider()
         )
 
@@ -114,11 +112,13 @@ class HttpRequestCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet,
         ) {
-            if (!isRequestStart(parameters)) return
+            if (!isRequestStart(parameters)) {
+                return
+            }
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.POST as HttpElementType).name)
+                    LookupElementBuilder.create((HttpTypes.POST as HttpTokenType).name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -126,7 +126,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.GET as HttpElementType).name)
+                    LookupElementBuilder.create((HttpTypes.GET as HttpTokenType).name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -134,7 +134,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.WEBSOCKET as HttpElementType).name)
+                    LookupElementBuilder.create((HttpTypes.DELETE as HttpTokenType).name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -142,7 +142,23 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.DUBBO as HttpElementType).name)
+                    LookupElementBuilder.create((HttpTypes.PUT as HttpTokenType).name)
+                        .withBoldness(true)
+                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+                )
+            )
+
+            result.addElement(
+                PrioritizedLookupElement.withPriority(
+                    LookupElementBuilder.create((HttpTypes.WEBSOCKET as HttpTokenType).name)
+                        .withBoldness(true)
+                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+                )
+            )
+
+            result.addElement(
+                PrioritizedLookupElement.withPriority(
+                    LookupElementBuilder.create((HttpTypes.DUBBO as HttpTokenType).name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -150,20 +166,8 @@ class HttpRequestCompletionContributor : CompletionContributor() {
         }
 
         private fun isRequestStart(parameters: CompletionParameters): Boolean {
-            val request = PsiTreeUtil.getParentOfType(
-                parameters.position,
-                HttpRequest::class.java
-            )
-            val target = PsiTreeUtil.getParentOfType(
-                parameters.position,
-                HttpRequestTarget::class.java
-            )
-            if (request != null && target != null) {
-                val currentStartOffset = parameters.position.textRange.startOffset
-                return request.textRange.startOffset == currentStartOffset
-            } else {
-                return false
-            }
+            val parent = parameters.position.parent
+            return parent is PsiErrorElement || parent is HttpMethod
         }
     }
 

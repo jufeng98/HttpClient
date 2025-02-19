@@ -69,7 +69,6 @@ DIRECTION_PART=[^\r\n ]+
   "@"                         { nameFlag = true; yybegin(IN_GLOBAL_VARIABLE); return AT; }
   {REQUEST_METHOD}            { yybegin(IN_FIRST_LINE); return REQUEST_METHOD; }
   {WHITE_SPACE}               { return WHITE_SPACE; }
-  [a-z]                       { return HOST_VALUE; }
 }
 
 <IN_GLOBAL_SCRIPT> {
@@ -195,6 +194,7 @@ DIRECTION_PART=[^\r\n ]+
   {ONLY_SPACE}               { return WHITE_SPACE; }
   [^\r\n]                    { yypushback(yylength()); yybegin(IN_HEADER_FIELD_VALUE_NO_SPACE); }
   {EOL}                      { yybegin(IN_HEADER); return WHITE_SPACE; }
+  <<EOF>>                    { yybegin(YYINITIAL); return FIELD_VALUE; }
 }
 
 <IN_HEADER_FIELD_VALUE_NO_SPACE> {
@@ -203,6 +203,7 @@ DIRECTION_PART=[^\r\n ]+
   {ONLY_SPACE}                          { }
   "{{"                                  { yypushback(yylength()); yybegin(IN_HEADER_FIELD_VALUE); return FIELD_VALUE; }
   [ ]*{EOL}                             { yypushback(yylength()); yybegin(IN_HEADER_FIELD_VALUE); return FIELD_VALUE; }
+  <<EOF>>                               { yybegin(YYINITIAL); return FIELD_VALUE; }
 }
 
 <IN_BODY> {

@@ -32,6 +32,8 @@
 
     POST='POST'
     GET='GET'
+    DELETE='DELETE'
+    PUT='PUT'
     WEBSOCKET='WEBSOCKET'
     DUBBO='DUBBO'
     INPUT_FILE_SIGN='< '

@@ -28,12 +28,12 @@
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
     </context>
   </template>
-  <template name="ptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: $HEADER_VALUE$&#10;Accept: $HEADER_VALUE$&#10;&#10;$BODY$&#10;&#10;"
+  <template name="ptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: $HEADER_VALUE$&#10;Accept: $HEADER_VALUE$&#10;&#10;$BODY$&#10;"
             description="POST http://example.com/add..." toReformat="true" toShortenFQNames="false">
     <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
     <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
     <variable name="HEADER_VALUE" expression="" defaultValue="&quot;application/json&quot;" alwaysStopAt="true"/>
-    <variable name="BODY" expression="" defaultValue="&quot;{}" alwaysStopAt="true"/>
+    <variable name="BODY" expression="" defaultValue="&quot;{}&quot;" alwaysStopAt="true"/>
     <context>
       <option name="REQUEST" value="true"/>
       <option name="REQUEST_AUTH_HEADER" value="false" />
