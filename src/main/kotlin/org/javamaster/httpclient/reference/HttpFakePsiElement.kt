@@ -21,26 +21,26 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
-import org.javamaster.httpclient.psi.HttpUrl
+import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.utils.HttpUtils
 import java.util.concurrent.CompletableFuture
 
 /**
  * @author yudong
  */
-class HttpFakePsiElement(private val httpUrl: HttpUrl, private val searchTxt: String) :
-    ASTWrapperPsiElement(httpUrl.node) {
+class HttpFakePsiElement(private val httpRequestTarget: HttpRequestTarget, private val searchTxt: String) :
+    ASTWrapperPsiElement(httpRequestTarget.node) {
 
     override fun getPresentation(): ItemPresentation {
         return HttpItemPresentation
     }
 
     override fun navigate(requestFocus: Boolean) {
-        val virtualFile = httpUrl.containingFile.virtualFile
+        val virtualFile = httpRequestTarget.containingFile.virtualFile
         val module = if (HttpUtils.isFileInIdeaDir(virtualFile)) {
-            HttpUtils.getOriginalModule(httpUrl)
+            HttpUtils.getOriginalModule(httpRequestTarget)
         } else {
-            ModuleUtil.findModuleForPsiElement(httpUrl)
+            ModuleUtil.findModuleForPsiElement(httpRequestTarget)
         }
 
         if (module == null) {
@@ -48,9 +48,6 @@ class HttpFakePsiElement(private val httpUrl: HttpUrl, private val searchTxt: St
         }
 
         val event = createEvent()
-
-//        val seManager = SearchEverywhereManager.getInstance(project)
-//        seManager.show(ApiAbstractGotoSEContributor::class.java.simpleName, searchTxt, event)
 
         val processIndicator = createProcessIndicator("Tip:正在搜索对应的Controller...", project)
         Disposer.register(Disposer.newDisposable(), processIndicator)
@@ -102,6 +99,7 @@ class HttpFakePsiElement(private val httpUrl: HttpUrl, private val searchTxt: St
 
         @Suppress("DEPRECATION")
         fun createEvent(): AnActionEvent {
+            @Suppress("removal")
             return AnActionEvent(
                 null,
                 DataManager.getInstance().dataContext,

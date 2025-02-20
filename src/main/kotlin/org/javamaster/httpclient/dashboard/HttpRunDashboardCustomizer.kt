@@ -6,7 +6,7 @@ import com.intellij.execution.dashboard.RunDashboardRunConfigurationNode
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
-import org.javamaster.httpclient.runconfig.HttpRunProfileState.Companion.getTargetHttpMethod
+import org.javamaster.httpclient.utils.HttpUtils.getTargetHttpMethod
 
 /**
  * 支持 Service 工具窗口的双击动作,跳转到对应的文件请求

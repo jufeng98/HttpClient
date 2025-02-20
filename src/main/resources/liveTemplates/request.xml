@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templateSet group="HTTP Request">
+  <template name="gtr" value="### request&#10;GET http://$HOST$/$PATH$&#10;$HEADER$: $HEADER_VALUE$&#10;"
+            description="GET http://example.com/get" toReformat="true" toShortenFQNames="false">
+    <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
+    <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
+    <variable name="HEADER" expression="" defaultValue="&quot;Accept&quot;" alwaysStopAt="true"/>
+    <variable name="HEADER_VALUE" expression="" defaultValue="&quot;application/json&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
+  <template name="gtrp" value="### request&#10;GET http://$HOST$/$PATH$?$PARAM$=$VALUE$&#10;$HEADER$: $HEADER_VALUE$&#10;"
+            description="GET http://example.com/get?id=99" toReformat="true" toShortenFQNames="false">
+    <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
+    <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
+    <variable name="PARAM" expression="" defaultValue="&quot;id&quot;" alwaysStopAt="true"/>
+    <variable name="VALUE" expression="" defaultValue="&quot;99&quot;" alwaysStopAt="true"/>
+    <variable name="HEADER" expression="" defaultValue="&quot;Accept&quot;" alwaysStopAt="true"/>
+    <variable name="HEADER_VALUE" expression="" defaultValue="&quot;application/json&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
+  <template name="ptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: $HEADER_VALUE$&#10;Accept: $HEADER_VALUE$&#10;&#10;$BODY$&#10;"
+            description="POST http://example.com/add..." toReformat="true" toShortenFQNames="false">
+    <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
+    <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
+    <variable name="HEADER_VALUE" expression="" defaultValue="&quot;application/json&quot;" alwaysStopAt="true"/>
+    <variable name="BODY" expression="" defaultValue="&quot;{}&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
+  <template name="ptrp" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: application/x-www-form-urlencoded&#10;&#10;$PARAM1$=$VALUE1$&amp;$PARAM2$=$VALUE2$"
+            description="POST application/x-www-form-urlencoded" toReformat="true" toShortenFQNames="false">
+    <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
+    <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
+    <variable name="PARAM1" expression="" defaultValue="&quot;id&quot;" alwaysStopAt="true"/>
+    <variable name="VALUE1" expression="" defaultValue="&quot;99&quot;" alwaysStopAt="true"/>
+    <variable name="PARAM2" expression="" defaultValue="&quot;content&quot;" alwaysStopAt="true"/>
+    <variable name="VALUE2" expression="" defaultValue="&quot;new-element&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
+  <template name="mptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: multipart/form-data; boundary=WebAppBoundary&#10;&#10;--WebAppBoundary&#10;Content-Disposition: form-data; name=&quot;$FIELD_NAME$&quot;&#10;&#10;$BODY$&#10;--WebAppBoundary--&#10;&#10;"
+            description="POST multipart/form-data" toReformat="true" toShortenFQNames="false">
+    <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
+    <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
+    <variable name="FIELD_NAME" expression="" defaultValue="&quot;field-name&quot;" alwaysStopAt="true"/>
+    <variable name="BODY" expression="" defaultValue="&quot;field-value&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
+  <template name="fptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: multipart/form-data; boundary=WebAppBoundary&#10;&#10;--WebAppBoundary&#10;Content-Disposition: form-data; name=&quot;$FIELD_NAME$&quot;; filename=&quot;$FILE_NAME$&quot;&#10;&#10;&lt; $FILE_PATH$&#10;--WebAppBoundary--&#10;&#10;"
+            description="POST file by multipart/form-data" toReformat="true" toShortenFQNames="false">
+    <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
+    <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
+    <variable name="FIELD_NAME" expression="" defaultValue="&quot;field-name&quot;" alwaysStopAt="true"/>
+    <variable name="FILE_NAME" expression="" defaultValue="&quot;file.txt&quot;" alwaysStopAt="true"/>
+    <variable name="FILE_PATH" expression="" defaultValue="&quot;./relative/path/to/local_file.txt&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
+  <template name="wsr"
+            value="### request&#10;WEBSOCKET $SCHEME$://$HOST$/$URL_PATH$&#10;Content-Type: application/json // used only for IDE highlighting.&#10;// Highlighting is applied for each message independently.&#10;&#10;&#10;{&#10;    &quot;message&quot;: &quot;$TEXT_1$&quot;&#10;}&#10;=== wait-for-server&#10;{&#10;    &quot;message&quot;: &quot;$TEXT_2$&quot;&#10;}&#10;===&#10;{&#10;    &quot;message&quot;: &quot;$TEXT_3$&quot;&#10;}&#10;&#10;"
+            toReformat="false" toShortenFQNames="true"
+            description="WebSocket Request">
+    <variable name="SCHEME" expression="enum(&quot;ws&quot;, &quot;wss&quot;)" defaultValue="" alwaysStopAt="true"/>
+    <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
+    <variable name="URL_PATH" expression="" defaultValue="&quot;websocket&quot;" alwaysStopAt="true"/>
+    <variable name="TEXT_1" expression="" defaultValue="&quot;Send when the WebSocket connection is opened&quot;" alwaysStopAt="true"/>
+    <variable name="TEXT_2" expression="" defaultValue="&quot;Wait for the server message and send the current message as response&quot;"
+              alwaysStopAt="true"/>
+    <variable name="TEXT_3" expression="" defaultValue="&quot;Send after previous message without waiting for the server message&quot;"
+              alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
+  <template name="var" value="$COMMA_BEFORE$&quot;$VAR_NAME$&quot;: &quot;$VAR_VALUE$&quot;$COMMA_AFTER$" description="Environment variable"
+            toReformat="true" toShortenFQNames="false">
+    <variable name="COMMA_BEFORE" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false"/>
+    <variable name="VAR_NAME" expression="propertyUniqueName(&quot;var&quot;)" alwaysStopAt="true"/>
+    <variable name="VAR_VALUE" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+    <variable name="COMMA_AFTER" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false"/>
+    <context>
+      <option name="HTTP_CLIENT_ENVIRONMENT_INSIDE_ENVIRONMENT" value="true"/>
+    </context>
+  </template>
+  <template name="env"
+            value="$COMMA_BEFORE$&quot;$ENV_NAME$&quot;: {&#10;  &quot;$VAR_NAME$&quot;: &quot;$VAR_VALUE$&quot;&#10;}$COMMA_AFTER$"
+            description="HTTP Client Environment" toReformat="true" toShortenFQNames="false">
+    <variable name="COMMA_BEFORE" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false"/>
+    <variable name="ENV_NAME" expression="" defaultValue="&quot;dev&quot;" alwaysStopAt="true"/>
+    <variable name="VAR_NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <variable name="VAR_VALUE" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+    <variable name="COMMA_AFTER" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false"/>
+    <context>
+      <option name="HTTP_CLIENT_ENVIRONMENT_OBJECT_FOR_ENVIRONMENTS" value="true"/>
+    </context>
+  </template>
+  <template name="ssl"
+            value="$COMMA_BEFORE$&quot;SSLConfiguration&quot;: {&#10;  &quot;clientCertificate&quot;: &quot;$CERT_PATH$&quot;,&#10;  &quot;clientCertificateKey&quot;: &quot;$KEY_PATH$&quot;,&#10;  &quot;verifyHostCertificate&quot;: $VERIFY$,&#10;  &quot;hasCertificatePassphrase&quot;: $PASS$&#10;}$COMMA_AFTER$"
+            description="SSL Configuration" toReformat="true" toShortenFQNames="false">
+    <variable name="COMMA_BEFORE" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false"/>
+    <variable name="CERT_PATH" expression="complete()" defaultValue="file.pem" alwaysStopAt="true"/>
+    <variable name="KEY_PATH" expression="complete()" defaultValue="file.key" alwaysStopAt="true"/>
+    <variable name="VERIFY" expression="complete()" defaultValue="true" alwaysStopAt="true"/>
+    <variable name="PASS" expression="complete()" defaultValue="false" alwaysStopAt="true"/>
+    <variable name="COMMA_AFTER" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false"/>
+    <context>
+      <option name="HTTP_CLIENT_ENVIRONMENT_INSIDE_PRIVATE_ENVIRONMENT" value="true"/>
+    </context>
+  </template>
+  <template name="auth" value="$COMMA_BEFORE$&quot;$NAME$&quot;: {&#10;    &quot;Type&quot;: &quot;OAuth2&quot;,&#10;    &quot;Grant Type&quot;: &quot;$GRANT_TYPE$&quot;,&#10;    &quot;Client ID&quot;: &quot;&quot;&#10;    $GRANT_FIELDS$&#10;}$COMMA_AFTER$" description="Authorization configuration" toReformat="true" toShortenFQNames="true">
+    <variable name="COMMA_BEFORE" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false" />
+    <variable name="NAME" expression="propertyUniqueName(&quot;auth-id&quot;)" alwaysStopAt="true" />
+    <variable name="GRANT_TYPE" expression="complete()" defaultValue="" alwaysStopAt="true" />
+    <variable name="GRANT_FIELDS" expression="grantTypeFields(GRANT_TYPE)" defaultValue="" alwaysStopAt="false" />
+    <variable name="COMMA_AFTER" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false" />
+    <context>
+      <option name="HTTP_CLIENT_ENVIRONMENT_AUTH_CONFIG" value="true" />
+    </context>
+  </template>
+  <template name="authObj" value="$COMMA_BEFORE$&quot;Security&quot;: {&#10;    &quot;Auth&quot;: {&#10;        $END$&#10;    }&#10;}$COMMA_AFTER$" description="Authorization configurations object" toReformat="true" toShortenFQNames="true">
+    <variable name="COMMA_BEFORE" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false" />
+    <variable name="COMMA_AFTER" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false" />
+    <context>
+      <option name="HTTP_CLIENT_ENVIRONMENT_INSIDE_PUBLIC_ENVIRONMENT" value="true" />
+    </context>
+  </template>
+  <template name="AuthorizationToken" value="Authorization: Bearer {{$auth.token(&quot;$AUTH_ID$&quot;)}}" description="Authorization header with token, e.g. OAuth2" toReformat="false" toShortenFQNames="true">
+    <variable name="AUTH_ID" expression="complete()" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="REQUEST_HEADER" value="true" />
+    </context>
+  </template>
+  <template name="BearerToken" value="Bearer {{$auth.token(&quot;$AUTH_ID$&quot;)}}" description="Bearer with token, e.g. from OAuth2 configuration" toReformat="false" toShortenFQNames="true">
+    <variable name="AUTH_ID" expression="complete()" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="REQUEST_AUTH_HEADER" value="true" />
+    </context>
+  </template>
+  <template name="jsonPath" value="{% client.log(jsonPath(response.body, &quot;$END$&quot;)) %}" description="Filter response with JSON Path" toReformat="false" toShortenFQNames="true">
+    <context>
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="true" />
+    </context>
+  </template>
+</templateSet>
+

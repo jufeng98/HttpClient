@@ -8,10 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpMethodImpl extends ASTWrapperPsiElement implements HttpMethod {
+public class HttpMethodImpl extends HttpMethodBase implements HttpMethod {
 
   public HttpMethodImpl(@NotNull ASTNode node) {
     super(node);

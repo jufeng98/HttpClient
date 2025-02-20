@@ -13,6 +13,10 @@ class HttpVariableFakePsiElement(private val element: PsiElement, private val va
     ASTWrapperPsiElement(element.node) {
 
     override fun navigate(requestFocus: Boolean) {
+        if (variableName.startsWith("$")) {
+            return
+        }
+
         val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project) ?: "dev"
 
         val path = element.containingFile.virtualFile.parent.path

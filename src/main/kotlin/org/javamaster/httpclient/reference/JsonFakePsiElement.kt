@@ -9,6 +9,7 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.InheritanceUtil
@@ -17,6 +18,7 @@ import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.createPr
 import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.findControllerPsiMethods
 import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.getControllerNavigationItem
 import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.showTip
+import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.PsiUtils
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -43,11 +45,69 @@ class JsonFakePsiElement(
             return
         }
 
-        val event = HttpFakePsiElement.createEvent()
-        val seContributor = ApiAbstractGotoSEContributor(event)
+        if (searchTxt.isBlank()) {
+            jumpToDubbo(virtualFile, jsonPropertyNameLevels)
+            return
+        }
 
+        jumpToControllerAsync(virtualFile, jsonPropertyNameLevels)
+    }
+
+    private fun jumpToDubbo(
+        virtualFile: VirtualFile?,
+        jsonPropertyNameLevels: LinkedList<String>,
+    ) {
+        val serviceMethod = DubboUtils.findDubboServiceMethod(jsonString)
+        if (serviceMethod == null) {
+            showTip("Tip:未能解析到对应的Dubbo方法,无法跳转", project)
+            return
+        }
+
+        val paramPsiType: PsiType?
+
+        if (virtualFile?.name?.endsWith("res.http") == true) {
+            paramPsiType = serviceMethod.returnType
+        } else {
+            val name = jsonPropertyNameLevels.pop()
+            val psiParameter = serviceMethod.parameterList.parameters
+                .firstOrNull { it.name == name }
+
+            if (psiParameter == null) {
+                showTip("Tip:未能解析到对应的方法参数,无法跳转", project)
+                return
+            }
+
+            if (jsonPropertyNameLevels.isEmpty()) {
+                psiParameter.navigate(true)
+                return
+            }
+
+            paramPsiType = psiParameter.type
+        }
+
+        val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return
+
+        val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
+
+        val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters)
+        if (targetField == null) {
+            showTip("Tip:未能解析对应的Bean属性,无法跳转", project)
+            return
+        }
+
+        targetField.navigate(true)
+
+    }
+
+    private fun jumpToControllerAsync(
+        virtualFile: VirtualFile?,
+        jsonPropertyNameLevels: LinkedList<String>,
+    ) {
         val processIndicator = createProcessIndicator("Tip:正在尝试跳转到对应的Bean字段...", project)
         Disposer.register(Disposer.newDisposable(), processIndicator)
+
+        val event = HttpFakePsiElement.createEvent()
+        val seContributor = ApiAbstractGotoSEContributor(event)
 
         CompletableFuture.runAsync {
             val list = seContributor.search(searchTxt, processIndicator)
@@ -157,6 +217,10 @@ class JsonFakePsiElement(
 
             while (true) {
                 psiField = fieldTypeCls.findFieldByName(propertyName, true) ?: return null
+                if (psiField.type !is PsiClassType) {
+                    return psiField
+                }
+
                 val psiType = psiField.type as PsiClassType
 
                 val parameters = psiType.parameters

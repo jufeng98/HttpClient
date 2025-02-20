@@ -4,10 +4,11 @@ package org.javamaster.httpclient.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 
 public interface HttpFilePath extends PsiElement {
 
   @NotNull
-  PsiElement getPath();
+  PsiReference[] getReferences();
 
 }

@@ -28,9 +28,9 @@ public class HttpGlobalScriptImpl extends ASTWrapperPsiElement implements HttpGl
   }
 
   @Override
-  @NotNull
-  public HttpScript getScript() {
-    return findNotNullChildByClass(HttpScript.class);
+  @Nullable
+  public HttpScriptBody getScriptBody() {
+    return findChildByClass(HttpScriptBody.class);
   }
 
 }

@@ -10,6 +10,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
+import java.net.http.HttpClient.Version;
+import org.apache.http.entity.ContentType;
 
 public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest {
 
@@ -28,15 +30,9 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   }
 
   @Override
-  @Nullable
-  public HttpBody getBody() {
-    return findChildByClass(HttpBody.class);
-  }
-
-  @Override
-  @Nullable
-  public HttpHeaders getHeaders() {
-    return findChildByClass(HttpHeaders.class);
+  @NotNull
+  public List<HttpHeaderField> getHeaderFieldList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpHeaderField.class);
   }
 
   @Override
@@ -47,26 +43,68 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
 
   @Override
   @Nullable
+  public HttpMultipartMessage getMultipartMessage() {
+    return findChildByClass(HttpMultipartMessage.class);
+  }
+
+  @Override
+  @Nullable
   public HttpOutputFile getOutputFile() {
     return findChildByClass(HttpOutputFile.class);
   }
 
   @Override
   @Nullable
-  public HttpScript getScript() {
-    return findChildByClass(HttpScript.class);
+  public HttpRequestMessagesGroup getRequestMessagesGroup() {
+    return findChildByClass(HttpRequestMessagesGroup.class);
   }
 
   @Override
   @Nullable
-  public HttpUrl getUrl() {
-    return findChildByClass(HttpUrl.class);
+  public HttpRequestTarget getRequestTarget() {
+    return findChildByClass(HttpRequestTarget.class);
+  }
+
+  @Override
+  @Nullable
+  public HttpResponseHandler getResponseHandler() {
+    return findChildByClass(HttpResponseHandler.class);
   }
 
   @Override
   @Nullable
   public HttpVersion getVersion() {
     return findChildByClass(HttpVersion.class);
+  }
+
+  @Override
+  @Nullable
+  public ContentType getContentType() {
+    return HttpPsiImplUtil.getContentType(this);
+  }
+
+  @Override
+  @Nullable
+  public String getContentTypeBoundary() {
+    return HttpPsiImplUtil.getContentTypeBoundary(this);
+  }
+
+  @Override
+  @Nullable
+  public Integer getContentLength() {
+    return HttpPsiImplUtil.getContentLength(this);
+  }
+
+  @Override
+  @NotNull
+  public Version getHttpVersion() {
+    return HttpPsiImplUtil.getHttpVersion(this);
+  }
+
+  @Override
+  @NotNull
+  public String getHttpHost() {
+    return HttpPsiImplUtil.getHttpHost(this);
   }
 
 }

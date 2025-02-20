@@ -1,0 +1,165 @@
+{
+  parserClass="org.javamaster.httpclient.parser.HttpParser"
+  parserUtilClass="org.javamaster.httpclient.parser.HttpParserUtil"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Http"
+  psiImplClassSuffix="Impl"
+  psiPackage="org.javamaster.httpclient.psi"
+  psiImplPackage="org.javamaster.httpclient.psi.impl"
+
+  elementTypeHolderClass="org.javamaster.httpclient.psi.HttpTypes"
+  elementTypeClass="org.javamaster.httpclient.psi.HttpElementType"
+  tokenTypeClass="org.javamaster.httpclient.psi.HttpTokenType"
+  psiImplUtilClass="org.javamaster.httpclient.psi.impl.HttpPsiImplUtil"
+
+  tokens=[
+    LINE_COMMENT='regexp://.*'
+
+    SCHEMA_SEPARATE='://'
+    COLON=':'
+
+    SLASH='/'
+    QUESTION='?'
+    EQUALS='='
+    AND='&'
+    HASH='#'
+    DOLLAR='$'
+    AT='@'
+
+    INPUT_FILE_SIGN='< '
+    OUTPUT_FILE_SIGN='>> '
+    GLOBAL_START_SCRIPT_BRACE='<! {%'
+    IN_START_SCRIPT_BRACE='< {%'
+    OUT_START_SCRIPT_BRACE='> {%'
+    END_SCRIPT_BRACE='%}'
+    START_VARIABLE_BRACE='{{'
+    END_VARIABLE_BRACE='}}'
+  ]
+}
+
+httpFile ::= globalHandler? globalVariable* request_block*
+
+globalVariable::= globalVariableName globalVariableValue? {
+    pin = 1
+}
+globalVariableName ::= AT GLOBAL_NAME {
+    pin = 1
+}
+globalVariableValue ::= EQUALS (GLOBAL_VALUE | variable)
+globalHandler ::= globalScript
+globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
+    pin = 1
+}
+request_block ::= directionComment* comment preRequestHandler? request
+comment ::= REQUEST_COMMENT
+directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
+    pin = 1
+}
+directionName ::= DIRECTION_NAME_PART
+directionValue ::= DIRECTION_VALUE_PART
+preRequestHandler ::= preRequestScript
+preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
+    pin = 1
+}
+
+request ::= method requestTarget version? headerField* requestMessagesGroup? multipartMessage? responseHandler? outputFile? {
+    methods = [
+        getContentType
+        getContentTypeBoundary
+        getContentLength
+        getHttpVersion
+        getHttpHost
+    ]
+    pin = 1
+}
+
+method ::= REQUEST_METHOD {
+    mixin = "org.javamaster.httpclient.psi.impl.HttpMethodBase"
+}
+
+requestTarget ::= (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? (QUESTION query)? (HASH fragment)?  {
+    methods = [
+        getUrl
+        getReferences
+    ]
+}
+schema ::= SCHEMA_PART
+host ::= HOST_VALUE | variable
+
+variable ::= START_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE {
+    methods = [
+        getName
+        getReferences
+    ]
+    pin = 1
+}
+
+port ::= COLON PORT_SEGMENT
+pathAbsolute ::= (SLASH (SEGMENT | variable))+
+query ::= queryParameter (AND queryParameter)*
+queryParameter ::= queryParameterKey EQUALS? queryParameterValue? {
+    pin = 1
+}
+queryParameterKey ::= QUERY_NAME | variable
+queryParameterValue ::= QUERY_VALUE | variable
+fragment ::= FRAGMENT_PART
+version ::= HTTP_VERSION {
+    methods = [
+        getVersion
+    ]
+}
+
+headerField ::= headerFieldName COLON headerFieldValue? {
+    methods = [
+        getName
+        getValue
+    ]
+    pin = 1
+}
+headerFieldName ::= FIELD_NAME
+headerFieldValue ::= (FIELD_VALUE | variable | FIELD_VALUE variable | variable FIELD_VALUE)+ {
+    methods = [
+        getReferences
+    ]
+}
+
+requestMessagesGroup ::= inputFile | messageBody
+
+inputFile ::= INPUT_FILE_SIGN filePath {
+    pin = 1
+}
+filePath ::= INPUT_FILE_PATH_PART {
+    methods = [
+        getReferences
+    ]
+}
+messageBody ::= MESSAGE_TEXT {
+    mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
+}
+
+multipartMessage ::= (MESSAGE_BOUNDARY multipartField?)+
+multipartField ::= headerField+ requestMessagesGroup {
+    methods = [
+        getContentType
+    ]
+}
+
+responseHandler ::= responseScript
+responseScript ::= OUT_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
+    pin = 1
+}
+scriptBody ::= SCRIPT_BODY_PAET {
+  mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
+}
+
+outputFile ::= OUTPUT_FILE_SIGN outputFilePath {
+    pin = 1
+}
+outputFilePath ::= OUTPUT_FILE_PATH_PART {
+    methods = [
+        getReferences
+    ]
+    implements = "org.javamaster.httpclient.psi.HttpFilePath"
+}

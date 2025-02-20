@@ -8,7 +8,7 @@ import com.intellij.execution.configurations.RuntimeConfigurationError
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
-import org.javamaster.httpclient.runconfig.HttpRunProfileState.Companion.getTargetHttpMethod
+import org.javamaster.httpclient.utils.HttpUtils.getTargetHttpMethod
 import org.jdom.Element
 
 /**
@@ -37,7 +37,7 @@ class HttpRunConfiguration(
     }
 
     override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {
-        return HttpRunProfileState(project, environment, env, httpFilePath)
+        return HttpRunProfileState(project, environment, httpFilePath, env)
     }
 
     override fun getConfigurationEditor(): SettingsEditor<out RunConfiguration> {

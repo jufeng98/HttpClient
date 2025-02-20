@@ -1,0 +1,28 @@
+### 测试dubbo项目存在接口类情况
+DUBBO dubbo://10.255.0.1:31299
+Content-Type: application/json
+Interface: org.javamaster.service.washing.admin.api.dubbo.ServiceExchangeDubboService
+Method: getExchangeInfo
+Version: 1.0.0
+
+{
+  "reqDto": {
+    "shippingExpressCodes":["20241024hd"]
+  }
+}
+
+// Registry 说明: 该header表示注册中心配置,指定该header将会忽略url上的地址,进而从注册中心去取得服务
+### 测试dubbo项目无接口类情况
+DUBBO dubbo://dubbo.javamaster.org:31299
+Content-Type: application/json
+Interface-Name: org.javamaster.api.serviceorder.dubbo.IMHServiceOrderDubboService
+Method: getOrderList
+Version: 1.0.0
+Registry: zookeeper://zk.javamaster.org:2181
+Arg0-Type: org.javamaster.api.serviceorder.dto.GetOrderListDto
+
+{
+  "Arg0-Type": {
+    "shopOrderId": "602495678454930066"
+  }
+}

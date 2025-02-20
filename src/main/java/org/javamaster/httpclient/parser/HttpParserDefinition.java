@@ -37,7 +37,7 @@ public class HttpParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull TokenSet getCommentTokens() {
-        return TokenSet.create(HttpTypes.LINE_COMMENT, HttpTypes.REQUEST_COMMENT);
+        return TokenSet.create(HttpTypes.LINE_COMMENT);
     }
 
     @Override

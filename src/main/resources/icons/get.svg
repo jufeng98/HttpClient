@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 2048 2048">
+    <rect fill-opacity="0.85" x="0" y="0" width="2048" height="2048" rx="384" ry="384" fill="#148f39"></rect>
+    <g transform="scale(0.45)">
+        <path fill-opacity="1" transform="translate(432.17999999999995, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M872 270v285h-202v248h460v-684q-85 -73 -187.5 -110.5t-219.5 -37.5q-290 0 -448 201.5t-158 572.5q0 377 159.5 576t460.5 199q90 0 177 -25.5t163 -73.5v-327q-62 80 -142.5 120.5t-176.5 40.5q-168 0 -251 -126.5t-83 -383.5q0 -249 80 -379t233 -130q46 0 80 8.5 t55 25.5z"></path>
+        <path fill-opacity="1" transform="translate(1665.1799999999998, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M1098 0h-930v1493h930v-260h-635v-322h575v-260h-575v-391h635v-260z"></path>
+        <path fill-opacity="1" transform="translate(2898.18, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M764 0h-295v1235h-379v258h1053v-258h-379v-1235z"></path>
+    </g>
+</svg>

@@ -3,23 +3,27 @@ package org.javamaster.httpclient.utils
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
+import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
+import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
-import com.intellij.psi.util.elementType
+import org.apache.http.HttpHeaders.CONTENT_TYPE
+import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
 import java.net.URI
 import java.net.http.HttpResponse
@@ -35,96 +39,98 @@ object HttpUtils {
         .serializeNulls()
         .create()
 
-    fun saveConfiguration(tabName: String, project: Project, selectedEnv: String?, httpMethod: HttpMethod) {
+    const val HTTP_TYPE_ID = "intellijHttpClient"
+    const val VARIABLE_SIGN_START = "{{"
+    private const val VARIABLE_SIGN_END = "}}"
+    val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
+
+    fun saveConfiguration(
+        tabName: String,
+        project: Project,
+        selectedEnv: String?,
+        httpMethod: HttpMethod,
+    ): RunnerAndConfigurationSettings {
         val runManager = RunManager.getInstance(project)
 
-        var config = runManager.findConfigurationByName(tabName)
-        if (config == null) {
-            config = runManager.createConfiguration(tabName, HttpConfigurationType::class.java)
-            val httpRunConfiguration = config.configuration as HttpRunConfiguration
-            httpRunConfiguration.env = selectedEnv ?: ""
-            httpRunConfiguration.httpFilePath = httpMethod.containingFile.virtualFile.path
-            runManager.addConfiguration(config)
-            runManager.selectedConfiguration = config
+        var configurationSettings = runManager.allSettings
+            .firstOrNull {
+                it.configuration is HttpRunConfiguration && it.configuration.name == tabName
+            }
+
+        val configNotExists = configurationSettings == null
+
+        val httpRunConfiguration: HttpRunConfiguration
+        if (configNotExists) {
+            configurationSettings = runManager.createConfiguration(tabName, HttpConfigurationType::class.java)
+            httpRunConfiguration = configurationSettings.configuration as HttpRunConfiguration
         } else {
-            val httpRunConfiguration = config.configuration as HttpRunConfiguration
-            httpRunConfiguration.env = selectedEnv ?: ""
-            httpRunConfiguration.httpFilePath = httpMethod.containingFile.virtualFile.path
-            runManager.selectedConfiguration = config
+            httpRunConfiguration = configurationSettings!!.configuration as HttpRunConfiguration
         }
+
+        configurationSettings.isActivateToolWindowBeforeRun = false
+
+        httpRunConfiguration.env = selectedEnv ?: ""
+        httpRunConfiguration.httpFilePath = httpMethod.containingFile.virtualFile.path
+
+        if (configNotExists) {
+            runManager.addConfiguration(configurationSettings)
+        }
+
+        runManager.selectedConfiguration = configurationSettings
+
+        return configurationSettings
     }
 
     fun getTabName(httpMethod: HttpMethod): String {
-        val commentTxt = getReqCommentTxt(httpMethod)
-        return httpMethod.text + " " + commentTxt.replace("#", "").trim()
-    }
-
-    private fun getReqCommentTxt(httpMethod: HttpMethod): String {
-        val httpRequest =
-            PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
-
-        val comment = PsiTreeUtil.findChildOfType(httpRequest, PsiComment::class.java)
-        val blankStr = "http-client"
-        if (comment != null || httpRequest.prevSibling is HttpRequest) {
-            return blankStr
-        }
-
-        val psiComment = PsiTreeUtil.getPrevSiblingOfType(httpRequest, PsiComment::class.java) ?: return blankStr
-        return psiComment.text
+        val requestBlock = PsiTreeUtil.getParentOfType(httpMethod, HttpRequestBlock::class.java)!!
+        return requestBlock.comment.text.replace("#", "").trim()
     }
 
     fun convertToReqHeaderMap(
-        httpHeaders: HttpHeaders?,
+        httpHeaderFields: List<HttpHeaderField>,
         variableResolver: VariableResolver,
         selectedEnv: String?,
         httpFileParentPath: String,
     ): MutableMap<String, String> {
         val map = mutableMapOf<String, String>()
-        if (httpHeaders != null) {
-            val headerList = httpHeaders.headerList
-            headerList.stream()
-                .forEach {
-                    val text = it.text
-                    val split = text.split(":")
-                    if (split.size != 2) {
-                        throw IllegalArgumentException("请求头${text}有错误")
-                    }
-                    map[split[0]] = variableResolver.resolve(split[1], selectedEnv, httpFileParentPath)
-                }
-        }
+
+        if (httpHeaderFields.isEmpty()) return map
+
+        httpHeaderFields.stream()
+            .forEach {
+                val headerName = it.headerFieldName.text
+                val headerValue = it.headerFieldValue?.text ?: ""
+                map[headerName] = variableResolver.resolve(headerValue, selectedEnv, httpFileParentPath)
+            }
+
         return map
     }
 
     fun convertToReqBody(
-        httpBody: HttpBody?,
+        request: HttpRequest,
         variableResolver: VariableResolver,
         selectedEnv: String?,
         httpFileParentPath: String,
     ): Any? {
-        if (httpBody == null) {
-            return null
-        }
-
-        val parentPath = httpBody.containingFile.virtualFile.parent.path
-
-        val ordinaryContent = httpBody.ordinaryContent
-        if (ordinaryContent != null) {
+        val requestMessagesGroups = PsiTreeUtil.getChildOfType(request, HttpRequestMessagesGroup::class.java)
+        if (requestMessagesGroups != null) {
             return handleOrdinaryContent(
-                ordinaryContent,
+                requestMessagesGroups,
                 variableResolver,
                 selectedEnv,
-                parentPath,
                 httpFileParentPath
             )
         }
 
-        val multipartContent = httpBody.multipartContent
-        if (multipartContent != null) {
+        val httpMultipartMessage = PsiTreeUtil.getChildOfType(request, HttpMultipartMessage::class.java)
+        if (httpMultipartMessage != null) {
+            val boundary =
+                request.contentTypeBoundary ?: throw IllegalArgumentException("Content-Type 请求头缺少 boundary!")
             return constructMultipartBody(
-                multipartContent,
+                boundary,
+                httpMultipartMessage,
                 variableResolver,
                 selectedEnv,
-                parentPath,
                 httpFileParentPath
             )
 
@@ -134,70 +140,95 @@ object HttpUtils {
     }
 
     private fun handleOrdinaryContent(
-        ordinaryContent: HttpOrdinaryContent,
+        requestMessagesGroup: HttpRequestMessagesGroup?,
         variableResolver: VariableResolver,
         selectedEnv: String?,
-        parentPath: String,
         httpFileParentPath: String,
     ): Any? {
-        val elementType = ordinaryContent.firstChild.elementType
-        if (elementType == HttpTypes.JSON_TEXT || elementType == HttpTypes.XML_TEXT
-            || elementType == HttpTypes.URL_FORM_ENCODE || elementType == HttpTypes.URL_DESC
-        ) {
-            return variableResolver.resolve(ordinaryContent.text, selectedEnv, httpFileParentPath)
+        if (requestMessagesGroup == null) {
+            return null
         }
 
-        val httpFile = ordinaryContent.file ?: return null
-        val filePath = httpFile.filePath.text
+        var reqStr: String? = null
 
-        val path = constructFilePath(filePath, parentPath)
+        val messageBody = requestMessagesGroup.messageBody
+        if (messageBody != null) {
+            reqStr = variableResolver.resolve(messageBody.text, selectedEnv, httpFileParentPath)
+        }
+
+        val inputFile = requestMessagesGroup.inputFile
+        if (inputFile == null || inputFile.filePath == null) {
+            return reqStr
+        }
+
+        val filePath = inputFile.filePath!!.text
+        val path = constructFilePath(filePath, httpFileParentPath)
+
         val virtualFile = VfsUtil.findFileByIoFile(File(path), true)
             ?: throw IllegalArgumentException("文件:${path}不存在")
 
-        if (filePath.endsWith("json") || filePath.endsWith("xml")
-            || filePath.endsWith("txt") || filePath.endsWith("text")
+        if (filePath.endsWith(SimpleTypeEnum.JSON.type) || filePath.endsWith(SimpleTypeEnum.XML.type)
+            || filePath.endsWith(SimpleTypeEnum.TXT.type) || filePath.endsWith(SimpleTypeEnum.TEXT.type)
         ) {
-            val str = VfsUtil.loadText(virtualFile)
-            return variableResolver.resolve(str, selectedEnv, httpFileParentPath)
-        }
+            if (reqStr == null) {
+                reqStr = ""
+            } else {
+                reqStr += "\r\n"
+            }
 
-        return VfsUtil.loadBytes(virtualFile)
+            val str = VfsUtil.loadText(virtualFile)
+            reqStr += variableResolver.resolve(str, selectedEnv, httpFileParentPath)
+            return reqStr
+        } else {
+            return VfsUtil.loadBytes(virtualFile)
+        }
     }
 
     private fun constructMultipartBody(
-        multipartContent: HttpMultipartContent,
+        boundary: String,
+        httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
         selectedEnv: String?,
-        parentPath: String,
         httpFileParentPath: String,
     ): MutableList<ByteArray> {
         val byteArrays = mutableListOf<ByteArray>()
 
-        multipartContent.multipartBodyList.forEach {
-            byteArrays.add((it.multipartSeperate.text + "\r\n").toByteArray(StandardCharsets.UTF_8))
+        val multipartFields = PsiTreeUtil.getChildrenOfType(httpMultipartMessage, HttpMultipartField::class.java)!!
+        multipartFields
+            .forEach {
+                byteArrays.add("--$boundary\r\n".toByteArray(StandardCharsets.UTF_8))
 
-            it.headerList.forEach { header ->
-                byteArrays.add((header.text + "\r\n").toByteArray(StandardCharsets.UTF_8))
+                it.headerFieldList
+                    .forEach { innerIt ->
+                        val headerName = innerIt.headerFieldName.text
+                        val headerValue = innerIt.headerFieldValue?.text
+
+                        val value = if (headerValue.isNullOrEmpty()) {
+                            ""
+                        } else {
+                            variableResolver.resolve(headerValue + "\r\n", selectedEnv, httpFileParentPath)
+                        }
+
+                        val header = "$headerName: $value"
+                        byteArrays.add(header.toByteArray(StandardCharsets.UTF_8))
+                    }
+
+                byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
+
+                val content = handleOrdinaryContent(
+                    it.requestMessagesGroup,
+                    variableResolver,
+                    selectedEnv,
+                    httpFileParentPath
+                )
+                if (content is String) {
+                    byteArrays.add((content + "\r\n").toByteArray(StandardCharsets.UTF_8))
+                } else if (content is ByteArray) {
+                    byteArrays.add(content + "\r\n".toByteArray(StandardCharsets.UTF_8))
+                }
             }
-            byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
 
-            val ordinaryContent = it.ordinaryContent
-            val content = handleOrdinaryContent(
-                ordinaryContent,
-                variableResolver,
-                selectedEnv,
-                parentPath,
-                httpFileParentPath
-            )
-
-            if (content is String) {
-                byteArrays.add((content + "\r\n").toByteArray(StandardCharsets.UTF_8))
-            } else if (content is ByteArray) {
-                byteArrays.add(content + "\r\n".toByteArray(StandardCharsets.UTF_8))
-            }
-        }
-
-        byteArrays.add((multipartContent.multipartSeperate.text).toByteArray(StandardCharsets.UTF_8))
+        byteArrays.add("--$boundary--".toByteArray(StandardCharsets.UTF_8))
 
         return byteArrays
     }
@@ -226,92 +257,116 @@ object HttpUtils {
         return headerDescList
     }
 
-    fun convertToResPair(response: HttpResponse<ByteArray>): Pair<String, ByteArray> {
+    fun convertToResPair(response: HttpResponse<ByteArray>): Pair<SimpleTypeEnum, ByteArray> {
         val resBody = response.body()
         val resHeaders = response.headers()
-        val contentType = resHeaders.firstValue(org.apache.http.HttpHeaders.CONTENT_TYPE).getOrElse { "text/plain" }
+        val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { "text/plain" }
 
-        if (contentType.contains("json")) {
+        if (contentType.contains(SimpleTypeEnum.JSON.type)) {
             val jsonStr = String(resBody, StandardCharsets.UTF_8)
-            val jsonElement = gson.fromJson(jsonStr, JsonElement::class.java)
-            val jsonStrPretty = gson.toJson(jsonElement)
-            return Pair("json", jsonStrPretty.toByteArray(StandardCharsets.UTF_8))
+            try {
+                val jsonElement = gson.fromJson(jsonStr, JsonElement::class.java)
+                val jsonStrPretty = gson.toJson(jsonElement)
+                return Pair(SimpleTypeEnum.JSON, jsonStrPretty.toByteArray(StandardCharsets.UTF_8))
+            } catch (e: JsonSyntaxException) {
+                return Pair(SimpleTypeEnum.JSON, resBody)
+            }
         }
 
-        if (contentType.contains("html")) {
-            return Pair("html", resBody)
+        if (contentType.contains(SimpleTypeEnum.HTML.type)) {
+            return Pair(SimpleTypeEnum.HTML, resBody)
         }
 
-        if (contentType.contains("xml")) {
-            return Pair("xml", resBody)
+        if (contentType.contains(SimpleTypeEnum.XML.type)) {
+            return Pair(SimpleTypeEnum.XML, resBody)
         }
 
-        if (contentType.contains("jpg") || contentType.contains("jpeg") || contentType.contains("png")) {
-            return Pair("image", resBody)
+        if (SimpleTypeEnum.isImage(contentType)) {
+            return Pair(SimpleTypeEnum.IMAGE, resBody)
         }
 
-        return Pair("txt", resBody)
+        return Pair(SimpleTypeEnum.TXT, resBody)
     }
 
-    fun getJsScript(httpScript: HttpScript?): String? {
-        if (httpScript == null) {
+    fun getJsScript(httpResponseHandler: HttpResponseHandler?): String? {
+        if (httpResponseHandler == null) {
             return null
         }
 
-        val text = httpScript.text
-        return text.substring(4, text.length - 2)
+        return httpResponseHandler.responseScript.scriptBody?.text
     }
 
-    fun collectBeforeJsScripts(httpFile: PsiFile): List<String> {
-        val globalScripts = PsiTreeUtil.getChildrenOfType(httpFile, HttpGlobalScript::class.java) ?: arrayOf()
-        return globalScripts
-            .mapNotNull {
-                getJsScript(it.script)
-            }
+    fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<String> {
+        val scripts = mutableListOf<String>()
+
+        val globalScript = getGlobalJsScript(httpFile)
+        if (globalScript != null) {
+            scripts.add(globalScript)
+        }
+
+        val preJsScript = getPreJsScript(httpRequestBlock)
+        if (preJsScript != null) {
+            scripts.add(preJsScript)
+        }
+
+        return scripts
     }
 
-    fun getOriginalFile(httpUrl: HttpUrl): VirtualFile? {
-        val virtualFile = PsiUtil.getVirtualFile(httpUrl)
+    private fun getGlobalJsScript(httpFile: PsiFile): String? {
+        val globalHandler = PsiTreeUtil.getChildOfType(httpFile, HttpGlobalHandler::class.java) ?: return null
+        return globalHandler.globalScript.scriptBody?.text ?: return null
+    }
+
+    private fun getPreJsScript(httpRequestBlock: HttpRequestBlock): String? {
+        val preRequestHandler = httpRequestBlock.preRequestHandler ?: return null
+        return preRequestHandler.preRequestScript.scriptBody?.text ?: return null
+    }
+
+    fun getOriginalFile(requestTarget: HttpRequestTarget): VirtualFile? {
+        val virtualFile = PsiUtil.getVirtualFile(requestTarget)
         if (!isFileInIdeaDir(virtualFile)) {
             return virtualFile
         }
 
-        val httpMethod = PsiTreeUtil.getPrevSiblingOfType(httpUrl, HttpMethod::class.java) ?: return null
+        val httpMethod = PsiTreeUtil.getPrevSiblingOfType(requestTarget, HttpMethod::class.java) ?: return null
 
-        val tabName = if (isFileInIdeaDir(httpUrl.containingFile.virtualFile)) {
-            getReqCommentTxt(httpMethod).replace("#", "").trim()
-        } else {
-            getTabName(httpMethod)
+        val tabName = getTabName(httpMethod)
+
+        val runManager = RunManager.getInstance(requestTarget.project)
+        val configurationSettings = runManager.allSettings
+            .firstOrNull {
+                it.configuration is HttpRunConfiguration && it.configuration.name == tabName
+            }
+        if (configurationSettings == null) {
+            return null
         }
 
-        val project = httpUrl.project
-        val runManager = RunManager.getInstance(project)
-        val settings = runManager.findConfigurationByTypeAndName("gitFlowPlusHttpClient", tabName) ?: return null
-        val httpRunConfiguration = settings.configuration as HttpRunConfiguration
+        val httpRunConfiguration = configurationSettings.configuration as HttpRunConfiguration
 
         return VfsUtil.findFileByIoFile(File(httpRunConfiguration.httpFilePath), true)
     }
 
-    fun getOriginalModule(httpUrl: HttpUrl): Module? {
-        val project = httpUrl.project
+    fun getOriginalModule(requestTarget: HttpRequestTarget): Module? {
+        val project = requestTarget.project
 
-        val virtualFile = getOriginalFile(httpUrl) ?: return null
+        val virtualFile = getOriginalFile(requestTarget) ?: return null
 
         return ModuleUtilCore.findModuleForFile(virtualFile, project)
     }
 
-    fun getSearchTxtInfo(httpUrl: HttpUrl, httpFileParentPath: String): Pair<String, TextRange>? {
-        val project = httpUrl.project
+    fun getSearchTxtInfo(requestTarget: HttpRequestTarget, httpFileParentPath: String): Pair<String, TextRange>? {
+        val project = requestTarget.project
 
-        val url = httpUrl.text.trim()
+        val url = requestTarget.text
 
         val start: Int
-        val bracketIdx = url.indexOf("}}")
+        val bracketIdx = url.indexOf(VARIABLE_SIGN_END)
         start = if (bracketIdx != -1) {
             bracketIdx + 2
         } else {
             val envFileService = EnvFileService.getService(project)
-            val contextPath = envFileService.getEnvValue("contextPath", null, httpFileParentPath)
+            val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
+            val contextPath = envFileService.getEnvValue("contextPath", selectedEnv, httpFileParentPath)
 
             val tmpIdx: Int
             val uri: URI
@@ -339,6 +394,10 @@ object HttpUtils {
             idx
         }
 
+        if (end < start) {
+            return null
+        }
+
         val textRange = TextRange(start, end)
         val searchTxt = url.substring(start, end)
         return Pair(searchTxt, textRange)
@@ -346,5 +405,17 @@ object HttpUtils {
 
     fun isFileInIdeaDir(virtualFile: VirtualFile?): Boolean {
         return virtualFile?.name?.startsWith("tmp") == true
+    }
+
+    fun getTargetHttpMethod(httpFilePath: String, runConfigName: String, project: Project): HttpMethod? {
+        val virtualFile = VfsUtil.findFileByIoFile(File(httpFilePath), false) ?: return null
+
+        val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+        val httpMethods = PsiTreeUtil.findChildrenOfType(psiFile, HttpMethod::class.java)
+
+        return httpMethods.firstOrNull {
+            val tabName = getTabName(it)
+            runConfigName == tabName
+        }
     }
 }

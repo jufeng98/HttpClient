@@ -8,8 +8,10 @@ import com.intellij.openapi.project.Project
  * @author yudong
  */
 object TooltipUtils {
+
     fun showTooltip(msg: String, project: Project) {
         val textEditor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
         HintManager.getInstance().showInformationHint(textEditor, msg)
     }
+
 }

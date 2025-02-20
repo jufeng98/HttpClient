@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface HttpGlobalScript extends PsiElement {
 
-  @NotNull
-  HttpScript getScript();
+  @Nullable
+  HttpScriptBody getScriptBody();
 
 }

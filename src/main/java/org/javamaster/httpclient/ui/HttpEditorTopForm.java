@@ -23,7 +23,9 @@ public class HttpEditorTopForm extends JComponent {
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
     private JComboBox<String> exampleComboBox;
+    private JButton showVariableBtn;
     private Project project;
+    private static String httpFileParentPath;
 
     public HttpEditorTopForm() {
         exampleComboBox.addActionListener(e -> {
@@ -41,6 +43,12 @@ public class HttpEditorTopForm extends JComponent {
                 url = classLoader.getResource("examples/requests-with-scripts.http");
             } else if (Objects.equals(selectedItem, "Response presentations")) {
                 url = classLoader.getResource("examples/responses-presentation.http");
+            } else if (Objects.equals(selectedItem, "Websocket requests")) {
+                url = classLoader.getResource("examples/ws-requests.http");
+            } else if (Objects.equals(selectedItem, "Dubbo requests")) {
+                url = classLoader.getResource("examples/dubbo-requests.http");
+            } else if (Objects.equals(selectedItem, "CryptoJS")) {
+                url = classLoader.getResource("examples/crypto-js.js");
             }
 
             if (url != null) {
@@ -49,6 +57,10 @@ public class HttpEditorTopForm extends JComponent {
                 FileEditorManager.getInstance(project).openFile(virtualFile, true);
                 exampleComboBox.setSelectedIndex(0);
             }
+        });
+        showVariableBtn.addActionListener(e -> {
+            ViewVariableForm viewVariableForm = new ViewVariableForm(project);
+            viewVariableForm.show();
         });
     }
 
@@ -89,6 +101,7 @@ public class HttpEditorTopForm extends JComponent {
 
     public void initEnvCombo(Module module, String httpFileParentPath) {
         project = module.getProject();
+        HttpEditorTopForm.httpFileParentPath = httpFileParentPath;
 
         EnvFileService envFileService = EnvFileService.Companion.getService(project);
         Set<String> presetEnvSet = envFileService.getPresetEnvList(httpFileParentPath);
@@ -98,6 +111,10 @@ public class HttpEditorTopForm extends JComponent {
 
     public String getCurrentEditorSelectedEnv() {
         return (String) envComboBox.getSelectedItem();
+    }
+
+    public static String getHttpFileParentPath() {
+        return httpFileParentPath;
     }
 
     public void setSelectEnv(String env) {

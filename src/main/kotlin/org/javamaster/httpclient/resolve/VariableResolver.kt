@@ -1,17 +1,15 @@
 package org.javamaster.httpclient.resolve
 
-import com.cool.request.utils.Base64Utils
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.RandomStringUtils
-import org.apache.commons.lang3.RandomUtils
+import com.intellij.psi.PsiFile
+import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsScriptExecutor
-import org.javamaster.httpclient.psi.HttpGlobalVariableDefinition
-import org.javamaster.httpclient.utils.HttpUtils
-import java.io.File
-import java.util.*
+import org.javamaster.httpclient.psi.HttpGlobalVariable
+import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
+import org.javamaster.httpclient.psi.HttpTypes
 import java.util.regex.Pattern
 
 /**
@@ -21,20 +19,43 @@ import java.util.regex.Pattern
  */
 @Service(Service.Level.PROJECT)
 class VariableResolver(private val project: Project) {
-    private val patternNotNumber = Pattern.compile("\\D")
     private val fileScopeVariableMap: MutableMap<String, String> = mutableMapOf()
 
-    fun addFileScopeVariables(
-        definitions: MutableCollection<HttpGlobalVariableDefinition>,
+    fun initFileScopeVariables(
+        httpFile: PsiFile,
         selectedEnv: String?,
         httpFileParentPath: String,
     ) {
-        definitions.forEach {
-            val split = it.text.split("=")
-            val variableName = split[0].replace("@", "")
-            val result = resolve(split[1], selectedEnv, httpFileParentPath)
-            fileScopeVariableMap[variableName] = result
+        val map = getFileGlobalVariables(httpFile, selectedEnv, httpFileParentPath)
+        fileScopeVariableMap.putAll(map)
+    }
+
+    fun getFileGlobalVariables(
+        httpFile: PsiFile,
+        selectedEnv: String?,
+        httpFileParentPath: String,
+    ): LinkedHashMap<String, String> {
+        val map = LinkedHashMap<String, String>()
+
+        val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
+
+        globalVariables.forEach {
+            val name =
+                getNextSiblingByType(it.globalVariableName.firstChild, HttpTypes.GLOBAL_NAME, false)?.text
+                    ?: return@forEach
+            val globalVariableValue = it.globalVariableValue ?: return@forEach
+
+            val variable = globalVariableValue.variable
+            val value = if (variable != null) {
+                resolveVariable(variable.name, selectedEnv, httpFileParentPath)
+            } else {
+                getNextSiblingByType(globalVariableValue.firstChild, HttpTypes.GLOBAL_VALUE, false)?.text ?: ""
+            }
+
+            map[name] = value
         }
+
+        return map
     }
 
     fun clearFileScopeVariables() {
@@ -42,7 +63,7 @@ class VariableResolver(private val project: Project) {
     }
 
     fun resolve(str: String, selectedEnv: String?, httpFileParentPath: String): String {
-        val matcher = PATTERN.matcher(str)
+        val matcher = VARIABLE_PATTERN.matcher(str)
 
         return matcher.replaceAll {
             val matchStr = it.group()
@@ -57,12 +78,7 @@ class VariableResolver(private val project: Project) {
         selectedEnv: String?,
         httpFileParentPath: String,
     ): String {
-        var innerVariable = resolveInnerVariable(variable, httpFileParentPath)
-        if (innerVariable != null) {
-            return innerVariable
-        }
-
-        innerVariable = fileScopeVariableMap[variable]
+        var innerVariable = fileScopeVariableMap[variable]
         if (innerVariable != null) {
             return innerVariable
         }
@@ -84,62 +100,28 @@ class VariableResolver(private val project: Project) {
             return envValue
         }
 
-        throw IllegalArgumentException("无法解析变量${variable}")
+        innerVariable = resolveInnerVariable(variable, httpFileParentPath)
+        if (innerVariable != null) {
+            return innerVariable
+        }
+
+        return variable
+    }
+
+    fun getJsGlobalVariables(): LinkedHashMap<String, String> {
+        val jsScriptExecutor = JsScriptExecutor.getService(project)
+        val globalVariables = jsScriptExecutor.getJsGlobalVariables()
+
+        val map = linkedMapOf<String, String>()
+        map.putAll(globalVariables)
+
+        return map
     }
 
     private fun resolveInnerVariable(variable: String, httpFileParentPath: String): String? {
-        if (variable == "\$random.uuid") {
-            return UUID.randomUUID().toString().replace("-", "")
-        }
+        val variableEnum = InnerVariableEnum.getEnum(variable) ?: return null
 
-        if (variable == "\$timestamp") {
-            return System.currentTimeMillis().toString()
-        }
-
-        if (variable == "\$randomInt") {
-            return RandomUtils.nextInt(0, 1000).toString()
-        }
-
-        if (variable.startsWith("\$random.integer")) {
-            val split = variable.split(",")
-            if (split.size == 1) {
-                return RandomUtils.nextInt(0, 1000).toString()
-            }
-
-            val start = patternNotNumber.matcher(split[0]).replaceAll("")
-            val end = patternNotNumber.matcher(split[1]).replaceAll("")
-            return (start.toInt() + RandomUtils.nextInt(0, end.toInt())).toString()
-        }
-
-        if (variable.startsWith("\$random.alphabetic")) {
-            val count = patternNotNumber.matcher(variable).replaceAll("")
-            return RandomStringUtils.randomAlphabetic(count.toInt())
-        }
-
-        if (variable.startsWith("\$random.alphanumeric")) {
-            val count = patternNotNumber.matcher(variable).replaceAll("")
-            return RandomStringUtils.randomAlphanumeric(count.toInt())
-        }
-
-        if (variable.startsWith("\$random.numeric")) {
-            val count = patternNotNumber.matcher(variable).replaceAll("")
-            return RandomStringUtils.randomNumeric(count.toInt())
-        }
-
-        val funName = "\$imageToBase64"
-        if (variable.startsWith(funName)) {
-            val imagePath = variable.substring(funName.length + 1, variable.length - 1)
-            val filePath = HttpUtils.constructFilePath(imagePath, httpFileParentPath)
-            val file = File(filePath)
-            if (!file.exists()) {
-                throw IllegalArgumentException("文件${filePath}不存在!")
-            }
-
-            val bytes = FileUtils.readFileToByteArray(file)
-            return Base64Utils.encodeToString(bytes)
-        }
-
-        return null
+        return variableEnum.exec(variable, httpFileParentPath)
     }
 
     companion object {
@@ -147,6 +129,6 @@ class VariableResolver(private val project: Project) {
             return project.getService(VariableResolver::class.java)
         }
 
-        val PATTERN: Pattern = Pattern.compile("(\\{\\{[\\w\\-,.\\\\:\$()\u4E00-\u9FA5]+}})", Pattern.MULTILINE)
+        val VARIABLE_PATTERN: Pattern = Pattern.compile("(\\{\\{[^{}]+}})")
     }
 }

@@ -1,0 +1,6 @@
+### ws测试1
+WEBSOCKET wss://javamaster.org:8896/clothesRegister?sessionId=6785435456
+Cookie: JSESSIONID=1AB59E3B890BB3015F8176472883731A; b1wash_client=wx;
+
+### ws测试2
+WEBSOCKET ws://localhost:8898/cameraPreview

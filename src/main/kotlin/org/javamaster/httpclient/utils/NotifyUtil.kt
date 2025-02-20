@@ -1,9 +1,9 @@
 package org.javamaster.httpclient.utils
 
-import com.intellij.notification.NotificationGroup
-import com.intellij.notification.NotificationGroupManager
-import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.MessageType
+import com.intellij.openapi.wm.ToolWindowId
+import com.intellij.openapi.wm.ToolWindowManager
 
 /**
  * 通知弹框
@@ -11,25 +11,21 @@ import com.intellij.openapi.project.Project
  * @author yudong
  */
 object NotifyUtil {
-    private val STICKY_BALLOON_GROUP: NotificationGroup = NotificationGroupManager.getInstance()
-        .getNotificationGroup("HttpClient.STICKY_BALLOON")
 
-    fun notifyError(project: Project?, message: String?) {
-        notify(project, "温馨提示", message)
+    fun notifyWarn(project: Project, message: String?) {
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        toolWindowManager.notifyByBalloon(
+            ToolWindowId.SERVICES, MessageType.WARNING,
+            "<div style='font-size:18pt'>${message}</div>"
+        )
     }
 
-    fun notifyError(project: Project?, title: String, message: String?) {
-        notify(project, title, message)
+    fun notifyError(project: Project, message: String?) {
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        toolWindowManager.notifyByBalloon(
+            ToolWindowId.SERVICES, MessageType.ERROR,
+            "<div style='font-size:18pt'>${message}</div>"
+        )
     }
 
-    private fun notify(
-        project: Project?,
-        title: String, message: String?,
-    ) {
-        if (project == null) {
-            return
-        }
-
-        STICKY_BALLOON_GROUP.createNotification(title, message ?: "null", NotificationType.ERROR).notify(project)
-    }
 }
