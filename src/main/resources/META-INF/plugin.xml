@@ -6,38 +6,55 @@
         jufeng98
     </vendor>
 
-    <description><![CDATA[
-        Provides the ability to edit and execute HTTP requests from the code editor.<br>
-        <ul>
-            <li>Support initiating GET, POST and other requests</li>
-            <li>Support WebSocket request</li>
-            <li>Support Environment, build-in variable and build-in method</li>
-            <li>Support jump to Spring Controller from url</li>
-            <li>Support jump to Spring Controller bean field from json property</li>
-            <li>Support JavaScript handler</li>
-            <li>Support reading file content as http request body</li>
-            <li>Support save http response body to file</li>
-            <li>Support preview image</li>
-        </ul>
-        提供从 IDEA Editor 编写和执行 HTTP 请求的能力：<br>
-        <ul>
-            <li>支持发起 GET、POST 等请求</li>
-            <li>支持发起 WebSocket 请求</li>
-            <li>支持环境变量、内置变量和内置方法</li>
-            <li>支持从 url 跳转到 Spring 控制器(依赖Cool Request插件)</li>
-            <li>支持从 json 属性跳转到 Spring Bean 字段(依赖Cool Request插件)</li>
-            <li>支持 JavaScript 语法的前置处理器和后置处理器</li>
-            <li>支持从文件读取内容作为请求体</li>
-            <li>支持保存响应到文件</li>
-            <li>支持预览图片</li>
-        </ul>
-        开始使用：<br>
-        <ol>
-            <li>创建一个 http 后缀的文件</li>
-            <li>从右上角的 Examples 根据需要选择合适的请求模板并复制到刚创建的文件里加以修改</li>
-            <li>点击文件左侧的运行按钮发起请求并查看响应</li>
-        </ol>
-  ]]></description>
+    <description>
+        <![CDATA[
+            Provides the ability to edit and execute HTTP requests from the code editor.<br>
+            <ul>
+                <li>Support initiating GET, POST and other requests</li>
+                <li>Support WebSocket request</li>
+                <li>Support Environment, build-in variable and build-in method</li>
+                <li>Support jump to Spring Controller from url</li>
+                <li>Support jump to Spring Controller bean field from json property</li>
+                <li>Support JavaScript handler</li>
+                <li>Support reading file content as http request body</li>
+                <li>Support save http response body to file</li>
+                <li>Support preview image</li>
+            </ul>
+            提供从 IDEA Editor 编写和执行 HTTP 请求的能力：<br>
+            <ul>
+                <li>支持发起 GET、POST 等请求</li>
+                <li>支持发起 WebSocket 请求</li>
+                <li>支持发起 Dubbo 请求</li>
+                <li>支持环境变量、内置变量和内置方法</li>
+                <li>支持从 url 跳转到 SpringMVC Controller(依赖Cool Request插件)</li>
+                <li>支持从 json 属性跳转到 Spring Bean 字段(依赖Cool Request插件)</li>
+                <li>支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器，其中 JavaScript 语法高亮功能依赖 WebCalm 插件</li>
+                <li>支持从文件读取内容作为请求体</li>
+                <li>支持保存响应到文件</li>
+                <li>支持预览图片</li>
+            </ul>
+            开始使用：<br>
+            <ol>
+                <li>创建一个 http 后缀的文件</li>
+                <li>从右上角的 Examples 根据需要选择合适的请求模板并复制到刚创建的文件里加以修改</li>
+                <li>点击文件左侧的运行按钮发起请求并查看响应</li>
+            </ol>
+        ]]>
+    </description>
+
+    <change-notes>
+        <![CDATA[
+            <ul>
+                <li><b>2.0.0</b></li>
+                <ul>
+                    <li>重构http语法解析逻辑，采用更科学的方式</li>
+                    <li>更合理的窗口布局</li>
+                    <li>支持 Dubbo 请求</li>
+                    <li>Bug修复</li>
+                </ul>
+            </ul>
+        ]]>
+    </change-notes>
 
     <depends>com.intellij.java</depends>
     <depends>com.intellij.modules.json</depends>

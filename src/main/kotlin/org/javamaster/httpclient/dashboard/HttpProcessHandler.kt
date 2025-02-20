@@ -108,12 +108,12 @@ class HttpProcessHandler(
         val httpHeaderFields = request.headerFieldList
         val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver, selectedEnv, parentPath)
 
-        if (methodType == (HttpTypes.WEBSOCKET as HttpTokenType).name) {
+        if (methodType == HttpRequestEnum.WEBSOCKET.name) {
             handleWs(url, reqHeaderMap)
             return
         }
 
-        if (methodType == (HttpTypes.DUBBO as HttpTokenType).name) {
+        if (methodType == HttpRequestEnum.DUBBO.name) {
             handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
             return
         }

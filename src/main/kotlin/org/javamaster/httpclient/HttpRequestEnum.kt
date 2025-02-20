@@ -98,6 +98,26 @@ enum class HttpRequestEnum {
             return builder.build()
         }
     },
+    WEBSOCKET {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: MutableMap<String, String>,
+            bodyPublisher: HttpRequest.BodyPublisher?,
+        ): HttpRequest {
+            throw UnsupportedOperationException()
+        }
+    },
+    DUBBO {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: MutableMap<String, String>,
+            bodyPublisher: HttpRequest.BodyPublisher?,
+        ): HttpRequest {
+            throw UnsupportedOperationException()
+        }
+    }
     ;
 
     fun execute(

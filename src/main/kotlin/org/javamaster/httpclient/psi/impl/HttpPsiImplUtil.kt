@@ -91,7 +91,7 @@ object HttpPsiImplUtil {
     @JvmStatic
     fun getHttpVersion(request: HttpRequest): Version {
         val psiElement =
-            HttpPsiUtils.getNextSiblingByType(request.firstChild, HttpTypes.HTTP, false)
+            HttpPsiUtils.getNextSiblingByType(request.firstChild, HttpTypes.HTTP_VERSION, false)
                 ?: return Version.HTTP_1_1
         val text = psiElement.text
         return if (text.contains("2.0")) {

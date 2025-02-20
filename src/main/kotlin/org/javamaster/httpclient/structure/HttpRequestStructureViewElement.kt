@@ -15,8 +15,11 @@ import com.intellij.util.ArrayUtil
 import com.intellij.util.SmartList
 import com.intellij.util.containers.ContainerUtil
 import org.javamaster.httpclient.HttpIcons
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.psi.HttpHeaderField
+import org.javamaster.httpclient.psi.HttpPsiUtils
+import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.utils.HttpUtils.getTabName
 import java.util.function.Consumer
 import javax.swing.Icon
@@ -74,9 +77,9 @@ class HttpRequestStructureViewElement private constructor(
 
                 var icon = AllIcons.Actions.Annotate
                 val type = method.text
-                if (type == (HttpTypes.GET as HttpTokenType).name) {
+                if (type == HttpRequestEnum.GET.name) {
                     icon = HttpIcons.GET
-                } else if (type == (HttpTypes.POST as HttpTokenType).name) {
+                } else if (type == HttpRequestEnum.POST.name) {
                     icon = HttpIcons.POST
                 }
 

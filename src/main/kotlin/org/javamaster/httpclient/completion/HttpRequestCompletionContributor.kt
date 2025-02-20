@@ -16,6 +16,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import com.intellij.util.containers.CollectionFactory
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.getHeaderValues
 import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.headers
 import org.javamaster.httpclient.completion.support.HttpSuffixInsertHandler
@@ -118,7 +119,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.POST as HttpTokenType).name)
+                    LookupElementBuilder.create(HttpRequestEnum.POST.name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -126,7 +127,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.GET as HttpTokenType).name)
+                    LookupElementBuilder.create(HttpRequestEnum.GET.name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -134,7 +135,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.DELETE as HttpTokenType).name)
+                    LookupElementBuilder.create(HttpRequestEnum.DELETE.name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -142,7 +143,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.PUT as HttpTokenType).name)
+                    LookupElementBuilder.create(HttpRequestEnum.PUT.name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -150,7 +151,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.WEBSOCKET as HttpTokenType).name)
+                    LookupElementBuilder.create(HttpRequestEnum.WEBSOCKET.name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )
@@ -158,7 +159,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
 
             result.addElement(
                 PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create((HttpTypes.DUBBO as HttpTokenType).name)
+                    LookupElementBuilder.create(HttpRequestEnum.DUBBO.name)
                         .withBoldness(true)
                         .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
                 )

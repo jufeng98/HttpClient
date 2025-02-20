@@ -7,10 +7,9 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.psi.HttpTokenType
-import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
 
@@ -48,7 +47,7 @@ class JsonKeyGotoDeclarationHandler : GotoDeclarationHandler {
         val httpMethod = httpRequest?.method ?: return arrayOf()
         val methodType = httpMethod.text
 
-        if (methodType == (HttpTypes.DUBBO as HttpTokenType).name) {
+        if (methodType == HttpRequestEnum.DUBBO.name) {
             val originalModule = DubboUtils.getOriginalModule(httpRequest) ?: return arrayOf()
             return arrayOf(JsonFakePsiElement(jsonString, "", originalModule))
         }

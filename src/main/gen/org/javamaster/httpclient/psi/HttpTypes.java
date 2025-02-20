@@ -52,26 +52,21 @@ public interface HttpTypes {
   IElementType AND = new HttpTokenType("&");
   IElementType AT = new HttpTokenType("@");
   IElementType COLON = new HttpTokenType(":");
-  IElementType DELETE = new HttpTokenType("DELETE");
   IElementType DIRECTION_COMMENT_START = new HttpTokenType("DIRECTION_COMMENT_START");
   IElementType DIRECTION_NAME_PART = new HttpTokenType("DIRECTION_NAME_PART");
   IElementType DIRECTION_VALUE_PART = new HttpTokenType("DIRECTION_VALUE_PART");
   IElementType DOLLAR = new HttpTokenType("$");
-  IElementType DUBBO = new HttpTokenType("DUBBO");
   IElementType END_SCRIPT_BRACE = new HttpTokenType("%}");
   IElementType END_VARIABLE_BRACE = new HttpTokenType("}}");
   IElementType EQUALS = new HttpTokenType("=");
   IElementType FIELD_NAME = new HttpTokenType("FIELD_NAME");
   IElementType FIELD_VALUE = new HttpTokenType("FIELD_VALUE");
   IElementType FRAGMENT_PART = new HttpTokenType("FRAGMENT_PART");
-  IElementType GET = new HttpTokenType("GET");
   IElementType GLOBAL_NAME = new HttpTokenType("GLOBAL_NAME");
   IElementType GLOBAL_START_SCRIPT_BRACE = new HttpTokenType("<! {%");
   IElementType GLOBAL_VALUE = new HttpTokenType("GLOBAL_VALUE");
   IElementType HASH = new HttpTokenType("#");
   IElementType HOST_VALUE = new HttpTokenType("HOST_VALUE");
-  IElementType HTTP = new HttpTokenType("http");
-  IElementType HTTPS = new HttpTokenType("https");
   IElementType HTTP_VERSION = new HttpTokenType("HTTP_VERSION");
   IElementType IDENTIFIER = new HttpTokenType("IDENTIFIER");
   IElementType INPUT_FILE_PATH_PART = new HttpTokenType("INPUT_FILE_PATH_PART");
@@ -84,8 +79,6 @@ public interface HttpTypes {
   IElementType OUTPUT_FILE_SIGN = new HttpTokenType(">> ");
   IElementType OUT_START_SCRIPT_BRACE = new HttpTokenType("> {%");
   IElementType PORT_SEGMENT = new HttpTokenType("PORT_SEGMENT");
-  IElementType POST = new HttpTokenType("POST");
-  IElementType PUT = new HttpTokenType("PUT");
   IElementType QUERY_NAME = new HttpTokenType("QUERY_NAME");
   IElementType QUERY_VALUE = new HttpTokenType("QUERY_VALUE");
   IElementType QUESTION = new HttpTokenType("?");
@@ -97,7 +90,6 @@ public interface HttpTypes {
   IElementType SEGMENT = new HttpTokenType("SEGMENT");
   IElementType SLASH = new HttpTokenType("/");
   IElementType START_VARIABLE_BRACE = new HttpTokenType("{{");
-  IElementType WEBSOCKET = new HttpTokenType("WEBSOCKET");
 
   class Factory {
     public static PsiElement createElement(ASTNode node) {

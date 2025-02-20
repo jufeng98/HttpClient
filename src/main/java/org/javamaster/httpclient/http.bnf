@@ -17,8 +17,6 @@
   tokens=[
     LINE_COMMENT='regexp://.*'
 
-    HTTP='http'
-    HTTPS='https'
     SCHEMA_SEPARATE='://'
     COLON=':'
 
@@ -30,12 +28,6 @@
     DOLLAR='$'
     AT='@'
 
-    POST='POST'
-    GET='GET'
-    DELETE='DELETE'
-    PUT='PUT'
-    WEBSOCKET='WEBSOCKET'
-    DUBBO='DUBBO'
     INPUT_FILE_SIGN='< '
     OUTPUT_FILE_SIGN='>> '
     GLOBAL_START_SCRIPT_BRACE='<! {%'
