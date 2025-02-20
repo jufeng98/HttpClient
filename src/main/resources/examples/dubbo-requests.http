@@ -11,17 +11,18 @@ Version: 1.0.0
   }
 }
 
+// Registry 说明: 该header表示注册中心配置,指定该header将会忽略url上的地址,进而从注册中心去取得服务
 ### 测试dubbo项目无接口类情况
-DUBBO dubbo://10.255.0.1:31299
+DUBBO dubbo://dubbo.javamaster.org:31299
 Content-Type: application/json
 Interface-Name: org.javamaster.api.serviceorder.dubbo.IMHServiceOrderDubboService
-Method: searchServiceOrderList
+Method: getOrderList
 Version: 1.0.0
-Registry: zookeeper://127.0.0.1:2181 // 注册中心配置,此header有值将会忽略url上的地址,从注册中心取得服务
-Arg0-Type: org.javamaster.api.serviceorder.dto.SearchServiceOrderListDto
+Registry: zookeeper://zk.javamaster.org:2181
+Arg0-Type: org.javamaster.api.serviceorder.dto.GetOrderListDto
 
 {
   "Arg0-Type": {
-    "shopOrderId": "602410211454930066"
+    "shopOrderId": "602495678454930066"
   }
 }

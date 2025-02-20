@@ -31,15 +31,15 @@
 
 #### DUBBO 请求(针对项目中存在 Dubbo 接口类情况)
 
-![dubbo-1.png](./images/dubbo-1.jpg)
+![dubbo-1.png](./images/dubbo-1.png)
 
 #### DUBBO 请求(针对项目中不存在 Dubbo 接口类情况)
 
-![dubbo-2.png](./images/dubbo-2.jpg)
+![dubbo-2.png](./images/dubbo-2.png)
 
 #### WebSocket 请求
 
-![websocket.png](./images/websocket.jpg)
+![websocket.png](./images/websocket.png)
 
 #### 环境变量跳转
 
@@ -59,11 +59,11 @@
 
 #### 保存响应到文件
 
-![save-response.png](./images/res-to-file.jpg)
+![save-response.png](./images/res-to-file.png)
 
 #### 预览图片
 
-![preview-img.png](./images/preview-image.jpg)
+![preview-img.png](./images/preview-image.png)
 
 #### multipart请求
 
@@ -82,5 +82,5 @@
 
 ## 技术支持
 
-微信记得备注 ```HttpClient```，共同进步。
+微信记得备注 ```HttpRequest```，共同进步。
 ![wechat](./images/wechat.jpg)

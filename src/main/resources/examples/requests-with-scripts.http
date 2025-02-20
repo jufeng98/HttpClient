@@ -38,6 +38,7 @@ Name: {{name}}
 %}
 
 >> result.html
+
 ### 后置js处理器
 GET https://miao.baidu.com/abdr
 
@@ -45,7 +46,7 @@ GET https://miao.baidu.com/abdr
     client.test("Request executed successfully", () => {
         client.assert(response.status === 200, "Response status is not 200");
         client.log('content-type:' + response.headers['content-type'])
-    });
+    })
 %}
 
 ### 检查响应体
@@ -54,7 +55,7 @@ GET https://miao.baidu.com/abdr
 > {%
     client.test("Headers option exists", () => {
         client.assert(response.body.hasOwnProperty("data"), "Cannot find 'data' option in response");
-    });
+    })
 %}
 
 ### 检查 Content-Type from headers
