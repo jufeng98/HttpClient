@@ -475,10 +475,10 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
   private boolean zzEOFDone;
 
   /* user code: */
-        private boolean nameFlag = true;
+        private boolean nameFlag;
         int nextState;
-        public int matchTimes = 0;
-        public CharSequence lastMatch = "";
+        public int matchTimes;
+        public CharSequence lastMatch;
 
         public _HttpLexer() {
           this((java.io.Reader)null);
@@ -875,7 +875,7 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
           // fall through
           case 92: break;
           case 26:
-            { yybegin(IN_BODY); return WHITE_SPACE;
+            { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE;
             }
           // fall through
           case 93: break;

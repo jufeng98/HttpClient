@@ -11,10 +11,10 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %%
 
 %{
-        private boolean nameFlag = true;
+        private boolean nameFlag;
         int nextState;
-        public int matchTimes = 0;
-        public CharSequence lastMatch = "";
+        public int matchTimes;
+        public CharSequence lastMatch;
 
         public _HttpLexer() {
           this((java.io.Reader)null);
@@ -181,7 +181,7 @@ DIRECTION_PART=[^\r\n ]+
 
 <IN_HEADER> {
   [^\r\n]           { yypushback(yylength()); yybegin(IN_HEADER_FIELD_NAME); }
-  {EOL}             { yybegin(IN_BODY); return WHITE_SPACE; }
+  {EOL}             { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
 }
 
 <IN_HEADER_FIELD_NAME> {
@@ -236,7 +236,7 @@ DIRECTION_PART=[^\r\n ]+
 <IN_INPUT_FILE_PATH> {
   {FILE_PATH_PART}           { return INPUT_FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
-  {EOL_MULTI}                { yybegin(IN_BODY); return WHITE_SPACE; }
+  {EOL_MULTI}                { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
 }
 
 <IN_POST_SCRIPT> {
