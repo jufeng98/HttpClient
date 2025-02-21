@@ -10,12 +10,13 @@
         <![CDATA[
             Provides the ability to edit and execute HTTP requests from the code editor.<br>
             <ul>
-                <li>Support initiating GET, POST and other requests</li>
-                <li>Support WebSocket request</li>
+                <li>Support sending GET, POST and other requests</li>
+                <li>Support sending WebSocket request</li>
+                <li>Support sending Dubbo request</li>
                 <li>Support Environment, build-in variable and build-in method</li>
-                <li>Support jump to Spring Controller from url</li>
-                <li>Support jump to Spring Controller bean field from json property</li>
-                <li>Support JavaScript handler</li>
+                <li>Support jump to Spring Controller from url(Depend on Cool Request plugin)</li>
+                <li>Support jump to Spring Controller bean field from json property(Depend on Cool Request plugin)</li>
+                <li>Support JavaScript previous handler, post handler and global handler. JavaScript syntax highlighting depend on WebCalm plugin</li>
                 <li>Support reading file content as http request body</li>
                 <li>Support save http response body to file</li>
                 <li>Support preview image</li>
@@ -44,6 +45,13 @@
 
     <change-notes>
         <![CDATA[
+            <ul>
+                <li><b>2.1.0</b></li>
+                <ul>
+                    <li>支持注释指令参数</li>
+                    <li>Bug修复</li>
+                </ul>
+            </ul>
             <ul>
                 <li><b>2.0.0</b></li>
                 <ul>
