@@ -47,7 +47,9 @@ globalVariable::= globalVariableName globalVariableValue? {
 globalVariableName ::= AT GLOBAL_NAME {
     pin = 1
 }
-globalVariableValue ::= EQUALS (GLOBAL_VALUE | variable)
+globalVariableValue ::= EQUALS (GLOBAL_VALUE | variable) {
+    pin = 1
+}
 globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1

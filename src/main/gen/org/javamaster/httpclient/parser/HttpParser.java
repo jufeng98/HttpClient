@@ -183,12 +183,13 @@ public class HttpParser implements PsiParser, LightPsiParser {
   public static boolean globalVariableValue(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariableValue")) return false;
     if (!nextTokenIs(b, EQUALS)) return false;
-    boolean r;
-    Marker m = enter_section_(b);
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_VALUE, null);
     r = consumeToken(b, EQUALS);
+    p = r; // pin = 1
     r = r && globalVariableValue_1(b, l + 1);
-    exit_section_(b, m, GLOBAL_VARIABLE_VALUE, r);
-    return r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   // GLOBAL_VALUE | variable

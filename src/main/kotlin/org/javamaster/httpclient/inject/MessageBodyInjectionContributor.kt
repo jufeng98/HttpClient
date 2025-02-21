@@ -6,6 +6,7 @@ import com.intellij.lang.html.HTMLLanguage
 import com.intellij.lang.injection.MultiHostInjector
 import com.intellij.lang.injection.MultiHostRegistrar
 import com.intellij.lang.xml.XMLLanguage
+import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLanguageInjectionHost
@@ -21,7 +22,7 @@ import org.javamaster.httpclient.utils.InjectionUtils
 class MessageBodyInjectionContributor : MultiHostInjector {
 
     override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
-        var language: Language? = null
+        var language: Language = PlainTextLanguage.INSTANCE
         var textRange: TextRange? = null
         var contentType: ContentType? = null
         if (context is HttpMessageBody) {
@@ -50,7 +51,7 @@ class MessageBodyInjectionContributor : MultiHostInjector {
             textRange = InjectionUtils.innerRange(context)
         }
 
-        if (language == null || textRange == null) {
+        if (textRange == null) {
             return
         }
 
