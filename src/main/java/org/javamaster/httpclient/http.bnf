@@ -39,7 +39,7 @@
   ]
 }
 
-httpFile ::= globalHandler? globalVariable* request_block*
+httpFile ::= globalHandler? globalVariable* requestBlock*
 
 globalVariable::= globalVariableName globalVariableValue? {
     pin = 1
@@ -52,7 +52,7 @@ globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-request_block ::= directionComment* comment preRequestHandler? request
+requestBlock ::= comment directionComment* preRequestHandler? request
 comment ::= REQUEST_COMMENT
 directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1
