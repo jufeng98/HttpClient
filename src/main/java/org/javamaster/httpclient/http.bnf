@@ -52,7 +52,11 @@ globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-requestBlock ::= comment directionComment* preRequestHandler? request
+requestBlock ::= comment directionComment* preRequestHandler? request {
+    pin = 1
+    recoverWhile = "requestBlockRecover"
+}
+private requestBlockRecover ::= !(REQUEST_COMMENT)
 comment ::= REQUEST_COMMENT
 directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1

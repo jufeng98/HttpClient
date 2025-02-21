@@ -58,7 +58,7 @@ class HttpRequestStructureViewElement private constructor(
 
             for (block in blocks) {
                 val request = block.request
-                val originalHost = request.httpHost
+                val originalHost = request?.httpHost ?: continue
                 val target = request.requestTarget
                 val path = target?.url
 
@@ -150,7 +150,8 @@ class HttpRequestStructureViewElement private constructor(
                 elements.add(create(preRequestHandler, "Pre request handler", AllIcons.Actions.Play_first))
             }
 
-            val headers = element.request.headerFieldList
+            val request = element.request
+            val headers = request?.headerFieldList ?: return emptyList()
             if (headers.isNotEmpty()) {
                 headers.forEach(Consumer { header: HttpHeaderField ->
                     val headerElement = create(
@@ -161,10 +162,10 @@ class HttpRequestStructureViewElement private constructor(
                 })
             }
 
-            val messagesGroup = element.request.requestMessagesGroup
+            val messagesGroup = request.requestMessagesGroup
             if (messagesGroup != null) {
                 var mimeType = "<not defined>"
-                val contentType = element.request.contentType
+                val contentType = request.contentType
                 if (contentType != null) {
                     mimeType = contentType.mimeType
                 }
@@ -185,7 +186,7 @@ class HttpRequestStructureViewElement private constructor(
                 elements.add(create(messagesGroup, "Request body $mimeType", icon))
             }
 
-            val responseHandler = element.request.responseHandler
+            val responseHandler = request.responseHandler
             if (responseHandler != null) {
                 elements.add(create(responseHandler, "Response handler", AllIcons.Actions.Play_last))
             }

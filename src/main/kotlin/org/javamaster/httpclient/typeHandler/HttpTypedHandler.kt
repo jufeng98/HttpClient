@@ -68,7 +68,7 @@ class HttpTypedHandler : TypedHandlerDelegate() {
         } else {
             val sibling = element.getPrevSibling()
             if (sibling is HttpRequestBlock) {
-                val request = sibling.request
+                val request = sibling.request ?: return false
                 if (request.headerFieldList.isEmpty()) {
                     return false
                 }

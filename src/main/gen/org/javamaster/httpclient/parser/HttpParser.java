@@ -704,15 +704,15 @@ public class HttpParser implements PsiParser, LightPsiParser {
   // comment directionComment* preRequestHandler? request
   public static boolean requestBlock(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "requestBlock")) return false;
-    if (!nextTokenIs(b, REQUEST_COMMENT)) return false;
-    boolean r;
-    Marker m = enter_section_(b);
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, REQUEST_BLOCK, "<request block>");
     r = comment(b, l + 1);
-    r = r && requestBlock_1(b, l + 1);
-    r = r && requestBlock_2(b, l + 1);
-    r = r && request(b, l + 1);
-    exit_section_(b, m, REQUEST_BLOCK, r);
-    return r;
+    p = r; // pin = 1
+    r = r && report_error_(b, requestBlock_1(b, l + 1));
+    r = p && report_error_(b, requestBlock_2(b, l + 1)) && r;
+    r = p && request(b, l + 1) && r;
+    exit_section_(b, l, m, r, p, HttpParser::requestBlockRecover);
+    return r || p;
   }
 
   // directionComment*
@@ -731,6 +731,17 @@ public class HttpParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "requestBlock_2")) return false;
     preRequestHandler(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // !(REQUEST_COMMENT)
+  static boolean requestBlockRecover(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestBlockRecover")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_);
+    r = !consumeToken(b, REQUEST_COMMENT);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   /* ********************************************************** */

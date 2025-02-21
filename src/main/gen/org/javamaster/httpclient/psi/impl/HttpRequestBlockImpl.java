@@ -46,9 +46,9 @@ public class HttpRequestBlockImpl extends ASTWrapperPsiElement implements HttpRe
   }
 
   @Override
-  @NotNull
+  @Nullable
   public HttpRequest getRequest() {
-    return findNotNullChildByClass(HttpRequest.class);
+    return findChildByClass(HttpRequest.class);
   }
 
 }
