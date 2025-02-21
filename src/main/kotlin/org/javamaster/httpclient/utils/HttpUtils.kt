@@ -312,6 +312,16 @@ object HttpUtils {
         return scripts
     }
 
+    fun getDirectionCommentParamMap(httpRequestBlock: HttpRequestBlock): Map<String, String> {
+        val list = PsiTreeUtil.getChildrenOfTypeAsList(httpRequestBlock, HttpDirectionComment::class.java)
+        val map = mutableMapOf<String, String>()
+        list.forEach {
+            val name = it.directionName?.text ?: return@forEach
+            map[name] = it.directionValue?.text ?: ""
+        }
+        return map
+    }
+
     private fun getGlobalJsScript(httpFile: PsiFile): String? {
         val globalHandler = PsiTreeUtil.getChildOfType(httpFile, HttpGlobalHandler::class.java) ?: return null
         return globalHandler.globalScript.scriptBody?.text ?: return null

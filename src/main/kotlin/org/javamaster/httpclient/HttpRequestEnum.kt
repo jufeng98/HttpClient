@@ -22,10 +22,13 @@ enum class HttpRequestEnum {
             version: Version,
             reqHeaderMap: MutableMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
         ): HttpRequest {
+            val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+
             val builder = HttpRequest.newBuilder()
                 .version(version)
-                .timeout(READ_TIMEOUT)
+                .timeout(Duration.ofSeconds(readTimeout))
                 .GET()
                 .uri(URI.create(url))
 
@@ -40,10 +43,13 @@ enum class HttpRequestEnum {
             version: Version,
             reqHeaderMap: MutableMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
         ): HttpRequest {
+            val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+
             val builder = HttpRequest.newBuilder()
                 .version(version)
-                .timeout(READ_TIMEOUT)
+                .timeout(Duration.ofSeconds(readTimeout))
                 .uri(URI.create(url))
 
             reqHeaderMap.forEach(builder::setHeader)
@@ -63,10 +69,13 @@ enum class HttpRequestEnum {
             version: Version,
             reqHeaderMap: MutableMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
         ): HttpRequest {
+            val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+
             val builder = HttpRequest.newBuilder()
                 .version(version)
-                .timeout(READ_TIMEOUT)
+                .timeout(Duration.ofSeconds(readTimeout))
                 .DELETE()
                 .uri(URI.create(url))
 
@@ -81,10 +90,13 @@ enum class HttpRequestEnum {
             version: Version,
             reqHeaderMap: MutableMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
         ): HttpRequest {
+            val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+
             val builder = HttpRequest.newBuilder()
                 .version(version)
-                .timeout(READ_TIMEOUT)
+                .timeout(Duration.ofSeconds(readTimeout))
                 .uri(URI.create(url))
 
             reqHeaderMap.forEach(builder::setHeader)
@@ -104,6 +116,7 @@ enum class HttpRequestEnum {
             version: Version,
             reqHeaderMap: MutableMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
@@ -114,6 +127,7 @@ enum class HttpRequestEnum {
             version: Version,
             reqHeaderMap: MutableMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
@@ -127,6 +141,7 @@ enum class HttpRequestEnum {
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
         tabName: String,
+        paramMap: Map<String, String>,
     ): CompletableFuture<HttpResponse<ByteArray>> {
         try {
             var multipartLength = 0L
@@ -151,10 +166,11 @@ enum class HttpRequestEnum {
                 }
             }
 
-            val request = createRequest(url, version, reqHttpHeaders, bodyPublisher)
+            val request = createRequest(url, version, reqHttpHeaders, bodyPublisher, paramMap)
 
+            val connectTimeout = paramMap[CONNECT_TIMEOUT_NAME]?.toLong() ?: 6L
             val client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(6))
+                .connectTimeout(Duration.ofSeconds(connectTimeout))
                 .build()
 
             val commentTabName = "### $tabName\r\n"
@@ -215,11 +231,13 @@ enum class HttpRequestEnum {
         version: Version,
         reqHeaderMap: MutableMap<String, String>,
         bodyPublisher: HttpRequest.BodyPublisher?,
+        paramMap: Map<String, String>,
     ): HttpRequest
 
     companion object {
-        // 加了请求中断功能,因此设为永不超时
-        val READ_TIMEOUT: Duration = Duration.ofDays(1)
+        private const val READ_TIMEOUT_NAME = "readTimeout"
+        private const val CONNECT_TIMEOUT_NAME = "connectTimeout"
+        private const val READ_TIMEOUT = 7200L
 
         fun getInstance(httpMethod: HttpMethod): HttpRequestEnum {
             val name = httpMethod.text

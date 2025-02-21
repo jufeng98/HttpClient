@@ -131,15 +131,15 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitRequestBlock(@NotNull HttpRequestBlock o) {
+    visitPsiElement(o);
+  }
+
   public void visitRequestMessagesGroup(@NotNull HttpRequestMessagesGroup o) {
     visitPsiElement(o);
   }
 
   public void visitRequestTarget(@NotNull HttpRequestTarget o) {
-    visitPsiElement(o);
-  }
-
-  public void visitRequestBlock(@NotNull HttpRequestBlock o) {
     visitPsiElement(o);
   }
 

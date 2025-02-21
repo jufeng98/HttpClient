@@ -57,6 +57,8 @@ class HttpProcessHandler(
 
     private val jsAfterScriptStr = getJsScript(responseHandler)
 
+    private val paramMap = HttpUtils.getDirectionCommentParamMap(requestBlock)
+
     private val httpDashboardForm = HttpDashboardForm()
 
     private val version = request.version?.version ?: Version.HTTP_1_1
@@ -203,8 +205,8 @@ class HttpProcessHandler(
     ) {
         val start = System.currentTimeMillis()
 
-        val httpRequestEnum = HttpRequestEnum.getInstance(httpMethod)
-        val future = httpRequestEnum.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName)
+        val requestEnum = HttpRequestEnum.getInstance(httpMethod)
+        val future = requestEnum.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         future.whenCompleteAsync { response, throwable ->
             runWriteActionAndWait {

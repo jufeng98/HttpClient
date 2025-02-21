@@ -25,6 +25,8 @@ Content-Type: application/json
 }
 
 ### 复杂multipart请求
+# @connectTimeout 6
+# @readTimeout 6
 POST https://miao.baidu.com/abdr
 Content-Type: multipart/form-data; boundary=boundary
 
