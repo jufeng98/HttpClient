@@ -15,10 +15,8 @@ import org.javamaster.httpclient.reference.support.HttpVariablePsiReferenceProvi
  */
 class HttpReferenceContributor : PsiReferenceContributor() {
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
-        val provider = HttpVariablePsiReferenceProvider()
-
         registrar.registerReferenceProvider(
-            PlatformPatterns.psiElement(HttpVariable::class.java), provider
+            PlatformPatterns.psiElement(HttpVariable::class.java), HttpVariablePsiReferenceProvider()
         )
 
         registrar.registerReferenceProvider(

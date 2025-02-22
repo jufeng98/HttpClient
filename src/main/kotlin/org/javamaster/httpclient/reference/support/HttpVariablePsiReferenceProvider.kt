@@ -19,10 +19,13 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
         element: PsiElement,
         context: ProcessingContext,
     ): Array<PsiReference> {
-
         val text = element.text
         val start = 2
         val end = text.length - start
+        if (end <= start) {
+            return arrayOf()
+        }
+
         val textRange = TextRange(start, end)
         val name = text.substring(start, end)
 
