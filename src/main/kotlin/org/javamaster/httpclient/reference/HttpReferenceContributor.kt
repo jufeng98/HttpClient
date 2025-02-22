@@ -28,6 +28,5 @@ class HttpReferenceContributor : PsiReferenceContributor() {
         registrar.registerReferenceProvider(
             PlatformPatterns.psiElement(HttpHeaderFieldValue::class.java), HttpHeaderPsiReferenceProvider()
         )
-
     }
 }

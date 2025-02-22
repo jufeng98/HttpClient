@@ -21,6 +21,7 @@ import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.getHea
 import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.headers
 import org.javamaster.httpclient.completion.support.HttpSuffixInsertHandler
 import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.completion.support.HttpDirectionNameCompletionProvider
 
 
 class HttpCompletionContributor : CompletionContributor() {
@@ -63,6 +64,11 @@ class HttpCompletionContributor : CompletionContributor() {
                 ), PlatformPatterns.psiElement(HttpTypes.MESSAGE_BOUNDARY)
             ),
             HttpMessageBodySeparatorOptionsCompletion()
+        )
+
+        this.extend(
+            CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.DIRECTION_NAME_PART),
+            HttpDirectionNameCompletionProvider()
         )
     }
 
