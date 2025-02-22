@@ -3,17 +3,23 @@ package org.javamaster.httpclient.ui;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.javamaster.httpclient.env.EnvFileService;
+import org.javamaster.httpclient.utils.NotifyUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.net.URL;
 import java.util.Objects;
 import java.util.Set;
+
+import static org.javamaster.httpclient.env.EnvFileService.ENV_FILE_NAME;
+import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME;
 
 /**
  * @author yudong
@@ -47,8 +53,12 @@ public class HttpEditorTopForm extends JComponent {
                 url = classLoader.getResource("examples/ws-requests.http");
             } else if (Objects.equals(selectedItem, "Dubbo requests")) {
                 url = classLoader.getResource("examples/dubbo-requests.http");
-            } else if (Objects.equals(selectedItem, "CryptoJS")) {
+            } else if (Objects.equals(selectedItem, "show CryptoJS file")) {
                 url = classLoader.getResource("examples/crypto-js.js");
+            } else if (Objects.equals(selectedItem, "Create env.json file")) {
+                createAndReInitEnvCompo(ENV_FILE_NAME, false);
+            } else if (Objects.equals(selectedItem, "Create env.private.json file")) {
+                createAndReInitEnvCompo(PRIVATE_ENV_FILE_NAME, true);
             }
 
             if (url != null) {
@@ -62,6 +72,39 @@ public class HttpEditorTopForm extends JComponent {
             ViewVariableForm viewVariableForm = new ViewVariableForm(project);
             viewVariableForm.show();
         });
+    }
+
+    private void createAndReInitEnvCompo(String fileName, boolean isPrivate) {
+        VirtualFile envFile = EnvFileService.Companion.createEnvFile(fileName, isPrivate, project);
+        exampleComboBox.setSelectedIndex(0);
+        if (envFile == null) {
+            NotifyUtil.INSTANCE.notifyWarn(project, fileName + "环境文件已存在!");
+            return;
+        }
+
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+        fileEditorManager.openFile(envFile, true);
+
+        NotifyUtil.INSTANCE.notifyInfo(project, "成功创建环境文件:" + fileName);
+
+        try {
+            Module module = ModuleUtil.findModuleForFile(envFile, project);
+            if (module == null) {
+                return;
+            }
+
+            FileEditor @NotNull [] allEditors = fileEditorManager.getAllEditors();
+            for (FileEditor editor : allEditors) {
+                HttpEditorTopForm httpEditorTopForm = editor.getUserData(HttpEditorTopForm.KEY);
+                if (httpEditorTopForm == null) {
+                    continue;
+                }
+
+                httpEditorTopForm.initEnvCombo(module, envFile.getParent().getPath());
+
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     public static @Nullable String getCurrentEditorSelectedEnv(Project project) {

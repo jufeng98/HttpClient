@@ -1,12 +1,15 @@
 package org.javamaster.httpclient.env
 
 import com.intellij.json.psi.*
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.writeText
+import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.indexing.FileBasedIndex
@@ -108,6 +111,62 @@ class EnvFileService(val project: Project) {
         const val PRIVATE_ENV_FILE_NAME = "http-client.private.env.json"
 
         const val COMMON_ENV_NAME = "common"
+
+        fun createEnvFile(name: String, isPrivate: Boolean, project: Project): VirtualFile? {
+            val editorManager = FileEditorManager.getInstance(project)
+            val selectedEditor = editorManager.selectedEditor!!
+            val parent = selectedEditor.file.parent
+            val parentPath = parent.path
+
+            val file = File(parentPath, name)
+            val virtualFile = VfsUtil.findFileByIoFile(file, true)
+            if (virtualFile != null) {
+                return null
+            }
+
+            return WriteAction.computeAndWait<VirtualFile, Exception> {
+                val psiDirectory = PsiManager.getInstance(project).findDirectory(parent)!!
+                val newFile = psiDirectory.createFile(name).virtualFile
+                if (isPrivate) {
+                    newFile.writeText(
+                        """
+                            {
+                              "dev": {
+                                "token": "rRTJHGerfgET"
+                              },
+                              "uat": {
+                                "token": "ERTYHGSDKFue"
+                              },
+                              "pro": {
+                                "token": "efJFGHJKHYTR"
+                              }
+                            }
+                """.trimIndent()
+                    )
+                } else {
+                    newFile.writeText(
+                        """
+                            {
+                              "dev": {
+                                "baseUrl": "http://localhost:8800"
+                              },
+                              "uat": {
+                                "baseUrl": "https://uat.javamaster.org/bm-wash"
+                              },
+                              "pro": {
+                                "baseUrl": "https://pro.javamaster.org/bm-wash"
+                              },
+                              "common": {
+                                "contextPath": "/bm-wash"
+                              }
+                            }
+                """.trimIndent()
+                    )
+                }
+
+                newFile
+            }
+        }
 
         fun getService(project: Project): EnvFileService {
             return project.getService(EnvFileService::class.java)

@@ -11,6 +11,13 @@ import com.intellij.openapi.wm.ToolWindowManager
  * @author yudong
  */
 object NotifyUtil {
+    fun notifyInfo(project: Project, message: String?) {
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        toolWindowManager.notifyByBalloon(
+            ToolWindowId.SERVICES, MessageType.INFO,
+            "<div style='font-size:18pt'>${message}</div>"
+        )
+    }
 
     fun notifyWarn(project: Project, message: String?) {
         val toolWindowManager = ToolWindowManager.getInstance(project)

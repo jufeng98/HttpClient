@@ -56,7 +56,9 @@
             <item value="Response presentations"/>
             <item value="Websocket requests"/>
             <item value="Dubbo requests"/>
-            <item value="CryptoJS"/>
+            <item value="show CryptoJS file"/>
+            <item value="Create env.json file"/>
+            <item value="Create env.private.json file"/>
           </model>
         </properties>
       </component>
