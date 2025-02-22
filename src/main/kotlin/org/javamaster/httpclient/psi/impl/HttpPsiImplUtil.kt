@@ -135,6 +135,16 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
+    fun getReferences(param: HttpInputFile): Array<PsiReference> {
+        return ReferenceProvidersRegistry.getReferencesFromProviders(param)
+    }
+
+    @JvmStatic
+    fun getReferences(param: HttpDirectionName): Array<PsiReference> {
+        return ReferenceProvidersRegistry.getReferencesFromProviders(param)
+    }
+
+    @JvmStatic
     fun getMultipartFieldDescription(part: HttpMultipartField): HttpHeaderFieldValue? {
         val description = part.headerFieldList
             .firstOrNull { it.headerFieldName.text == "Content-Disposition" }

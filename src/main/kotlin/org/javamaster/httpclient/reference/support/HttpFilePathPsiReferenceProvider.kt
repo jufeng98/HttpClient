@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.reference
+package org.javamaster.httpclient.reference.support
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.ide.projectView.ProjectView

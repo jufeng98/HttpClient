@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.reference
+package org.javamaster.httpclient.reference.support
 
 import com.cool.request.view.tool.search.ApiAbstractGotoSEContributor
 import com.intellij.extapi.psi.ASTWrapperPsiElement
@@ -14,10 +14,10 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
-import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.createProcessIndicator
-import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.findControllerPsiMethods
-import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.getControllerNavigationItem
-import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.showTip
+import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.createProcessIndicator
+import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.findControllerPsiMethods
+import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.getControllerNavigationItem
+import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.showTip
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.PsiUtils
 import java.util.*

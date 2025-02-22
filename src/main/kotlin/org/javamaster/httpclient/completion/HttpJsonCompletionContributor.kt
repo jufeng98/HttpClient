@@ -9,7 +9,7 @@ import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.project.Project
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.reference.HttpVariablePsiReferenceProvider
+import org.javamaster.httpclient.reference.support.HttpVariablePsiReferenceProvider
 
 class HttpJsonCompletionContributor : CompletionContributor() {
 

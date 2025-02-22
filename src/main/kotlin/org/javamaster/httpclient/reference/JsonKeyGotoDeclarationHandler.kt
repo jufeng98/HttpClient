@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequest
+import org.javamaster.httpclient.reference.support.JsonFakePsiElement
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
 

@@ -68,7 +68,7 @@ public class HttpVisitor extends PsiElementVisitor {
   }
 
   public void visitInputFile(@NotNull HttpInputFile o) {
-    visitPsiElement(o);
+    visitFilePath(o);
   }
 
   public void visitMessageBody(@NotNull HttpMessageBody o) {

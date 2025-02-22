@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class HttpInputFileImpl extends ASTWrapperPsiElement implements HttpInputFile {
 
@@ -31,6 +32,12 @@ public class HttpInputFileImpl extends ASTWrapperPsiElement implements HttpInput
   @Nullable
   public HttpFilePath getFilePath() {
     return findChildByClass(HttpFilePath.class);
+  }
+
+  @Override
+  @NotNull
+  public PsiReference[] getReferences() {
+    return HttpPsiImplUtil.getReferences(this);
   }
 
 }

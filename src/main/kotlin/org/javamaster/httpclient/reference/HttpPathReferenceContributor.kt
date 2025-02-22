@@ -4,6 +4,7 @@ import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.*
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.psi.HttpRequestTarget
+import org.javamaster.httpclient.reference.support.HttpFakePsiElement
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**

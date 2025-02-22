@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.reference
+package org.javamaster.httpclient.reference.support
 
 import com.cool.request.view.tool.search.ApiAbstractGotoSEContributor
 import com.cool.request.view.tool.search.ControllerNavigationItem

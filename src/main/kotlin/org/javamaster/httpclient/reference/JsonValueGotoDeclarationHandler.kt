@@ -6,6 +6,7 @@ import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.psi.HttpMessageBody
+import org.javamaster.httpclient.reference.support.HttpVariableFakePsiElement
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**

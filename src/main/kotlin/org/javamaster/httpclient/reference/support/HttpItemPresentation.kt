@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.reference
+package org.javamaster.httpclient.reference.support
 
 import com.intellij.navigation.ItemPresentation
 import javax.swing.Icon
@@ -6,10 +6,10 @@ import javax.swing.Icon
 /**
  * @author yudong
  */
-object JsonItemPresentation : ItemPresentation {
+object HttpItemPresentation : ItemPresentation {
 
     override fun getPresentableText(): String {
-        return "跳转到对应的Bean字段"
+        return "搜索对应的Controller接口"
     }
 
     override fun getIcon(unused: Boolean): Icon? {

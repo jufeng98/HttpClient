@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.reference
+package org.javamaster.httpclient.reference.support
 
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.util.TextRange

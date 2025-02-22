@@ -63,7 +63,11 @@ comment ::= REQUEST_COMMENT
 directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1
 }
-directionName ::= DIRECTION_NAME_PART
+directionName ::= DIRECTION_NAME_PART {
+    methods = [
+        getReferences
+    ]
+}
 directionValue ::= DIRECTION_VALUE_PART
 preRequestHandler ::= preRequestScript
 preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
@@ -135,6 +139,10 @@ requestMessagesGroup ::= inputFile | messageBody
 
 inputFile ::= INPUT_FILE_SIGN filePath {
     pin = 1
+    methods = [
+        getReferences
+    ]
+    implements = "org.javamaster.httpclient.psi.HttpFilePath"
 }
 filePath ::= INPUT_FILE_PATH_PART {
     methods = [

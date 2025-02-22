@@ -1,9 +1,9 @@
-package org.javamaster.httpclient.reference
+package org.javamaster.httpclient.reference.support
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.reference.HttpFakePsiElement.Companion.showTip
+import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.showTip
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 
 /**

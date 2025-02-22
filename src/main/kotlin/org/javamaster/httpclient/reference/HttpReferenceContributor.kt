@@ -6,6 +6,9 @@ import com.intellij.psi.PsiReferenceRegistrar
 import org.javamaster.httpclient.psi.HttpFilePath
 import org.javamaster.httpclient.psi.HttpHeaderFieldValue
 import org.javamaster.httpclient.psi.HttpVariable
+import org.javamaster.httpclient.reference.support.HttpFilePathPsiReferenceProvider
+import org.javamaster.httpclient.reference.support.HttpHeaderPsiReferenceProvider
+import org.javamaster.httpclient.reference.support.HttpVariablePsiReferenceProvider
 
 /**
  * @author yudong
@@ -25,5 +28,6 @@ class HttpReferenceContributor : PsiReferenceContributor() {
         registrar.registerReferenceProvider(
             PlatformPatterns.psiElement(HttpHeaderFieldValue::class.java), HttpHeaderPsiReferenceProvider()
         )
+
     }
 }
