@@ -54,6 +54,8 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
             }
         } else if (type === HttpTypes.RESPONSE_HANDLER) {
             return "{% ... %}"
+        } else if (type == HttpTypes.GLOBAL_HANDLER) {
+            return "{% ... %}"
         }
 
         return "..."
@@ -96,12 +98,17 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
     private fun collectDescriptors(node: ASTNode, descriptors: MutableList<FoldingDescriptor>) {
         val requestBlocks = node.getChildren(TokenSet.create(HttpTypes.REQUEST_BLOCK))
 
+        val globalHandlerNode = node.findChildByType(HttpTypes.GLOBAL_HANDLER)
+        if (globalHandlerNode != null) {
+            descriptors.add(FoldingDescriptor(globalHandlerNode, globalHandlerNode.textRange))
+        }
+
         for (requestBlockNode in requestBlocks) {
             val requestNode = requestBlockNode.findChildByType(HttpTypes.REQUEST) ?: continue
 
             collectMultipartRequests(requestNode, descriptors)
 
-            collectScriptPart(requestNode, descriptors)
+            collectScriptPart(requestNode, requestBlockNode, descriptors)
 
             if (requestNode.findChildByType(HttpTypes.METHOD) != null) {
                 descriptors.add(FoldingDescriptor(requestNode, requestNode.textRange))
@@ -136,10 +143,20 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         }
     }
 
-    private fun collectScriptPart(node: ASTNode, descriptors: MutableList<FoldingDescriptor>) {
-        val responseHandlerNode = node.findChildByType(HttpTypes.RESPONSE_HANDLER) ?: return
+    private fun collectScriptPart(
+        requestNode: ASTNode,
+        requestBlockNode: ASTNode,
+        descriptors: MutableList<FoldingDescriptor>,
+    ) {
+        val responseHandlerNode = requestNode.findChildByType(HttpTypes.RESPONSE_HANDLER)
+        if (responseHandlerNode != null) {
+            descriptors.add(FoldingDescriptor(responseHandlerNode, responseHandlerNode.textRange))
+        }
 
-        descriptors.add(FoldingDescriptor(responseHandlerNode, responseHandlerNode.textRange))
+        val preHandlerNode = requestBlockNode.findChildByType(HttpTypes.PRE_REQUEST_HANDLER)
+        if (preHandlerNode != null) {
+            descriptors.add(FoldingDescriptor(preHandlerNode, preHandlerNode.textRange))
+        }
     }
 
     private fun skipCommentsAndWhitespaces(node: ASTNode): ASTNode? {

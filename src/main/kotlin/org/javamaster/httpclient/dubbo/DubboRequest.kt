@@ -21,6 +21,7 @@ class DubboRequest(
     private val reqBodyStr: Any?,
     private val httpReqDescList: MutableList<String>,
     module: Module,
+    private val paramMap: Map<String, String>,
 ) {
     private val methodName: String = reqHeaderMap[DubboUtils.METHOD_KEY]!!
     private val interfaceCls: String? = reqHeaderMap[DubboUtils.INTERFACE_KEY]
@@ -91,7 +92,8 @@ class DubboRequest(
         reference.isGeneric = true
         reference.application = application
         reference.setInterface(targetInterfaceName)
-        reference.timeout = 3600000
+        val timeout = paramMap["timeout"]?.toInt() ?: 3600000
+        reference.timeout = timeout
         reference.retries = 1
 
         if (!version.isNullOrBlank()) {
@@ -103,7 +105,7 @@ class DubboRequest(
         } else {
             val registryConfig = RegistryConfig()
             registryConfig.address = registry
-            registryConfig.timeout = 3600000
+            registryConfig.timeout = timeout
             reference.registry = registryConfig
         }
 
@@ -180,7 +182,7 @@ class DubboRequest(
         private val application = ApplicationConfig()
 
         init {
-            application.name = "RestClient"
+            application.name = "HttpClient"
         }
 
     }

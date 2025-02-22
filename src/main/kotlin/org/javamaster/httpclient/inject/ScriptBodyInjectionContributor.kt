@@ -15,10 +15,9 @@ import ris58h.webcalm.javascript.JavaScriptLanguage
 class ScriptBodyInjectionContributor : MultiHostInjector {
 
     override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
-        val language = JavaScriptLanguage
         val textRange = InjectionUtils.innerRange(context) ?: return
 
-        registrar.startInjecting(language)
+        registrar.startInjecting(JavaScriptLanguage)
         registrar.addPlace(null, null, context as PsiLanguageInjectionHost, textRange)
         registrar.doneInjecting()
     }

@@ -116,7 +116,7 @@
         <completion.contributor language="JSON" id="HttpCompletionContributor" order="last"
                                 implementationClass="org.javamaster.httpclient.completion.HttpJsonCompletionContributor"/>
         <completion.contributor language="http" id="HttpRequestCompletionContributor" order="last"
-                                implementationClass="org.javamaster.httpclient.completion.HttpRequestCompletionContributor"/>
+                                implementationClass="org.javamaster.httpclient.completion.HttpCompletionContributor"/>
         <typedHandler implementation="org.javamaster.httpclient.typeHandler.HttpTypedHandler"/>
         <braceMatcher filetype="http"
                       implementationClass="org.javamaster.httpclient.braceMatcher.HttpBraceMatcher"/>

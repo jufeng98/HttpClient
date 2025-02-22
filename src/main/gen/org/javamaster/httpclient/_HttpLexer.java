@@ -3,7 +3,8 @@
 
 package org.javamaster.httpclient;
 
-import com.intellij.psi.tree.IElementType;import org.javamaster.httpclient.utils.LexerUtils;
+import com.intellij.psi.tree.IElementType;
+import org.javamaster.httpclient.utils.LexerUtils;
 import static org.javamaster.httpclient.utils.LexerUtils.*;
 
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
@@ -476,7 +477,7 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
 
   /* user code: */
         private boolean nameFlag;
-        int nextState;
+        private int nextState;
         public int matchTimes;
         public CharSequence lastMatch;
 

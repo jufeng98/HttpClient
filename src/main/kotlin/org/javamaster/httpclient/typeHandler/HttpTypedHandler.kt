@@ -11,6 +11,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.psi.HttpRequestBlock
@@ -22,7 +23,10 @@ class HttpTypedHandler : TypedHandlerDelegate() {
         editor: Editor, file: PsiFile,
         fileType: FileType,
     ): Result {
-        if (file !is HttpFile || c != '%' && c != '{') {
+        editor.virtualFile ?: return Result.CONTINUE
+        val psiFile = PsiUtil.getPsiFile(project, editor.virtualFile)
+
+        if (psiFile !is HttpFile || c != '%' && c != '{') {
             return Result.CONTINUE
         }
 
@@ -34,7 +38,7 @@ class HttpTypedHandler : TypedHandlerDelegate() {
         val charAfter = getCharAt(document, offset)
         if (charBefore == '{') {
             if (c == '%' && charAfter != '%') {
-                return this.addBrace(project, editor, document, "%  %}", 2)
+                return this.addBrace(project, editor, document, "%\n    \n%}", 6)
             }
 
             if (c == '{' && charAfter != '}') {
@@ -65,27 +69,27 @@ class HttpTypedHandler : TypedHandlerDelegate() {
     private fun couldCompleteToMessageBody(element: PsiElement, document: Document, offset: Int): Boolean {
         if (element !is PsiWhiteSpace) {
             return false
-        } else {
-            val sibling = element.getPrevSibling()
-            if (sibling is HttpRequestBlock) {
-                val request = sibling.request ?: return false
-                if (request.headerFieldList.isEmpty()) {
-                    return false
-                }
-            } else if (sibling !is HttpHeaderField) {
+        }
+
+        val sibling = element.getPrevSibling()
+        if (sibling is HttpRequestBlock) {
+            val request = sibling.request ?: return false
+            if (request.headerFieldList.isEmpty()) {
                 return false
             }
-
-            var prevOffset = offset - 1
-            var countOfLineBreaks = 0
-            while (StringUtil.isWhiteSpace(getCharAt(document, prevOffset))) {
-                if (StringUtil.isLineBreak(getCharAt(document, prevOffset))) {
-                    ++countOfLineBreaks
-                }
-                --prevOffset
-            }
-
-            return countOfLineBreaks > 1
+        } else if (sibling !is HttpHeaderField) {
+            return false
         }
+
+        var prevOffset = offset - 1
+        var countOfLineBreaks = 0
+        while (StringUtil.isWhiteSpace(getCharAt(document, prevOffset))) {
+            if (StringUtil.isLineBreak(getCharAt(document, prevOffset))) {
+                ++countOfLineBreaks
+            }
+            --prevOffset
+        }
+
+        return countOfLineBreaks > 1
     }
 }

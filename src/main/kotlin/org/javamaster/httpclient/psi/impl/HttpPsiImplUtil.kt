@@ -5,7 +5,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.tree.IElementType
-import com.intellij.psi.util.elementType
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.psi.*
 import java.net.http.HttpClient.Version
@@ -23,6 +22,13 @@ object HttpPsiImplUtil {
         } else {
             Version.HTTP_2
         }
+    }
+
+    @JvmStatic
+    fun getHttpVersion(request: HttpRequest): Version {
+        val version = request.version ?: return Version.HTTP_1_1
+
+        return getVersion(version)
     }
 
     @JvmStatic
@@ -55,22 +61,9 @@ object HttpPsiImplUtil {
             return null
         }
 
-        var child = first.headerFieldValue?.firstChild
-        while (child != null) {
-            if (child.elementType == HttpTypes.FIELD_VALUE) {
-                val text = child.text
-                val split = text.split(";")
-                split.forEach {
-                    if (it.contains("boundary")) {
-                        return text.split("=")[1]
-                    }
-                }
-            }
+        val headerFieldValue = first.headerFieldValue ?: return null
 
-            child = child.nextSibling
-        }
-
-        return null
+        return getHeaderFieldOption(headerFieldValue, "boundary")
     }
 
     @JvmStatic
@@ -86,19 +79,6 @@ object HttpPsiImplUtil {
 
         val text = first.headerFieldValue?.text ?: return null
         return text.toInt()
-    }
-
-    @JvmStatic
-    fun getHttpVersion(request: HttpRequest): Version {
-        val psiElement =
-            HttpPsiUtils.getNextSiblingByType(request.firstChild, HttpTypes.HTTP_VERSION, false)
-                ?: return Version.HTTP_1_1
-        val text = psiElement.text
-        return if (text.contains("2.0")) {
-            Version.HTTP_2
-        } else {
-            Version.HTTP_1_1
-        }
     }
 
     @JvmStatic
@@ -166,11 +146,16 @@ object HttpPsiImplUtil {
         var child = value.firstChild
         while (child != null) {
             if (isOfType(child, HttpTypes.FIELD_VALUE)) {
-                val option = child.text.trim { it <= ' ' }
-                if (option.length > optionName.length + 1 && option.startsWith(optionName) && option[optionName.length] == '=') {
-                    return StringUtil.unquoteString(option.substring(optionName.length + 1))
+                val text = child.text
+                val split = text.split(";")
+                split.forEach {
+                    val tmp = it.trim()
+                    if (tmp.startsWith(optionName)) {
+                        return StringUtil.unquoteString(tmp.split("=")[1])
+                    }
                 }
             }
+
             child = child.nextSibling
         }
 

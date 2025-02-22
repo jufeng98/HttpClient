@@ -147,7 +147,8 @@ class HttpProcessHandler(
                 reqHeaderMap,
                 reqBody,
                 httpReqDescList,
-                module
+                module,
+                paramMap
             )
         }
 

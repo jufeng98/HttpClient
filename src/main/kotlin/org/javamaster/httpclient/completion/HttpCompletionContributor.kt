@@ -23,7 +23,7 @@ import org.javamaster.httpclient.completion.support.HttpSuffixInsertHandler
 import org.javamaster.httpclient.psi.*
 
 
-class HttpRequestCompletionContributor : CompletionContributor() {
+class HttpCompletionContributor : CompletionContributor() {
     init {
         this.extend(
             CompletionType.BASIC, PlatformPatterns.psiElement().withParent(
@@ -121,7 +121,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
                 PrioritizedLookupElement.withPriority(
                     LookupElementBuilder.create(HttpRequestEnum.POST.name)
                         .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 300.0
                 )
             )
 
@@ -129,7 +129,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
                 PrioritizedLookupElement.withPriority(
                     LookupElementBuilder.create(HttpRequestEnum.GET.name)
                         .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 300.0
                 )
             )
 
@@ -153,7 +153,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
                 PrioritizedLookupElement.withPriority(
                     LookupElementBuilder.create(HttpRequestEnum.WEBSOCKET.name)
                         .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 200.0
                 )
             )
 
@@ -161,7 +161,7 @@ class HttpRequestCompletionContributor : CompletionContributor() {
                 PrioritizedLookupElement.withPriority(
                     LookupElementBuilder.create(HttpRequestEnum.DUBBO.name)
                         .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 200.0
                 )
             )
         }
