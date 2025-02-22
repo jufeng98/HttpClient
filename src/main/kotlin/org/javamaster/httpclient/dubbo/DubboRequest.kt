@@ -9,6 +9,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.HttpUtils.TIMEOUT_NAME
 import org.javamaster.httpclient.utils.PsiUtils
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
@@ -92,7 +93,7 @@ class DubboRequest(
         reference.isGeneric = true
         reference.application = application
         reference.setInterface(targetInterfaceName)
-        val timeout = paramMap["timeout"]?.toInt() ?: 3600000
+        val timeout = paramMap[TIMEOUT_NAME]?.toInt() ?: 10_000
         reference.timeout = timeout
         reference.retries = 1
 

@@ -126,7 +126,7 @@ class HttpProcessHandler(
     private fun handleWs(url: String, reqHeaderMap: MutableMap<String, String>) {
         loadingRemover?.run()
 
-        wsRequest = WsRequest(url, reqHeaderMap, this)
+        wsRequest = WsRequest(url, reqHeaderMap, this, paramMap)
 
         httpDashboardForm.initWsResData(wsRequest, project, tabName)
 

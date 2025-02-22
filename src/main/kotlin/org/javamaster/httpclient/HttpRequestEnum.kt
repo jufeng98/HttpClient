@@ -1,6 +1,9 @@
 package org.javamaster.httpclient
 
 import org.javamaster.httpclient.psi.HttpMethod
+import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT_NAME
+import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
+import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT_NAME
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpClient.Version
@@ -235,10 +238,6 @@ enum class HttpRequestEnum {
     ): HttpRequest
 
     companion object {
-        private const val READ_TIMEOUT_NAME = "readTimeout"
-        private const val CONNECT_TIMEOUT_NAME = "connectTimeout"
-        private const val READ_TIMEOUT = 7200L
-
         fun getInstance(httpMethod: HttpMethod): HttpRequestEnum {
             val name = httpMethod.text
             try {

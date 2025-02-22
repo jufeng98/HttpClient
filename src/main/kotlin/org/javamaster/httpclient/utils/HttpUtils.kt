@@ -39,6 +39,10 @@ object HttpUtils {
         .serializeNulls()
         .create()
 
+    const val READ_TIMEOUT_NAME = "readTimeout"
+    const val TIMEOUT_NAME = "timeout"
+    const val CONNECT_TIMEOUT_NAME = "connectTimeout"
+    const val READ_TIMEOUT = 7200L
     const val HTTP_TYPE_ID = "intellijHttpClient"
     const val VARIABLE_SIGN_START = "{{"
     private const val VARIABLE_SIGN_END = "}}"

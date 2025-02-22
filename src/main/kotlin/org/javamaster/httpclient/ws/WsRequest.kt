@@ -7,6 +7,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Disposer.newDisposable
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.dashboard.HttpProcessHandler
+import org.javamaster.httpclient.utils.HttpUtils
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket
@@ -25,6 +26,7 @@ class WsRequest(
     private val url: String,
     private val reqHeaderMap: MutableMap<String, String>,
     private val httpProcessHandler: HttpProcessHandler,
+    private val paramMap: Map<String, String>,
 ) : Disposable {
     private var webSocket: WebSocket? = null
     lateinit var resConsumer: Consumer<String>
@@ -38,8 +40,10 @@ class WsRequest(
 
         val uri = URI(url)
 
+        val connectTimeout = paramMap[HttpUtils.CONNECT_TIMEOUT_NAME]?.toLong() ?: 6
+
         val client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(6))
+            .connectTimeout(Duration.ofSeconds(connectTimeout))
             .build()
 
         val builder = client.newWebSocketBuilder()
