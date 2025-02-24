@@ -9,6 +9,9 @@ import org.apache.http.entity.ContentType;
 
 public interface HttpRequest extends PsiElement {
 
+  @Nullable
+  HttpBody getBody();
+
   @NotNull
   List<HttpHeaderField> getHeaderFieldList();
 
@@ -16,13 +19,7 @@ public interface HttpRequest extends PsiElement {
   HttpMethod getMethod();
 
   @Nullable
-  HttpMultipartMessage getMultipartMessage();
-
-  @Nullable
   HttpOutputFile getOutputFile();
-
-  @Nullable
-  HttpRequestMessagesGroup getRequestMessagesGroup();
 
   @Nullable
   HttpRequestTarget getRequestTarget();

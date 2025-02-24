@@ -30,6 +30,12 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   }
 
   @Override
+  @Nullable
+  public HttpBody getBody() {
+    return findChildByClass(HttpBody.class);
+  }
+
+  @Override
   @NotNull
   public List<HttpHeaderField> getHeaderFieldList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpHeaderField.class);
@@ -43,20 +49,8 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
 
   @Override
   @Nullable
-  public HttpMultipartMessage getMultipartMessage() {
-    return findChildByClass(HttpMultipartMessage.class);
-  }
-
-  @Override
-  @Nullable
   public HttpOutputFile getOutputFile() {
     return findChildByClass(HttpOutputFile.class);
-  }
-
-  @Override
-  @Nullable
-  public HttpRequestMessagesGroup getRequestMessagesGroup() {
-    return findChildByClass(HttpRequestMessagesGroup.class);
   }
 
   @Override

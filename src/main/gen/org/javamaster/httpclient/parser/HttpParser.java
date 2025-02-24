@@ -36,6 +36,18 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // requestMessagesGroup | multipartMessage
+  public static boolean body(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "body")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, BODY, "<body>");
+    r = requestMessagesGroup(b, l + 1);
+    if (!r) r = multipartMessage(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
   // REQUEST_COMMENT
   public static boolean comment(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "comment")) return false;
@@ -636,7 +648,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // method requestTarget version? headerField* requestMessagesGroup? multipartMessage? responseHandler? outputFile?
+  // method requestTarget version? headerField* body? responseHandler? outputFile?
   public static boolean request(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request")) return false;
     if (!nextTokenIs(b, REQUEST_METHOD)) return false;
@@ -649,8 +661,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
     r = p && report_error_(b, request_3(b, l + 1)) && r;
     r = p && report_error_(b, request_4(b, l + 1)) && r;
     r = p && report_error_(b, request_5(b, l + 1)) && r;
-    r = p && report_error_(b, request_6(b, l + 1)) && r;
-    r = p && request_7(b, l + 1) && r;
+    r = p && request_6(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -673,30 +684,23 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // requestMessagesGroup?
+  // body?
   private static boolean request_4(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request_4")) return false;
-    requestMessagesGroup(b, l + 1);
-    return true;
-  }
-
-  // multipartMessage?
-  private static boolean request_5(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "request_5")) return false;
-    multipartMessage(b, l + 1);
+    body(b, l + 1);
     return true;
   }
 
   // responseHandler?
-  private static boolean request_6(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "request_6")) return false;
+  private static boolean request_5(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_5")) return false;
     responseHandler(b, l + 1);
     return true;
   }
 
   // outputFile?
-  private static boolean request_7(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "request_7")) return false;
+  private static boolean request_6(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_6")) return false;
     outputFile(b, l + 1);
     return true;
   }

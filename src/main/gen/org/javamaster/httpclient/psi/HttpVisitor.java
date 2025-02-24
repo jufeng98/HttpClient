@@ -7,6 +7,10 @@ import com.intellij.psi.PsiElement;
 
 public class HttpVisitor extends PsiElementVisitor {
 
+  public void visitBody(@NotNull HttpBody o) {
+    visitPsiElement(o);
+  }
+
   public void visitComment(@NotNull HttpComment o) {
     visitPsiElement(o);
   }

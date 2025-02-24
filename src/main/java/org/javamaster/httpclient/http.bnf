@@ -70,7 +70,7 @@ preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
 
-request ::= method requestTarget version? headerField* requestMessagesGroup? multipartMessage? responseHandler? outputFile? {
+request ::= method requestTarget version? headerField* body? responseHandler? outputFile? {
     methods = [
         getContentType
         getContentTypeBoundary
@@ -130,7 +130,7 @@ headerFieldValue ::= (FIELD_VALUE | variable | FIELD_VALUE variable | variable F
         getReferences
     ]
 }
-
+body ::= requestMessagesGroup | multipartMessage
 requestMessagesGroup ::= inputFile | messageBody
 
 inputFile ::= INPUT_FILE_SIGN filePath {

@@ -8,6 +8,7 @@ import org.javamaster.httpclient.psi.impl.*;
 
 public interface HttpTypes {
 
+  IElementType BODY = new HttpElementType("BODY");
   IElementType COMMENT = new HttpElementType("COMMENT");
   IElementType DIRECTION_COMMENT = new HttpElementType("DIRECTION_COMMENT");
   IElementType DIRECTION_NAME = new HttpElementType("DIRECTION_NAME");
@@ -94,7 +95,10 @@ public interface HttpTypes {
   class Factory {
     public static PsiElement createElement(ASTNode node) {
       IElementType type = node.getElementType();
-      if (type == COMMENT) {
+      if (type == BODY) {
+        return new HttpBodyImpl(node);
+      }
+      else if (type == COMMENT) {
         return new HttpCommentImpl(node);
       }
       else if (type == DIRECTION_COMMENT) {
