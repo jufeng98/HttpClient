@@ -12,16 +12,14 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.ArrayUtil
-import com.intellij.util.SmartList
-import com.intellij.util.containers.ContainerUtil
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpRequestBlock
+import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil
+import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
 import org.javamaster.httpclient.utils.HttpUtils.getTabName
-import java.util.function.Consumer
 import javax.swing.Icon
 
 class HttpRequestStructureViewElement private constructor(
@@ -57,40 +55,8 @@ class HttpRequestStructureViewElement private constructor(
             }
 
             for (block in blocks) {
-                val request = block.request
-                val originalHost = request?.httpHost ?: continue
-                val target = request.requestTarget
-                val path = target?.url
-
-
-                val preRequestHandler = block.preRequestHandler
-                if (preRequestHandler != null) {
-                    children.add(create(preRequestHandler, "Pre request handler", AllIcons.Actions.Play_first))
-                }
-
-                val location = StringBuilder()
-                location.append(StringUtil.notNullize(path, "<not defined>"))
-
-                var tabName: String
-                val method = request.method
-                tabName = getTabName(method)
-
-                var icon = AllIcons.Actions.Annotate
-                val type = method.text
-                if (type == HttpRequestEnum.GET.name) {
-                    icon = HttpIcons.GET
-                } else if (type == HttpRequestEnum.POST.name) {
-                    icon = HttpIcons.POST
-                }
-
-                children.add(
-                    create(request, tabName, location.toString(), icon, StringUtil.isNotEmpty(originalHost))
-                )
-
-                val responseHandler = request.responseHandler
-                if (responseHandler != null) {
-                    children.add(create(responseHandler, "Response handler", AllIcons.Actions.Play_last))
-                }
+                val list = Companion.getChildren(block)
+                children.addAll(list)
             }
             return children
         } else if (element is HttpRequestBlock) {
@@ -143,26 +109,39 @@ class HttpRequestStructureViewElement private constructor(
             return HttpRequestStructureViewElement(element, text, location, icon, isValid)
         }
 
-        private fun getChildren(element: HttpRequestBlock): List<StructureViewTreeElement> {
-            val elements = SmartList<StructureViewTreeElement>()
-            val preRequestHandler = element.preRequestHandler
+        private fun getChildren(block: HttpRequestBlock): List<StructureViewTreeElement> {
+            val children = mutableListOf<StructureViewTreeElement>()
+            val request = block.request
+            val originalHost = request?.httpHost ?: return children
+            val target = request.requestTarget
+            val path = target?.url
+
+            val preRequestHandler = block.preRequestHandler
             if (preRequestHandler != null) {
-                elements.add(create(preRequestHandler, "Pre request handler", AllIcons.Actions.Play_first))
+                children.add(create(preRequestHandler, "Pre request handler", AllIcons.Actions.Play_first))
             }
 
-            val request = element.request
-            val headers = request?.headerFieldList ?: return emptyList()
-            if (headers.isNotEmpty()) {
-                headers.forEach(Consumer { header: HttpHeaderField ->
-                    val headerElement = create(
-                        header, header.headerFieldName.text,
-                        header.headerFieldValue?.text, AllIcons.Json.Array
-                    )
-                    elements.add(headerElement)
-                })
+            val location = StringBuilder()
+            location.append(StringUtil.notNullize(path, "<not defined>"))
+
+            val tabName: String
+            val method = request.method
+            tabName = getTabName(method)
+
+            var icon = AllIcons.Actions.Annotate
+            val type = method.text
+            if (type == HttpRequestEnum.GET.name) {
+                icon = HttpIcons.GET
+            } else if (type == HttpRequestEnum.POST.name) {
+                icon = HttpIcons.POST
             }
 
-            val messagesGroup = request.requestMessagesGroup
+            children.add(
+                create(request, tabName, location.toString(), icon, StringUtil.isNotEmpty(originalHost))
+            )
+
+            val body = request.body
+            val messagesGroup = body?.requestMessagesGroup
             if (messagesGroup != null) {
                 var mimeType = "<not defined>"
                 val contentType = request.contentType
@@ -170,10 +149,9 @@ class HttpRequestStructureViewElement private constructor(
                     mimeType = contentType.mimeType
                 }
 
-                var icon = AllIcons.FileTypes.Any_type
                 val messageBody = messagesGroup.messageBody
                 if (messageBody != null) {
-                    val injectedLanguageManager = InjectedLanguageManager.getInstance(element.project)
+                    val injectedLanguageManager = InjectedLanguageManager.getInstance(block.project)
                     val files = injectedLanguageManager.getInjectedPsiFiles(messageBody)
                     val psiElement = files?.get(0)?.first
                     val psiFile = psiElement as PsiFile?
@@ -183,15 +161,31 @@ class HttpRequestStructureViewElement private constructor(
                     }
                 }
 
-                elements.add(create(messagesGroup, "Request body $mimeType", icon))
+                children.add(create(messagesGroup, "Request body $mimeType", icon))
+            }
+
+            val multipartMessage = body?.multipartMessage
+            multipartMessage?.multipartFieldList?.forEach {
+                var name = ""
+                val headerFieldValue = HttpPsiImplUtil.getMultipartFieldDescription(it)
+                if (headerFieldValue != null) {
+                    name = getHeaderFieldOption(headerFieldValue, "name") ?: ""
+                }
+
+                var mimeType = "<not defined>"
+                val contentType = it.contentType
+                if (contentType != null) {
+                    mimeType = contentType.mimeType
+                }
+                children.add(create(it, "Multipart field: $name $mimeType", icon))
             }
 
             val responseHandler = request.responseHandler
             if (responseHandler != null) {
-                elements.add(create(responseHandler, "Response handler", AllIcons.Actions.Play_last))
+                children.add(create(responseHandler, "Response handler", AllIcons.Actions.Play_last))
             }
 
-            return if (elements.isEmpty()) ContainerUtil.emptyList() else elements
+            return children
         }
 
     }

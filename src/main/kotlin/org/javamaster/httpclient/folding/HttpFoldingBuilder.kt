@@ -117,8 +117,10 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
     }
 
     private fun collectMultipartRequests(node: ASTNode, descriptors: MutableList<FoldingDescriptor>) {
+        val bodyNode = node.findChildByType(HttpTypes.BODY) ?: return
+
         val multipartMessage: ASTNode?
-        val multipart = node.findChildByType(HttpTypes.MULTIPART_MESSAGE)
+        val multipart = bodyNode.findChildByType(HttpTypes.MULTIPART_MESSAGE)
             .also { multipartMessage = it }
 
         if (multipart == null) return
@@ -173,7 +175,7 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         val psiElement = node.psi
         if (psiElement !is HttpMultipartField) return null
 
-        val headerFieldValue = getMultipartFieldDescription((node.psi as HttpMultipartField)) ?: return null
+        val headerFieldValue = getMultipartFieldDescription(node.psi as HttpMultipartField) ?: return null
 
         return getHeaderFieldOption(headerFieldValue, "name")
     }

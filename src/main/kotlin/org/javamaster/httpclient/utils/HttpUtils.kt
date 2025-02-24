@@ -116,17 +116,18 @@ object HttpUtils {
         selectedEnv: String?,
         httpFileParentPath: String,
     ): Any? {
-        val requestMessagesGroups = PsiTreeUtil.getChildOfType(request, HttpRequestMessagesGroup::class.java)
-        if (requestMessagesGroups != null) {
+        val body = request.body
+        val requestMessagesGroup = body?.requestMessagesGroup
+        if (requestMessagesGroup != null) {
             return handleOrdinaryContent(
-                requestMessagesGroups,
+                requestMessagesGroup,
                 variableResolver,
                 selectedEnv,
                 httpFileParentPath
             )
         }
 
-        val httpMultipartMessage = PsiTreeUtil.getChildOfType(request, HttpMultipartMessage::class.java)
+        val httpMultipartMessage =  body?.multipartMessage
         if (httpMultipartMessage != null) {
             val boundary =
                 request.contentTypeBoundary ?: throw IllegalArgumentException("Content-Type 请求头缺少 boundary!")
