@@ -296,10 +296,7 @@ class EnvFileService(val project: Project) {
 
             val virtualFile = VfsUtil.findFileByIoFile(File(fileName), true) ?: return null
 
-            val psiFile = PsiUtil.getPsiFile(project, virtualFile)
-            if (psiFile !is JsonFile) {
-                throw IllegalArgumentException("*.json后缀文件未关联到JSON文件类型,请在 Settings -> Editor -> File Types 先设置!")
-            }
+            val psiFile = PsiUtil.getPsiFile(project, virtualFile) as JsonFile
 
             val topLevelValue = psiFile.topLevelValue
             if (topLevelValue !is JsonObject) {
