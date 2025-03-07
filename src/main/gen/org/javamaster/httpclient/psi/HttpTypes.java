@@ -20,6 +20,7 @@ public interface HttpTypes {
   IElementType GLOBAL_VARIABLE = new HttpElementType("GLOBAL_VARIABLE");
   IElementType GLOBAL_VARIABLE_NAME = new HttpElementType("GLOBAL_VARIABLE_NAME");
   IElementType GLOBAL_VARIABLE_VALUE = new HttpElementType("GLOBAL_VARIABLE_VALUE");
+  IElementType HEADER = new HttpElementType("HEADER");
   IElementType HEADER_FIELD = new HttpElementType("HEADER_FIELD");
   IElementType HEADER_FIELD_NAME = new HttpElementType("HEADER_FIELD_NAME");
   IElementType HEADER_FIELD_VALUE = new HttpElementType("HEADER_FIELD_VALUE");
@@ -130,6 +131,9 @@ public interface HttpTypes {
       }
       else if (type == GLOBAL_VARIABLE_VALUE) {
         return new HttpGlobalVariableValueImpl(node);
+      }
+      else if (type == HEADER) {
+        return new HttpHeaderImpl(node);
       }
       else if (type == HEADER_FIELD) {
         return new HttpHeaderFieldImpl(node);

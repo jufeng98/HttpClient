@@ -70,7 +70,7 @@ preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
 
-request ::= method requestTarget version? headerField* body? responseHandler? outputFile? {
+request ::= method requestTarget version? header? body? responseHandler? outputFile? {
     methods = [
         getContentType
         getContentTypeBoundary
@@ -117,6 +117,11 @@ version ::= HTTP_VERSION {
     ]
 }
 
+header ::= headerField+ {
+    methods = [
+        getContentTypeField
+    ]
+}
 headerField ::= headerFieldName COLON headerFieldValue? {
     methods = [
         getName
@@ -150,7 +155,7 @@ messageBody ::= MESSAGE_TEXT {
 }
 
 multipartMessage ::= (MESSAGE_BOUNDARY multipartField?)+
-multipartField ::= headerField+ requestMessagesGroup {
+multipartField ::= header requestMessagesGroup {
     methods = [
         getContentType
     ]

@@ -185,10 +185,10 @@ class EnvFileService(val project: Project) {
 
             val map = mutableMapOf<String, String>()
 
-            val list1 = fileBasedIndex.getValues(INDEX_ID, selectedEnv, scope)
+            val list1 = fileBasedIndex.getValues(INDEX_ID, COMMON_ENV_NAME, scope)
             list1.forEach { map.putAll(it) }
 
-            val list2 = fileBasedIndex.getValues(INDEX_ID, COMMON_ENV_NAME, scope)
+            val list2 = fileBasedIndex.getValues(INDEX_ID, selectedEnv, scope)
             list2.forEach { map.putAll(it) }
 
             if (map.isEmpty()) {

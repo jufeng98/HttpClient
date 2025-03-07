@@ -55,6 +55,10 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitHeader(@NotNull HttpHeader o) {
+    visitPsiElement(o);
+  }
+
   public void visitHeaderField(@NotNull HttpHeaderField o) {
     visitPsiElement(o);
   }

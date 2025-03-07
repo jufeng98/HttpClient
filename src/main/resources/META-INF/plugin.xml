@@ -1,10 +1,7 @@
 <idea-plugin>
     <id>org.javamaster.HttpRequest</id>
     <name>HttpRequest</name>
-
-    <vendor email="375709770@qq.com" url="https://www.zhihu.com/people/liang-yu-dong-44">
-        jufeng98
-    </vendor>
+    <vendor email="375709770@qq.com" url="https://www.zhihu.com/people/liang-yu-dong-44">jufeng98</vendor>
 
     <description>
         <![CDATA[
@@ -21,6 +18,12 @@
                 <li>Support save http response body to file</li>
                 <li>Support preview image</li>
             </ul>
+            Getting Started:<br>
+            <ol>
+                <li>Create a file with an HTTP suffix</li>
+                <li>Input gtr or ptr to trigger live templates and quickly create HTTP requests</li>
+                <li>Click the run button on the left side of the file to sending request and view the response</li>
+            </ol>
             提供从 IDEA Editor 编写和执行 HTTP 请求的能力：<br>
             <ul>
                 <li>支持发起 GET、POST 等请求</li>
@@ -37,7 +40,7 @@
             开始使用：<br>
             <ol>
                 <li>创建一个 http 后缀的文件</li>
-                <li>从右上角的 Examples 根据需要选择合适的请求模板并复制到刚创建的文件里加以修改</li>
+                <li>输入 gtr 或 ptr 等触发实时模板从而快速创建 http 请求</li>
                 <li>点击文件左侧的运行按钮发起请求并查看响应</li>
             </ol>
         ]]>
@@ -45,6 +48,20 @@
 
     <change-notes>
         <![CDATA[
+            <ul>
+                <li><b>2.3.0</b></li>
+                <ul>
+                    <li>提升内置方法的输入补全体验</li>
+                    <li>Bug修复</li>
+                </ul>
+            </ul>
+            <ul>
+                <li><b>2.2.0</b></li>
+                <ul>
+                    <li>默认折叠Header</li>
+                    <li>Bug修复</li>
+                </ul>
+            </ul>
             <ul>
                 <li><b>2.1.0</b></li>
                 <ul>

@@ -214,6 +214,23 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // headerField+
+  public static boolean header(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "header")) return false;
+    if (!nextTokenIs(b, FIELD_NAME)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = headerField(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!headerField(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "header", c)) break;
+    }
+    exit_section_(b, m, HEADER, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // headerFieldName COLON headerFieldValue?
   public static boolean headerField(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "headerField")) return false;
@@ -393,30 +410,15 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // headerField+ requestMessagesGroup
+  // header requestMessagesGroup
   public static boolean multipartField(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "multipartField")) return false;
     if (!nextTokenIs(b, FIELD_NAME)) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = multipartField_0(b, l + 1);
+    r = header(b, l + 1);
     r = r && requestMessagesGroup(b, l + 1);
     exit_section_(b, m, MULTIPART_FIELD, r);
-    return r;
-  }
-
-  // headerField+
-  private static boolean multipartField_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "multipartField_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = headerField(b, l + 1);
-    while (r) {
-      int c = current_position_(b);
-      if (!headerField(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "multipartField_0", c)) break;
-    }
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -648,7 +650,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // method requestTarget version? headerField* body? responseHandler? outputFile?
+  // method requestTarget version? header? body? responseHandler? outputFile?
   public static boolean request(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request")) return false;
     if (!nextTokenIs(b, REQUEST_METHOD)) return false;
@@ -673,14 +675,10 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // headerField*
+  // header?
   private static boolean request_3(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request_3")) return false;
-    while (true) {
-      int c = current_position_(b);
-      if (!headerField(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "request_3", c)) break;
-    }
+    header(b, l + 1);
     return true;
   }
 

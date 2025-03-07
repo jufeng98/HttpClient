@@ -36,9 +36,9 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   }
 
   @Override
-  @NotNull
-  public List<HttpHeaderField> getHeaderFieldList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpHeaderField.class);
+  @Nullable
+  public HttpHeader getHeader() {
+    return findChildByClass(HttpHeader.class);
   }
 
   @Override

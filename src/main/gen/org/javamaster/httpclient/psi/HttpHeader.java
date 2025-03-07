@@ -4,17 +4,13 @@ package org.javamaster.httpclient.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import org.apache.http.entity.ContentType;
 
-public interface HttpMultipartField extends PsiElement {
-
-  @NotNull
-  HttpHeader getHeader();
+public interface HttpHeader extends PsiElement {
 
   @NotNull
-  HttpRequestMessagesGroup getRequestMessagesGroup();
+  List<HttpHeaderField> getHeaderFieldList();
 
   @Nullable
-  ContentType getContentType();
+  HttpHeaderField getContentTypeField();
 
 }

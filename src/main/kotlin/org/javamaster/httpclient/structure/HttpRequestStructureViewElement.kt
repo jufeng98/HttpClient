@@ -129,11 +129,19 @@ class HttpRequestStructureViewElement private constructor(
             tabName = getTabName(method)
 
             var icon = AllIcons.Actions.Annotate
-            val type = method.text
-            if (type == HttpRequestEnum.GET.name) {
-                icon = HttpIcons.GET
-            } else if (type == HttpRequestEnum.POST.name) {
-                icon = HttpIcons.POST
+            when (method.text) {
+                HttpRequestEnum.GET.name -> {
+                    icon = HttpIcons.GET
+                }
+                HttpRequestEnum.POST.name -> {
+                    icon = HttpIcons.POST
+                }
+                HttpRequestEnum.PUT.name -> {
+                    icon = HttpIcons.PUT
+                }
+                HttpRequestEnum.DELETE.name -> {
+                    icon = HttpIcons.DELETE
+                }
             }
 
             children.add(

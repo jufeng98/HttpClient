@@ -10,16 +10,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
-import org.apache.http.entity.ContentType;
 
-public class HttpMultipartFieldImpl extends ASTWrapperPsiElement implements HttpMultipartField {
+public class HttpHeaderImpl extends ASTWrapperPsiElement implements HttpHeader {
 
-  public HttpMultipartFieldImpl(@NotNull ASTNode node) {
+  public HttpHeaderImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitMultipartField(this);
+    visitor.visitHeader(this);
   }
 
   @Override
@@ -30,20 +29,14 @@ public class HttpMultipartFieldImpl extends ASTWrapperPsiElement implements Http
 
   @Override
   @NotNull
-  public HttpHeader getHeader() {
-    return findNotNullChildByClass(HttpHeader.class);
-  }
-
-  @Override
-  @NotNull
-  public HttpRequestMessagesGroup getRequestMessagesGroup() {
-    return findNotNullChildByClass(HttpRequestMessagesGroup.class);
+  public List<HttpHeaderField> getHeaderFieldList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpHeaderField.class);
   }
 
   @Override
   @Nullable
-  public ContentType getContentType() {
-    return HttpPsiImplUtil.getContentType(this);
+  public HttpHeaderField getContentTypeField() {
+    return HttpPsiImplUtil.getContentTypeField(this);
   }
 
 }

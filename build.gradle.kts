@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.javamaster"
-version = "2.1.0"
+version = "2.3.0"
 
 repositories {
     maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
@@ -42,12 +42,12 @@ intellij {
 
 tasks {
     withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
+        sourceCompatibility = "21"
+        targetCompatibility = "21"
         options.encoding = "UTF-8"
     }
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
+        kotlinOptions.jvmTarget = "21"
     }
 
     jar {

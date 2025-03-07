@@ -52,8 +52,8 @@ class HttpHeaderPsiReferenceProvider : PsiReferenceProvider() {
 
             if (fieldName == DubboUtils.METHOD_KEY) {
                 val httpRequest = headerField.parent as HttpRequest
-                val field = httpRequest.headerFieldList
-                    .firstOrNull {
+                val field = httpRequest.header?.headerFieldList
+                    ?.firstOrNull {
                         it.headerFieldName.text == DubboUtils.INTERFACE_KEY
                     }
                 if (field == null) {

@@ -12,8 +12,8 @@ public interface HttpRequest extends PsiElement {
   @Nullable
   HttpBody getBody();
 
-  @NotNull
-  List<HttpHeaderField> getHeaderFieldList();
+  @Nullable
+  HttpHeader getHeader();
 
   @NotNull
   HttpMethod getMethod();

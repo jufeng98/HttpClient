@@ -37,7 +37,7 @@ object DubboUtils {
             InjectedLanguageManager.getInstance(jsonString.project).getInjectionHost(jsonString) as HttpMessageBody
         val httpRequest = PsiTreeUtil.getParentOfType(httpMessageBody, HttpRequest::class.java)
 
-        val headerField = httpRequest?.headerFieldList
+        val headerField = httpRequest?.header?.headerFieldList
             ?.firstOrNull { it.headerFieldName.text == INTERFACE_KEY }
             ?: return null
 
@@ -45,8 +45,8 @@ object DubboUtils {
         val name = headerField.headerFieldValue?.text ?: return null
         val psiClass = findInterface(module, name) ?: return null
 
-        val headerFieldMethod = httpRequest.headerFieldList
-            .firstOrNull { it.headerFieldName.text == METHOD_KEY }
+        val headerFieldMethod = httpRequest.header?.headerFieldList
+            ?.firstOrNull { it.headerFieldName.text == METHOD_KEY }
             ?: return null
 
         val value = headerFieldMethod.headerFieldValue?.text ?: return null

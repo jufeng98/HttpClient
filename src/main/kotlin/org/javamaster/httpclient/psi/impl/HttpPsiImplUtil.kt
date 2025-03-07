@@ -47,13 +47,21 @@ object HttpPsiImplUtil {
 
     @JvmStatic
     fun getContentType(request: HttpRequest): ContentType? {
-        return getContentType(request.headerFieldList)
+        return getContentType(request.header?.headerFieldList)
+    }
+
+    @JvmStatic
+    fun getContentTypeField(header: HttpHeader): HttpHeaderField? {
+        return header.headerFieldList
+            .firstOrNull {
+                it.headerFieldName.text.lowercase() == "content-type"
+            }
     }
 
     @JvmStatic
     fun getContentTypeBoundary(request: HttpRequest): String? {
-        val first = request.headerFieldList
-            .firstOrNull {
+        val first = request.header?.headerFieldList
+            ?.firstOrNull {
                 it.headerFieldName.text.lowercase() == "content-type"
             }
 
@@ -68,8 +76,8 @@ object HttpPsiImplUtil {
 
     @JvmStatic
     fun getContentLength(request: HttpRequest): Int? {
-        val first = request.headerFieldList
-            .firstOrNull {
+        val first = request.header?.headerFieldList
+            ?.firstOrNull {
                 it.headerFieldName.text.lowercase() == "content-length"
             }
 
@@ -94,9 +102,9 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
-    fun getContentType(headerFieldList: List<HttpHeaderField>): ContentType? {
+    fun getContentType(headerFieldList: List<HttpHeaderField>?): ContentType? {
         val first = headerFieldList
-            .firstOrNull {
+            ?.firstOrNull {
                 it.headerFieldName.text.lowercase() == "content-type"
             }
 
@@ -111,7 +119,7 @@ object HttpPsiImplUtil {
 
     @JvmStatic
     fun getContentType(request: HttpMultipartField): ContentType? {
-        return getContentType(request.headerFieldList)
+        return getContentType(request.header.headerFieldList)
     }
 
     @JvmStatic
@@ -141,7 +149,7 @@ object HttpPsiImplUtil {
 
     @JvmStatic
     fun getMultipartFieldDescription(part: HttpMultipartField): HttpHeaderFieldValue? {
-        val description = part.headerFieldList
+        val description = part.header.headerFieldList
             .firstOrNull { it.headerFieldName.text == "Content-Disposition" }
         return description?.headerFieldValue
     }

@@ -107,7 +107,7 @@ class HttpProcessHandler(
 
         val url: String = variableResolver.resolve(requestTarget.url, selectedEnv, parentPath)
 
-        val httpHeaderFields = request.headerFieldList
+        val httpHeaderFields = request.header?.headerFieldList
         val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver, selectedEnv, parentPath)
 
         if (methodType == HttpRequestEnum.WEBSOCKET.name) {

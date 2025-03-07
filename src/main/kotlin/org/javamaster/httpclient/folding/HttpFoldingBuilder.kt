@@ -4,12 +4,12 @@ import com.intellij.lang.ASTNode
 import com.intellij.lang.folding.FoldingBuilder
 import com.intellij.lang.folding.FoldingDescriptor
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.FoldingGroup
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.containers.toArray
+import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
@@ -18,9 +18,7 @@ import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getMultipartFieldDescr
 
 class HttpFoldingBuilder : FoldingBuilder, DumbAware {
     override fun buildFoldRegions(node: ASTNode, document: Document): Array<FoldingDescriptor> {
-        val descriptors: MutableList<FoldingDescriptor> = ArrayList()
-
-        collectDescriptors(node, descriptors)
+        val descriptors = collectDescriptors(node)
 
         return descriptors.toArray(FoldingDescriptor.EMPTY_ARRAY)
     }
@@ -56,74 +54,64 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
             return "{% ... %}"
         } else if (type == HttpTypes.GLOBAL_HANDLER) {
             return "{% ... %}"
+        } else if (type == HttpTypes.HEADER) {
+            val contentTypeField = (node.psi as HttpHeader).contentTypeField
+            if (contentTypeField != null) {
+                return "(Headers)...${contentTypeField.text}..."
+            }
+            return "(Headers)..."
         }
 
         return "..."
     }
 
     override fun isCollapsedByDefault(node: ASTNode): Boolean {
-        return false
+        val type = node.elementType
+        return type == HttpTypes.HEADER
     }
 
-    override fun isCollapsedByDefault(foldingDescriptor: FoldingDescriptor): Boolean {
-        return foldingDescriptor is DifferenceFilesFoldingDescriptor
-    }
+    private fun collectDescriptors(node: ASTNode): MutableList<FoldingDescriptor> {
+        val descriptors = mutableListOf<FoldingDescriptor>()
 
-    private class DifferenceFilesFoldingDescriptor(parent: ASTNode, differenceFiles: Array<ASTNode>, limit: Int) :
-        FoldingDescriptor(
-            parent,
-            getRange(differenceFiles, limit),
-            null as FoldingGroup?,
-            "place holder",
-            true,
-            setOf()
-        ) {
-        init {
-            this.isGutterMarkEnabledForSingleLine = true
-            this.setCanBeRemovedWhenCollapsed(true)
-        }
-
-        companion object {
-            private fun getRange(differenceFiles: Array<ASTNode>, limit: Int): TextRange {
-                assert(differenceFiles.size > limit)
-
-                val firstToHide = differenceFiles[limit]
-                val lastToHide = differenceFiles[differenceFiles.size - 1]
-
-                return TextRange(firstToHide.startOffset, lastToHide.startOffset + lastToHide.textLength)
-            }
-        }
-    }
-
-    private fun collectDescriptors(node: ASTNode, descriptors: MutableList<FoldingDescriptor>) {
-        val requestBlocks = node.getChildren(TokenSet.create(HttpTypes.REQUEST_BLOCK))
+        val requestBlockNodes = node.getChildren(TokenSet.create(HttpTypes.REQUEST_BLOCK))
 
         val globalHandlerNode = node.findChildByType(HttpTypes.GLOBAL_HANDLER)
         if (globalHandlerNode != null) {
             descriptors.add(FoldingDescriptor(globalHandlerNode, globalHandlerNode.textRange))
         }
 
-        for (requestBlockNode in requestBlocks) {
+        for (requestBlockNode in requestBlockNodes) {
             val requestNode = requestBlockNode.findChildByType(HttpTypes.REQUEST) ?: continue
 
-            collectMultipartRequests(requestNode, descriptors)
+            val list = collectMultipartRequests(requestNode)
+            descriptors.addAll(list)
 
-            collectScriptPart(requestNode, requestBlockNode, descriptors)
+            val parts = collectScriptPart(requestNode, requestBlockNode)
+            descriptors.addAll(parts)
 
             if (requestNode.findChildByType(HttpTypes.METHOD) != null) {
                 descriptors.add(FoldingDescriptor(requestNode, requestNode.textRange))
             }
+
+            val header = requestNode.findChildByType(HttpTypes.HEADER)
+            if (header != null) {
+                descriptors.add(FoldingDescriptor(header, header.textRange))
+            }
         }
+
+        return descriptors
     }
 
-    private fun collectMultipartRequests(node: ASTNode, descriptors: MutableList<FoldingDescriptor>) {
-        val bodyNode = node.findChildByType(HttpTypes.BODY) ?: return
+    private fun collectMultipartRequests(node: ASTNode): MutableList<FoldingDescriptor> {
+        val descriptors = mutableListOf<FoldingDescriptor>()
+
+        val bodyNode = node.findChildByType(HttpTypes.BODY) ?: return descriptors
 
         val multipartMessage: ASTNode?
         val multipart = bodyNode.findChildByType(HttpTypes.MULTIPART_MESSAGE)
             .also { multipartMessage = it }
 
-        if (multipart == null) return
+        if (multipart == null) return descriptors
 
         val multipartFields = multipartMessage!!.getChildren(TokenSet.create(HttpTypes.MULTIPART_FIELD))
 
@@ -143,13 +131,16 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
                 )
             )
         }
+
+        return descriptors
     }
 
     private fun collectScriptPart(
         requestNode: ASTNode,
         requestBlockNode: ASTNode,
-        descriptors: MutableList<FoldingDescriptor>,
-    ) {
+    ): MutableList<FoldingDescriptor> {
+        val descriptors = mutableListOf<FoldingDescriptor>()
+
         val responseHandlerNode = requestNode.findChildByType(HttpTypes.RESPONSE_HANDLER)
         if (responseHandlerNode != null) {
             descriptors.add(FoldingDescriptor(responseHandlerNode, responseHandlerNode.textRange))
@@ -159,6 +150,8 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         if (preHandlerNode != null) {
             descriptors.add(FoldingDescriptor(preHandlerNode, preHandlerNode.textRange))
         }
+
+        return descriptors
     }
 
     private fun skipCommentsAndWhitespaces(node: ASTNode): ASTNode? {

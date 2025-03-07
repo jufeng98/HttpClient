@@ -91,14 +91,14 @@ object HttpUtils {
     }
 
     fun convertToReqHeaderMap(
-        httpHeaderFields: List<HttpHeaderField>,
+        httpHeaderFields: List<HttpHeaderField>?,
         variableResolver: VariableResolver,
         selectedEnv: String?,
         httpFileParentPath: String,
     ): MutableMap<String, String> {
         val map = mutableMapOf<String, String>()
 
-        if (httpHeaderFields.isEmpty()) return map
+        if (httpHeaderFields.isNullOrEmpty()) return map
 
         httpHeaderFields.stream()
             .forEach {
@@ -203,7 +203,7 @@ object HttpUtils {
             .forEach {
                 byteArrays.add("--$boundary\r\n".toByteArray(StandardCharsets.UTF_8))
 
-                it.headerFieldList
+                it.header.headerFieldList
                     .forEach { innerIt ->
                         val headerName = innerIt.headerFieldName.text
                         val headerValue = innerIt.headerFieldValue?.text
