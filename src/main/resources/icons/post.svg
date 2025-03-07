@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 2048 2048">
-    <rect fill-opacity="0.85" x="0" y="0" width="2048" height="2048" rx="384" ry="384" fill="#148f39"></rect>
+    <rect fill-opacity="0.95" x="0" y="0" width="2048" height="2048" rx="384" ry="384" fill="#148f39"></rect>
     <g transform="scale(0.45)">
-        <path fill-opacity="1" transform="translate(-140.20999999999998, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
+        <path fill-opacity="1" transform="translate(-20.20999999999998, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
               d="M457 1245v-438h121q145 0 203.5 49t58.5 170t-58.5 170t-203.5 49h-121zM162 1493h405q309 0 444.5 -110t135.5 -357t-135.5 -357t-444.5 -110h-110v-559h-295v1493z"></path>
-        <path fill-opacity="1" transform="translate(1092.79, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
+        <path fill-opacity="1" transform="translate(1132.79, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
               d="M616 1255q-113 0 -165 -120.5t-52 -389.5q0 -268 52 -388.5t165 -120.5q114 0 166 120.5t52 388.5q0 269 -52 389.5t-166 120.5zM92 745q0 383 132.5 579t391.5 196q260 0 392.5 -196t132.5 -579q0 -382 -132.5 -578t-392.5 -196q-259 0 -391.5 196t-132.5 578z"></path>
-        <path fill-opacity="1" transform="translate(2325.79, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
+        <path fill-opacity="1" transform="translate(2265.79, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
               d="M510 655q-223 85 -302 178.5t-79 251.5q0 203 130 319t357 116q103 0 206 -23.5t204 -69.5v-288q-95 67 -193 102t-194 35q-107 0 -164 -43t-57 -123q0 -62 41.5 -102.5t173.5 -89.5l127 -48q180 -66 265 -175t85 -275q0 -226 -133.5 -337.5t-403.5 -111.5 q-111 0 -222.5 26.5t-215.5 78.5v305q118 -84 228.5 -125t218.5 -41q109 0 169 49.5t60 138.5q0 67 -40 117.5t-116 79.5z"></path>
-        <path fill-opacity="1" transform="translate(3558.79, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
+        <path fill-opacity="1" transform="translate(3358.79, 2980) rotate(180) scale(-1, 1)" fill="#ffffff"
               d="M764 0h-295v1235h-379v258h1053v-258h-379v-1235z"></path>
     </g>
 </svg>

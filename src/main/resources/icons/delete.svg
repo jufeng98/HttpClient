@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 2048 2048">
+    <rect fill-opacity="0.9" x="0" y="0" width="2048" height="2048" rx="256" ry="256" fill="#ff1252"></rect>
+    <g transform="scale(0.28)">
+        <path fill-opacity="1" transform="translate(-56.190000000000055, 4280) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M436 166q255 0 356 125.5t101 453.5q0 331 -100.5 456.5t-356.5 125.5h-96v-1161h96zM440 1493q342 0 504 -182t162 -566q0 -382 -162 -563.5t-504 -181.5h-303v1493h303z"></path>
+        <path fill-opacity="1" transform="translate(1176.81, 4280) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M197 1493h886v-170h-684v-402h654v-170h-654v-581h703v-170h-905v1493z"></path>
+        <path fill-opacity="1" transform="translate(2409.81, 4280) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M215 1493h203v-1323h721v-170h-924v1493z"></path>
+        <path fill-opacity="1" transform="translate(3642.81, 4280) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M197 1493h886v-170h-684v-402h654v-170h-654v-581h703v-170h-905v1493z"></path>
+        <path fill-opacity="1" transform="translate(4875.8099999999995, 4280) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M47 1493h1139v-170h-467v-1323h-203v1323h-469v170z"></path>
+        <path fill-opacity="1" transform="translate(6108.8099999999995, 4280) rotate(180) scale(-1, 1)" fill="#ffffff"
+              d="M197 1493h886v-170h-684v-402h654v-170h-654v-581h703v-170h-905v1493z"></path>
+    </g>
+</svg>
