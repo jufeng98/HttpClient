@@ -1,5 +1,8 @@
 package org.javamaster.httpclient.enums
 
+import com.intellij.codeInsight.completion.InsertHandler
+import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.readBytes
 import org.javamaster.httpclient.utils.HttpUtils
@@ -19,6 +22,10 @@ enum class InnerVariableEnum(val methodName: String) {
             val count = patternNotNumber.matcher(variable).replaceAll("")
             return RandomStringUtils.randomAlphabetic(count.toInt())
         }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
     },
     RANDOM_ALPHA_NUMERIC("\$random.alphanumeric") {
         override fun typeText(): String {
@@ -29,6 +36,10 @@ enum class InnerVariableEnum(val methodName: String) {
             val count = patternNotNumber.matcher(variable).replaceAll("")
             return RandomStringUtils.randomAlphanumeric(count.toInt())
         }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
     },
     RANDOM_NUMBER("\$random.numeric") {
         override fun typeText(): String {
@@ -38,6 +49,10 @@ enum class InnerVariableEnum(val methodName: String) {
         override fun exec(variable: String, httpFileParentPath: String): String {
             val count = patternNotNumber.matcher(variable).replaceAll("")
             return RandomStringUtils.randomNumeric(count.toInt())
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
         }
     },
     RANDOM_UUID("\$random.uuid") {
@@ -68,6 +83,10 @@ enum class InnerVariableEnum(val methodName: String) {
             val start = patternNotNumber.matcher(split[0]).replaceAll("").toInt()
             val end = patternNotNumber.matcher(split[1]).replaceAll("").toInt()
             return (start + ThreadLocalRandom.current().nextInt(0, end - start)).toString()
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
         }
     },
     TIMESTAMP("\$timestamp") {
@@ -100,6 +119,10 @@ enum class InnerVariableEnum(val methodName: String) {
 
             return Base64.getEncoder().encodeToString(bytes)
         }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
     },
     RANDOM_ADDRESS("\$random.address.full") {
         override fun typeText(): String {
@@ -112,7 +135,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_BOOL("\$random.bool") {
         override fun typeText(): String {
-            return "生成完整地址"
+            return "生成布尔值"
         }
 
         override fun exec(variable: String, httpFileParentPath: String): String {
@@ -182,6 +205,30 @@ enum class InnerVariableEnum(val methodName: String) {
             return RandomStringUtils.faker().university().name()
         }
     },
+    PICK("\$random.pick") {
+        override fun typeText(): String {
+            return "从给定的选项中随机挑选一个，用法:$methodName(23, 46) 或 $methodName('Jack', 'Rose')"
+        }
+
+        override fun exec(variable: String, httpFileParentPath: String): String {
+            val paramsStr = variable.substring(methodName.length + 1, variable.length - 1)
+
+            val split = paramsStr.split(",").stream()
+                .map { it.trim() }
+                .toList()
+
+            val value = split[RandomStringUtils.RANDOM.nextInt(split.size)]
+            if (value.startsWith("'")) {
+                return value.substring(1, value.length - 1)
+            }
+
+            return value
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
     ;
 
     val patternNotNumber: Pattern = Pattern.compile("\\D")
@@ -189,6 +236,10 @@ enum class InnerVariableEnum(val methodName: String) {
     abstract fun typeText(): String
 
     abstract fun exec(variable: String, httpFileParentPath: String): String
+
+    open fun insertHandler(): InsertHandler<LookupElement>? {
+        return null
+    }
 
     companion object {
         private val map by lazy {

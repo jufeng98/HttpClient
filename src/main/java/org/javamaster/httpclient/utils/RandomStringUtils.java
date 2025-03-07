@@ -12,7 +12,7 @@ public class RandomStringUtils {
      * to the random method so as to not return the same value in the
      * same millisecond.</p>
      */
-    private static final Random RANDOM = new Random();
+    public static final Random RANDOM = new Random();
     private static final Faker FAKER = new Faker(Locale.SIMPLIFIED_CHINESE, RANDOM);
     /**
      * <p>{@code RandomStringUtils} instances should NOT be constructed in

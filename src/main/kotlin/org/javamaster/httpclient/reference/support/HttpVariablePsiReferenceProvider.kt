@@ -63,7 +63,9 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
         val builtInFunList: Array<Any> by lazy {
             return@lazy InnerVariableEnum.entries
                 .map {
-                    LookupElementBuilder.create(it.methodName).withTypeText(it.typeText(), true)
+                    LookupElementBuilder.create(it.methodName)
+                        .withInsertHandler(it.insertHandler())
+                        .withTypeText(it.typeText(), true)
                 }
                 .toList()
                 .toTypedArray()
