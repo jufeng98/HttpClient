@@ -20,6 +20,20 @@ import org.javamaster.httpclient.utils.NotifyUtil
  * @author yudong
  */
 class HttpEditorListener : FileEditorManagerListener {
+    private val state by lazy {
+        // 兼容下旧版
+        val cls = ModalityState::class.java
+        try {
+            val method = cls.getDeclaredMethod("nonModal")
+            method.isAccessible = true
+            method.invoke(null) as ModalityState
+        } catch (e: Exception) {
+            val field = cls.getDeclaredField("NON_MODAL")
+            field.isAccessible = true
+            field.get(null) as ModalityState
+        }
+    }
+
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         if (file.fileType !is HttpFileType) {
             return
@@ -40,7 +54,7 @@ class HttpEditorListener : FileEditorManagerListener {
 
                     initTopForm(source, file, module, fileEditor)
                 }
-            }, ModalityState.nonModal())
+            }, state)
         } else {
             initTopForm(source, file, module, fileEditor)
         }
