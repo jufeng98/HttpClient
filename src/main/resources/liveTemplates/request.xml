@@ -28,11 +28,12 @@
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
     </context>
   </template>
-  <template name="ptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: $HEADER_VALUE$&#10;Accept: $HEADER_VALUE$&#10;&#10;$BODY$&#10;"
+  <template name="ptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: $CONTENT_TYPE$&#10;Accept: $ACCEPT$&#10;&#10;$BODY$&#10;"
             description="POST http://example.com/add..." toReformat="true" toShortenFQNames="false">
     <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
     <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
-    <variable name="HEADER_VALUE" expression="" defaultValue="&quot;application/json&quot;" alwaysStopAt="true"/>
+    <variable name="CONTENT_TYPE" expression="" defaultValue="&quot;application/json&quot;" alwaysStopAt="true"/>
+    <variable name="ACCEPT" expression="" defaultValue="&quot;application/json&quot;" alwaysStopAt="true"/>
     <variable name="BODY" expression="" defaultValue="&quot;{}&quot;" alwaysStopAt="true"/>
     <context>
       <option name="REQUEST" value="true"/>
@@ -84,17 +85,12 @@
     </context>
   </template>
   <template name="wsr"
-            value="### request&#10;WEBSOCKET $SCHEME$://$HOST$/$URL_PATH$&#10;Content-Type: application/json // used only for IDE highlighting.&#10;// Highlighting is applied for each message independently.&#10;&#10;&#10;{&#10;    &quot;message&quot;: &quot;$TEXT_1$&quot;&#10;}&#10;=== wait-for-server&#10;{&#10;    &quot;message&quot;: &quot;$TEXT_2$&quot;&#10;}&#10;===&#10;{&#10;    &quot;message&quot;: &quot;$TEXT_3$&quot;&#10;}&#10;&#10;"
+            value="### request&#10;WEBSOCKET $SCHEME$://$HOST$/$URL_PATH$&#10;Cookie: JSESSIONID=1AB59E3B890BB3015F8176472883731A&#10;"
             toReformat="false" toShortenFQNames="true"
             description="WebSocket Request">
     <variable name="SCHEME" expression="enum(&quot;ws&quot;, &quot;wss&quot;)" defaultValue="" alwaysStopAt="true"/>
     <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
     <variable name="URL_PATH" expression="" defaultValue="&quot;websocket&quot;" alwaysStopAt="true"/>
-    <variable name="TEXT_1" expression="" defaultValue="&quot;Send when the WebSocket connection is opened&quot;" alwaysStopAt="true"/>
-    <variable name="TEXT_2" expression="" defaultValue="&quot;Wait for the server message and send the current message as response&quot;"
-              alwaysStopAt="true"/>
-    <variable name="TEXT_3" expression="" defaultValue="&quot;Send after previous message without waiting for the server message&quot;"
-              alwaysStopAt="true"/>
     <context>
       <option name="REQUEST" value="true"/>
       <option name="REQUEST_AUTH_HEADER" value="false" />
