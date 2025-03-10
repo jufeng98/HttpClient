@@ -8,6 +8,7 @@ import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.psi.HttpGlobalHandler
 import org.javamaster.httpclient.psi.HttpGlobalVariable
+import org.javamaster.httpclient.psi.HttpRequestBlock
 
 /**
  * @author yudong
@@ -23,6 +24,10 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
 
     fun getGlobalVariables(): List<HttpGlobalVariable> {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpGlobalVariable::class.java)
+    }
+
+    fun getRequestBlocks(): List<HttpRequestBlock> {
+        return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpRequestBlock::class.java)
     }
 
     override fun toString(): String {

@@ -49,9 +49,10 @@
     <change-notes>
         <![CDATA[
             <ul>
-                <li><b>2.3.0</b></li>
+                <li><b>2.5.0</b></li>
                 <ul>
                     <li>提升内置方法的输入补全体验</li>
+                    <li>允许请求名称为空</li>
                     <li>指定确切最低版本</li>
                     <li>Bug修复</li>
                 </ul>
