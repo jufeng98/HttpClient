@@ -7,14 +7,17 @@ import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.navigation.ColoredItemPresentation
 import com.intellij.openapi.editor.colors.CodeInsightColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Iconable
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.ArrayUtil
+import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.parser.HttpFile
+import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil
@@ -115,6 +118,7 @@ class HttpRequestStructureViewElement private constructor(
             val originalHost = request?.httpHost ?: return children
             val target = request.requestTarget
             val path = target?.url
+            val project = block.project
 
             val preRequestHandler = block.preRequestHandler
             if (preRequestHandler != null) {
@@ -133,12 +137,15 @@ class HttpRequestStructureViewElement private constructor(
                 HttpRequestEnum.GET.name -> {
                     icon = HttpIcons.GET
                 }
+
                 HttpRequestEnum.POST.name -> {
                     icon = HttpIcons.POST
                 }
+
                 HttpRequestEnum.PUT.name -> {
                     icon = HttpIcons.PUT
                 }
+
                 HttpRequestEnum.DELETE.name -> {
                     icon = HttpIcons.DELETE
                 }
@@ -157,19 +164,13 @@ class HttpRequestStructureViewElement private constructor(
                     mimeType = contentType.mimeType
                 }
 
-                val messageBody = messagesGroup.messageBody
-                if (messageBody != null) {
-                    val injectedLanguageManager = InjectedLanguageManager.getInstance(block.project)
-                    val files = injectedLanguageManager.getInjectedPsiFiles(messageBody)
-                    val psiElement = files?.get(0)?.first
-                    val psiFile = psiElement as PsiFile?
-                    val fileIcon = psiFile?.getIcon(Iconable.ICON_FLAG_VISIBILITY)
-                    if (fileIcon != null) {
-                        icon = fileIcon
-                    }
+                val bodyIcon = if (isImageType(contentType)) {
+                    HttpIcons.IMAGE
+                } else {
+                    getInjectedLanguageIcon(project, messagesGroup.messageBody)
                 }
 
-                children.add(create(messagesGroup, "Request body $mimeType", icon))
+                children.add(create(messagesGroup, "Request body $mimeType", bodyIcon))
             }
 
             val multipartMessage = body?.multipartMessage
@@ -185,7 +186,14 @@ class HttpRequestStructureViewElement private constructor(
                 if (contentType != null) {
                     mimeType = contentType.mimeType
                 }
-                children.add(create(it, "Multipart field: $name $mimeType", icon))
+
+                val multiIcon = if (isImageType(contentType)) {
+                    HttpIcons.IMAGE
+                } else {
+                    getInjectedLanguageIcon(project, it.requestMessagesGroup.messageBody)
+                }
+
+                children.add(create(it, "Multipart field: $name $mimeType", multiIcon))
             }
 
             val responseHandler = request.responseHandler
@@ -196,5 +204,27 @@ class HttpRequestStructureViewElement private constructor(
             return children
         }
 
+        private fun isImageType(contentType: ContentType?): Boolean {
+            if (contentType == null) {
+                return false
+            }
+
+            return contentType == ContentType.IMAGE_PNG || contentType == ContentType.IMAGE_JPEG
+                    || contentType == ContentType.IMAGE_BMP || contentType == ContentType.IMAGE_WEBP
+                    || contentType == ContentType.IMAGE_SVG || contentType == ContentType.IMAGE_GIF
+                    || contentType == ContentType.IMAGE_TIFF
+        }
+
+        private fun getInjectedLanguageIcon(project: Project, messageBody: HttpMessageBody?): Icon? {
+            if (messageBody == null) {
+                return null
+            }
+
+            val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
+            val files = injectedLanguageManager.getInjectedPsiFiles(messageBody)
+            val psiElement = files?.get(0)?.first
+            val psiFile = psiElement as PsiFile?
+            return psiFile?.getIcon(Iconable.ICON_FLAG_VISIBILITY)
+        }
     }
 }

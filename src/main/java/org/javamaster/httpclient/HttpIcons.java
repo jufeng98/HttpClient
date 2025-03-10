@@ -14,5 +14,6 @@ public class HttpIcons {
     public static final Icon POST = IconLoader.getIcon("/icons/post.svg", HttpIcons.class);
     public static final Icon PUT = IconLoader.getIcon("/icons/put.svg", HttpIcons.class);
     public static final Icon DELETE = IconLoader.getIcon("/icons/delete.svg", HttpIcons.class);
+    public static final Icon IMAGE = IconLoader.getIcon("/icons/image.svg", HttpIcons.class);
 
 }
