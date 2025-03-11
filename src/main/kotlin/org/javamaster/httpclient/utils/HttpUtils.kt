@@ -97,10 +97,6 @@ object HttpUtils {
 
         val httpFile = requestBlock.parent as HttpFile
         val requestBlocks = httpFile.getRequestBlocks()
-            .filter {
-                val txt = it.comment.text
-                txt.substring(3, txt.length).isBlank()
-            }
 
         for ((index, httpRequestBlock) in requestBlocks.withIndex()) {
             if (requestBlock == httpRequestBlock) {
