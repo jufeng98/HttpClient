@@ -28,9 +28,9 @@ public class HttpRequestBlockImpl extends ASTWrapperPsiElement implements HttpRe
   }
 
   @Override
-  @NotNull
+  @Nullable
   public HttpComment getComment() {
-    return findNotNullChildByClass(HttpComment.class);
+    return findChildByClass(HttpComment.class);
   }
 
   @Override

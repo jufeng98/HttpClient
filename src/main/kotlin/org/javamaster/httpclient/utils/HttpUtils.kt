@@ -89,10 +89,13 @@ object HttpUtils {
 
     fun getTabName(httpMethod: HttpMethod): String {
         val requestBlock = PsiTreeUtil.getParentOfType(httpMethod, HttpRequestBlock::class.java)!!
-        val text = requestBlock.comment.text
-        val tabName = text.substring(3, text.length).trim()
-        if (tabName.isNotEmpty()) {
-            return tabName
+        val comment = requestBlock.comment
+        if (comment != null) {
+            val text = comment.text
+            val tabName = text.substring(3, text.length).trim()
+            if (tabName.isNotEmpty()) {
+                return tabName
+            }
         }
 
         val httpFile = requestBlock.parent as HttpFile

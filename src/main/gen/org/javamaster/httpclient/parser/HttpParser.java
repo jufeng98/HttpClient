@@ -704,18 +704,25 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // comment directionComment* preRequestHandler? request
+  // comment? directionComment* preRequestHandler? request
   public static boolean requestBlock(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "requestBlock")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, REQUEST_BLOCK, "<request block>");
-    r = comment(b, l + 1);
+    r = requestBlock_0(b, l + 1);
     p = r; // pin = 1
     r = r && report_error_(b, requestBlock_1(b, l + 1));
     r = p && report_error_(b, requestBlock_2(b, l + 1)) && r;
     r = p && request(b, l + 1) && r;
     exit_section_(b, l, m, r, p, HttpParser::requestBlockRecover);
     return r || p;
+  }
+
+  // comment?
+  private static boolean requestBlock_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "requestBlock_0")) return false;
+    comment(b, l + 1);
+    return true;
   }
 
   // directionComment*

@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface HttpRequestBlock extends PsiElement {
 
-  @NotNull
+  @Nullable
   HttpComment getComment();
 
   @NotNull

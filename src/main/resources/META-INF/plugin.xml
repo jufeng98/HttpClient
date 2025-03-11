@@ -49,6 +49,13 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>2.5.1</b></li>
+                <ul>
+                    <li>###行调整为可选</li>
+                    <li>Bug修复</li>
+                </ul>
+            </ul>
+            <ul>
                 <li><b>2.5.0</b></li>
                 <ul>
                     <li>提升内置方法的输入补全体验</li>
