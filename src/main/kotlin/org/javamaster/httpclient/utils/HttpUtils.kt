@@ -38,6 +38,7 @@ object HttpUtils {
     val gson: Gson = GsonBuilder()
         .setPrettyPrinting()
         .serializeNulls()
+        .disableHtmlEscaping()
         .create()
 
     const val READ_TIMEOUT_NAME = "readTimeout"
