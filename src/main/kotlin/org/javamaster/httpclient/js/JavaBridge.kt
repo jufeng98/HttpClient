@@ -5,6 +5,8 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.readText
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.utils.HttpUtils
+import org.mozilla.javascript.Context
+import org.mozilla.javascript.NativeJavaObject
 import org.mozilla.javascript.ScriptableObject
 import java.io.File
 
@@ -38,6 +40,18 @@ class JavaBridge(private val jsScriptExecutor: JsScriptExecutor) {
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
         return virtualFile.readText()
+    }
+
+    @JsBridge(jsFun = "getXmlDoc()")
+    fun getXmlDoc(): Any {
+        val resObj = Context.javaToJS(jsScriptExecutor.xmlDoc!!, jsScriptExecutor.global) as NativeJavaObject
+        resObj.prototype = jsScriptExecutor.context.initStandardObjects()
+        return resObj
+    }
+
+    @JsBridge(jsFun = "evaluate(xPath)")
+    fun evaluate(xPath: String): String? {
+        return jsScriptExecutor.xPath!!.evaluate(xPath, jsScriptExecutor.xmlDoc!!)
     }
 
 }

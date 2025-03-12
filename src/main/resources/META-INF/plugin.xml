@@ -49,13 +49,25 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>2.6.0</b></li>
+                <ul>
+                    <li>内置变量支持引用系统变量,如 {{$property.java.version}}, 其中 java.version 是系统变量名</li>
+                    <li>内置变量支持引用环境变量,如 {{$env.OS}}, 其中 OS 是环境变量名</li>
+                    <li>变量输入时的智能提示新增系统变量和环境变量</li>
+                    <li>允许在 js 处理器中访问系统变量和环境变量</li>
+                    <li>Bug修复</li>
+                    <li>
+                        保存响应到文件路径允许使用变量, 如 >> {{$mvnTarget}}/res.json, 当前可用的三个变量:
+                        {{$projectRoot}} 指向项目根目录,
+                        {{$historyFolder}} 指向 .idea/httpClient
+                        {{$mvnTarget}} 指向模块的 src/target
+                    </li>
+                </ul>
                 <li><b>2.5.1</b></li>
                 <ul>
                     <li>###行调整为可选</li>
                     <li>Bug修复</li>
                 </ul>
-            </ul>
-            <ul>
                 <li><b>2.5.0</b></li>
                 <ul>
                     <li>提升内置方法的输入补全体验</li>
@@ -63,23 +75,17 @@
                     <li>指定确切最低版本</li>
                     <li>Bug修复</li>
                 </ul>
-            </ul>
-            <ul>
                 <li><b>2.2.0</b></li>
                 <ul>
                     <li>默认折叠Header</li>
                     <li>Bug修复</li>
                 </ul>
-            </ul>
-            <ul>
                 <li><b>2.1.0</b></li>
                 <ul>
                     <li>改进http语法错误恢复能力</li>
                     <li>支持注释指令参数</li>
                     <li>Bug修复</li>
                 </ul>
-            </ul>
-            <ul>
                 <li><b>2.0.0</b></li>
                 <ul>
                     <li>重构http语法解析逻辑，采用更科学的方式</li>

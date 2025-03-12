@@ -3,15 +3,15 @@
 var request = {
     variables: {
         dataHolder: {},
-        get: function(key) {
+        get: function (key) {
             return this.dataHolder[key] !== undefined ? this.dataHolder[key] : null;
         },
-        set: function(key, val) {
+        set: function (key, val) {
             var desc
-            if(val !== null) {
+            if (val !== null) {
                 val = val + '';
-                if(val.length > 100) {
-                    desc = val.substr(0, 100) + "...(已截断显示)"
+                if (val.length > 100) {
+                    desc = val.substring(0, 100) + "...(已截断显示)"
                 } else {
                     desc = val;
                 }
