@@ -10,7 +10,6 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
-import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.dubbo.DubboRequest
@@ -77,7 +76,7 @@ class HttpProcessHandler(
             startHandleRequest()
         } catch (e: Exception) {
             destroyProcess()
-            println(ExceptionUtils.getMessage(e))
+            e.printStackTrace()
             NotifyUtil.notifyError(project, "<div style='font-size:18pt'>${e.message}</div>")
             return
         }
@@ -174,8 +173,9 @@ class HttpProcessHandler(
                     mutableMapOf()
                 )
                 if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("// 后置js执行结果:\r\n")
+                    httpResDescList.add("/*\r\n后置js执行结果:\r\n")
                     httpResDescList.add("$evalJsRes")
+                    httpResDescList.add("*/\r\n")
                 }
 
                 httpResDescList.add("### $tabName\r\n")
@@ -227,15 +227,21 @@ class HttpProcessHandler(
                 val httpResDescList =
                     mutableListOf("// status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: $size KB\r\n")
 
-                val evalJsRes = jsScriptExecutor.evalJsAfterRequest(
-                    jsAfterScriptStr,
-                    resPair,
-                    response.statusCode(),
-                    response.headers().map()
-                )
+                val evalJsRes = try {
+                    jsScriptExecutor.evalJsAfterRequest(
+                        jsAfterScriptStr,
+                        resPair,
+                        response.statusCode(),
+                        response.headers().map()
+                    )
+                } catch (e: Exception) {
+                    e.message + "\r\n"
+                }
+
                 if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("// 后置js执行结果:\r\n")
+                    httpResDescList.add("/*\r\n后置js执行结果:\r\n")
                     httpResDescList.add("$evalJsRes")
+                    httpResDescList.add("*/\r\n")
                 }
 
                 val commentTabName = "### $tabName\r\n"
@@ -305,7 +311,7 @@ class HttpProcessHandler(
             return null
         }
 
-        val path = HttpUtils.constructFilePath(outPutFileName, parentPath)
+        val path = HttpUtils.constructFilePath(outPutFileName, parentPath, httpFile)
         val file = File(path)
         if (!file.parentFile.exists()) {
             Files.createDirectories(file.toPath())
@@ -331,6 +337,12 @@ class HttpProcessHandler(
         CompletableFuture.runAsync {
             while (!isProcessTerminated) {
                 Thread.sleep(600)
+            }
+
+            if (loadingRemover != null) {
+                runWriteActionAndWait {
+                    loadingRemover.run()
+                }
             }
 
             future.cancel(true)

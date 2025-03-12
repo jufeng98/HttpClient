@@ -7,6 +7,7 @@ import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -22,6 +23,7 @@ import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
+import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.ui.HttpEditorTopForm
@@ -48,6 +50,9 @@ object HttpUtils {
     const val HTTP_TYPE_ID = "intellijHttpClient"
     const val VARIABLE_SIGN_START = "{{"
     private const val VARIABLE_SIGN_END = "}}"
+    const val PROJECT_ROOT = "\$projectRoot"
+    const val HISTORY_FOLDER = "\$historyFolder"
+    const val MVN_TARGET = "\$mvnTarget"
     val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
 
     fun saveConfiguration(
@@ -265,6 +270,37 @@ object HttpUtils {
         } else {
             "$parentPath/$filePath"
         }
+    }
+
+    fun constructFilePath(filePath: String, parentPath: String, httpFile: PsiFile): String {
+        val project = httpFile.project
+
+        val matcher = VARIABLE_PATTERN.matcher(filePath)
+
+        val path = matcher.replaceAll {
+            val matchStr = it.group()
+            val variable = matchStr.substring(2, matchStr.length - 2)
+
+            when (variable) {
+                PROJECT_ROOT -> {
+                    return@replaceAll project.basePath
+                }
+
+                HISTORY_FOLDER -> {
+                    return@replaceAll project.basePath + "/.idea/httpClient"
+                }
+
+                MVN_TARGET -> {
+                    val module = ModuleUtil.findModuleForFile(httpFile) ?: return@replaceAll "Unresolved"
+                    val dirPath = ModuleUtil.getModuleDirPath(module)
+                    return@replaceAll "$dirPath/target"
+                }
+            }
+
+            "Unresolved"
+        }
+
+        return constructFilePath(path, parentPath)
     }
 
     fun convertToResHeaderDescList(

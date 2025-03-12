@@ -9,6 +9,10 @@ import com.intellij.psi.PsiReferenceProvider
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
+import org.javamaster.httpclient.psi.HttpOutputFilePath
+import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
+import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
+import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * @author yudong
@@ -43,17 +47,38 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
         }
 
         override fun getVariants(): Array<Any> {
+            val allList = mutableListOf<Any>()
+
+            if (element.parent is HttpOutputFilePath) {
+                allList.add(HttpUtils.PROJECT_ROOT)
+                allList.add(HttpUtils.HISTORY_FOLDER)
+                allList.add(HttpUtils.MVN_TARGET)
+                return allList.toTypedArray()
+            }
+
             val envVariables = EnvFileService.getEnvVariables(element.project)
             val list = envVariables.entries
                 .map {
                     LookupElementBuilder.create(it.key).withTypeText(it.value, true)
                 }
 
-            val allList = mutableListOf<Any>()
-
             allList.addAll(list)
 
             allList.addAll(builtInFunList)
+
+            val propertyList = System.getProperties().entries
+                .map {
+                    LookupElementBuilder.create(PROPERTY_PREFIX + "." + it.key)
+                }
+                .toList()
+            allList.addAll(propertyList)
+
+            val envList = System.getenv().entries
+                .map {
+                    LookupElementBuilder.create(ENV_PREFIX + "." + it.key)
+                }
+                .toList()
+            allList.addAll(envList)
 
             return allList.toTypedArray()
         }
