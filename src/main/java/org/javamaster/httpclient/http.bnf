@@ -16,6 +16,7 @@
 
   tokens=[
     LINE_COMMENT='regexp://.*'
+    BLOCK_COMMENT="regexp:/\*(.|\n)*\*/"
 
     SCHEMA_SEPARATE='://'
     COLON=':'
@@ -172,7 +173,7 @@ scriptBody ::= SCRIPT_BODY_PAET {
 outputFile ::= OUTPUT_FILE_SIGN outputFilePath {
     pin = 1
 }
-outputFilePath ::= OUTPUT_FILE_PATH_PART {
+outputFilePath ::= variable? OUTPUT_FILE_PATH_PART {
     methods = [
         getReferences
     ]

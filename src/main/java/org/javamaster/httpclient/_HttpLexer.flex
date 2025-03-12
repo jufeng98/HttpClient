@@ -37,7 +37,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_COMMENT
 %state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_PATH, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
-%state IN_POST_SCRIPT, IN_POST_SCRIPT_END, IN_RES_SCRIPT_BODY_PAET
+%state IN_POST_SCRIPT, IN_POST_SCRIPT_END
 %state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION
 %state IN_MULTIPART, IN_VARIABLE, IN_DINAMIC_VARIABLE, IN_GLOBAL_VARIABLE
 
@@ -46,6 +46,7 @@ EOL_MULTI=[ ]*\R+
 ONLY_SPACE=[ ]+
 WHITE_SPACE=\s+
 LINE_COMMENT="//".*
+BLOCK_COMMENT="/*" !([^]* "*/" [^]*) ("*/")?
 REQUEST_COMMENT=###.*
 REQUEST_METHOD=[A-Z]+
 SCHEMA_PART=https|wss|http|ws|dubbo
@@ -57,9 +58,9 @@ FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
 FIELD_NAME=[a-zA-Z0-9\-]+
 FIELD_VALUE=[^\r\n{ ]+
-FILE_PATH_PART=[^\r\n<> ]+
+FILE_PATH_PART=[^\r\n<>{} ]+
 MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
-VARIABLE_NAME=[[a-zA-Z0-9_\-]--[$}= ]]+
+VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
 GLOBAL_VARIABLE_PART=[^\r\n={} ]+
 DIRECTION_PART=[^\r\n ]+
 %%
@@ -266,11 +267,13 @@ DIRECTION_PART=[^\r\n ]+
 
 <IN_OUTPUT_FILE_PATH> {
   ">> "                      { return OUTPUT_FILE_SIGN; }
+  "{{"                       { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {FILE_PATH_PART}           { return OUTPUT_FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
   {EOL_MULTI}                { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 
   {LINE_COMMENT}{EOL}         { yypushback(1); return LINE_COMMENT; }
+  {BLOCK_COMMENT}{EOL}        { yypushback(1); return BLOCK_COMMENT; }
 
 [^]                    { return BAD_CHARACTER; }

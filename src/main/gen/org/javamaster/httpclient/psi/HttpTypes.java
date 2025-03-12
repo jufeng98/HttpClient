@@ -53,6 +53,7 @@ public interface HttpTypes {
 
   IElementType AND = new HttpTokenType("&");
   IElementType AT = new HttpTokenType("@");
+  IElementType BLOCK_COMMENT = new HttpTokenType("BLOCK_COMMENT");
   IElementType COLON = new HttpTokenType(":");
   IElementType DIRECTION_COMMENT_START = new HttpTokenType("DIRECTION_COMMENT_START");
   IElementType DIRECTION_NAME_PART = new HttpTokenType("DIRECTION_NAME_PART");
