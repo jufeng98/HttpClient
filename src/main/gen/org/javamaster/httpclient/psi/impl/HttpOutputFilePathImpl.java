@@ -29,6 +29,12 @@ public class HttpOutputFilePathImpl extends ASTWrapperPsiElement implements Http
   }
 
   @Override
+  @Nullable
+  public HttpVariable getVariable() {
+    return findChildByClass(HttpVariable.class);
+  }
+
+  @Override
   @NotNull
   public PsiReference[] getReferences() {
     return HttpPsiImplUtil.getReferences(this);

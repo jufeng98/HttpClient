@@ -105,7 +105,21 @@ class VariableResolver(private val project: Project) {
             return innerVariable
         }
 
-        return variable
+        if (variable.startsWith(PROPERTY_PREFIX)) {
+            innerVariable = System.getProperty(variable.substring(PROPERTY_PREFIX.length + 1))
+            if (innerVariable != null) {
+                return innerVariable
+            }
+        }
+
+        if (variable.startsWith(ENV_PREFIX)) {
+            innerVariable = System.getenv(variable.substring(ENV_PREFIX.length + 1))
+            if (innerVariable != null) {
+                return innerVariable
+            }
+        }
+
+        return "Unresolved"
     }
 
     fun getJsGlobalVariables(): LinkedHashMap<String, String> {
@@ -130,5 +144,7 @@ class VariableResolver(private val project: Project) {
         }
 
         val VARIABLE_PATTERN: Pattern = Pattern.compile("(\\{\\{[^{}]+}})")
+        const val PROPERTY_PREFIX = "\$property"
+        const val ENV_PREFIX = "\$env"
     }
 }

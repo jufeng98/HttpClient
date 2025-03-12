@@ -35,9 +35,10 @@ class HttpFilePathPsiReferenceProvider : PsiReferenceProvider() {
         override fun navigate(requestFocus: Boolean) {
             val text = element.text
             val project = element.project
-            val parentPath = element.containingFile.virtualFile.parent.path
+            val httpFile = element.containingFile
+            val parentPath = httpFile.virtualFile.parent.path
 
-            val path = HttpUtils.constructFilePath(text, parentPath)
+            val path = HttpUtils.constructFilePath(text, parentPath, httpFile)
 
             val file = File(path)
             if (!file.exists()) {
