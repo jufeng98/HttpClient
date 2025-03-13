@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.js
 
-import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
@@ -23,79 +22,29 @@ import javax.xml.xpath.XPathFactory
  *
  * @author yudong
  */
-@Service(Service.Level.PROJECT)
-class JsScriptExecutor {
-    lateinit var parentPath: String
-    lateinit var project: Project
-    val context: Context = Context.enter()
-    val global: ScriptableObject = context.initStandardObjects()
-    private val initRequestJsStr: String
-    private val reserveKeys: Set<String>
+class JsScriptExecutor(val project: Project, val parentPath: String) {
+    val reqScriptableObject: ScriptableObject by lazy {
+        val scriptableObject = context.initStandardObjects()
+        scriptableObject.prototype = global
 
-    private val documentBuilderFactory by lazy {
-        val factory = DocumentBuilderFactory.newInstance()
-        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
-        factory
-    }
-    private val xPathFactory by lazy {
-        XPathFactory.newInstance()
-    }
-    var xmlDoc: Document? = null
-    var xPath: XPath? = null
-
-    init {
-        val set = mutableSetOf(
-            "CryptoJS",
-            "javaBridge",
-            "client",
-            "getLog",
-            "hasGlobalVariableKey",
-            "getGlobalVariable",
-            "hasRequestVariableKey",
-            "getRequestVariable",
-            "console"
-        )
-
-        var url = javaClass.classLoader.getResource("examples/crypto-js.js")!!
-        var jsStr = url.readText(StandardCharsets.UTF_8)
-        context.evaluateString(global, jsStr, "dummy.js", 1, null)
-        // 注册 CryptoJS 对象
-        global.prototype.put("CryptoJS", global, global.get("CryptoJS"))
-
-        val javaBridge = Context.javaToJS(JavaBridge(this), global)
         // 注册js桥接对象 javaBridge
-        ScriptableObject.putProperty(global, "javaBridge", javaBridge)
-        // 注册全局js函数
-        JavaBridge::class.java.declaredMethods.forEach {
-            val jsBridge = it.getAnnotation(JsBridge::class.java)
-            val js = """
-                function ${jsBridge.jsFun} {
-                    return javaBridge.${jsBridge.jsFun};                    
-                }
-            """.trimIndent()
-            context.evaluateString(global, js, "dummy.js", 1, null)
-            set.add(it.name)
-        }
+        val javaBridge = Context.javaToJS(JavaBridge(this), scriptableObject)
+        ScriptableObject.putProperty(scriptableObject, "javaBridge", javaBridge)
+        context.evaluateString(scriptableObject, javaBridgeJsStr, "javaBridge.js", 1, null)
 
-        reserveKeys = set
+        context.evaluateString(scriptableObject, initRequestJsStr, "initRequest.js", 1, null)
 
-        url = javaClass.classLoader.getResource("examples/initGlobal.js")!!
-        jsStr = url.readText(StandardCharsets.UTF_8)
-        context.evaluateString(global, jsStr, "dummy.js", 1, null)
-
-        url = javaClass.classLoader.getResource("examples/initRequest.js")!!
-        initRequestJsStr = url.readText(StandardCharsets.UTF_8)
-    }
-
-    fun prepareJsRequestObj() {
         val jsonJs = """
             $PROPERTY_PREFIX = ${gson.toJson(System.getProperties())};
             $ENV_PREFIX = ${gson.toJson(System.getenv())};
         """.trimIndent()
-        context.evaluateString(global, jsonJs, "dummy.js", 1, null)
+        context.evaluateString(scriptableObject, jsonJs, "initPropertiesAndEnv.js", 1, null)
 
-        context.evaluateString(global, initRequestJsStr, "dummy.js", 1, null)
+        scriptableObject
     }
+
+    var xmlDoc: Document? = null
+    var xPath: XPath? = null
 
     fun initJsRequestBody(reqBody: Any) {
         val js = """
@@ -105,29 +54,12 @@ class JsScriptExecutor {
                 }
             }
         """.trimIndent()
-        context.evaluateString(global, js, "dummy.js", 1, null)
-    }
-
-    fun clearJsRequestObj() {
-        // 清除多余对象,防止污染全局 js 环境
-        val nativeObject = global as NativeObject
-        nativeObject.keys
-            .forEach {
-                val key = "" + it
-                if (reserveKeys.contains(key)) {
-                    return@forEach
-                }
-
-                global.remove(key)
-                if (nativeObject.has(key, global)) {
-                    ScriptableObject.putProperty(global, key, null)
-                }
-            }
+        context.evaluateString(reqScriptableObject, js, "initRequestBody.js", 1, null)
     }
 
     fun evalJsBeforeRequest(beforeJsScripts: List<String>): List<String> {
         if (beforeJsScripts.isEmpty()) {
-            return arrayListOf()
+            return mutableListOf()
         }
 
         val resList = mutableListOf("/*\r\n前置js执行结果:\r\n")
@@ -205,14 +137,11 @@ class JsScriptExecutor {
         }
 
 
-        context.evaluateString(global, js, "dummy.js", 1, null)
+        context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)
 
         val res = evalJsInAnonymousFun(jsScript)
 
-        context.evaluateString(global, "delete response;", "dummy.js", 1, null)
-
-        xmlDoc = null
-        xPath=null
+        context.evaluateString(reqScriptableObject, "delete response;", "dummy.js", 1, null)
 
         return res
     }
@@ -220,41 +149,41 @@ class JsScriptExecutor {
     private fun evalJsInAnonymousFun(jsScript: String): String {
         try {
             val js = "(function(){'use strict';${jsScript}}())"
-            context.evaluateString(global, js, "dummy.js", 0, null)
+            context.evaluateString(reqScriptableObject, js, "anonymous.js", 0, null)
         } catch (e: Exception) {
             return e.message + "\r\n"
         }
 
-        return ScriptableObject.callMethod(global, "getLog", arrayOf()) as String
+        return ScriptableObject.callMethod(reqScriptableObject, "getLog", arrayOf()) as String
     }
 
     fun getRequestVariable(key: String): String? {
-        if (!ScriptableObject.hasProperty(global, "request")) {
+        if (!ScriptableObject.hasProperty(reqScriptableObject, "request")) {
             return null
         }
 
-        val hasKey = ScriptableObject.callMethod(global, "hasRequestVariableKey", arrayOf(key)) as Boolean
+        val hasKey = ScriptableObject.callMethod(reqScriptableObject, "hasRequestVariableKey", arrayOf(key)) as Boolean
         if (!hasKey) {
             return null
         }
 
-        val res = ScriptableObject.callMethod(global, "getRequestVariable", arrayOf(key)) ?: return "null"
+        val res = ScriptableObject.callMethod(reqScriptableObject, "getRequestVariable", arrayOf(key)) ?: return "null"
         return res.toString()
     }
 
     fun getGlobalVariable(key: String): String? {
-        val hasKey = ScriptableObject.callMethod(global, "hasGlobalVariableKey", arrayOf(key)) as Boolean
+        val hasKey = ScriptableObject.callMethod(reqScriptableObject, "hasGlobalVariableKey", arrayOf(key)) as Boolean
         if (!hasKey) {
             return null
         }
 
-        val res = ScriptableObject.callMethod(global, "getGlobalVariable", arrayOf(key)) ?: return "null"
+        val res = ScriptableObject.callMethod(reqScriptableObject, "getGlobalVariable", arrayOf(key)) ?: return "null"
         return res.toString()
     }
 
     fun getJsGlobalVariables(): Map<String, String> {
         val dataHolder = context.evaluateString(
-            global, "client.global.dataHolder", "dummy.js",
+            reqScriptableObject, "client.global.dataHolder", "dummy.js",
             1, null
         ) as NativeObject
 
@@ -271,8 +200,50 @@ class JsScriptExecutor {
     }
 
     companion object {
-        fun getService(project: Project): JsScriptExecutor {
-            return project.getService(JsScriptExecutor::class.java)
+        private val pair by lazy {
+            val context: Context = Context.enter()
+            val global: ScriptableObject = context.initStandardObjects()
+
+            var url = Companion::class.java.classLoader.getResource("examples/crypto-js.js")!!
+            var jsStr = url.readText(StandardCharsets.UTF_8)
+            context.evaluateString(global, jsStr, "crypto-js.js", 1, null)
+            // 注册 CryptoJS 对象
+            global.prototype.put("CryptoJS", global, global.get("CryptoJS"))
+
+            url = Companion::class.java.classLoader.getResource("examples/initGlobal.js")!!
+            jsStr = url.readText(StandardCharsets.UTF_8)
+            context.evaluateString(global, jsStr, "initGlobal.js", 1, null)
+
+            Pair(context, global)
+        }
+        val context: Context = pair.first
+        val global: ScriptableObject = pair.second
+
+        private val javaBridgeJsStr by lazy {
+            JavaBridge::class.java.declaredMethods
+                .joinToString("\r\n") {
+                    val jsBridge = it.getAnnotation(JsBridge::class.java)
+                    """
+                        function ${jsBridge.jsFun} {
+                            return javaBridge.${jsBridge.jsFun};                    
+                        }
+                    """.trimIndent()
+                }
+        }
+
+        private val initRequestJsStr by lazy {
+            val url = Companion::class.java.classLoader.getResource("examples/initRequest.js")!!
+            url.readText(StandardCharsets.UTF_8)
+        }
+
+        private val documentBuilderFactory by lazy {
+            val factory = DocumentBuilderFactory.newInstance()
+            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+            factory
+        }
+
+        private val xPathFactory by lazy {
+            XPathFactory.newInstance()
         }
     }
 }

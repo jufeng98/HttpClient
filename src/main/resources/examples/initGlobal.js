@@ -24,8 +24,8 @@ var client = {
             var desc
             if (val !== null) {
                 val = val + '';
-                if (val.length > 100) {
-                    desc = val.substring(0, 100) + "...(已截断显示)"
+                if (val.length > 300) {
+                    desc = val.substring(0, 300) + "...(已截断显示)"
                 } else {
                     desc = val;
                 }
@@ -69,12 +69,4 @@ function hasGlobalVariableKey(key) {
 
 function getGlobalVariable(key) {
     return client.global.get(key);
-}
-
-function hasRequestVariableKey(key) {
-    return Object.keys(request.variables.dataHolder).indexOf(key) !== -1;
-}
-
-function getRequestVariable(key) {
-    return request.variables.get(key);
 }

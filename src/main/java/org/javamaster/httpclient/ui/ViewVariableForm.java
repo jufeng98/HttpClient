@@ -9,6 +9,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiUtil;
 import org.javamaster.httpclient.env.EnvFileService;
+import org.javamaster.httpclient.js.JsScriptExecutor;
 import org.javamaster.httpclient.resolve.VariableResolver;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,25 +26,27 @@ public class ViewVariableForm extends DialogWrapper {
         super(project);
         setModal(false);
 
-        Map<String, String> map = Maps.newLinkedHashMap();
-
-
-        map.put("js全局变量", "---");
-        VariableResolver variableResolver = VariableResolver.Companion.getService(project);
-        Map<String, String> variableMap = variableResolver.getJsGlobalVariables();
-        map.putAll(variableMap);
-
         FileEditor selectedEditor = FileEditorManager.getInstance(project).getSelectedEditor();
         //noinspection DataFlowIssue
         VirtualFile virtualFile = selectedEditor.getFile();
         PsiFile httpFile = PsiUtil.getPsiFile(project, virtualFile);
         String selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project);
         String httpFileParentPath = HttpEditorTopForm.getHttpFileParentPath();
-        LinkedHashMap<String, String> fileGlobalVariables = variableResolver.getFileGlobalVariables(httpFile, selectedEnv, httpFileParentPath);
-        map.put("http全局变量", "---");
+
+        Map<String, String> map = Maps.newLinkedHashMap();
+        map.put("js全局变量", "---------");
+
+        JsScriptExecutor jsScriptExecutor = new JsScriptExecutor(project, httpFileParentPath);
+        VariableResolver variableResolver = new VariableResolver(jsScriptExecutor, httpFile, selectedEnv);
+
+        Map<String, String> variableMap = variableResolver.getJsGlobalVariables();
+        map.putAll(variableMap);
+
+        LinkedHashMap<String, String> fileGlobalVariables = variableResolver.getFileGlobalVariables();
+        map.put("http全局变量", "---------");
         map.putAll(fileGlobalVariables);
 
-        map.put("环境文件变量", "---");
+        map.put("环境文件变量", "---------");
         Map<String, String> envMap = EnvFileService.Companion.getEnvVariables(project);
         map.putAll(envMap);
 

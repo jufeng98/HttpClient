@@ -34,17 +34,14 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import javax.swing.JPanel
 
-class HttpProcessHandler(
-    private val httpMethod: HttpMethod,
-    private val selectedEnv: String?,
-) : ProcessHandler() {
+class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String?) : ProcessHandler() {
     val tabName = HttpUtils.getTabName(httpMethod)
     val project = httpMethod.project
 
     private val httpFile = httpMethod.containingFile
     private val parentPath = httpFile.virtualFile.parent.path
-    private val jsScriptExecutor = JsScriptExecutor.getService(project)
-    private val variableResolver = VariableResolver.getService(project)
+    private val jsScriptExecutor = JsScriptExecutor(project, parentPath)
+    private val variableResolver = VariableResolver(jsScriptExecutor, httpFile, selectedEnv)
     private val loadingRemover = httpMethod.getUserData(HttpUtils.gutterIconLoadingKey)
     private val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
     private val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
@@ -77,23 +74,16 @@ class HttpProcessHandler(
         } catch (e: Exception) {
             destroyProcess()
             e.printStackTrace()
-            NotifyUtil.notifyError(project, "<div style='font-size:18pt'>${e.message}</div>")
-            return
+            NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e.message}</div>")
         }
     }
 
     private fun startHandleRequest() {
-        jsScriptExecutor.project = project
-        jsScriptExecutor.parentPath = parentPath
-        jsScriptExecutor.prepareJsRequestObj()
-
         if (request.contentLength != null) {
             throw IllegalArgumentException("不能有 Content-Length 请求头!")
         }
 
-        variableResolver.initFileScopeVariables(httpFile, selectedEnv, parentPath)
-
-        val reqBody: Any? = HttpUtils.convertToReqBody(request, variableResolver, selectedEnv, parentPath)
+        val reqBody: Any? = HttpUtils.convertToReqBody(request, variableResolver)
 
         if (reqBody != null) {
             jsScriptExecutor.initJsRequestBody(reqBody)
@@ -104,10 +94,10 @@ class HttpProcessHandler(
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
 
-        val url: String = variableResolver.resolve(requestTarget.url, selectedEnv, parentPath)
+        val url: String = variableResolver.resolve(requestTarget.url)
 
         val httpHeaderFields = request.header?.headerFieldList
-        val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver, selectedEnv, parentPath)
+        val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
         if (methodType == HttpRequestEnum.WEBSOCKET.name) {
             handleWs(url, reqHeaderMap)
@@ -289,15 +279,15 @@ class HttpProcessHandler(
         val myThrowable = httpDashboardForm.throwable
         hasError = myThrowable != null
         if (hasError) {
-            val error = if (myThrowable is CancellationException) {
+            val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
                 "已中断${tabName}请求!"
             } else {
                 "${tabName}请求失败,异常信息:${myThrowable.message}!"
             }
-            val msg = "<div style='font-size:18pt'>$error</div>"
+            val msg = "<div style='font-size:13pt'>$error</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)
         } else {
-            val msg = "<div style='font-size:18pt'>${tabName}请求成功!</div>"
+            val msg = "<div style='font-size:13pt'>${tabName}请求成功!</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
         }
     }
@@ -356,12 +346,6 @@ class HttpProcessHandler(
             }
         }
 
-        runWriteActionAndWait {
-            jsScriptExecutor.clearJsRequestObj()
-        }
-
-        variableResolver.clearFileScopeVariables()
-
         wsRequest?.abortConnect()
 
         val code = if (hasError) {
@@ -373,6 +357,8 @@ class HttpProcessHandler(
     }
 
     override fun detachProcessImpl() {
+        destroyProcessImpl()
+
         notifyProcessDetached()
     }
 

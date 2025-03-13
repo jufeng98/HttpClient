@@ -2,7 +2,6 @@ package org.javamaster.httpclient.reference.support
 
 import com.cool.request.view.tool.search.ApiAbstractGotoSEContributor
 import com.cool.request.view.tool.search.ControllerNavigationItem
-import com.intellij.codeInsight.hint.HintManager
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.ide.DataManager
 import com.intellij.navigation.ItemPresentation
@@ -11,7 +10,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.progress.TaskInfo
@@ -23,6 +21,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.TooltipUtils
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -93,8 +92,7 @@ class HttpFakePsiElement(private val httpRequestTarget: HttpRequestTarget, priva
 
     companion object {
         fun showTip(msg: String, project: Project) {
-            val textEditor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
-            HintManager.getInstance().showInformationHint(textEditor, msg)
+            TooltipUtils.showTooltip(msg, project)
         }
 
         @Suppress("DEPRECATION")

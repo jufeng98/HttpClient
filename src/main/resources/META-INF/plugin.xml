@@ -55,13 +55,14 @@
                     <li>内置变量支持引用环境变量,如 {{$env.OS}}, 其中 OS 是环境变量名</li>
                     <li>变量输入时的智能提示新增系统变量和环境变量</li>
                     <li>允许在 js 处理器中访问系统变量和环境变量</li>
-                    <li>Bug修复</li>
+                    <li>允许在 js 后置处理器中对于响应格式为 xml 的,可以使用 w3c 的 api 以及 xPath 进行操作</li>
                     <li>
                         保存响应到文件路径允许使用变量, 如 >> {{$mvnTarget}}/res.json, 当前可用的三个变量:
                         {{$projectRoot}} 指向项目根目录,
                         {{$historyFolder}} 指向 .idea/httpClient
                         {{$mvnTarget}} 指向模块的 src/target
                     </li>
+                    <li>功能优化及Bug修复</li>
                 </ul>
                 <li><b>2.5.1</b></li>
                 <ul>

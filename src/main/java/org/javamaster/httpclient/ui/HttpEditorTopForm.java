@@ -25,7 +25,7 @@ import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME
  * @author yudong
  */
 public class HttpEditorTopForm extends JComponent {
-    public static final Key<HttpEditorTopForm> KEY = Key.create("gitflowplus.httpEditorTopForm");
+    public static final Key<HttpEditorTopForm> KEY = Key.create("httpRequest.httpEditorTopForm");
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
     private JComboBox<String> exampleComboBox;
@@ -150,6 +150,8 @@ public class HttpEditorTopForm extends JComponent {
         Set<String> presetEnvSet = envFileService.getPresetEnvList(httpFileParentPath);
 
         presetEnvSet.forEach(it -> envComboBox.addItem(it));
+
+        setSelectEnv("uat");
     }
 
     public String getCurrentEditorSelectedEnv() {

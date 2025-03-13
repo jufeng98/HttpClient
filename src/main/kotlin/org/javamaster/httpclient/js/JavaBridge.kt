@@ -25,9 +25,9 @@ class JavaBridge(private val jsScriptExecutor: JsScriptExecutor) {
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)
         val jsStr = document?.text ?: virtualFile.readText()
 
-        jsScriptExecutor.context.evaluateString(jsScriptExecutor.global, jsStr, file.name, 1, null)
+        JsScriptExecutor.context.evaluateString(jsScriptExecutor.reqScriptableObject, jsStr, file.name, 1, null)
 
-        return jsScriptExecutor.global
+        return jsScriptExecutor.reqScriptableObject
     }
 
     @JsBridge(jsFun = "readString(path)")
@@ -44,8 +44,8 @@ class JavaBridge(private val jsScriptExecutor: JsScriptExecutor) {
 
     @JsBridge(jsFun = "getXmlDoc()")
     fun getXmlDoc(): Any {
-        val resObj = Context.javaToJS(jsScriptExecutor.xmlDoc!!, jsScriptExecutor.global) as NativeJavaObject
-        resObj.prototype = jsScriptExecutor.context.initStandardObjects()
+        val resObj = Context.javaToJS(jsScriptExecutor.xmlDoc!!, jsScriptExecutor.reqScriptableObject) as NativeJavaObject
+        resObj.prototype = JsScriptExecutor.context.initStandardObjects()
         return resObj
     }
 

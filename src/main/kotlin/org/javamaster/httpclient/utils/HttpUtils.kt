@@ -118,8 +118,6 @@ object HttpUtils {
     fun convertToReqHeaderMap(
         httpHeaderFields: List<HttpHeaderField>?,
         variableResolver: VariableResolver,
-        selectedEnv: String?,
-        httpFileParentPath: String,
     ): MutableMap<String, String> {
         val map = mutableMapOf<String, String>()
 
@@ -129,26 +127,19 @@ object HttpUtils {
             .forEach {
                 val headerName = it.headerFieldName.text
                 val headerValue = it.headerFieldValue?.text ?: ""
-                map[headerName] = variableResolver.resolve(headerValue, selectedEnv, httpFileParentPath)
+                map[headerName] = variableResolver.resolve(headerValue)
             }
 
         return map
     }
 
-    fun convertToReqBody(
-        request: HttpRequest,
-        variableResolver: VariableResolver,
-        selectedEnv: String?,
-        httpFileParentPath: String,
-    ): Any? {
+    fun convertToReqBody(request: HttpRequest, variableResolver: VariableResolver): Any? {
         val body = request.body
         val requestMessagesGroup = body?.requestMessagesGroup
         if (requestMessagesGroup != null) {
             return handleOrdinaryContent(
                 requestMessagesGroup,
-                variableResolver,
-                selectedEnv,
-                httpFileParentPath
+                variableResolver
             )
         }
 
@@ -156,14 +147,7 @@ object HttpUtils {
         if (httpMultipartMessage != null) {
             val boundary =
                 request.contentTypeBoundary ?: throw IllegalArgumentException("Content-Type 请求头缺少 boundary!")
-            return constructMultipartBody(
-                boundary,
-                httpMultipartMessage,
-                variableResolver,
-                selectedEnv,
-                httpFileParentPath
-            )
-
+            return constructMultipartBody(boundary, httpMultipartMessage, variableResolver)
         }
 
         return null
@@ -172,8 +156,6 @@ object HttpUtils {
     private fun handleOrdinaryContent(
         requestMessagesGroup: HttpRequestMessagesGroup?,
         variableResolver: VariableResolver,
-        selectedEnv: String?,
-        httpFileParentPath: String,
     ): Any? {
         if (requestMessagesGroup == null) {
             return null
@@ -183,7 +165,7 @@ object HttpUtils {
 
         val messageBody = requestMessagesGroup.messageBody
         if (messageBody != null) {
-            reqStr = variableResolver.resolve(messageBody.text, selectedEnv, httpFileParentPath)
+            reqStr = variableResolver.resolve(messageBody.text)
         }
 
         val inputFile = requestMessagesGroup.inputFile
@@ -192,7 +174,7 @@ object HttpUtils {
         }
 
         val filePath = inputFile.filePath!!.text
-        val path = constructFilePath(filePath, httpFileParentPath)
+        val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
         val virtualFile = VfsUtil.findFileByIoFile(File(path), true)
             ?: throw IllegalArgumentException("文件:${path}不存在")
@@ -207,7 +189,7 @@ object HttpUtils {
             }
 
             val str = VfsUtil.loadText(virtualFile)
-            reqStr += variableResolver.resolve(str, selectedEnv, httpFileParentPath)
+            reqStr += variableResolver.resolve(str)
             return reqStr
         } else {
             return VfsUtil.loadBytes(virtualFile)
@@ -218,8 +200,6 @@ object HttpUtils {
         boundary: String,
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
-        selectedEnv: String?,
-        httpFileParentPath: String,
     ): MutableList<ByteArray> {
         val byteArrays = mutableListOf<ByteArray>()
 
@@ -236,7 +216,7 @@ object HttpUtils {
                         val value = if (headerValue.isNullOrEmpty()) {
                             ""
                         } else {
-                            variableResolver.resolve(headerValue + "\r\n", selectedEnv, httpFileParentPath)
+                            variableResolver.resolve(headerValue + "\r\n")
                         }
 
                         val header = "$headerName: $value"
@@ -245,12 +225,7 @@ object HttpUtils {
 
                 byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
 
-                val content = handleOrdinaryContent(
-                    it.requestMessagesGroup,
-                    variableResolver,
-                    selectedEnv,
-                    httpFileParentPath
-                )
+                val content = handleOrdinaryContent(it.requestMessagesGroup, variableResolver)
                 if (content is String) {
                     byteArrays.add((content + "\r\n").toByteArray(StandardCharsets.UTF_8))
                 } else if (content is ByteArray) {
@@ -303,9 +278,7 @@ object HttpUtils {
         return constructFilePath(path, parentPath)
     }
 
-    fun convertToResHeaderDescList(
-        response: HttpResponse<ByteArray>,
-    ): MutableList<String> {
+    fun convertToResHeaderDescList(response: HttpResponse<ByteArray>): MutableList<String> {
         val headerDescList = mutableListOf<String>()
         val headers = response.headers()
         headers.map()

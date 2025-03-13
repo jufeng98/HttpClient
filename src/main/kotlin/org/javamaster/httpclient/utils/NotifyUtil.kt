@@ -15,7 +15,7 @@ object NotifyUtil {
         val toolWindowManager = ToolWindowManager.getInstance(project)
         toolWindowManager.notifyByBalloon(
             ToolWindowId.SERVICES, MessageType.INFO,
-            "<div style='font-size:18pt'>${message}</div>"
+            "<div style='font-size:13pt'>${message}</div>"
         )
     }
 
@@ -23,7 +23,7 @@ object NotifyUtil {
         val toolWindowManager = ToolWindowManager.getInstance(project)
         toolWindowManager.notifyByBalloon(
             ToolWindowId.SERVICES, MessageType.WARNING,
-            "<div style='font-size:18pt'>${message}</div>"
+            "<div style='font-size:13pt'>${message}</div>"
         )
     }
 
@@ -31,7 +31,7 @@ object NotifyUtil {
         val toolWindowManager = ToolWindowManager.getInstance(project)
         toolWindowManager.notifyByBalloon(
             ToolWindowId.SERVICES, MessageType.ERROR,
-            "<div style='font-size:18pt'>${message}</div>"
+            "<div style='font-size:13pt'>${message}</div>"
         )
     }
 
