@@ -36,7 +36,7 @@ class WsRequest(
     }
 
     fun connect() {
-        returnResMsg("正在连接:${url}\n")
+        returnResMsg("正在连接 ${url}\n")
 
         val uri = URI(url)
 
@@ -71,7 +71,7 @@ class WsRequest(
         }
 
         webSocket!!.abort()
-        returnResMsg("ws连接已断开:$webSocket\n")
+        returnResMsg("ws连接已断开\n")
     }
 
     fun sendWsMsg(msg: String) {
@@ -117,19 +117,19 @@ class WsListener(private val wsRequest: WsRequest, private val httpProcessHandle
     override fun onOpen(webSocket: WebSocket?) {
         webSocket?.request(1)
 
-        wsRequest.returnResMsg("ws连接成功:$webSocket\n")
+        wsRequest.returnResMsg("连接成功\n")
     }
 
     override fun onClose(webSocket: WebSocket?, statusCode: Int, reason: String?): CompletionStage<*> {
         httpProcessHandler.destroyProcess()
 
-        wsRequest.returnResMsg("ws连接已关闭:$webSocket,statusCode:$statusCode,reason:$reason\n")
+        wsRequest.returnResMsg("ws连接已关闭,statusCode:$statusCode,reason:$reason\n")
         return CompletableFuture<Void>()
     }
 
     override fun onError(webSocket: WebSocket?, error: Throwable?) {
         httpProcessHandler.destroyProcess()
 
-        wsRequest.returnResMsg("连接ws异常:$webSocket,${error?.message}\n")
+        wsRequest.returnResMsg("连接ws异常,${error?.message}\n")
     }
 }
