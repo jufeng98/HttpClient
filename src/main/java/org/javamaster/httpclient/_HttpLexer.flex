@@ -35,7 +35,8 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %unicode
 //%debug
 %state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_COMMENT
-%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_PATH, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE
+%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE
+%xstate IN_PATH
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
 %state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION
@@ -45,7 +46,7 @@ EOL=\R
 EOL_MULTI=[ ]*\R+
 ONLY_SPACE=[ ]+
 WHITE_SPACE=\s+
-LINE_COMMENT="//".*
+LINE_COMMENT="//"[^\r\n]*
 BLOCK_COMMENT="/*" !([^]* "*/" [^]*) ("*/")?
 REQUEST_COMMENT=###.*
 REQUEST_METHOD=[A-Z]+
@@ -276,4 +277,4 @@ DIRECTION_PART=[^\r\n ]+
   {LINE_COMMENT}{EOL}         { yypushback(1); return LINE_COMMENT; }
   {BLOCK_COMMENT}{EOL}        { yypushback(1); return BLOCK_COMMENT; }
 
-[^]                    { return BAD_CHARACTER; }
+  [^]                         { return BAD_CHARACTER; }

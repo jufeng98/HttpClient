@@ -104,7 +104,7 @@ variable ::= START_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE {
 }
 
 port ::= COLON PORT_SEGMENT
-pathAbsolute ::= (SLASH (SEGMENT | variable))+
+pathAbsolute ::= (SLASH (SEGMENT | variable)?)+
 query ::= queryParameter (AND queryParameter)*
 queryParameter ::= queryParameterKey EQUALS? queryParameterValue? {
     pin = 1

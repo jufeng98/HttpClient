@@ -492,7 +492,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (SLASH (SEGMENT | variable))+
+  // (SLASH (SEGMENT | variable)?)+
   public static boolean pathAbsolute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "pathAbsolute")) return false;
     if (!nextTokenIs(b, SLASH)) return false;
@@ -508,7 +508,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // SLASH (SEGMENT | variable)
+  // SLASH (SEGMENT | variable)?
   private static boolean pathAbsolute_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "pathAbsolute_0")) return false;
     boolean r;
@@ -519,9 +519,16 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // SEGMENT | variable
+  // (SEGMENT | variable)?
   private static boolean pathAbsolute_0_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "pathAbsolute_0_1")) return false;
+    pathAbsolute_0_1_0(b, l + 1);
+    return true;
+  }
+
+  // SEGMENT | variable
+  private static boolean pathAbsolute_0_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "pathAbsolute_0_1_0")) return false;
     boolean r;
     r = consumeToken(b, SEGMENT);
     if (!r) r = variable(b, l + 1);
