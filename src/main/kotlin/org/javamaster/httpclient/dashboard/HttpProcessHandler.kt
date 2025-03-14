@@ -164,7 +164,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 )
                 if (!evalJsRes.isNullOrEmpty()) {
                     httpResDescList.add("/*\r\n后置js执行结果:\r\n")
-                    httpResDescList.add("$evalJsRes")
+                    httpResDescList.add("$evalJsRes\r\n")
                     httpResDescList.add("*/\r\n")
                 }
 
@@ -217,20 +217,16 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 val httpResDescList =
                     mutableListOf("// status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: $size KB\r\n")
 
-                val evalJsRes = try {
-                    jsScriptExecutor.evalJsAfterRequest(
-                        jsAfterScriptStr,
-                        resPair,
-                        response.statusCode(),
-                        response.headers().map()
-                    )
-                } catch (e: Exception) {
-                    e.message + "\r\n"
-                }
+                val evalJsRes = jsScriptExecutor.evalJsAfterRequest(
+                    jsAfterScriptStr,
+                    resPair,
+                    response.statusCode(),
+                    response.headers().map()
+                )
 
                 if (!evalJsRes.isNullOrEmpty()) {
                     httpResDescList.add("/*\r\n后置js执行结果:\r\n")
-                    httpResDescList.add("$evalJsRes")
+                    httpResDescList.add("$evalJsRes\r\n")
                     httpResDescList.add("*/\r\n")
                 }
 

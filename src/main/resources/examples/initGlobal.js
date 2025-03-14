@@ -1,9 +1,8 @@
-// noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst
+// noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst,JSUnresolvedReference
 // noinspection ES6ConvertVarToLetConst
 var client = {
-    fullMsg: '',
     log: function (msg) {
-        this.fullMsg = this.fullMsg + msg + '\r\n';
+        return javaBridge.log(msg);
     },
     global: {
         dataHolder: {},
@@ -34,33 +33,28 @@ var client = {
             }
 
             this.dataHolder[key] = val;
-            client.log(key + ' 已设置为(global): ' + desc);
+            javaBridge.log(key + ' 已设置为(global): ' + desc);
         },
     },
     test: function (successMsg, assertCallback) {
-        const success = assertCallback();
-        if (success === true || success === undefined) {
-            this.log(successMsg);
+        try {
+            assertCallback();
+            javaBridge.log(successMsg);
+        } catch (e) {
+            javaBridge.log(e);
         }
     },
     assert: function (success, failMsg) {
         if (!success) {
-            this.log("断言失败: " + failMsg);
+            throw new Error(failMsg);
         }
-        return success;
     }
 };
 
 var console = {
     log: function (msg) {
-        return client.log(msg);
+        return javaBridge.log(msg);
     }
-}
-
-function getLog() {
-    var tmp = client.fullMsg;
-    client.fullMsg = '';
-    return tmp;
 }
 
 function hasGlobalVariableKey(key) {

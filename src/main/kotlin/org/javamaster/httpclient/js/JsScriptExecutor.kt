@@ -23,13 +23,16 @@ import javax.xml.xpath.XPathFactory
  * @author yudong
  */
 class JsScriptExecutor(val project: Project, val parentPath: String) {
+    private val bridge = JavaBridge(this)
     val reqScriptableObject: ScriptableObject by lazy {
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global
 
         // 注册js桥接对象 javaBridge
-        val javaBridge = Context.javaToJS(JavaBridge(this), scriptableObject)
+        val javaBridge = Context.javaToJS(bridge, scriptableObject)
+
         ScriptableObject.putProperty(scriptableObject, "javaBridge", javaBridge)
+
         context.evaluateString(scriptableObject, javaBridgeJsStr, "javaBridge.js", 1, null)
 
         context.evaluateString(scriptableObject, initRequestJsStr, "initRequest.js", 1, null)
@@ -64,11 +67,9 @@ class JsScriptExecutor(val project: Project, val parentPath: String) {
 
         val resList = mutableListOf("/*\r\n前置js执行结果:\r\n")
 
-        val list = beforeJsScripts
-            .map { evalJsInAnonymousFun(it) }
-            .filter { it.isNotEmpty() }
+        beforeJsScripts.forEach { evalJsInAnonymousFun(it) }
 
-        resList.addAll(list)
+        resList.add(bridge.getAndClearLogs() + "\r\n")
 
         resList.add("*/\r\n")
 
@@ -136,25 +137,26 @@ class JsScriptExecutor(val project: Project, val parentPath: String) {
             }
         }
 
-
         context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)
 
-        val res = evalJsInAnonymousFun(jsScript)
+        try {
+            evalJsInAnonymousFun(jsScript)
+        } catch (e: Exception) {
+            bridge.log(e.message ?: "null")
+        }
 
         context.evaluateString(reqScriptableObject, "delete response;", "dummy.js", 1, null)
 
-        return res
+        return bridge.getAndClearLogs()
     }
 
-    private fun evalJsInAnonymousFun(jsScript: String): String {
+    private fun evalJsInAnonymousFun(jsScript: String) {
         try {
-            val js = "(function(){'use strict';${jsScript}}())"
-            context.evaluateString(reqScriptableObject, js, "anonymous.js", 0, null)
+            val js = "(function () {'use strict'; $jsScript })();"
+            context.evaluateString(reqScriptableObject, js, "anonymous.js", 1, null)
         } catch (e: Exception) {
-            return e.message + "\r\n"
+            bridge.log(e.message ?: "null")
         }
-
-        return ScriptableObject.callMethod(reqScriptableObject, "getLog", arrayOf()) as String
     }
 
     fun getRequestVariable(key: String): String? {
@@ -222,7 +224,7 @@ class JsScriptExecutor(val project: Project, val parentPath: String) {
         private val javaBridgeJsStr by lazy {
             JavaBridge::class.java.declaredMethods
                 .joinToString("\r\n") {
-                    val jsBridge = it.getAnnotation(JsBridge::class.java)
+                    val jsBridge = it.getAnnotation(JsBridge::class.java) ?: return@joinToString ""
                     """
                         function ${jsBridge.jsFun} {
                             return javaBridge.${jsBridge.jsFun};                    

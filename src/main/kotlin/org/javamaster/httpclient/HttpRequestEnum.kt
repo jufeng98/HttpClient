@@ -165,7 +165,9 @@ enum class HttpRequestEnum {
                 }
 
                 else -> {
-                    println("未知类型:${reqBody?.javaClass}")
+                    if (reqBody != null) {
+                        println("未知类型:${reqBody.javaClass}")
+                    }
                 }
             }
 

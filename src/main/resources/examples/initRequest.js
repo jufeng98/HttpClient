@@ -1,4 +1,4 @@
-// noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst
+// noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst,JSUnresolvedReference
 // noinspection ES6ConvertVarToLetConst
 var request = {
     variables: {
@@ -20,7 +20,7 @@ var request = {
             }
 
             this.dataHolder[key] = val;
-            client.log(key + ' 已设置为(request): ' + desc);
+            javaBridge.log(key + ' 已设置为(request): ' + desc);
         },
     }
 };

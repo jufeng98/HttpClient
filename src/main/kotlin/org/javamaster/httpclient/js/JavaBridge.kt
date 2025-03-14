@@ -13,29 +13,44 @@ import java.io.File
 
 @Suppress("unused")
 class JavaBridge(private val jsScriptExecutor: JsScriptExecutor) {
+    private val logs = mutableListOf<String>()
+
+    fun getAndClearLogs(): String {
+        val res = logs.joinToString("\r\n")
+        logs.clear()
+        return res
+    }
 
     @JsBridge(jsFun = "require(path)")
-    fun require(path: String): ScriptableObject {
+    fun require(path: String): ScriptableObject? {
         val filePath = HttpUtils.constructFilePath(path, jsScriptExecutor.parentPath)
         val file = File(filePath)
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)
-            ?: throw IllegalArgumentException("js文件不存在:${file.normalize()}")
+        if (virtualFile == null) {
+            log("js文件不存在:${file.normalize()}")
+            return null
+        }
 
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)
         val jsStr = document?.text ?: virtualFile.readText()
 
-        JsScriptExecutor.context.evaluateString(jsScriptExecutor.reqScriptableObject, jsStr, file.name, 1, null)
+        try {
+            JsScriptExecutor.context.evaluateString(jsScriptExecutor.reqScriptableObject, jsStr, file.name, 1, null)
+        } catch (e: Exception) {
+            log("${e.message}")
+        }
 
         return jsScriptExecutor.reqScriptableObject
     }
 
     @JsBridge(jsFun = "readString(path)")
-    fun readString(path: String): String {
+    fun readString(path: String): String? {
         val filePath = HttpUtils.constructFilePath(path, jsScriptExecutor.parentPath)
         val file = File(filePath)
         if (!file.exists()) {
-            throw IllegalArgumentException("文件不存在:${file.normalize()}")
+            log("文件文件不存在:${file.normalize()}")
+            return null
         }
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
@@ -52,6 +67,11 @@ class JavaBridge(private val jsScriptExecutor: JsScriptExecutor) {
     @JsBridge(jsFun = "evaluate(xPath)")
     fun evaluate(xPath: String): String? {
         return jsScriptExecutor.xPath!!.evaluate(xPath, jsScriptExecutor.xmlDoc!!)
+    }
+
+    @JsBridge(jsFun = "log(msg)")
+    fun log(msg: String?) {
+        logs.add(msg ?: "null")
     }
 
 }
