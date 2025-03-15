@@ -1,8 +1,13 @@
 // noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst,JSUnresolvedReference
 // noinspection ES6ConvertVarToLetConst
 var client = {
-    log: function (msg) {
-        return globalLog.log(msg);
+    log: function (msgs) {
+        const strList = [];
+        const length = arguments.length;
+        for (var i = 0; i < length; i++) {
+            strList.push(`${arguments[i]}`)
+        }
+        globalLog.log(strList.join(" "));
     },
     global: {
         dataHolder: {},
@@ -52,9 +57,14 @@ var client = {
 };
 
 var console = {
-    log: function (msg) {
-        return globalLog.log(msg);
-    }
+    log: function (msgs) {
+        const strList = [];
+        const length = arguments.length;
+        for (var i = 0; i < length; i++) {
+            strList.push(`${arguments[i]}`)
+        }
+        globalLog.log(strList.join(" "));
+    },
 }
 
 function hasGlobalVariableKey(key) {
@@ -64,3 +74,51 @@ function hasGlobalVariableKey(key) {
 function getGlobalVariable(key) {
     return client.global.get(key);
 }
+
+function URLSearchParams(queryParams) {
+    if (queryParams === null || queryParams === undefined || queryParams === '') {
+        this.params = {};
+        return;
+    }
+
+    this.params = parseQueryParams(queryParams);
+
+    function parseQueryParams(queryParams) {
+        return queryParams.split('&')
+            .reduce((params, pair) => {
+                const [key, value] = pair.split('=');
+                params[decodeURIComponent(key)] = decodeURIComponent(value || '');
+                return params;
+            }, {});
+    }
+}
+
+URLSearchParams.prototype.append = function (key, value) {
+    this.params[key] = value;
+};
+
+URLSearchParams.prototype.has = function (key) {
+    return this.params[key] !== undefined;
+};
+
+URLSearchParams.prototype.get = function (key) {
+    return this.params[key];
+};
+
+URLSearchParams.prototype.set = function (key, value) {
+    this.params[key] = value;
+};
+
+URLSearchParams.prototype.delete = function (key) {
+    delete this.params[key];
+};
+
+URLSearchParams.prototype.toString = function () {
+    const strList = [];
+    const keys = Object.keys(this.params);
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        strList.push(encodeURIComponent(key) + "=" + encodeURIComponent(this.params[key]));
+    }
+    return strList.join("&");
+};

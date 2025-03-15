@@ -154,7 +154,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
     private fun evalJsInAnonymousFun(jsScript: String) {
         try {
-            val js = "(function () {'use strict'; $jsScript })();"
+            val js = "(function () { 'use strict'; ${jsScript.trim()} })();"
             context.evaluateString(reqScriptableObject, js, "anonymous.js", 1, null)
         } catch (e: Exception) {
             GlobalLog.log(e.message)
