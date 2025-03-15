@@ -70,3 +70,14 @@ GET https://miao.baidu.com/abdr
         client.assert(contentType === "application/json", `Expected Content-Type is application/json, but actual is  ${contentType}`);
     })
 %}
+
+### 操作xml
+GET https://examples.http-client.intellij.net/xml
+
+> {%
+    const slide = response.body.getElementsByTagName("slide").item(0).textContent
+    client.log("textContent:", slide)
+
+    const title = response.body.xPath.evaluate("/slideshow/slide/title")
+    console.log("xPath title:", title)
+%}
