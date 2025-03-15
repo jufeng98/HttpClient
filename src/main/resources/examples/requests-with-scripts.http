@@ -9,6 +9,11 @@
     // 使用内置的 CryptoJS 对象
     const sign = CryptoJS.MD5(signSource)
     request.variables.set('sign', sign);
+    console.log("sign:", sign);
+
+    const params = new URLSearchParams();
+    params.append("name", "yu");
+    console.log("查询参数:", params.toString());
 
     // 执行自定义的 js 文件
     const global = require('./myUtils.js');
