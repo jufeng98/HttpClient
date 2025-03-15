@@ -20,7 +20,7 @@ var request = {
             }
 
             this.dataHolder[key] = val;
-            javaBridge.log(key + ' 已设置为(request): ' + desc);
+            globalLog.log(key + ' 已设置为(request): ' + desc);
         },
     }
 };

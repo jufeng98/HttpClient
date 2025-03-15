@@ -9,7 +9,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiUtil;
 import org.javamaster.httpclient.env.EnvFileService;
-import org.javamaster.httpclient.js.JsScriptExecutor;
+import org.javamaster.httpclient.js.JsExecutor;
 import org.javamaster.httpclient.resolve.VariableResolver;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,8 +36,8 @@ public class ViewVariableForm extends DialogWrapper {
         Map<String, String> map = Maps.newLinkedHashMap();
         map.put("js全局变量", "---------");
 
-        JsScriptExecutor jsScriptExecutor = new JsScriptExecutor(project, httpFileParentPath);
-        VariableResolver variableResolver = new VariableResolver(jsScriptExecutor, httpFile, selectedEnv);
+        JsExecutor jsExecutor = new JsExecutor(project, httpFileParentPath, "");
+        VariableResolver variableResolver = new VariableResolver(jsExecutor, httpFile, selectedEnv);
 
         Map<String, String> variableMap = variableResolver.getJsGlobalVariables();
         map.putAll(variableMap);

@@ -4,7 +4,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.js.JsScriptExecutor
+import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.psi.HttpGlobalVariable
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.psi.HttpTypes
@@ -17,11 +17,11 @@ import java.util.regex.Pattern
  * @author yudong
  */
 class VariableResolver(
-    private val jsScriptExecutor: JsScriptExecutor,
+    private val jsExecutor: JsExecutor,
     private val httpFile: PsiFile,
     private val selectedEnv: String?,
 ) {
-    private val project = jsScriptExecutor.project
+    private val project = jsExecutor.project
     val httpFileParentPath = httpFile.virtualFile.parent.path
 
     private val fileScopeVariableMap = getFileGlobalVariables()
@@ -67,12 +67,12 @@ class VariableResolver(
             return innerVariable
         }
 
-        innerVariable = jsScriptExecutor.getRequestVariable(variable)
+        innerVariable = jsExecutor.getRequestVariable(variable)
         if (innerVariable != null) {
             return innerVariable
         }
 
-        innerVariable = jsScriptExecutor.getGlobalVariable(variable)
+        innerVariable = jsExecutor.getGlobalVariable(variable)
         if (innerVariable != null) {
             return innerVariable
         }
@@ -106,7 +106,7 @@ class VariableResolver(
     }
 
     fun getJsGlobalVariables(): LinkedHashMap<String, String> {
-        val globalVariables = jsScriptExecutor.getJsGlobalVariables()
+        val globalVariables = jsExecutor.getJsGlobalVariables()
 
         val map = linkedMapOf<String, String>()
         map.putAll(globalVariables)

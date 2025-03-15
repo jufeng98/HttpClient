@@ -2,7 +2,7 @@
 // noinspection ES6ConvertVarToLetConst
 var client = {
     log: function (msg) {
-        return javaBridge.log(msg);
+        return globalLog.log(msg);
     },
     global: {
         dataHolder: {},
@@ -33,15 +33,15 @@ var client = {
             }
 
             this.dataHolder[key] = val;
-            javaBridge.log(key + ' 已设置为(global): ' + desc);
+            globalLog.log(key + ' 已设置为(global): ' + desc);
         },
     },
     test: function (successMsg, assertCallback) {
         try {
             assertCallback();
-            javaBridge.log(successMsg);
+            globalLog.log(successMsg);
         } catch (e) {
-            javaBridge.log(e);
+            globalLog.log(e);
         }
     },
     assert: function (success, failMsg) {
@@ -53,7 +53,7 @@ var client = {
 
 var console = {
     log: function (msg) {
-        return javaBridge.log(msg);
+        return globalLog.log(msg);
     }
 }
 

@@ -18,19 +18,17 @@ import javax.xml.xpath.XPath
 import javax.xml.xpath.XPathFactory
 
 /**
- * 执行请求的前置js和后置js脚本
+ * 执行请求的前置js和后置js脚本(永远是在 EDT 线程中执行)
  *
  * @author yudong
  */
-class JsScriptExecutor(val project: Project, val parentPath: String) {
-    private val bridge = JavaBridge(this)
+class JsExecutor(val project: Project, val parentPath: String, val tabName: String) {
     val reqScriptableObject: ScriptableObject by lazy {
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global
 
         // 注册js桥接对象 javaBridge
-        val javaBridge = Context.javaToJS(bridge, scriptableObject)
-
+        val javaBridge = Context.javaToJS(JavaBridge(this), scriptableObject)
         ScriptableObject.putProperty(scriptableObject, "javaBridge", javaBridge)
 
         context.evaluateString(scriptableObject, javaBridgeJsStr, "javaBridge.js", 1, null)
@@ -65,11 +63,13 @@ class JsScriptExecutor(val project: Project, val parentPath: String) {
             return mutableListOf()
         }
 
+        GlobalLog.setTabName(tabName)
+
         val resList = mutableListOf("/*\r\n前置js执行结果:\r\n")
 
         beforeJsScripts.forEach { evalJsInAnonymousFun(it) }
 
-        resList.add(bridge.getAndClearLogs() + "\r\n")
+        resList.add(GlobalLog.getAndClearLogs() + "\r\n")
 
         resList.add("*/\r\n")
 
@@ -85,6 +85,8 @@ class JsScriptExecutor(val project: Project, val parentPath: String) {
         if (jsScript == null) {
             return null
         }
+
+        GlobalLog.setTabName(tabName)
 
         val headerJsonStr = gson.toJson(headers)
 
@@ -142,12 +144,12 @@ class JsScriptExecutor(val project: Project, val parentPath: String) {
         try {
             evalJsInAnonymousFun(jsScript)
         } catch (e: Exception) {
-            bridge.log(e.message ?: "null")
+            GlobalLog.log(e.message)
         }
 
         context.evaluateString(reqScriptableObject, "delete response;", "dummy.js", 1, null)
 
-        return bridge.getAndClearLogs()
+        return GlobalLog.getAndClearLogs()
     }
 
     private fun evalJsInAnonymousFun(jsScript: String) {
@@ -155,7 +157,7 @@ class JsScriptExecutor(val project: Project, val parentPath: String) {
             val js = "(function () {'use strict'; $jsScript })();"
             context.evaluateString(reqScriptableObject, js, "anonymous.js", 1, null)
         } catch (e: Exception) {
-            bridge.log(e.message ?: "null")
+            GlobalLog.log(e.message)
         }
     }
 
@@ -211,6 +213,9 @@ class JsScriptExecutor(val project: Project, val parentPath: String) {
             context.evaluateString(global, jsStr, "crypto-js.js", 1, null)
             // 注册 CryptoJS 对象
             global.prototype.put("CryptoJS", global, global.get("CryptoJS"))
+
+            val globalLog = Context.javaToJS(GlobalLog, global)
+            ScriptableObject.putProperty(global, "globalLog", globalLog)
 
             url = Companion::class.java.classLoader.getResource("examples/initGlobal.js")!!
             jsStr = url.readText(StandardCharsets.UTF_8)

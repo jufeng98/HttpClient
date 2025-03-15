@@ -12,66 +12,58 @@ import java.io.File
 
 
 @Suppress("unused")
-class JavaBridge(private val jsScriptExecutor: JsScriptExecutor) {
-    private val logs = mutableListOf<String>()
-
-    fun getAndClearLogs(): String {
-        val res = logs.joinToString("\r\n")
-        logs.clear()
-        return res
-    }
+class JavaBridge(private val jsExecutor: JsExecutor) {
 
     @JsBridge(jsFun = "require(path)")
-    fun require(path: String): ScriptableObject? {
-        val filePath = HttpUtils.constructFilePath(path, jsScriptExecutor.parentPath)
+    fun require(path: String): ScriptableObject {
+        val scriptableObject = jsExecutor.reqScriptableObject
+
+        val filePath = HttpUtils.constructFilePath(path, jsExecutor.parentPath)
         val file = File(filePath)
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)
         if (virtualFile == null) {
-            log("js文件不存在:${file.normalize()}")
-            return null
+            GlobalLog.log("js文件不存在:${file.normalize()}")
+            return scriptableObject
         }
 
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)
         val jsStr = document?.text ?: virtualFile.readText()
 
         try {
-            JsScriptExecutor.context.evaluateString(jsScriptExecutor.reqScriptableObject, jsStr, file.name, 1, null)
+            JsExecutor.context.evaluateString(scriptableObject, jsStr, file.name, 1, null)
         } catch (e: Exception) {
-            log("${e.message}")
+            GlobalLog.log("${e.message}")
         }
 
-        return jsScriptExecutor.reqScriptableObject
+        return scriptableObject
     }
 
     @JsBridge(jsFun = "readString(path)")
     fun readString(path: String): String? {
-        val filePath = HttpUtils.constructFilePath(path, jsScriptExecutor.parentPath)
+        val filePath = HttpUtils.constructFilePath(path, jsExecutor.parentPath)
         val file = File(filePath)
         if (!file.exists()) {
-            log("文件文件不存在:${file.normalize()}")
+            GlobalLog.log("文件不存在:${file.normalize()}")
             return null
         }
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
-        return virtualFile.readText()
+
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
+        return document?.text ?: virtualFile.readText()
     }
 
     @JsBridge(jsFun = "getXmlDoc()")
     fun getXmlDoc(): Any {
-        val resObj = Context.javaToJS(jsScriptExecutor.xmlDoc!!, jsScriptExecutor.reqScriptableObject) as NativeJavaObject
-        resObj.prototype = JsScriptExecutor.context.initStandardObjects()
+        val resObj = Context.javaToJS(jsExecutor.xmlDoc!!, jsExecutor.reqScriptableObject) as NativeJavaObject
+        resObj.prototype = JsExecutor.context.initStandardObjects()
         return resObj
     }
 
     @JsBridge(jsFun = "evaluate(xPath)")
     fun evaluate(xPath: String): String? {
-        return jsScriptExecutor.xPath!!.evaluate(xPath, jsScriptExecutor.xmlDoc!!)
-    }
-
-    @JsBridge(jsFun = "log(msg)")
-    fun log(msg: String?) {
-        logs.add(msg ?: "null")
+        return jsExecutor.xPath!!.evaluate(xPath, jsExecutor.xmlDoc!!)
     }
 
 }

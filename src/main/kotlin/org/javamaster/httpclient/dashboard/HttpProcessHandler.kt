@@ -14,7 +14,7 @@ import org.javamaster.httpclient.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.dubbo.DubboRequest
 import org.javamaster.httpclient.enums.SimpleTypeEnum
-import org.javamaster.httpclient.js.JsScriptExecutor
+import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
@@ -40,8 +40,8 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private val httpFile = httpMethod.containingFile
     private val parentPath = httpFile.virtualFile.parent.path
-    private val jsScriptExecutor = JsScriptExecutor(project, parentPath)
-    private val variableResolver = VariableResolver(jsScriptExecutor, httpFile, selectedEnv)
+    private val jsExecutor = JsExecutor(project, parentPath, tabName)
+    private val variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv)
     private val loadingRemover = httpMethod.getUserData(HttpUtils.gutterIconLoadingKey)
     private val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
     private val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
@@ -86,10 +86,10 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         val reqBody: Any? = HttpUtils.convertToReqBody(request, variableResolver)
 
         if (reqBody != null) {
-            jsScriptExecutor.initJsRequestBody(reqBody)
+            jsExecutor.initJsRequestBody(reqBody)
         }
 
-        val beforeJsResList = jsScriptExecutor.evalJsBeforeRequest(jsBeforeJsScripts)
+        val beforeJsResList = jsExecutor.evalJsBeforeRequest(jsBeforeJsScripts)
 
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
@@ -156,7 +156,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
                 val httpResDescList = mutableListOf("// 耗时: ${consumeTimes}ms,大小:${byteArray.size / 1024.0}kb\r\n")
 
-                val evalJsRes = jsScriptExecutor.evalJsAfterRequest(
+                val evalJsRes = jsExecutor.evalJsAfterRequest(
                     jsAfterScriptStr,
                     Pair(SimpleTypeEnum.JSON, byteArray),
                     200,
@@ -217,7 +217,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 val httpResDescList =
                     mutableListOf("// status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: $size KB\r\n")
 
-                val evalJsRes = jsScriptExecutor.evalJsAfterRequest(
+                val evalJsRes = jsExecutor.evalJsAfterRequest(
                     jsAfterScriptStr,
                     resPair,
                     response.statusCode(),
