@@ -9,6 +9,7 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.NativeJavaObject
 import org.mozilla.javascript.ScriptableObject
 import java.io.File
+import java.io.FileNotFoundException
 
 
 @Suppress("unused")
@@ -22,33 +23,23 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         val file = File(filePath)
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)
-        if (virtualFile == null) {
-            GlobalLog.log("js文件不存在:${file.normalize()}")
-            return scriptableObject
-        }
+            ?: throw FileNotFoundException("js文件不存在:${file.normalize()}")
 
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)
         val jsStr = document?.text ?: virtualFile.readText()
 
-        try {
-            JsExecutor.context.evaluateString(scriptableObject, jsStr, file.name, 1, null)
-        } catch (e: Exception) {
-            GlobalLog.log("${e.message}")
-        }
+        JsExecutor.context.evaluateString(scriptableObject, jsStr, file.name, 1, null)
 
         return scriptableObject
     }
 
     @JsBridge(jsFun = "readString(path)")
-    fun readString(path: String): String? {
+    fun readString(path: String): String {
         val filePath = HttpUtils.constructFilePath(path, jsExecutor.parentPath)
         val file = File(filePath)
-        if (!file.exists()) {
-            GlobalLog.log("文件不存在:${file.normalize()}")
-            return null
-        }
 
-        val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
+        val virtualFile = VfsUtil.findFileByIoFile(file, true)
+            ?: throw FileNotFoundException("文件不存在:${file.normalize()}")
 
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)
         return document?.text ?: virtualFile.readText()

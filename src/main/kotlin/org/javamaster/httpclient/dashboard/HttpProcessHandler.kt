@@ -49,9 +49,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
     private val methodType = httpMethod.text
     private val responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
 
-    private val jsBeforeJsScripts = HttpUtils.getAllPreJsScripts(httpFile, requestBlock)
+    private val jsListBeforeReq = HttpUtils.getAllPreJsScripts(httpFile, requestBlock)
 
-    private val jsAfterScriptStr = getJsScript(responseHandler)
+    private val jsAfterReq = getJsScript(responseHandler)
 
     private val paramMap = HttpUtils.getDirectionCommentParamMap(requestBlock)
 
@@ -83,13 +83,11 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             throw IllegalArgumentException("不能有 Content-Length 请求头!")
         }
 
-        val reqBody: Any? = HttpUtils.convertToReqBody(request, variableResolver)
+        val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
 
-        if (reqBody != null) {
-            jsExecutor.initJsRequestBody(reqBody)
-        }
+        jsExecutor.initJsRequestBody(reqBody)
 
-        val beforeJsResList = jsExecutor.evalJsBeforeRequest(jsBeforeJsScripts)
+        val beforeJsResList = jsExecutor.evalJsBeforeRequest(jsListBeforeReq)
 
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
@@ -157,7 +155,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 val httpResDescList = mutableListOf("// 耗时: ${consumeTimes}ms,大小:${byteArray.size / 1024.0}kb\r\n")
 
                 val evalJsRes = jsExecutor.evalJsAfterRequest(
-                    jsAfterScriptStr,
+                    jsAfterReq,
                     Pair(SimpleTypeEnum.JSON, byteArray),
                     200,
                     mutableMapOf()
@@ -218,7 +216,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     mutableListOf("// status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: $size KB\r\n")
 
                 val evalJsRes = jsExecutor.evalJsAfterRequest(
-                    jsAfterScriptStr,
+                    jsAfterReq,
                     resPair,
                     response.statusCode(),
                     response.headers().map()

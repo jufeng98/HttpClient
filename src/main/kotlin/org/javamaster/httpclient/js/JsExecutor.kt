@@ -1,16 +1,17 @@
 package org.javamaster.httpclient.js
 
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
 import org.javamaster.httpclient.utils.HttpUtils.gson
-import org.mozilla.javascript.Context
-import org.mozilla.javascript.NativeObject
-import org.mozilla.javascript.ScriptableObject
+import org.mozilla.javascript.*
 import org.w3c.dom.Document
 import org.xml.sax.InputSource
+import java.io.FileNotFoundException
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import javax.xml.parsers.DocumentBuilderFactory
@@ -47,19 +48,29 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
     var xmlDoc: Document? = null
     var xPath: XPath? = null
 
-    fun initJsRequestBody(reqBody: Any) {
-        val js = """
+    fun initJsRequestBody(reqBody: Any?) {
+        val js = if (reqBody == null) {
+            """
             request.body = {
                 string: () => {
-                    return `$reqBody`
+                    return null;
                 }
             }
         """.trimIndent()
+        } else {
+            """
+            request.body = {
+                string: () => {
+                    return `$reqBody`;
+                }
+            }
+        """.trimIndent()
+        }
         context.evaluateString(reqScriptableObject, js, "initRequestBody.js", 1, null)
     }
 
-    fun evalJsBeforeRequest(beforeJsScripts: List<String>): List<String> {
-        if (beforeJsScripts.isEmpty()) {
+    fun evalJsBeforeRequest(jsListBeforeReq: List<HttpScriptBody>): List<String> {
+        if (jsListBeforeReq.isEmpty()) {
             return mutableListOf()
         }
 
@@ -67,7 +78,13 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
         val resList = mutableListOf("/*\r\n前置js执行结果:\r\n")
 
-        beforeJsScripts.forEach { evalJsInAnonymousFun(it) }
+        val virtualFile = jsListBeforeReq[0].containingFile.virtualFile
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
+
+        jsListBeforeReq.forEach {
+            val rowNum = document.getLineNumber(it.textOffset)
+            evalJsInAnonymousFun(it.text, rowNum, virtualFile.name)
+        }
 
         resList.add(GlobalLog.getAndClearLogs() + "\r\n")
 
@@ -77,7 +94,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
     }
 
     fun evalJsAfterRequest(
-        jsScript: String?,
+        jsScript: HttpScriptBody?,
         resPair: Pair<SimpleTypeEnum, ByteArray>,
         statusCode: Int,
         headers: MutableMap<String, MutableList<String>>,
@@ -123,7 +140,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
                   response.body.xPath = {
                     evaluate: function(xPath) {
                         return javaBridge.evaluate(xPath);
-                    },
+                    }
                   }
                 """.trimIndent()
             }
@@ -142,7 +159,11 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)
 
         try {
-            evalJsInAnonymousFun(jsScript)
+            val virtualFile = jsScript.containingFile.virtualFile
+            val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
+
+            val rowNum = document.getLineNumber(jsScript.textOffset)
+            evalJsInAnonymousFun(jsScript.text, rowNum, virtualFile.name)
         } catch (e: Exception) {
             GlobalLog.log(e.message)
         }
@@ -152,12 +173,17 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         return GlobalLog.getAndClearLogs()
     }
 
-    private fun evalJsInAnonymousFun(jsScript: String) {
+    private fun evalJsInAnonymousFun(jsStr: String, rowNum: Int, fileName: String) {
         try {
-            val js = "(function () { 'use strict'; ${jsScript.trim()} })();"
-            context.evaluateString(reqScriptableObject, js, "anonymous.js", 1, null)
-        } catch (e: Exception) {
-            GlobalLog.log(e.message)
+            val js = "(function () { 'use strict'; ${jsStr.trim()} })();"
+            context.evaluateString(reqScriptableObject, js, fileName, 1 + rowNum, null)
+        } catch (e: WrappedException) {
+            val cause = e.cause
+            if (cause is FileNotFoundException) {
+                throw FileNotFoundException(cause.message + "($fileName)")
+            }
+
+            throw EvaluatorException(cause?.message ?: "null", fileName, e.lineNumber())
         }
     }
 

@@ -322,16 +322,16 @@ object HttpUtils {
         return Pair(SimpleTypeEnum.TXT, resBody)
     }
 
-    fun getJsScript(httpResponseHandler: HttpResponseHandler?): String? {
+    fun getJsScript(httpResponseHandler: HttpResponseHandler?): HttpScriptBody? {
         if (httpResponseHandler == null) {
             return null
         }
 
-        return httpResponseHandler.responseScript.scriptBody?.text
+        return httpResponseHandler.responseScript.scriptBody
     }
 
-    fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<String> {
-        val scripts = mutableListOf<String>()
+    fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<HttpScriptBody> {
+        val scripts = mutableListOf<HttpScriptBody>()
 
         val globalScript = getGlobalJsScript(httpFile)
         if (globalScript != null) {
@@ -356,14 +356,14 @@ object HttpUtils {
         return map
     }
 
-    private fun getGlobalJsScript(httpFile: PsiFile): String? {
+    private fun getGlobalJsScript(httpFile: PsiFile): HttpScriptBody? {
         val globalHandler = PsiTreeUtil.getChildOfType(httpFile, HttpGlobalHandler::class.java) ?: return null
-        return globalHandler.globalScript.scriptBody?.text ?: return null
+        return globalHandler.globalScript.scriptBody
     }
 
-    private fun getPreJsScript(httpRequestBlock: HttpRequestBlock): String? {
+    private fun getPreJsScript(httpRequestBlock: HttpRequestBlock): HttpScriptBody? {
         val preRequestHandler = httpRequestBlock.preRequestHandler ?: return null
-        return preRequestHandler.preRequestScript.scriptBody?.text ?: return null
+        return preRequestHandler.preRequestScript.scriptBody
     }
 
     fun getOriginalFile(requestTarget: HttpRequestTarget): VirtualFile? {
