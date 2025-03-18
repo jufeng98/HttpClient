@@ -13,7 +13,9 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.indexing.FileBasedIndex
+import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.index.HttpEnvironmentIndex.Companion.INDEX_ID
+import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
 
@@ -87,7 +89,7 @@ class EnvFileService(val project: Project) {
     ): String? {
         val innerJsonValue = getEnvEle(key, selectedEnv, httpFileParentPath, envFileName, project) ?: return null
 
-        return when (innerJsonValue) {
+        val value = when (innerJsonValue) {
             is JsonStringLiteral -> {
                 innerJsonValue.value
             }
@@ -104,6 +106,8 @@ class EnvFileService(val project: Project) {
                 throw RuntimeException("error:$innerJsonValue")
             }
         }
+
+        return resolveValue(value, httpFileParentPath)
     }
 
     companion object {
@@ -172,27 +176,62 @@ class EnvFileService(val project: Project) {
             return project.getService(EnvFileService::class.java)
         }
 
-        private fun getEnvVariablesFromIndex(project: Project, selectedEnv: String?): MutableMap<String, String>? {
+        private fun resolveValue(value: String, httpFileParentPath: String): String {
+            val matcher = VARIABLE_PATTERN.matcher(value)
+
+            return matcher.replaceAll {
+                val matchStr = it.group()
+                val variable = matchStr.substring(2, matchStr.length - 2)
+                val innerVariableEnum = InnerVariableEnum.getEnum(variable) ?: return@replaceAll "Unresolved"
+                innerVariableEnum.exec(variable, httpFileParentPath)
+            }
+        }
+
+        private fun getEnvVariablesFromIndex(
+            project: Project,
+            selectedEnv: String?,
+            httpFileParentPath: String,
+        ): MutableMap<String, String>? {
             if (selectedEnv == null) return null
 
             val selectedEditor = FileEditorManager.getInstance(project).selectedEditor ?: return null
 
-            val module = ModuleUtilCore.findModuleForFile(selectedEditor.file, project) ?: return null
+            val projectScope = GlobalSearchScope.projectScope(project)
+            val map = collectEnvMapFromIndex(selectedEnv, httpFileParentPath, projectScope)
 
-            val scope = GlobalSearchScope.moduleScope(module)
-
-            val fileBasedIndex = FileBasedIndex.getInstance()
-
-            val map = mutableMapOf<String, String>()
-
-            val list1 = fileBasedIndex.getValues(INDEX_ID, COMMON_ENV_NAME, scope)
-            list1.forEach { map.putAll(it) }
-
-            val list2 = fileBasedIndex.getValues(INDEX_ID, selectedEnv, scope)
-            list2.forEach { map.putAll(it) }
+            val module = ModuleUtilCore.findModuleForFile(selectedEditor.file, project)
+            if (module != null) {
+                val moduleScope = GlobalSearchScope.moduleScope(module)
+                map.putAll(collectEnvMapFromIndex(selectedEnv, httpFileParentPath, moduleScope))
+            }
 
             if (map.isEmpty()) {
                 return null
+            }
+
+            return map
+        }
+
+        private fun collectEnvMapFromIndex(
+            selectedEnv: String,
+            httpFileParentPath: String,
+            scope: GlobalSearchScope,
+        ): MutableMap<String, String> {
+            val map = mutableMapOf<String, String>()
+            val fileBasedIndex = FileBasedIndex.getInstance()
+
+            val commonList = fileBasedIndex.getValues(INDEX_ID, COMMON_ENV_NAME, scope)
+            commonList.forEach {
+                it.forEach { (k, v) ->
+                    map[k] = resolveValue(v, httpFileParentPath)
+                }
+            }
+
+            val envList = fileBasedIndex.getValues(INDEX_ID, selectedEnv, scope)
+            envList.forEach {
+                it.forEach { (k, v) ->
+                    map[k] = resolveValue(v, httpFileParentPath)
+                }
             }
 
             return map
@@ -202,20 +241,20 @@ class EnvFileService(val project: Project) {
             val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
             val httpFileParentPath = HttpEditorTopForm.getHttpFileParentPath()
 
-            val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv)
+            val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv, httpFileParentPath)
             if (mapFromIndex != null) {
                 return mapFromIndex
             }
 
             val map = linkedMapOf<String, String>()
 
-            map.putAll(getEnvVariables(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
-
-            map.putAll(getEnvVariables(selectedEnv, httpFileParentPath, ENV_FILE_NAME, project))
+            map.putAll(getEnvVariables(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project))
 
             map.putAll(getEnvVariables(COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
 
-            map.putAll(getEnvVariables(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project))
+            map.putAll(getEnvVariables(selectedEnv, httpFileParentPath, ENV_FILE_NAME, project))
+
+            map.putAll(getEnvVariables(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
 
             return map
         }
@@ -292,9 +331,18 @@ class EnvFileService(val project: Project) {
             project: Project,
         ): JsonLiteral? {
             val env = selectedEnv ?: COMMON_ENV_NAME
-            val fileName = "$httpFileParentPath/$envFileName"
+            var fileName = "$httpFileParentPath/$envFileName"
 
-            val virtualFile = VfsUtil.findFileByIoFile(File(fileName), true) ?: return null
+            var virtualFile = VfsUtil.findFileByIoFile(File(fileName), true)
+            if (virtualFile == null) {
+                fileName = "${project.basePath}/$envFileName"
+
+                virtualFile = VfsUtil.findFileByIoFile(File(fileName), true)
+            }
+
+            if (virtualFile == null) {
+                return null
+            }
 
             val psiFile = PsiUtil.getPsiFile(project, virtualFile) as JsonFile
 
