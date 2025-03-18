@@ -10,6 +10,7 @@ import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.GenericProgramRunner
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
+import com.intellij.openapi.vfs.JarFileSystem
 import org.javamaster.httpclient.dashboard.HttpExecutor.Companion.HTTP_EXECUTOR_ID
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
@@ -38,6 +39,12 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         val loadingRemover = gutterComponent.setLoadingIconForCurrentGutterMark()
 
         val project = httpMethod.project
+
+        if (httpMethod.containingFile.virtualFile.fileSystem is JarFileSystem) {
+            NotifyUtil.notifyWarn(project, "模板 http 文件仅作示例,不支持直接执行!")
+            loadingRemover?.run()
+            return
+        }
 
         val tabName = HttpUtils.getTabName(httpMethod)
         if (tabName.isEmpty()) {

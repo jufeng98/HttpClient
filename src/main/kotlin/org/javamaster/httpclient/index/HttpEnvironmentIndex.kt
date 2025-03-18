@@ -19,7 +19,7 @@ class HttpEnvironmentIndex : FileBasedIndexExtension<String, MutableMap<String, 
         return DataIndexer<String, MutableMap<String, String>, FileContent> { inputData ->
             val file = inputData.psiFile as JsonFile
 
-            val root = file.topLevelValue as? JsonObject ?: return@DataIndexer emptyMap()
+            val root = file.topLevelValue as? JsonObject ?: return@DataIndexer mutableMapOf()
 
             val result: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
 
