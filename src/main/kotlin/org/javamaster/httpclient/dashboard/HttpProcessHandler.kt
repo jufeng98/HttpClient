@@ -30,6 +30,7 @@ import java.io.OutputStream
 import java.net.http.HttpClient.Version
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import javax.swing.JPanel
@@ -296,21 +297,21 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         }
 
         val path = HttpUtils.constructFilePath(outPutFileName, parentPath, httpFile)
+
         val file = File(path)
+
         if (!file.parentFile.exists()) {
             Files.createDirectories(file.toPath())
         }
 
-        if (file.exists()) {
-            try {
-                Files.delete(file.toPath())
-            } catch (e: Exception) {
-                return "// 保存失败, ${e.message?.trim()}\r\n"
+        try {
+            ByteArrayInputStream(byteArray).use {
+                Files.copy(it, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return "// 保存失败: $e\r\n"
         }
-
-        val inputStream = ByteArrayInputStream(byteArray)
-        Files.copy(inputStream, file.toPath())
 
         VirtualFileManager.getInstance().asyncRefresh(null)
 

@@ -1,8 +1,11 @@
 package org.javamaster.httpclient.utils
 
+import com.intellij.ide.impl.ProjectUtil
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.*
+import com.intellij.util.containers.stream
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import java.io.File
@@ -15,6 +18,53 @@ import java.util.*
  * @author yudong
  */
 object VirtualFileUtils {
+
+    fun readNewestBytes(file: File): ByteArray {
+        if (!file.exists()) {
+            throw IllegalArgumentException("文件 ${file.absoluteFile.normalize().absolutePath} 不存在!")
+        }
+
+        if (file.isDirectory) {
+            throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} 不是文件!")
+        }
+
+        val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
+
+        val opened = FileEditorManager.getInstance(ProjectUtil.getActiveProject()!!).allEditors.stream()
+            .anyMatch {
+                it.file == virtualFile
+            }
+
+        if (opened) {
+            return virtualFile.readBytes()
+        }
+
+        return Files.readAllBytes(file.toPath())
+    }
+
+    fun readNewestContent(file: File): String {
+        if (!file.exists()) {
+            throw IllegalArgumentException("文件 ${file.absoluteFile.normalize().absolutePath} 不存在!")
+        }
+
+        if (file.isDirectory) {
+            throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} 不是文件!")
+        }
+
+        val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
+
+        val opened = FileEditorManager.getInstance(ProjectUtil.getActiveProject()!!).allEditors.stream()
+            .anyMatch {
+                it.file == virtualFile
+            }
+
+        if (opened) {
+            val document = FileDocumentManager.getInstance().getDocument(virtualFile)
+            return document?.text ?: virtualFile.readText()
+        }
+
+        return Files.readString(file.toPath())
+    }
 
     @JvmStatic
     fun createHttpVirtualFileFromText(

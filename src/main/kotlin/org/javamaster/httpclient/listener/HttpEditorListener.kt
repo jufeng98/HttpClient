@@ -68,6 +68,7 @@ class HttpEditorListener : FileEditorManagerListener {
         try {
             httpEditorTopForm.initEnvCombo(module, file.parent.path)
         } catch (e: Exception) {
+            e.printStackTrace()
             NotifyUtil.notifyError(module.project, e.message)
         }
 

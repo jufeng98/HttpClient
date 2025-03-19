@@ -3,11 +3,9 @@ package org.javamaster.httpclient.enums
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler
 import com.intellij.codeInsight.lookup.LookupElement
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.readBytes
-import com.intellij.openapi.vfs.readText
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.RandomStringUtils
+import org.javamaster.httpclient.utils.VirtualFileUtils
 import java.io.File
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
@@ -105,19 +103,11 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variable: String, httpFileParentPath: String): String {
-            val imagePath = variable.substring(methodName.length + 1, variable.length - 1)
-            val filePath = HttpUtils.constructFilePath(imagePath, httpFileParentPath)
+            val path = variable.substring(methodName.length + 1, variable.length - 1)
+            val filePath = HttpUtils.constructFilePath(path, httpFileParentPath)
             val file = File(filePath)
-            if (!file.exists()) {
-                throw IllegalArgumentException("文件${file.absoluteFile.normalize().absolutePath}不存在!")
-            }
 
-            if (file.isDirectory) {
-                throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath}不是文件!")
-            }
-
-            val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
-            val bytes = virtualFile.readBytes()
+            val bytes = VirtualFileUtils.readNewestBytes(file)
 
             return Base64.getEncoder().encodeToString(bytes)
         }
@@ -135,16 +125,8 @@ enum class InnerVariableEnum(val methodName: String) {
             val path = variable.substring(methodName.length + 1, variable.length - 1)
             val filePath = HttpUtils.constructFilePath(path, httpFileParentPath)
             val file = File(filePath)
-            if (!file.exists()) {
-                throw IllegalArgumentException("文件${file.absoluteFile.normalize().absolutePath}不存在!")
-            }
 
-            if (file.isDirectory) {
-                throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath}不是文件!")
-            }
-
-            val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
-            return virtualFile.readText()
+            return VirtualFileUtils.readNewestContent(file)
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
