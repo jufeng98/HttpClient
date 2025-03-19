@@ -49,6 +49,15 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>2.7.0</b></li>
+                <ul>
+                    <li>新增读取文件内容的内置方法</li>
+                    <li>环境文件允许引用内置方法</li>
+                    <li>新增 js require 函数路径跳转功能</li>
+                    <li>重构 http 变量点击跳转逻辑</li>
+                    <li>查看可用变量窗口新增展示系统属性变量和系统环境变量</li>
+                    <li>功能优化及Bug修复</li>
+                </ul>
                 <li><b>2.6.0</b></li>
                 <ul>
                     <li>内置变量支持引用系统变量,如 {{$property.java.version}}, 其中 java.version 是系统变量名</li>
