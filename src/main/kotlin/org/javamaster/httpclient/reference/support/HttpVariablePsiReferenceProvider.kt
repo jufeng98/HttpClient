@@ -122,7 +122,12 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
                 return fileGlobalVariable
             }
 
-            val jsVariable = WebCalm.resolveJsVariable(variableName, element, httpFile)
+            var jsVariable = JavaScript.resolveJsVariable(variableName, element, httpFile)
+            if (jsVariable != null) {
+                return jsVariable
+            }
+
+            jsVariable = WebCalm.resolveJsVariable(variableName, element, httpFile)
             if (jsVariable != null) {
                 return jsVariable
             }

@@ -12,9 +12,14 @@ import ris58h.webcalm.javascript.psi.*
 import java.util.*
 
 object WebCalm {
+    private val pluginNotAlive by lazy {
+        val pluginId = PluginId.findId("ris58h.webcalm") ?: return@lazy true
+        val plugin = PluginManager.getInstance().findEnabledPlugin(pluginId)
+        return@lazy plugin == null
+    }
 
     fun resolveJsVariable(variableName: String, element: PsiElement, httpFile: PsiFile): PsiElement? {
-        if (pluginNotAlive()) {
+        if (pluginNotAlive) {
             return null
         }
 
@@ -62,12 +67,6 @@ object WebCalm {
             val text = it.text
             text.substring(1, text.length - 1) == variableName
         }
-    }
-
-    private fun pluginNotAlive(): Boolean {
-        val pluginId = PluginId.findId("ris58h.webcalm") ?: return true
-        PluginManager.getInstance().findEnabledPlugin(pluginId) ?: return true
-        return false
     }
 
 }
