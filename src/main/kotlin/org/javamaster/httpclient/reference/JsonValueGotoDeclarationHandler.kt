@@ -5,8 +5,9 @@ import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
+import org.javamaster.httpclient.env.EnvFileService.Companion.ENV_FILE_NAMES
 import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.reference.support.HttpVariableFakePsiElement
+import org.javamaster.httpclient.reference.support.HttpVariablePsiReferenceProvider
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
@@ -32,8 +33,10 @@ class JsonValueGotoDeclarationHandler : GotoDeclarationHandler {
             return arrayOf()
         }
 
-        val injectionHost = InjectedLanguageManager.getInstance(jsonString.project).getInjectionHost(jsonString)
-        if (injectionHost !is HttpMessageBody) {
+        val project = jsonString.project
+
+        val injectionHost = InjectedLanguageManager.getInstance(project).getInjectionHost(jsonString)
+        if (injectionHost !is HttpMessageBody && !ENV_FILE_NAMES.contains(editor?.virtualFile?.name)) {
             return arrayOf()
         }
 
@@ -42,8 +45,13 @@ class JsonValueGotoDeclarationHandler : GotoDeclarationHandler {
             return arrayOf()
         }
 
-        val name = value.substring(2, value.length - 2)
-        return arrayOf(HttpVariableFakePsiElement(injectionHost, name))
+        val variableName = value.substring(2, value.length - 2)
+
+        val psiElement = injectionHost ?: element
+
+        val item = HttpVariablePsiReferenceProvider.tryResolveVariable(variableName, psiElement) ?: return arrayOf()
+
+        return arrayOf(item)
     }
 
 }

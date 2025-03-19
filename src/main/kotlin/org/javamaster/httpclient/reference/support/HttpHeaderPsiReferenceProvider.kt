@@ -1,18 +1,13 @@
 package org.javamaster.httpclient.reference.support
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiReference
-import com.intellij.psi.PsiReferenceBase
-import com.intellij.psi.PsiReferenceProvider
+import com.intellij.psi.*
 import com.intellij.psi.search.searches.ClassInheritorsSearch
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.psi.HttpHeaderFieldValue
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.utils.DubboUtils
-import org.javamaster.httpclient.utils.NotifyUtil
-import org.javamaster.httpclient.utils.TooltipUtils
 
 class HttpHeaderPsiReferenceProvider : PsiReferenceProvider() {
 
@@ -22,53 +17,44 @@ class HttpHeaderPsiReferenceProvider : PsiReferenceProvider() {
         val rangeInElement = textRange.shiftLeft(textRange.startOffset)
 
         val psiReference = object : PsiReferenceBase<HttpHeaderFieldValue>(fieldValue, rangeInElement) {
-            override fun resolve(): PsiElement {
-                return HttpHeaderValuePathFakePsiElement(fieldValue)
-            }
-        }
 
-        return arrayOf(psiReference)
-    }
+            override fun resolve(): PsiElement? {
+                val headerField = fieldValue.parent as HttpHeaderField
+                val fieldName = headerField.headerFieldName.text
 
-    class HttpHeaderValuePathFakePsiElement(private val fieldValue: HttpHeaderFieldValue) :
-        ASTWrapperPsiElement(fieldValue.node) {
-
-        override fun navigate(requestFocus: Boolean) {
-            val headerField = fieldValue.parent as HttpHeaderField
-            val fieldName = headerField.headerFieldName.text
-
-            if (fieldName == DubboUtils.INTERFACE_KEY) {
-                val module = DubboUtils.getOriginalModule(fieldValue) ?: return
-                val interfaceName = fieldValue.text
-                val psiClass = DubboUtils.findInterface(module, interfaceName)
-                if (psiClass == null) {
-                    TooltipUtils.showTooltip("跳转接口失败,无法解析接口:${interfaceName}", project)
-                    return
+                if (fieldName == DubboUtils.INTERFACE_KEY) {
+                    return resolveInterface(fieldValue)
                 }
 
-                psiClass.navigate(requestFocus)
-                return
+                if (fieldName == DubboUtils.METHOD_KEY) {
+                    return resolveMethod(headerField)
+                }
+
+                return null
             }
 
-            if (fieldName == DubboUtils.METHOD_KEY) {
-                val httpRequest = headerField.parent as HttpRequest
+            private fun resolveInterface(fieldValue: HttpHeaderFieldValue?): PsiClass? {
+                if (fieldValue == null) {
+                    return null
+                }
+
+                val module = DubboUtils.getOriginalModule(fieldValue) ?: return null
+                val interfaceName = fieldValue.text
+                return DubboUtils.findInterface(module, interfaceName)
+            }
+
+            private fun resolveMethod(headerField: HttpHeaderField): PsiMethod? {
+                val httpRequest = PsiTreeUtil.getParentOfType(headerField, HttpRequest::class.java)!!
                 val field = httpRequest.header?.headerFieldList
                     ?.firstOrNull {
                         it.headerFieldName.text == DubboUtils.INTERFACE_KEY
                     }
+
                 if (field == null) {
-                    TooltipUtils.showTooltip("跳转失败,未找到 ${DubboUtils.INTERFACE_KEY} 请求头", project)
-                    return
+                    return null
                 }
 
-                val module = DubboUtils.getOriginalModule(fieldValue) ?: return
-
-                val interfaceName = field.headerFieldValue?.text ?: return
-                val psiClass = DubboUtils.findInterface(module, interfaceName)
-                if (psiClass == null) {
-                    TooltipUtils.showTooltip("跳转方法失败,无法解析接口:${interfaceName}", project)
-                    return
-                }
+                val psiClass = resolveInterface(field.headerFieldValue) ?: return null
 
                 val methodName = fieldValue.text
 
@@ -76,19 +62,20 @@ class HttpHeaderPsiReferenceProvider : PsiReferenceProvider() {
                     .forEach {
                         val methods = it.findMethodsByName(methodName, false)
                         if (methods.isEmpty()) {
-                            TooltipUtils.showTooltip("跳转方法失败,在${it.name}中无法解析方法:${methodName}", project)
-                            return
+                            return null
                         }
 
                         if (methods.size > 1) {
-                            NotifyUtil.notifyWarn(project, "在${interfaceName}中找到多个同名方法,简单跳转第一个")
-                            return
+                            println("解析到${methods.size}多个同名方法,直接取第一个")
                         }
 
-                        methods[0].navigate(requestFocus)
-                        return
+                        return methods[0]
                     }
+
+                return null
             }
         }
+
+        return arrayOf(psiReference)
     }
 }

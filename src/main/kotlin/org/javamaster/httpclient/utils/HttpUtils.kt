@@ -14,7 +14,9 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
@@ -22,6 +24,7 @@ import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
@@ -176,8 +179,7 @@ object HttpUtils {
         val filePath = inputFile.filePath!!.text
         val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
-        val virtualFile = VfsUtil.findFileByIoFile(File(path), true)
-            ?: throw IllegalArgumentException("文件:${path}不存在")
+        val file = File(path)
 
         if (filePath.endsWith(SimpleTypeEnum.JSON.type) || filePath.endsWith(SimpleTypeEnum.XML.type)
             || filePath.endsWith(SimpleTypeEnum.TXT.type) || filePath.endsWith(SimpleTypeEnum.TEXT.type)
@@ -188,11 +190,13 @@ object HttpUtils {
                 reqStr += "\r\n"
             }
 
-            val str = VfsUtil.loadText(virtualFile)
+            val str = VirtualFileUtils.readNewestContent(file)
+
             reqStr += variableResolver.resolve(str)
+
             return reqStr
         } else {
-            return VfsUtil.loadBytes(virtualFile)
+            return VirtualFileUtils.readNewestBytes(file)
         }
     }
 
@@ -330,6 +334,29 @@ object HttpUtils {
         return httpResponseHandler.responseScript.scriptBody
     }
 
+    fun resolveFileGlobalVariable(variableName: String, httpFile: PsiFile): PsiElement? {
+        val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
+
+        val element = globalVariables
+            .map {
+                val firstChild = it.globalVariableName.firstChild
+                val psiElement = getNextSiblingByType(firstChild, HttpTypes.GLOBAL_NAME, false) ?: return@map null
+                if (psiElement.text == variableName) {
+                    return@map psiElement.parent.parent
+                } else {
+                    return@map null
+                }
+            }
+            .filterNotNull()
+            .firstOrNull()
+
+        if (element == null) {
+            return null
+        }
+
+        return element
+    }
+
     fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<HttpScriptBody> {
         val scripts = mutableListOf<HttpScriptBody>()
 
@@ -462,4 +489,21 @@ object HttpUtils {
             runConfigName == tabName
         }
     }
+
+    fun resolveFilePath(path: String, httpFileParentPath: String, project: Project): PsiElement? {
+        val filePath = constructFilePath(path, httpFileParentPath)
+        val file = File(filePath)
+        if (!file.exists()) {
+            return null
+        }
+
+        val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
+
+        if (file.isDirectory) {
+            return PsiManager.getInstance(project).findDirectory(virtualFile)!!
+        }
+
+        return PsiUtil.getPsiFile(project, virtualFile)
+    }
+
 }

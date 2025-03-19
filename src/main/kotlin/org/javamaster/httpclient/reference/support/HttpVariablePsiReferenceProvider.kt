@@ -1,17 +1,21 @@
 package org.javamaster.httpclient.reference.support
 
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.json.psi.JsonProperty
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.PsiReferenceProvider
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.psi.HttpOutputFilePath
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
@@ -42,8 +46,8 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
     class HttpVariablePsiReference(element: PsiElement, private val variableName: String, rangeInElement: TextRange) :
         PsiReferenceBase<PsiElement>(element, rangeInElement) {
 
-        override fun resolve(): PsiElement {
-            return HttpVariableFakePsiElement(element, variableName)
+        override fun resolve(): PsiElement? {
+            return tryResolveVariable(variableName, element)
         }
 
         override fun getVariants(): Array<Any> {
@@ -94,6 +98,53 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
                 }
                 .toList()
                 .toTypedArray()
+        }
+
+        fun tryResolveVariable(variableName: String, element: PsiElement): PsiElement? {
+            val httpFile = element.containingFile
+            val project = httpFile.project
+            val httpFileParentPath = httpFile.virtualFile.parent.path
+
+            if (variableName.startsWith(InnerVariableEnum.IMAGE_TO_BASE64.methodName)) {
+                return tryResolvePath(variableName, httpFileParentPath, InnerVariableEnum.IMAGE_TO_BASE64, project)
+            }
+
+            if (variableName.startsWith(InnerVariableEnum.READ_STRING.methodName)) {
+                return tryResolvePath(variableName, httpFileParentPath, InnerVariableEnum.READ_STRING, project)
+            }
+
+            if (variableName.startsWith("$")) {
+                return null
+            }
+
+            val fileGlobalVariable = HttpUtils.resolveFileGlobalVariable(variableName, httpFile)
+            if (fileGlobalVariable != null) {
+                return fileGlobalVariable
+            }
+
+            val jsVariable = WebCalm.resolveJsVariable(variableName, element, httpFile)
+            if (jsVariable != null) {
+                return jsVariable
+            }
+
+            val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
+
+            val jsonLiteral = EnvFileService.getEnvEle(variableName, selectedEnv, httpFileParentPath, project)
+
+            return PsiTreeUtil.getParentOfType(jsonLiteral, JsonProperty::class.java)
+        }
+
+        private fun tryResolvePath(
+            variableName: String,
+            httpFileParentPath: String,
+            innerVariableEnum: InnerVariableEnum,
+            project: Project,
+        ): PsiElement? {
+            val path = variableName.substring(innerVariableEnum.methodName.length + 1, variableName.length - 1)
+
+            val filePath = HttpUtils.constructFilePath(path, httpFileParentPath)
+
+            return HttpUtils.resolveFilePath(filePath, httpFileParentPath, project)
         }
     }
 }
