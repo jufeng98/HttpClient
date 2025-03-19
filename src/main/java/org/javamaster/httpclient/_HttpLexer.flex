@@ -185,7 +185,7 @@ DIRECTION_PART=[^\r\n ]+
 
 <IN_HEADER> {
   [^\r\n]           { yypushback(yylength()); yybegin(IN_HEADER_FIELD_NAME); }
-  {EOL}             { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
+  [ ]*{EOL}         { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
 }
 
 <IN_HEADER_FIELD_NAME> {
