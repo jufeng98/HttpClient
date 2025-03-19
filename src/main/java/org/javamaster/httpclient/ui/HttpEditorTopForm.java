@@ -103,7 +103,9 @@ public class HttpEditorTopForm extends JComponent {
                 httpEditorTopForm.initEnvCombo(module, envFile.getParent().getPath());
 
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            //noinspection CallToPrintStackTrace
+            e.printStackTrace();
         }
     }
 
