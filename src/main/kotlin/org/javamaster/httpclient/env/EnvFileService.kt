@@ -113,6 +113,7 @@ class EnvFileService(val project: Project) {
     companion object {
         const val ENV_FILE_NAME = "http-client.env.json"
         const val PRIVATE_ENV_FILE_NAME = "http-client.private.env.json"
+        val ENV_FILE_NAMES: Array<String> = arrayOf(ENV_FILE_NAME, PRIVATE_ENV_FILE_NAME)
 
         const val COMMON_ENV_NAME = "common"
 
