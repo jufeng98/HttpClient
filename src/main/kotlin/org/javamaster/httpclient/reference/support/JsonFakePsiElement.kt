@@ -22,6 +22,7 @@ import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.PsiUtils
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import javax.swing.Icon
 
 /**
  * @author yudong
@@ -270,4 +271,17 @@ class JsonFakePsiElement(
         val name = nameElement.text
         return name.substring(1, name.length - 1)
     }
+
+    object JsonItemPresentation : ItemPresentation {
+
+        override fun getPresentableText(): String {
+            return "跳转到对应的Bean字段"
+        }
+
+        override fun getIcon(unused: Boolean): Icon? {
+            return null
+        }
+
+    }
 }
+

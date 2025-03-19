@@ -23,6 +23,7 @@ import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.TooltipUtils
 import java.util.concurrent.CompletableFuture
+import javax.swing.Icon
 
 /**
  * @author yudong
@@ -86,6 +87,18 @@ class HttpFakePsiElement(private val httpRequestTarget: HttpRequestTarget, priva
                     psiMethod.navigate(true)
                 }
             }
+        }
+
+    }
+
+    object HttpItemPresentation : ItemPresentation {
+
+        override fun getPresentableText(): String {
+            return "搜索对应的Controller接口"
+        }
+
+        override fun getIcon(unused: Boolean): Icon? {
+            return null
         }
 
     }
