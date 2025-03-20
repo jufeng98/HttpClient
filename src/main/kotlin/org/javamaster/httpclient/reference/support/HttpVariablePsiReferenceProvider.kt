@@ -73,6 +73,7 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
             val propertyList = System.getProperties().entries
                 .map {
                     LookupElementBuilder.create(PROPERTY_PREFIX + "." + it.key)
+                        .withTypeText("" + it.value, true)
                 }
                 .toList()
             allList.addAll(propertyList)
@@ -80,6 +81,7 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
             val envList = System.getenv().entries
                 .map {
                     LookupElementBuilder.create(ENV_PREFIX + "." + it.key)
+                        .withTypeText(it.value, true)
                 }
                 .toList()
             allList.addAll(envList)
