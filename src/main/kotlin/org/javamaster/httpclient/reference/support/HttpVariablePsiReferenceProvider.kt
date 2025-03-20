@@ -47,7 +47,7 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
         PsiReferenceBase<PsiElement>(element, rangeInElement) {
 
         override fun resolve(): PsiElement? {
-            return tryResolveVariable(variableName, element)
+            return tryResolveVariable(variableName, element, true)
         }
 
         override fun getVariants(): Array<Any> {
@@ -100,7 +100,7 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
                 .toTypedArray()
         }
 
-        fun tryResolveVariable(variableName: String, element: PsiElement): PsiElement? {
+        fun tryResolveVariable(variableName: String, element: PsiElement, searchJs: Boolean): PsiElement? {
             val httpFile = element.containingFile
             val project = httpFile.project
             val httpFileParentPath = httpFile.virtualFile.parent.path
@@ -122,14 +122,16 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
                 return fileGlobalVariable
             }
 
-            var jsVariable = JavaScript.resolveJsVariable(variableName, element, httpFile)
-            if (jsVariable != null) {
-                return jsVariable
-            }
+            if (searchJs) {
+                var jsVariable = JavaScript.resolveJsVariable(variableName, element, httpFile)
+                if (jsVariable != null) {
+                    return jsVariable
+                }
 
-            jsVariable = WebCalm.resolveJsVariable(variableName, element, httpFile)
-            if (jsVariable != null) {
-                return jsVariable
+                jsVariable = WebCalm.resolveJsVariable(variableName, element, httpFile)
+                if (jsVariable != null) {
+                    return jsVariable
+                }
             }
 
             val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)

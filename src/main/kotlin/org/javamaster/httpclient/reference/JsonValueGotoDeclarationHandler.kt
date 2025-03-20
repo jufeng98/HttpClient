@@ -7,7 +7,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.env.EnvFileService.Companion.ENV_FILE_NAMES
 import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.reference.support.HttpVariablePsiReferenceProvider
+import org.javamaster.httpclient.reference.support.HttpVariablePsiReferenceProvider.Companion.tryResolveVariable
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
@@ -49,7 +49,7 @@ class JsonValueGotoDeclarationHandler : GotoDeclarationHandler {
 
         val psiElement = injectionHost ?: element
 
-        val item = HttpVariablePsiReferenceProvider.tryResolveVariable(variableName, psiElement) ?: return arrayOf()
+        val item = tryResolveVariable(variableName, psiElement, false) ?: return arrayOf()
 
         return arrayOf(item)
     }
