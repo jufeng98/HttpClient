@@ -183,7 +183,8 @@ class EnvFileService(val project: Project) {
             return matcher.replaceAll {
                 val matchStr = it.group()
                 val variable = matchStr.substring(2, matchStr.length - 2)
-                val innerVariableEnum = InnerVariableEnum.getEnum(variable) ?: return@replaceAll "Unresolved"
+                val innerVariableEnum = InnerVariableEnum.getEnum(variable) ?: return@replaceAll "{{\\$variable}}"
+
                 innerVariableEnum.exec(variable, httpFileParentPath)
             }
         }
@@ -240,7 +241,7 @@ class EnvFileService(val project: Project) {
 
         fun getEnvVariables(project: Project): MutableMap<String, String> {
             val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
-            val httpFileParentPath = HttpEditorTopForm.getHttpFileParentPath()
+            val httpFileParentPath = HttpEditorTopForm.getHttpFileParentPath() ?: return mutableMapOf()
 
             val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv, httpFileParentPath)
             if (mapFromIndex != null) {

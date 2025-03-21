@@ -276,9 +276,7 @@ object HttpUtils {
 
         val path = matcher.replaceAll {
             val matchStr = it.group()
-            val variable = matchStr.substring(2, matchStr.length - 2)
-
-            when (variable) {
+            when (val variable = matchStr.substring(2, matchStr.length - 2)) {
                 PROJECT_ROOT -> {
                     return@replaceAll project.basePath
                 }
@@ -288,13 +286,22 @@ object HttpUtils {
                 }
 
                 MVN_TARGET -> {
-                    val module = ModuleUtil.findModuleForFile(httpFile) ?: return@replaceAll "Unresolved"
+                    val module = ModuleUtil.findModuleForFile(httpFile)
+                    if (module == null) {
+                        // 无法解析变量,原样返回
+                        if (variable.startsWith("$")) {
+                            return@replaceAll "{{\\$variable}}"
+                        }
+
+                        return@replaceAll matchStr
+                    }
+
                     val dirPath = ModuleUtil.getModuleDirPath(module)
                     return@replaceAll "$dirPath/target"
                 }
             }
 
-            "Unresolved"
+            matchStr
         }
 
         return constructFilePath(path, parentPath)
