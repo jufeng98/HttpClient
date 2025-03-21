@@ -8,6 +8,7 @@ enum class SimpleTypeEnum(val type: String) {
     TXT("txt"),
     TEXT("text"),
 
+    STREAM(""),
     IMAGE(""),
     ;
 

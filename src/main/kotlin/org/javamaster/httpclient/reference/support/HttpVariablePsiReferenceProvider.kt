@@ -105,7 +105,7 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
         fun tryResolveVariable(variableName: String, element: PsiElement, searchJs: Boolean): PsiElement? {
             val httpFile = element.containingFile
             val project = httpFile.project
-            val httpFileParentPath = httpFile.virtualFile.parent.path
+            val httpFileParentPath = httpFile.virtualFile?.parent?.path ?: return null
 
             if (variableName.startsWith(InnerVariableEnum.IMAGE_TO_BASE64.methodName)) {
                 return tryResolvePath(variableName, httpFileParentPath, InnerVariableEnum.IMAGE_TO_BASE64, project)

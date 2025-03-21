@@ -39,7 +39,7 @@ class VariableResolver(
 
             val variable = globalVariableValue.variable
             val value = if (variable != null) {
-                resolveVariable(variable.name, Collections.emptyMap())
+                resolveVariable(variable.name, Collections.emptyMap()) ?: variable.text
             } else {
                 getNextSiblingByType(globalVariableValue.firstChild, HttpTypes.GLOBAL_VALUE, false)?.text ?: ""
             }
@@ -57,11 +57,21 @@ class VariableResolver(
             val matchStr = it.group()
             val variable = matchStr.substring(2, matchStr.length - 2)
 
-            resolveVariable(variable, fileScopeVariableMap)
+            val resolved = resolveVariable(variable, fileScopeVariableMap)
+            if (resolved != null) {
+                return@replaceAll resolved
+            }
+
+            // 无法解析变量,原样返回
+            if (variable.startsWith("$")) {
+                return@replaceAll "{{\\$variable}}"
+            }
+
+            matchStr
         }
     }
 
-    private fun resolveVariable(variable: String, fileMap: Map<String, String>): String {
+    private fun resolveVariable(variable: String, fileMap: Map<String, String>): String? {
         var innerVariable = fileMap[variable]
         if (innerVariable != null) {
             return innerVariable
@@ -102,7 +112,7 @@ class VariableResolver(
             }
         }
 
-        return "Unresolved"
+        return null
     }
 
     fun getJsGlobalVariables(): LinkedHashMap<String, String> {
