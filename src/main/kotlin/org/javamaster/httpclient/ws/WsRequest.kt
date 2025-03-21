@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.ws
 
+import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runWriteActionAndWait
@@ -24,7 +25,7 @@ import java.util.function.Consumer
  */
 class WsRequest(
     private val url: String,
-    private val reqHeaderMap: MutableMap<String, String>,
+    private val reqHeaderMap: LinkedMultiValueMap<String, String>,
     private val httpProcessHandler: HttpProcessHandler,
     private val paramMap: Map<String, String>,
 ) : Disposable {
@@ -47,7 +48,11 @@ class WsRequest(
             .build()
 
         val builder = client.newWebSocketBuilder()
-        reqHeaderMap.forEach { builder.header(it.key, it.value) }
+        reqHeaderMap.forEach {
+            it.value.forEach { value ->
+                builder.header(it.key, value)
+            }
+        }
 
         val listener = WsListener(this, httpProcessHandler)
 
