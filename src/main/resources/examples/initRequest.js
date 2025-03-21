@@ -41,3 +41,24 @@ function hasRequestVariableKey(key) {
 function getRequestVariable(key) {
     return request.variables.get(key);
 }
+
+var Window = {
+    btoa: function btoa(bytes) {
+        return javaBridge.btoa(bytes);
+    },
+    atob: function atob(str) {
+        return javaBridge.atob(str);
+    }
+}
+
+function base64ToFile(base64, path) {
+    javaBridge.base64ToFile(base64, path);
+}
+
+function jsonPath(obj, expression) {
+    return javaBridge.jsonPath(obj, expression);
+}
+
+function xpath(obj, expression) {
+    return javaBridge.xpath(obj, expression);
+}

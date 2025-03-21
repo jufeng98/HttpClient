@@ -1,5 +1,7 @@
 // noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst,JSUnresolvedReference
 // noinspection ES6ConvertVarToLetConst
+
+// 切记由于范围问题该文件不能访问 javaBridge 桥接对象
 var client = {
     log: function (args) {
         const strList = [];
@@ -112,14 +114,6 @@ function resolveContentType(headers) {
         mimeType: (split[0] || '').trim(),
         charset: (split[1] || '').trim()
     }
-}
-
-function jsonPath(obj, expression) {
-    return javaBridge.jsonPath(obj, expression);
-}
-
-function xpath(obj, expression) {
-    return javaBridge.xpath(obj, expression);
 }
 
 function hasGlobalVariableKey(key) {
