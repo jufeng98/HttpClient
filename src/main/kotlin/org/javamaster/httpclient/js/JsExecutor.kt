@@ -223,7 +223,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             response.headers.valuesOf = function(name) {
                 return headersFindListByName(this, name) || [];
             };
-            response.contentType = resolveContentType(response.headers)           
+            response.contentType = resolveContentType(response.headers);
         """.trimIndent()
 
         context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)

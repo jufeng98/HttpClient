@@ -49,6 +49,11 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>2.8.0</b></li>
+                <ul>
+                    <li>新增 js 处理器中可用的 api，如jsonPath、xPath等等</li>
+                    <li>功能优化及Bug修复</li>
+                </ul>
                 <li><b>2.7.0</b></li>
                 <ul>
                     <li>新增读取文件内容的内置方法</li>

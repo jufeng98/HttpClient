@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.javamaster"
-version = "2.7.0"
+version = "2.8.0"
 
 repositories {
     maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
@@ -21,6 +21,7 @@ dependencies {
     implementation("com.alibaba:dubbo:2.6.12")
     implementation("org.apache.curator:curator-client:4.0.1")
     implementation("org.apache.curator:curator-framework:4.0.1")
+    implementation("com.jayway.jsonpath:json-path:2.9.0")
     testImplementation("junit:junit:4.13.1")
 }
 
