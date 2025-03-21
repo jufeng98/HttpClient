@@ -26,14 +26,16 @@ import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME
  */
 public class HttpEditorTopForm extends JComponent {
     public static final Key<HttpEditorTopForm> KEY = Key.create("httpRequest.httpEditorTopForm");
+    private final VirtualFile file;
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
     private JComboBox<String> exampleComboBox;
     private JButton showVariableBtn;
     private Project project;
-    private static String httpFileParentPath;
 
-    public HttpEditorTopForm() {
+    public HttpEditorTopForm(VirtualFile file) {
+        this.file = file;
+
         exampleComboBox.addActionListener(e -> {
             ClassLoader classLoader = getClass().getClassLoader();
             Object selectedItem = exampleComboBox.getSelectedItem();
@@ -124,6 +126,21 @@ public class HttpEditorTopForm extends JComponent {
         return httpEditorTopForm.getCurrentEditorSelectedEnv();
     }
 
+    public static @Nullable VirtualFile getAssociatedFile(Project project) {
+        FileEditorManager editorManager = FileEditorManager.getInstance(project);
+        FileEditor selectedEditor = editorManager.getSelectedEditor();
+        if (selectedEditor == null) {
+            return null;
+        }
+
+        HttpEditorTopForm httpEditorTopForm = selectedEditor.getUserData(HttpEditorTopForm.KEY);
+        if (httpEditorTopForm == null) {
+            return null;
+        }
+
+        return httpEditorTopForm.file;
+    }
+
     public static void setCurrentEditorSelectedEnv(String httpFilePath, Project project, String env) {
         FileEditorManager editorManager = FileEditorManager.getInstance(project);
         FileEditor selectedEditor = editorManager.getSelectedEditor();
@@ -146,7 +163,6 @@ public class HttpEditorTopForm extends JComponent {
 
     public void initEnvCombo(Module module, String httpFileParentPath) {
         project = module.getProject();
-        HttpEditorTopForm.httpFileParentPath = httpFileParentPath;
 
         EnvFileService envFileService = EnvFileService.Companion.getService(project);
         Set<String> presetEnvSet = envFileService.getPresetEnvList(httpFileParentPath);
@@ -158,10 +174,6 @@ public class HttpEditorTopForm extends JComponent {
 
     public String getCurrentEditorSelectedEnv() {
         return (String) envComboBox.getSelectedItem();
-    }
-
-    public static String getHttpFileParentPath() {
-        return httpFileParentPath;
     }
 
     public void setSelectEnv(String env) {

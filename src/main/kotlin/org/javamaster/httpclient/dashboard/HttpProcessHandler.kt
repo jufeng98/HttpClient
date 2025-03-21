@@ -42,7 +42,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private val httpFile = httpMethod.containingFile
     private val parentPath = httpFile.virtualFile.parent.path
-    private val jsExecutor = JsExecutor(project, parentPath, tabName)
+    private val jsExecutor = JsExecutor(project, httpFile, tabName)
     private val variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv)
     private val loadingRemover = httpMethod.getUserData(HttpUtils.gutterIconLoadingKey)
     private val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!

@@ -3,6 +3,7 @@ package org.javamaster.httpclient.js
 import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvVariables
@@ -25,7 +26,7 @@ import javax.xml.xpath.XPathFactory
  *
  * @author yudong
  */
-class JsExecutor(val project: Project, val parentPath: String, val tabName: String) {
+class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: String) {
     val reqScriptableObject: ScriptableObject by lazy {
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global

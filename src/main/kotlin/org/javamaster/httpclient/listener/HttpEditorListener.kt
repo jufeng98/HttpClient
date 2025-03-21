@@ -63,7 +63,7 @@ class HttpEditorListener : FileEditorManagerListener {
     }
 
     private fun initTopForm(source: FileEditorManager, file: VirtualFile, module: Module, fileEditor: FileEditor) {
-        val httpEditorTopForm = HttpEditorTopForm()
+        val httpEditorTopForm = HttpEditorTopForm(file)
 
         try {
             httpEditorTopForm.initEnvCombo(module, file.parent.path)

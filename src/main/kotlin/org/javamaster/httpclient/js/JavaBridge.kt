@@ -19,12 +19,13 @@ import java.util.*
 
 @Suppress("unused")
 class JavaBridge(private val jsExecutor: JsExecutor) {
+    private val parentPath = jsExecutor.httpFile.virtualFile.parent.path
 
     @JsBridge(jsFun = "require(path)")
     fun require(path: String): ScriptableObject {
         val scriptableObject = jsExecutor.reqScriptableObject
 
-        val filePath = HttpUtils.constructFilePath(path, jsExecutor.parentPath)
+        val filePath = HttpUtils.constructFilePath(path, parentPath)
         val file = File(filePath)
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)
@@ -40,7 +41,7 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
 
     @JsBridge(jsFun = "readString(path)")
     fun readString(path: String): String {
-        val filePath = HttpUtils.constructFilePath(path, jsExecutor.parentPath)
+        val filePath = HttpUtils.constructFilePath(path, parentPath)
         val file = File(filePath)
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)
@@ -95,7 +96,7 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
 
     fun base64ToFile(base64: String, path: String): Boolean {
         try {
-            val filePath = HttpUtils.constructFilePath(path, jsExecutor.parentPath)
+            val filePath = HttpUtils.constructFilePath(path, parentPath, jsExecutor.httpFile)
             val file = File(filePath)
             if (file.exists()) {
                 file.delete()

@@ -94,11 +94,9 @@ public class ViewVariableForm extends DialogWrapper {
 
         String selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project);
 
-        String httpFileParentPath = virtualFile.getParent().getPath();
-
         List<Pair<String, Map<String, String>>> resList = Lists.newArrayList();
 
-        JsExecutor jsExecutor = new JsExecutor(project, httpFileParentPath, "");
+        JsExecutor jsExecutor = new JsExecutor(project, httpFile, "");
         VariableResolver variableResolver = new VariableResolver(jsExecutor, httpFile, selectedEnv);
 
         LinkedHashMap<String, String> fileGlobalVariables = variableResolver.getFileGlobalVariables();
