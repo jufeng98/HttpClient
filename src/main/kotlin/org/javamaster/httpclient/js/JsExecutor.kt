@@ -1,9 +1,11 @@
 package org.javamaster.httpclient.js
 
+import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvVariables
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
@@ -45,27 +47,57 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         scriptableObject
     }
 
+    var bodyArray: ByteArray? = null
+    var jsonStr: String? = null
     var xmlDoc: Document? = null
     var xPath: XPath? = null
 
-    fun initJsRequestBody(reqBody: Any?) {
-        val js = if (reqBody == null) {
+    fun initJsRequestObj(reqBody: Any?, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
+        val environment = gson.toJson(getEnvVariables(project))
+
+        val headers = gson.toJson(reqHeaderMap)
+
+        var js = if (reqBody == null) {
             """
             request.body = {
                 string: () => {
                     return null;
+                },
+                tryGetSubstituted: () => {
+                    return null;
                 }
-            }
+            };
         """.trimIndent()
         } else {
             """
             request.body = {
                 string: () => {
                     return `$reqBody`;
+                },
+                tryGetSubstituted: () => {
+                    return `$reqBody`;
                 }
-            }
+            };
         """.trimIndent()
         }
+
+        js += """
+            request.method = '$method';
+            request.environment = $environment;
+            request.environment.get = function(name) {
+                return this[name] !== undefined ? this[name] : null;
+            };
+            
+            request.headers = $headers;
+            request.headers.all = function() {
+                return headersAll(this);
+            };
+            request.headers.findByName = function(name) {
+                return headersFindByName(this, name);
+            };
+        """.trimIndent()
+
+
         context.evaluateString(reqScriptableObject, js, "initRequestBody.js", 1, null)
     }
 
@@ -97,7 +129,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         jsScript: HttpScriptBody?,
         resPair: Pair<SimpleTypeEnum, ByteArray>,
         statusCode: Int,
-        headers: MutableMap<String, MutableList<String>>,
+        headerMap: MutableMap<String, MutableList<String>>,
     ): String? {
         if (jsScript == null) {
             return null
@@ -105,19 +137,25 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
         GlobalLog.setTabName(tabName)
 
-        val headerJsonStr = gson.toJson(headers)
+        val headers = gson.toJson(headerMap)
 
-        val js: String
+        var js: String
         val typeEnum = resPair.first
         when (typeEnum) {
             SimpleTypeEnum.JSON -> {
                 val bytes = resPair.second
-                val jsonStr = String(bytes, StandardCharsets.UTF_8)
+                jsonStr = String(bytes, StandardCharsets.UTF_8)
+
                 js = """
+                  // noinspection JSUnresolvedReference
+                  // noinspection JSUnresolvedReference
                   var response = {
-                    status: ${statusCode},
-                    body: $jsonStr,
-                    headers: $headerJsonStr
+                    body: $jsonStr
+                  };
+                  response.body.jsonPath = {
+                    evaluate: function(expression) {
+                        return javaBridge.evaluateJsonPath(expression);
+                    }
                   };
                 """.trimIndent()
             }
@@ -132,29 +170,61 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
                 xPath = xPathFactory.newXPath()
 
                 js = """   
+                  // noinspection JSUnresolvedReference
+                  // noinspection JSUnresolvedReference
                   var response = {
-                    status: ${statusCode},
-                    body: javaBridge.getXmlDoc(),
-                    headers: $headerJsonStr
+                    body: javaBridge.getXmlDoc()
                   };
-                  response.body.xPath = {
-                    evaluate: function(xPath) {
-                        return javaBridge.evaluate(xPath);
+                  response.body.xpath = {
+                    evaluate: function(expression) {
+                        return javaBridge.evaluateXPath(expression);
                     }
-                  }
+                  };
+                """.trimIndent()
+            }
+
+            SimpleTypeEnum.TEXT -> {
+                val bytes = resPair.second
+                val bodyText = String(bytes, StandardCharsets.UTF_8)
+
+                js = """
+                  // noinspection JSUnusedLocalSymbols
+                  var response = {
+                    body: `$bodyText`
+                  };
                 """.trimIndent()
             }
 
             else -> {
+                bodyArray = resPair.second
+
                 js = """
+                  // noinspection JSUnusedLocalSymbols
+                  // noinspection JSUnresolvedReference
                   var response = {
-                    status: ${statusCode},
-                    body: {},
-                    headers: $headerJsonStr
+                    body: javaBridge.getBodyArray()
                   };
                 """.trimIndent()
             }
         }
+
+        js += """
+            response.status = ${statusCode};
+            response.headers = $headers;
+            response.headers.all = function() {
+                return headersAll(this);
+            };
+            response.headers.findByName = function(name) {
+                return headersFindByName(this, name);
+            };
+            response.headers.valueOf = function(name) {
+                return headersFindByName(this, name);
+            };
+            response.headers.valuesOf = function(name) {
+                return headersFindListByName(this, name) || [];
+            };
+            response.contentType = resolveContentType(response.headers)           
+        """.trimIndent()
 
         context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)
 
@@ -275,7 +345,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             factory
         }
 
-        private val xPathFactory by lazy {
+        val xPathFactory: XPathFactory by lazy {
             XPathFactory.newInstance()
         }
     }

@@ -3,6 +3,7 @@ package org.javamaster.httpclient.js
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.readText
+import com.jayway.jsonpath.JsonPath
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.utils.HttpUtils
 import org.mozilla.javascript.Context
@@ -45,6 +46,11 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         return document?.text ?: virtualFile.readText()
     }
 
+    @JsBridge(jsFun = "getBodyArray()")
+    fun getBodyArray(): Any {
+        return Context.javaToJS(jsExecutor.bodyArray!!, jsExecutor.reqScriptableObject)
+    }
+
     @JsBridge(jsFun = "getXmlDoc()")
     fun getXmlDoc(): Any {
         val resObj = Context.javaToJS(jsExecutor.xmlDoc!!, jsExecutor.reqScriptableObject) as NativeJavaObject
@@ -52,9 +58,25 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         return resObj
     }
 
-    @JsBridge(jsFun = "evaluate(xPath)")
-    fun evaluate(xPath: String): String? {
-        return jsExecutor.xPath!!.evaluate(xPath, jsExecutor.xmlDoc!!)
+    @JsBridge(jsFun = "evaluateXPath(expression)")
+    fun evaluateXPath(expression: String): Any? {
+        return jsExecutor.xPath!!.evaluate(expression, jsExecutor.xmlDoc!!)
+    }
+
+    @JsBridge(jsFun = "evaluateJsonPath(expression)")
+    fun evaluateJsonPath(expression: String): Any? {
+        return JsonPath.read(jsExecutor.jsonStr, expression)
+    }
+
+
+    @JsBridge(jsFun = "xpath(obj, expression)")
+    fun xpath(obj: Any, expression: String): Any? {
+        return JsExecutor.xPathFactory.newXPath().evaluate(expression, obj)
+    }
+
+    @JsBridge(jsFun = "jsonPath(obj, expression)")
+    fun jsonPath(obj: Any, expression: String): Any? {
+        return JsonPath.read(obj, expression)
     }
 
 }
