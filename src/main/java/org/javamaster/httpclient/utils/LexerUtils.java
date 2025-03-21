@@ -7,7 +7,7 @@ import org.javamaster.httpclient.psi.HttpTypes;
 
 public class LexerUtils {
 
-    public static int detectBoundaryState(CharSequence matchText) {
+    public static int detectBoundaryState(CharSequence matchText, _HttpLexer lexer) {
         int length = matchText.length();
         if (length < 3) {
             return _HttpLexer.IN_HEADER;
@@ -26,6 +26,7 @@ public class LexerUtils {
         }
 
         if (matchText.charAt(idx) == '-') {
+            lexer.yypushback(1);
             return _HttpLexer.IN_BODY;
         } else {
             return _HttpLexer.IN_HEADER;

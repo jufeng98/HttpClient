@@ -1098,7 +1098,7 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
           // fall through
           case 128: break;
           case 60:
-            { yybegin(detectBoundaryState(yytext())); return MESSAGE_BOUNDARY;
+            { yybegin(detectBoundaryState(yytext(), this)); return MESSAGE_BOUNDARY;
             }
           // fall through
           case 129: break;

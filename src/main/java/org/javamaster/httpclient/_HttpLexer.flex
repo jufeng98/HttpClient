@@ -257,7 +257,7 @@ DIRECTION_PART=[^\r\n ]+
 }
 
 <IN_MULTIPART> {
-  {MESSAGE_BOUNDARY}\s*     { yybegin(detectBoundaryState(yytext())); return MESSAGE_BOUNDARY; }
+  {MESSAGE_BOUNDARY}\s*     { yybegin(detectBoundaryState(yytext(), this)); return MESSAGE_BOUNDARY; }
 }
 
 <IN_OUTPUT_FILE> {
