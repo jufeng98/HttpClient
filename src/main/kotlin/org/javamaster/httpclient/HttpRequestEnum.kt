@@ -1,5 +1,6 @@
 package org.javamaster.httpclient
 
+import com.cool.request.utils.LinkedMultiValueMap
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT_NAME
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
@@ -23,7 +24,7 @@ enum class HttpRequestEnum {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: MutableMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -35,7 +36,12 @@ enum class HttpRequestEnum {
                 .GET()
                 .uri(URI.create(url))
 
-            reqHeaderMap.forEach(builder::setHeader)
+            reqHeaderMap.forEach {
+                val name = it.key
+                it.value.forEach { value ->
+                    builder.header(name, value)
+                }
+            }
 
             return builder.build()
         }
@@ -44,7 +50,7 @@ enum class HttpRequestEnum {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: MutableMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -55,7 +61,12 @@ enum class HttpRequestEnum {
                 .timeout(Duration.ofSeconds(readTimeout))
                 .uri(URI.create(url))
 
-            reqHeaderMap.forEach(builder::setHeader)
+            reqHeaderMap.forEach {
+                val name = it.key
+                it.value.forEach { value ->
+                    builder.header(name, value)
+                }
+            }
 
             if (bodyPublisher != null) {
                 builder.POST(bodyPublisher)
@@ -70,7 +81,7 @@ enum class HttpRequestEnum {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: MutableMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -82,7 +93,12 @@ enum class HttpRequestEnum {
                 .DELETE()
                 .uri(URI.create(url))
 
-            reqHeaderMap.forEach(builder::setHeader)
+            reqHeaderMap.forEach {
+                val name = it.key
+                it.value.forEach { value ->
+                    builder.header(name, value)
+                }
+            }
 
             return builder.build()
         }
@@ -91,7 +107,7 @@ enum class HttpRequestEnum {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: MutableMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -102,7 +118,12 @@ enum class HttpRequestEnum {
                 .timeout(Duration.ofSeconds(readTimeout))
                 .uri(URI.create(url))
 
-            reqHeaderMap.forEach(builder::setHeader)
+            reqHeaderMap.forEach {
+                val name = it.key
+                it.value.forEach { value ->
+                    builder.header(name, value)
+                }
+            }
 
             if (bodyPublisher != null) {
                 builder.PUT(bodyPublisher)
@@ -117,7 +138,7 @@ enum class HttpRequestEnum {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: MutableMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -128,7 +149,7 @@ enum class HttpRequestEnum {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: MutableMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -140,7 +161,7 @@ enum class HttpRequestEnum {
     fun execute(
         url: String,
         version: Version,
-        reqHttpHeaders: MutableMap<String, String>,
+        reqHttpHeaders: LinkedMultiValueMap<String, String>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
         tabName: String,
@@ -234,7 +255,7 @@ enum class HttpRequestEnum {
     abstract fun createRequest(
         url: String,
         version: Version,
-        reqHeaderMap: MutableMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String>,
         bodyPublisher: HttpRequest.BodyPublisher?,
         paramMap: Map<String, String>,
     ): HttpRequest

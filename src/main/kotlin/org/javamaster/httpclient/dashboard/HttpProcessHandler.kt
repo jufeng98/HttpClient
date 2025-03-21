@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.dashboard
 
+import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.application.runWriteActionAndWait
@@ -86,17 +87,19 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
 
-        jsExecutor.initJsRequestBody(reqBody)
+        val httpHeaderFields = request.header?.headerFieldList
+        var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
+
+        jsExecutor.initJsRequestObj(reqBody, methodType, reqHeaderMap)
 
         val beforeJsResList = jsExecutor.evalJsBeforeRequest(jsListBeforeReq)
 
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
 
-        val url: String = variableResolver.resolve(requestTarget.url)
+        val url = variableResolver.resolve(requestTarget.url)
 
-        val httpHeaderFields = request.header?.headerFieldList
-        val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
+        reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
         if (methodType == HttpRequestEnum.WEBSOCKET.name) {
             handleWs(url, reqHeaderMap)
@@ -111,7 +114,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
     }
 
-    private fun handleWs(url: String, reqHeaderMap: MutableMap<String, String>) {
+    private fun handleWs(url: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
         loadingRemover?.run()
 
         wsRequest = WsRequest(url, reqHeaderMap, this, paramMap)
@@ -123,7 +126,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private fun handleDubbo(
         url: String,
-        reqHeaderMap: MutableMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
@@ -170,10 +173,15 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 httpResDescList.add("### $tabName\r\n")
                 httpResDescList.add("DUBBO $url \r\n")
                 httpResDescList.add("Content-Length: ${byteArray.size}\r\n")
+
                 reqHeaderMap.forEach {
-                    httpResDescList.add(it.key + ": " + it.value + "\r\n")
+                    val name = it.key
+                    it.value.forEach { value ->
+                        httpResDescList.add("$name: $value\r\n")
+                    }
                 }
                 httpResDescList.add("\r\n")
+
                 httpResDescList.add(String(byteArray, StandardCharsets.UTF_8))
 
                 val httpInfo = HttpInfo(httpReqDescList, httpResDescList, SimpleTypeEnum.JSON, byteArray, null)
@@ -189,7 +197,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private fun handleHttp(
         url: String,
-        reqHeaderMap: MutableMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
@@ -200,49 +208,54 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         future.whenCompleteAsync { response, throwable ->
             runWriteActionAndWait {
-                if (throwable != null) {
-                    val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+                try {
+                    if (throwable != null) {
+                        val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+                        dealResponse(httpInfo, parentPath)
+                        return@runWriteActionAndWait
+                    }
+
+                    val size = response.body().size / 1024.0
+                    val consumeTimes = System.currentTimeMillis() - start
+
+                    val resHeaderList = convertToResHeaderDescList(response)
+
+                    val resPair = convertToResPair(response)
+
+                    val httpResDescList =
+                        mutableListOf("// status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: $size KB\r\n")
+
+                    val evalJsRes = jsExecutor.evalJsAfterRequest(
+                        jsAfterReq,
+                        resPair,
+                        response.statusCode(),
+                        response.headers().map()
+                    )
+
+                    if (!evalJsRes.isNullOrEmpty()) {
+                        httpResDescList.add("/*\r\n后置js执行结果:\r\n")
+                        httpResDescList.add("$evalJsRes\r\n")
+                        httpResDescList.add("*/\r\n")
+                    }
+
+                    val commentTabName = "### $tabName\r\n"
+                    httpResDescList.add(commentTabName)
+
+                    httpResDescList.add(methodType + " " + response.uri() + "\r\n")
+
+                    httpResDescList.addAll(resHeaderList)
+
+                    if (resPair.first != SimpleTypeEnum.IMAGE) {
+                        httpResDescList.add(String(resPair.second, StandardCharsets.UTF_8))
+                    }
+
+                    val httpInfo = HttpInfo(httpReqDescList, httpResDescList, resPair.first, resPair.second, null)
+
                     dealResponse(httpInfo, parentPath)
-                    return@runWriteActionAndWait
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    NotifyUtil.notifyError(project, e.message)
                 }
-
-                val size = response.body().size / 1024.0
-                val consumeTimes = System.currentTimeMillis() - start
-
-                val resHeaderList = convertToResHeaderDescList(response)
-
-                val resPair = convertToResPair(response)
-
-                val httpResDescList =
-                    mutableListOf("// status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: $size KB\r\n")
-
-                val evalJsRes = jsExecutor.evalJsAfterRequest(
-                    jsAfterReq,
-                    resPair,
-                    response.statusCode(),
-                    response.headers().map()
-                )
-
-                if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("/*\r\n后置js执行结果:\r\n")
-                    httpResDescList.add("$evalJsRes\r\n")
-                    httpResDescList.add("*/\r\n")
-                }
-
-                val commentTabName = "### $tabName\r\n"
-                httpResDescList.add(commentTabName)
-
-                httpResDescList.add(methodType + " " + response.uri() + "\r\n")
-
-                httpResDescList.addAll(resHeaderList)
-
-                if (resPair.first != SimpleTypeEnum.IMAGE) {
-                    httpResDescList.add(String(resPair.second, StandardCharsets.UTF_8))
-                }
-
-                val httpInfo = HttpInfo(httpReqDescList, httpResDescList, resPair.first, resPair.second, null)
-
-                dealResponse(httpInfo, parentPath)
             }
 
             destroyProcess()

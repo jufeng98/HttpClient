@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.utils
 
+import com.cool.request.utils.LinkedMultiValueMap
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
@@ -119,18 +120,35 @@ object HttpUtils {
     }
 
     fun convertToReqHeaderMap(
-        httpHeaderFields: List<HttpHeaderField>?,
+        headerFields: List<HttpHeaderField>?,
         variableResolver: VariableResolver,
-    ): MutableMap<String, String> {
-        val map = mutableMapOf<String, String>()
+    ): LinkedMultiValueMap<String, String> {
+        if (headerFields.isNullOrEmpty()) return LinkedMultiValueMap()
 
-        if (httpHeaderFields.isNullOrEmpty()) return map
+        val map = LinkedMultiValueMap<String, String>()
 
-        httpHeaderFields.stream()
+        headerFields.stream()
             .forEach {
                 val headerName = it.headerFieldName.text
                 val headerValue = it.headerFieldValue?.text ?: ""
-                map[headerName] = variableResolver.resolve(headerValue)
+                map.add(headerName, variableResolver.resolve(headerValue))
+            }
+
+        return map
+    }
+
+    fun resolveReqHeaderMapAgain(
+        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        variableResolver: VariableResolver,
+    ): LinkedMultiValueMap<String, String> {
+        val map = LinkedMultiValueMap<String, String>()
+
+        reqHeaderMap.entries.stream()
+            .forEach {
+                val headerName = it.key
+                val values = it.value
+
+                values.forEach { value -> map.add(headerName, variableResolver.resolve(value)) }
             }
 
         return map
@@ -319,11 +337,15 @@ object HttpUtils {
             return Pair(SimpleTypeEnum.XML, resBody)
         }
 
+        if (contentType.contains(SimpleTypeEnum.TEXT.type)) {
+            return Pair(SimpleTypeEnum.TEXT, resBody)
+        }
+
         if (SimpleTypeEnum.isImage(contentType)) {
             return Pair(SimpleTypeEnum.IMAGE, resBody)
         }
 
-        return Pair(SimpleTypeEnum.TXT, resBody)
+        return Pair(SimpleTypeEnum.STREAM, resBody)
     }
 
     fun getJsScript(httpResponseHandler: HttpResponseHandler?): HttpScriptBody? {
