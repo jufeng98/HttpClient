@@ -1,7 +1,7 @@
 // noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst,JSUnresolvedReference
 // noinspection ES6ConvertVarToLetConst
 var client = {
-    log: function (msgs) {
+    log: function (args) {
         const strList = [];
         const length = arguments.length;
         for (var i = 0; i < length; i++) {
@@ -18,11 +18,10 @@ var client = {
             return this.dataHolder[key] !== undefined ? this.dataHolder[key] : null;
         },
         clear: function (key) {
-            return delete this.dataHolder[key];
+            delete this.dataHolder[key];
         },
         clearAll: function () {
             this.dataHolder = {};
-            return true;
         },
         set: function (key, val) {
             var desc
@@ -53,11 +52,14 @@ var client = {
         if (!success) {
             throw new Error(failMsg);
         }
+    },
+    exit: function () {
+        throw new Error("Exit");
     }
 };
 
 var console = {
-    log: function (msgs) {
+    log: function (args) {
         const strList = [];
         const length = arguments.length;
         for (var i = 0; i < length; i++) {
@@ -65,6 +67,59 @@ var console = {
         }
         globalLog.log(strList.join(" "));
     },
+}
+
+function headersAll(headers) {
+    return Object.keys(headers)
+        .map(key => {
+            return {
+                name: key,
+                values: headers[key]
+            }
+        })
+}
+
+function headersFindByName(headers, name) {
+    const values = headersFindListByName(headers, name);
+    if (values === null || values.length === 0) {
+        return null;
+    }
+
+    return values[0];
+}
+
+function headersFindListByName(headers, name) {
+    if (!name) {
+        return headersAll(headers, name);
+    }
+
+    const list = headersAll(headers).filter(it => it.name.toLowerCase() === name.toLowerCase());
+    if (list.length === 0) {
+        return null;
+    }
+
+    return list[0].values;
+}
+
+function resolveContentType(headers) {
+    const value = headersFindByName(headers, 'Content-Type');
+    if (!value) {
+        return null;
+    }
+
+    const split = value.split(';')
+    return {
+        mimeType: (split[0] || '').trim(),
+        charset: (split[1] || '').trim()
+    }
+}
+
+function jsonPath(obj, expression) {
+    return javaBridge.jsonPath(obj, expression);
+}
+
+function xpath(obj, expression) {
+    return javaBridge.xpath(obj, expression);
 }
 
 function hasGlobalVariableKey(key) {
@@ -76,14 +131,19 @@ function getGlobalVariable(key) {
 }
 
 function URLSearchParams(queryParams) {
-    if (queryParams === null || queryParams === undefined || queryParams === '') {
-        this.params = {};
-        return;
-    }
-
     this.params = parseQueryParams(queryParams);
 
+    Object.defineProperty(this, 'size', {
+        get() {
+            return Object.keys(this.params).length;
+        }
+    });
+
     function parseQueryParams(queryParams) {
+        if (queryParams === null || queryParams === undefined || queryParams === '') {
+            return {};
+        }
+
         return queryParams.split('&')
             .reduce((params, pair) => {
                 const [key, value] = pair.split('=');

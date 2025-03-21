@@ -6,6 +6,15 @@ var request = {
         get: function (key) {
             return this.dataHolder[key] !== undefined ? this.dataHolder[key] : null;
         },
+        isEmpty: function () {
+            return Object.keys(this.dataHolder).length === 0;
+        },
+        clear: function (key) {
+            delete this.dataHolder[key];
+        },
+        clearAll: function () {
+            this.dataHolder = {};
+        },
         set: function (key, val) {
             var desc
             if (val !== null) {
