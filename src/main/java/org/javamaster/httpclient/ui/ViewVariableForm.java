@@ -89,9 +89,12 @@ public class ViewVariableForm extends DialogWrapper {
         FileEditor selectedEditor = FileEditorManager.getInstance(project).getSelectedEditor();
         //noinspection DataFlowIssue
         VirtualFile virtualFile = selectedEditor.getFile();
+
         PsiFile httpFile = PsiUtil.getPsiFile(project, virtualFile);
+
         String selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project);
-        String httpFileParentPath = HttpEditorTopForm.getHttpFileParentPath();
+
+        String httpFileParentPath = virtualFile.getParent().getPath();
 
         List<Pair<String, Map<String, String>>> resList = Lists.newArrayList();
 
@@ -133,7 +136,7 @@ public class ViewVariableForm extends DialogWrapper {
     }
 
     private Object[][] createRowData(List<Pair<String, Map<String, String>>> resList, int rows) {
-        String repeat = "-".repeat(80);
+        String repeat = "-" .repeat(80);
         Object[][] rowData = new Object[rows][2];
         int i = 0;
         for (Pair<String, Map<String, String>> pair : resList) {
