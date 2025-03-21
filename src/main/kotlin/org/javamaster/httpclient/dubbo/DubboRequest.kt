@@ -4,6 +4,7 @@ import com.alibaba.dubbo.config.ApplicationConfig
 import com.alibaba.dubbo.config.ReferenceConfig
 import com.alibaba.dubbo.config.RegistryConfig
 import com.alibaba.dubbo.rpc.service.GenericService
+import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
@@ -18,18 +19,33 @@ import java.util.concurrent.CompletableFuture
 class DubboRequest(
     private val tabName: String,
     private val url: String,
-    private val reqHeaderMap: MutableMap<String, String>,
+    private val reqHeaderMap: LinkedMultiValueMap<String, String>,
     private val reqBodyStr: Any?,
     private val httpReqDescList: MutableList<String>,
     module: Module,
     private val paramMap: Map<String, String>,
 ) {
-    private val methodName: String = reqHeaderMap[DubboUtils.METHOD_KEY]!!
-    private val interfaceCls: String? = reqHeaderMap[DubboUtils.INTERFACE_KEY]
-    private val interfaceName: String? = reqHeaderMap["Interface-Name"]
-    private val version = reqHeaderMap["Version"]
-    private val registry = reqHeaderMap["Registry"]
-    private val reqMap: LinkedHashMap<*, *>? = if (reqBodyStr != null) {
+    private val methodName: String by lazy {
+        val values = reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException("缺少 Method 请求头!")
+        values[0]
+    }
+    private val interfaceCls: String? by lazy {
+        val values = reqHeaderMap[DubboUtils.INTERFACE_KEY] ?: return@lazy null
+        values[0]
+    }
+    private val interfaceName: String? by lazy {
+        val values = reqHeaderMap[DubboUtils.INTERFACE_NAME] ?: return@lazy null
+        values[0]
+    }
+    private val version by lazy {
+        val values = reqHeaderMap["Version"] ?: return@lazy null
+        values[0]
+    }
+    private val registry by lazy {
+        val values = reqHeaderMap["Registry"] ?: return@lazy null
+        values[0]
+    }
+    private val reqBodyMap: LinkedHashMap<*, *>? = if (reqBodyStr != null) {
         HttpUtils.gson.fromJson(reqBodyStr as String, LinkedHashMap::class.java)
     } else {
         null
@@ -41,11 +57,11 @@ class DubboRequest(
 
     init {
         if (interfaceCls != null) {
-            targetInterfaceName = interfaceCls
-            val psiClass = DubboUtils.findInterface(module, interfaceCls)
+            targetInterfaceName = interfaceCls!!
+            val psiClass = DubboUtils.findInterface(module, interfaceCls!!)
                 ?: throw IllegalArgumentException("无法解析接口:${interfaceCls}!")
 
-            val targetMethod = findTargetMethod(psiClass, reqMap)
+            val targetMethod = findTargetMethod(psiClass, reqBodyMap)
 
             paramTypeNameArray = targetMethod.parameterList.parameters
                 .map {
@@ -57,28 +73,28 @@ class DubboRequest(
             paramValueArray = targetMethod.parameterList.parameters
                 .map {
                     val name = it.name
-                    reqMap!![name]
+                    reqBodyMap!![name]
                 }
                 .toTypedArray()
         } else {
             if (interfaceName == null) {
-                throw IllegalArgumentException(DubboUtils.INTERFACE_KEY + " 和 Interface-Name 不能都为空")
+                throw IllegalArgumentException("请求头 ${DubboUtils.INTERFACE_KEY} 和 ${DubboUtils.INTERFACE_NAME} 不能同时为空!")
             }
 
-            targetInterfaceName = interfaceName
-            if (reqMap == null) {
+            targetInterfaceName = interfaceName!!
+            if (reqBodyMap == null) {
                 paramTypeNameArray = arrayOf()
                 paramValueArray = arrayOf()
             } else {
-                val paramNames = reqMap.entries
+                val paramNames = reqBodyMap.entries
 
                 val tmpTypeList = mutableListOf<String>()
                 val tmpValueList = mutableListOf<Any>()
 
                 for (entry in paramNames) {
-                    val headerName = "${entry.key}-Type"
-                    val argType = reqHeaderMap[headerName] ?: throw IllegalArgumentException("缺少${headerName}请求头")
-                    tmpTypeList.add(argType)
+                    val headerName = "${entry.key}"
+                    val argTypes = reqHeaderMap[headerName] ?: throw IllegalArgumentException("缺少${headerName}请求头")
+                    tmpTypeList.add(argTypes[0])
                     tmpValueList.add(entry.value)
                 }
 
@@ -114,11 +130,16 @@ class DubboRequest(
         val commentTabName = "### $tabName\r\n"
         httpReqDescList.add(commentTabName)
         httpReqDescList.add("DUBBO $url\r\n")
+
         reqHeaderMap.forEach {
-            httpReqDescList.add(it.key + ": " + it.value + "\r\n")
+            val name = it.key
+            it.value.forEach { value ->
+                httpReqDescList.add("$name: $value\r\n")
+            }
         }
+
         httpReqDescList.add("\r\n")
-        if (reqMap != null) {
+        if (reqBodyMap != null) {
             httpReqDescList.add(reqBodyStr as String)
         }
 

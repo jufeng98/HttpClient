@@ -23,6 +23,7 @@ import java.io.File
 
 object DubboUtils {
     const val INTERFACE_KEY = "Interface"
+    const val INTERFACE_NAME = "Interface-Name"
     const val METHOD_KEY = "Method"
 
     fun findInterface(module: Module, name: String): PsiClass? {
