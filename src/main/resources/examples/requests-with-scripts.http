@@ -54,6 +54,12 @@ GET https://miao.baidu.com/abdr
     client.test("Request executed successfully", () => {
         client.assert(response.status === 200, "Response status is not 200");
         client.log('content-type:' + response.headers['content-type'])
+
+        const res = response.body.jsonPath.evaluate("$.code");
+        console.log(res);
+
+        const result = jsonPath(response.body, "$.code");
+        console.log(result);
     })
 %}
 
@@ -71,8 +77,8 @@ GET https://miao.baidu.com/abdr
 
 > {%
     client.test("Content-Type is application/json", () => {
-        const contentType = response.headers["content-type"];
-        client.assert(contentType === "application/json", `Expected Content-Type is application/json, but actual is  ${contentType}`);
+        const mimeType = response.headers.contentType.mimeType;
+        client.assert(mimeType === "application/json", `Expected Content-Type is application/json, but actual is  ${mimeType}`);
     })
 %}
 
@@ -83,6 +89,9 @@ GET https://examples.http-client.intellij.net/xml
     const slide = response.body.getElementsByTagName("slide").item(0).textContent
     client.log("textContent:", slide)
 
-    const title = response.body.xPath.evaluate("/slideshow/slide/title")
+    const title = response.body.xpath.evaluate("/slideshow/slide/title")
     console.log("xPath title:", title)
+
+    const result = xpath(response.body, "/slideshow/slide/title")
+    console.log("xPath result:", result)
 %}
