@@ -4,7 +4,7 @@ import com.intellij.json.psi.*
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -193,19 +193,15 @@ class EnvFileService(val project: Project) {
             project: Project,
             selectedEnv: String?,
             httpFileParentPath: String,
+            module: Module,
         ): MutableMap<String, String>? {
             if (selectedEnv == null) return null
-
-            val selectedEditor = FileEditorManager.getInstance(project).selectedEditor ?: return null
 
             val projectScope = GlobalSearchScope.projectScope(project)
             val map = collectEnvMapFromIndex(selectedEnv, httpFileParentPath, projectScope)
 
-            val module = ModuleUtilCore.findModuleForFile(selectedEditor.file, project)
-            if (module != null) {
-                val moduleScope = GlobalSearchScope.moduleScope(module)
-                map.putAll(collectEnvMapFromIndex(selectedEnv, httpFileParentPath, moduleScope))
-            }
+            val moduleScope = GlobalSearchScope.moduleScope(module)
+            map.putAll(collectEnvMapFromIndex(selectedEnv, httpFileParentPath, moduleScope))
 
             if (map.isEmpty()) {
                 return null
@@ -240,13 +236,14 @@ class EnvFileService(val project: Project) {
         }
 
         fun getEnvVariables(project: Project, tryIndex: Boolean = true): MutableMap<String, String> {
-            val pair = HttpEditorTopForm.getPair(project) ?: return mutableMapOf()
+            val triple = HttpEditorTopForm.getTriple(project) ?: return mutableMapOf()
 
-            val selectedEnv = pair.first
-            val httpFileParentPath = pair.second.parent.path
+            val selectedEnv = triple.first
+            val httpFileParentPath = triple.second.parent.path
+            val module = triple.third
 
             if (tryIndex) {
-                val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv, httpFileParentPath)
+                val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv, httpFileParentPath, module)
                 if (mapFromIndex != null) {
                     return mapFromIndex
                 }

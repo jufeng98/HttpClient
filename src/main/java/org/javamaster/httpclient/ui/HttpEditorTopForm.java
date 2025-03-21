@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import kotlin.Pair;
+import kotlin.Triple;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.utils.NotifyUtil;
 import org.jetbrains.annotations.NotNull;
@@ -28,14 +28,16 @@ import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME
 public class HttpEditorTopForm extends JComponent {
     public static final Key<HttpEditorTopForm> KEY = Key.create("httpRequest.httpEditorTopForm");
     private final VirtualFile file;
+    private final Module module;
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
     private JComboBox<String> exampleComboBox;
     private JButton showVariableBtn;
     private Project project;
 
-    public HttpEditorTopForm(VirtualFile file) {
+    public HttpEditorTopForm(VirtualFile file, Module module) {
         this.file = file;
+        this.module = module;
 
         exampleComboBox.addActionListener(e -> {
             ClassLoader classLoader = getClass().getClassLoader();
@@ -103,7 +105,7 @@ public class HttpEditorTopForm extends JComponent {
                     continue;
                 }
 
-                httpEditorTopForm.initEnvCombo(module, envFile.getParent().getPath());
+                httpEditorTopForm.initEnvCombo();
 
             }
         } catch (Exception e) {
@@ -112,34 +114,32 @@ public class HttpEditorTopForm extends JComponent {
         }
     }
 
-    public static @Nullable String getCurrentEditorSelectedEnv(Project project) {
-        FileEditorManager editorManager = FileEditorManager.getInstance(project);
-        FileEditor selectedEditor = editorManager.getSelectedEditor();
-        if (selectedEditor == null) {
-            return null;
-        }
-
-        HttpEditorTopForm httpEditorTopForm = selectedEditor.getUserData(HttpEditorTopForm.KEY);
+    public static @Nullable String getSelectedEnv(Project project) {
+        HttpEditorTopForm httpEditorTopForm = getSelectedEditorTopForm(project);
         if (httpEditorTopForm == null) {
             return null;
         }
 
-        return httpEditorTopForm.getCurrentEditorSelectedEnv();
+        return httpEditorTopForm.getSelectedEnv();
     }
 
-    public static @Nullable Pair<String, VirtualFile> getPair(Project project) {
+    public static @Nullable Triple<String, VirtualFile, Module> getTriple(Project project) {
+        HttpEditorTopForm topForm = getSelectedEditorTopForm(project);
+        if (topForm == null) {
+            return null;
+        }
+
+        return new Triple<>(topForm.getSelectedEnv(), topForm.file, topForm.module);
+    }
+
+    private static @Nullable HttpEditorTopForm getSelectedEditorTopForm(Project project) {
         FileEditorManager editorManager = FileEditorManager.getInstance(project);
         FileEditor selectedEditor = editorManager.getSelectedEditor();
         if (selectedEditor == null) {
             return null;
         }
 
-        HttpEditorTopForm httpEditorTopForm = selectedEditor.getUserData(HttpEditorTopForm.KEY);
-        if (httpEditorTopForm == null) {
-            return null;
-        }
-
-        return new Pair<>(httpEditorTopForm.getCurrentEditorSelectedEnv(), httpEditorTopForm.file);
+        return selectedEditor.getUserData(HttpEditorTopForm.KEY);
     }
 
     public static void setCurrentEditorSelectedEnv(String httpFilePath, Project project, String env) {
@@ -162,18 +162,18 @@ public class HttpEditorTopForm extends JComponent {
         httpEditorTopForm.setSelectEnv(env);
     }
 
-    public void initEnvCombo(Module module, String httpFileParentPath) {
+    public void initEnvCombo() {
         project = module.getProject();
 
         EnvFileService envFileService = EnvFileService.Companion.getService(project);
-        Set<String> presetEnvSet = envFileService.getPresetEnvList(httpFileParentPath);
+        Set<String> presetEnvSet = envFileService.getPresetEnvList(file.getParent().getPath());
 
         presetEnvSet.forEach(it -> envComboBox.addItem(it));
 
         setSelectEnv("uat");
     }
 
-    public String getCurrentEditorSelectedEnv() {
+    public String getSelectedEnv() {
         return (String) envComboBox.getSelectedItem();
     }
 

@@ -465,7 +465,7 @@ object HttpUtils {
             bracketIdx + 2
         } else {
             val envFileService = EnvFileService.getService(project)
-            val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
+            val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
             val contextPath = envFileService.getEnvValue("contextPath", selectedEnv, httpFileParentPath)
 
             val tmpIdx: Int

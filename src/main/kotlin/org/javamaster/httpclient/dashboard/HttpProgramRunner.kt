@@ -66,7 +66,7 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
 
         val httpExecutor = ExecutorRegistry.getInstance().getExecutorById(HTTP_EXECUTOR_ID)!!
 
-        val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(httpMethod.project)
+        val selectedEnv = HttpEditorTopForm.getSelectedEnv(httpMethod.project)
 
         val runnerAndConfigurationSettings = HttpUtils.saveConfiguration(tabName, project, selectedEnv, httpMethod)
 

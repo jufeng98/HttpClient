@@ -92,7 +92,7 @@ public class ViewVariableForm extends DialogWrapper {
 
         PsiFile httpFile = PsiUtil.getPsiFile(project, virtualFile);
 
-        String selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project);
+        String selectedEnv = HttpEditorTopForm.getSelectedEnv(project);
 
         List<Pair<String, Map<String, String>>> resList = Lists.newArrayList();
 

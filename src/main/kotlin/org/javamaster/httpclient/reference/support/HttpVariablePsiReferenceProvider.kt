@@ -136,7 +136,7 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
                 }
             }
 
-            val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
+            val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
 
             val jsonLiteral = EnvFileService.getEnvEle(variableName, selectedEnv, httpFileParentPath, project)
 
