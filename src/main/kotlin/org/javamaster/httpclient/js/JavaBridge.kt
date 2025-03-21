@@ -11,6 +11,10 @@ import org.mozilla.javascript.NativeJavaObject
 import org.mozilla.javascript.ScriptableObject
 import java.io.File
 import java.io.FileNotFoundException
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+import java.util.*
 
 
 @Suppress("unused")
@@ -79,4 +83,31 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         return JsonPath.read(obj, expression)
     }
 
+    @JsBridge(jsFun = "btoa(bytes)")
+    fun btoa(bytes: String): String {
+        return Base64.getEncoder().encodeToString(bytes.toByteArray())
+    }
+
+    @JsBridge(jsFun = "atob(str)")
+    fun atob(str: String): String {
+        return String(Base64.getDecoder().decode(str), StandardCharsets.UTF_8)
+    }
+
+    fun base64ToFile(base64: String, path: String): Boolean {
+        try {
+            val filePath = HttpUtils.constructFilePath(path, jsExecutor.parentPath)
+            val file = File(filePath)
+            if (file.exists()) {
+                file.delete()
+            }
+
+            val bytes = Base64.getDecoder().decode(base64)
+            Files.write(file.toPath(), bytes, StandardOpenOption.CREATE)
+            GlobalLog.log("完成转换base64并保存到文件:${file.normalize()}")
+            return true
+        } catch (e: Exception) {
+            GlobalLog.log("base64ToFile处理失败:$e")
+            return false
+        }
+    }
 }

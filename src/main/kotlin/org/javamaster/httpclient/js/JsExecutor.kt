@@ -97,7 +97,6 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             };
         """.trimIndent()
 
-
         context.evaluateString(reqScriptableObject, js, "initRequestBody.js", 1, null)
     }
 
