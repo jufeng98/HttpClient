@@ -198,7 +198,6 @@ class EnvFileService(val project: Project) {
 
             val selectedEditor = FileEditorManager.getInstance(project).selectedEditor ?: return null
 
-            // TODO 会把所有环境文件都收集起来了,不太正确
             val projectScope = GlobalSearchScope.projectScope(project)
             val map = collectEnvMapFromIndex(selectedEnv, httpFileParentPath, projectScope)
 
@@ -240,16 +239,17 @@ class EnvFileService(val project: Project) {
             return map
         }
 
-        fun getEnvVariables(project: Project): MutableMap<String, String> {
-            val selectedEnv = HttpEditorTopForm.getCurrentEditorSelectedEnv(project)
+        fun getEnvVariables(project: Project, tryIndex: Boolean = true): MutableMap<String, String> {
+            val pair = HttpEditorTopForm.getPair(project) ?: return mutableMapOf()
 
-            val file = HttpEditorTopForm.getAssociatedFile(project) ?: return mutableMapOf()
+            val selectedEnv = pair.first
+            val httpFileParentPath = pair.second.parent.path
 
-            val httpFileParentPath = file.parent.path
-
-            val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv, httpFileParentPath)
-            if (mapFromIndex != null) {
-                return mapFromIndex
+            if (tryIndex) {
+                val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv, httpFileParentPath)
+                if (mapFromIndex != null) {
+                    return mapFromIndex
+                }
             }
 
             val map = linkedMapOf<String, String>()

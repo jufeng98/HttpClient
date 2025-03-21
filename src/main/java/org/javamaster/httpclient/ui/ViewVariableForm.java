@@ -105,7 +105,7 @@ public class ViewVariableForm extends DialogWrapper {
         Map<String, String> variableMap = variableResolver.getJsGlobalVariables();
         resList.add(new Pair<>("js全局变量(优先级次之)", variableMap));
 
-        Map<String, String> envMap = EnvFileService.Companion.getEnvVariables(project);
+        Map<String, String> envMap = EnvFileService.Companion.getEnvVariables(project, false);
         resList.add(new Pair<>("环境文件变量(优先级较低)", envMap));
 
         Map<String, String> propMap = Maps.newLinkedHashMap();

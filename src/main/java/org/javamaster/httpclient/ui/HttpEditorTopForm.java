@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import kotlin.Pair;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.utils.NotifyUtil;
 import org.jetbrains.annotations.NotNull;
@@ -126,7 +127,7 @@ public class HttpEditorTopForm extends JComponent {
         return httpEditorTopForm.getCurrentEditorSelectedEnv();
     }
 
-    public static @Nullable VirtualFile getAssociatedFile(Project project) {
+    public static @Nullable Pair<String, VirtualFile> getPair(Project project) {
         FileEditorManager editorManager = FileEditorManager.getInstance(project);
         FileEditor selectedEditor = editorManager.getSelectedEditor();
         if (selectedEditor == null) {
@@ -138,7 +139,7 @@ public class HttpEditorTopForm extends JComponent {
             return null;
         }
 
-        return httpEditorTopForm.file;
+        return new Pair<>(httpEditorTopForm.getCurrentEditorSelectedEnv(), httpEditorTopForm.file);
     }
 
     public static void setCurrentEditorSelectedEnv(String httpFilePath, Project project, String env) {
