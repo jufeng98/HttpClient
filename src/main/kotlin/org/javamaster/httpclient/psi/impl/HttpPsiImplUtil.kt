@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.psi.impl
 
+import com.google.common.net.HttpHeaders
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
@@ -54,7 +55,7 @@ object HttpPsiImplUtil {
     fun getContentTypeField(header: HttpHeader): HttpHeaderField? {
         return header.headerFieldList
             .firstOrNull {
-                it.headerFieldName.text.lowercase() == "content-type"
+                it.headerFieldName.text.equals(HttpHeaders.CONTENT_TYPE, ignoreCase = true)
             }
     }
 
@@ -62,7 +63,7 @@ object HttpPsiImplUtil {
     fun getContentTypeBoundary(request: HttpRequest): String? {
         val first = request.header?.headerFieldList
             ?.firstOrNull {
-                it.headerFieldName.text.lowercase() == "content-type"
+                it.headerFieldName.text.equals(HttpHeaders.CONTENT_TYPE, ignoreCase = true)
             }
 
         if (first == null) {
@@ -78,7 +79,7 @@ object HttpPsiImplUtil {
     fun getContentLength(request: HttpRequest): Int? {
         val first = request.header?.headerFieldList
             ?.firstOrNull {
-                it.headerFieldName.text.lowercase() == "content-length"
+                it.headerFieldName.text.equals(HttpHeaders.CONTENT_LENGTH, ignoreCase = true)
             }
 
         if (first == null) {
@@ -105,7 +106,7 @@ object HttpPsiImplUtil {
     fun getContentType(headerFieldList: List<HttpHeaderField>?): ContentType? {
         val first = headerFieldList
             ?.firstOrNull {
-                it.headerFieldName.text.lowercase() == "content-type"
+                it.headerFieldName.text.equals(HttpHeaders.CONTENT_TYPE, ignoreCase = true)
             }
 
         if (first == null) {
@@ -150,7 +151,7 @@ object HttpPsiImplUtil {
     @JvmStatic
     fun getMultipartFieldDescription(part: HttpMultipartField): HttpHeaderFieldValue? {
         val description = part.header.headerFieldList
-            .firstOrNull { it.headerFieldName.text == "Content-Disposition" }
+            .firstOrNull { it.headerFieldName.text.equals(HttpHeaders.CONTENT_DISPOSITION, ignoreCase = true) }
         return description?.headerFieldValue
     }
 
