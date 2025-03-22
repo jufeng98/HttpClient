@@ -20,6 +20,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
+import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.parser.HttpFile
@@ -167,7 +168,7 @@ object HttpUtils {
         val httpMultipartMessage = body?.multipartMessage
         if (httpMultipartMessage != null) {
             val boundary =
-                request.contentTypeBoundary ?: throw IllegalArgumentException("Content-Type 请求头缺少 boundary!")
+                request.contentTypeBoundary ?: throw IllegalArgumentException("$CONTENT_TYPE 请求头缺少 boundary!")
             return constructMultipartBody(boundary, httpMultipartMessage, variableResolver)
         }
 
@@ -323,7 +324,7 @@ object HttpUtils {
     fun convertToResPair(response: HttpResponse<ByteArray>): Pair<SimpleTypeEnum, ByteArray> {
         val resBody = response.body()
         val resHeaders = response.headers()
-        val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { "text/plain" }
+        val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { ContentType.TEXT_PLAIN.mimeType }
 
         if (contentType.contains(SimpleTypeEnum.JSON.type)) {
             val jsonStr = String(resBody, StandardCharsets.UTF_8)
@@ -348,7 +349,7 @@ object HttpUtils {
             return Pair(SimpleTypeEnum.TEXT, resBody)
         }
 
-        if (SimpleTypeEnum.isImage(contentType)) {
+        if (contentType.contains(SimpleTypeEnum.IMAGE.type)) {
             return Pair(SimpleTypeEnum.IMAGE, resBody)
         }
 

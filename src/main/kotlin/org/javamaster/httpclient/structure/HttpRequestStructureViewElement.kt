@@ -28,8 +28,7 @@ import javax.swing.Icon
 class HttpRequestStructureViewElement private constructor(
     element: PsiElement, private val myPresentationText: String, private val myLocation: String?,
     private val myIcon: Icon?, private val myIsValid: Boolean,
-) : PsiTreeElementBase<PsiElement?>(element),
-    ColoredItemPresentation {
+) : PsiTreeElementBase<PsiElement?>(element), ColoredItemPresentation {
     override fun getChildrenBase(): Collection<StructureViewTreeElement> {
         val element = element
         if (element is HttpFile) {
@@ -70,7 +69,7 @@ class HttpRequestStructureViewElement private constructor(
     }
 
     override fun getLocationString(): String? {
-        return this.myLocation
+        return myLocation
     }
 
     override fun isSearchInLocationString(): Boolean {
@@ -78,15 +77,15 @@ class HttpRequestStructureViewElement private constructor(
     }
 
     override fun getTextAttributesKey(): TextAttributesKey? {
-        return if (this.myIsValid) null else CodeInsightColors.ERRORS_ATTRIBUTES
+        return if (myIsValid) null else CodeInsightColors.ERRORS_ATTRIBUTES
     }
 
     override fun getPresentableText(): String {
-        return this.myPresentationText
+        return myPresentationText
     }
 
     override fun getIcon(open: Boolean): Icon? {
-        return this.myIcon ?: super.getIcon(open)
+        return myIcon ?: super.getIcon(open)
     }
 
     companion object {
@@ -100,8 +99,8 @@ class HttpRequestStructureViewElement private constructor(
             location: String?, icon: Icon?,
         ): StructureViewTreeElement {
             return HttpRequestStructureViewElement(
-                element, StringUtil.notNullize(text, "<not defined>"), location, icon,
-                StringUtil.isNotEmpty(text)
+                element, StringUtil.notNullize(text, "<not defined>"),
+                location, icon, StringUtil.isNotEmpty(text)
             )
         }
 

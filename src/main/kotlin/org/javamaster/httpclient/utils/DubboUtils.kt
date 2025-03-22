@@ -41,7 +41,7 @@ object DubboUtils {
         val httpRequest = PsiTreeUtil.getParentOfType(httpMessageBody, HttpRequest::class.java)
 
         val headerField = httpRequest?.header?.headerFieldList
-            ?.firstOrNull { it.headerFieldName.text == INTERFACE_KEY }
+            ?.firstOrNull { it.headerFieldName.text.equals(INTERFACE_KEY, ignoreCase = true) }
             ?: return null
 
         val module = getOriginalModule(httpRequest) ?: return null
@@ -49,7 +49,7 @@ object DubboUtils {
         val psiClass = findInterface(module, name) ?: return null
 
         val headerFieldMethod = httpRequest.header?.headerFieldList
-            ?.firstOrNull { it.headerFieldName.text == METHOD_KEY }
+            ?.firstOrNull { it.headerFieldName.text.equals(METHOD_KEY, ignoreCase = true) }
             ?: return null
 
         val value = headerFieldMethod.headerFieldValue?.text ?: return null

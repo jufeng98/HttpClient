@@ -13,12 +13,10 @@ public interface HttpHeaderField extends PsiElement {
   @Nullable
   HttpHeaderFieldValue getHeaderFieldValue();
 
-  //WARNING: getName(...) is skipped
-  //matching getName(HttpHeaderField, ...)
-  //methods are not found in HttpPsiImplUtil
+  @NotNull
+  String getName();
 
-  //WARNING: getValue(...) is skipped
-  //matching getValue(HttpHeaderField, ...)
-  //methods are not found in HttpPsiImplUtil
+  @Nullable
+  String getValue();
 
 }

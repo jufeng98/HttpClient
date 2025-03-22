@@ -20,7 +20,7 @@ class HttpHeaderPsiReferenceProvider : PsiReferenceProvider() {
 
             override fun resolve(): PsiElement? {
                 val headerField = fieldValue.parent as HttpHeaderField
-                val fieldName = headerField.headerFieldName.text
+                val fieldName = headerField.name
 
                 if (fieldName == DubboUtils.INTERFACE_KEY) {
                     return resolveInterface(fieldValue)
@@ -45,14 +45,8 @@ class HttpHeaderPsiReferenceProvider : PsiReferenceProvider() {
 
             private fun resolveMethod(headerField: HttpHeaderField): PsiMethod? {
                 val httpRequest = PsiTreeUtil.getParentOfType(headerField, HttpRequest::class.java)!!
-                val field = httpRequest.header?.headerFieldList
-                    ?.firstOrNull {
-                        it.headerFieldName.text == DubboUtils.INTERFACE_KEY
-                    }
 
-                if (field == null) {
-                    return null
-                }
+                val field = httpRequest.header?.interfaceField ?: return null
 
                 val psiClass = resolveInterface(field.headerFieldValue) ?: return null
 

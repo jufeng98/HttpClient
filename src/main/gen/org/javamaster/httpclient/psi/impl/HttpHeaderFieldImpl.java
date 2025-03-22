@@ -39,4 +39,16 @@ public class HttpHeaderFieldImpl extends ASTWrapperPsiElement implements HttpHea
     return findChildByClass(HttpHeaderFieldValue.class);
   }
 
+  @Override
+  @NotNull
+  public String getName() {
+    return HttpPsiImplUtil.getName(this);
+  }
+
+  @Override
+  @Nullable
+  public String getValue() {
+    return HttpPsiImplUtil.getValue(this);
+  }
+
 }

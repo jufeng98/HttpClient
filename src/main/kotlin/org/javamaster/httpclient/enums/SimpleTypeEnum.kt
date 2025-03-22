@@ -8,13 +8,7 @@ enum class SimpleTypeEnum(val type: String) {
     TXT("txt"),
     TEXT("text"),
 
-    STREAM(""),
-    IMAGE(""),
+    STREAM("stream"),
+    IMAGE("image"),
     ;
-
-    companion object {
-        fun isImage(contentType: String): Boolean {
-            return contentType.contains("jpg") || contentType.contains("jpeg") || contentType.contains("png")
-        }
-    }
 }

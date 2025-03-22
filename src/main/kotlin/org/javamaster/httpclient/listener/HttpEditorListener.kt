@@ -38,7 +38,7 @@ class HttpEditorListener : FileEditorManagerListener {
             val application = ApplicationManager.getApplication()
             application.invokeLater({
                 application.runWriteAction {
-                    fileTypeManagerEx.associateExtension(jsonFileType, JsonFileType.DEFAULT_EXTENSION)
+                    fileTypeManagerEx.associateExtension(jsonFileType, jsonFileType.defaultExtension)
 
                     initTopForm(source, file, module, fileEditor)
                 }

@@ -32,8 +32,7 @@ class HttpRunConfiguration(
 
 
     override fun checkConfiguration() {
-        getTargetHttpMethod(httpFilePath, this.name, project)
-            ?: throw RuntimeConfigurationError("Tip:无法找到对应请求!")
+        getTargetHttpMethod(httpFilePath, name, project) ?: throw RuntimeConfigurationError("Tip:无法找到对应请求!")
     }
 
     override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {

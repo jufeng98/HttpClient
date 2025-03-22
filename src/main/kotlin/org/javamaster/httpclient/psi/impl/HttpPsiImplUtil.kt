@@ -43,6 +43,16 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
+    fun getName(headerField: HttpHeaderField): String {
+        return headerField.headerFieldName.text
+    }
+
+    @JvmStatic
+    fun getValue(headerField: HttpHeaderField): String? {
+        return headerField.headerFieldValue?.text
+    }
+
+    @JvmStatic
     fun getUrl(httpRequestTarget: HttpRequestTarget): String {
         return httpRequestTarget.text
     }
