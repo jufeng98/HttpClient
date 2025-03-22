@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.ws
 
-import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runWriteActionAndWait
@@ -9,6 +8,7 @@ import com.intellij.openapi.util.Disposer.newDisposable
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.dashboard.HttpProcessHandler
 import org.javamaster.httpclient.utils.HttpUtils
+import org.springframework.util.LinkedMultiValueMap
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket

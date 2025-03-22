@@ -4,7 +4,6 @@ import com.alibaba.dubbo.config.ApplicationConfig
 import com.alibaba.dubbo.config.ReferenceConfig
 import com.alibaba.dubbo.config.RegistryConfig
 import com.alibaba.dubbo.rpc.service.GenericService
-import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
@@ -12,6 +11,7 @@ import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.TIMEOUT_NAME
 import org.javamaster.httpclient.utils.PsiUtils
+import org.springframework.util.LinkedMultiValueMap
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 

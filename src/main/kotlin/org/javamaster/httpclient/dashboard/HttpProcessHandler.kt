@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.dashboard
 
-import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.application.runWriteActionAndWait
@@ -25,6 +24,7 @@ import org.javamaster.httpclient.utils.HttpUtils.convertToResPair
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.ws.WsRequest
+import org.springframework.util.LinkedMultiValueMap
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.OutputStream

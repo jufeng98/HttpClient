@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.js
 
-import com.cool.request.utils.LinkedMultiValueMap
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
@@ -12,6 +11,7 @@ import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
 import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.mozilla.javascript.*
+import org.springframework.util.LinkedMultiValueMap
 import org.w3c.dom.Document
 import org.xml.sax.InputSource
 import java.io.FileNotFoundException
