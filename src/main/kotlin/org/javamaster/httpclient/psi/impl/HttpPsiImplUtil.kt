@@ -8,6 +8,7 @@ import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.tree.IElementType
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.utils.DubboUtils
 import java.net.http.HttpClient.Version
 
 /**
@@ -56,6 +57,14 @@ object HttpPsiImplUtil {
         return header.headerFieldList
             .firstOrNull {
                 it.headerFieldName.text.equals(HttpHeaders.CONTENT_TYPE, ignoreCase = true)
+            }
+    }
+
+    @JvmStatic
+    fun getInterfaceField(header: HttpHeader): HttpHeaderField? {
+        return header.headerFieldList
+            .firstOrNull {
+                it.headerFieldName.text.equals(DubboUtils.INTERFACE_KEY, ignoreCase = true)
             }
     }
 

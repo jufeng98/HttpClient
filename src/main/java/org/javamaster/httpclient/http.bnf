@@ -121,6 +121,7 @@ version ::= HTTP_VERSION {
 header ::= headerField+ {
     methods = [
         getContentTypeField
+        getInterfaceField
     ]
 }
 headerField ::= headerFieldName COLON headerFieldValue? {
