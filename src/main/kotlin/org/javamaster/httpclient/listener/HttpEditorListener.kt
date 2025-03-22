@@ -20,19 +20,6 @@ import org.javamaster.httpclient.utils.NotifyUtil
  * @author yudong
  */
 class HttpEditorListener : FileEditorManagerListener {
-    private val state by lazy {
-        // 兼容下旧版
-        val cls = ModalityState::class.java
-        try {
-            val method = cls.getDeclaredMethod("nonModal")
-            method.isAccessible = true
-            method.invoke(null) as ModalityState
-        } catch (e: Exception) {
-            val field = cls.getDeclaredField("NON_MODAL")
-            field.isAccessible = true
-            field.get(null) as ModalityState
-        }
-    }
 
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         if (file.fileType !is HttpFileType) {
@@ -45,21 +32,20 @@ class HttpEditorListener : FileEditorManagerListener {
         val module = ModuleUtil.findModuleForFile(file, project) ?: return
 
         val fileTypeManagerEx = FileTypeManagerEx.getInstanceEx()
-        val extension = fileTypeManagerEx.getFileTypeByExtension(file.extension!!)
-        if (extension !== JsonFileType.INSTANCE) {
+        val jsonFileType = JsonFileType.INSTANCE
+        val extension = fileTypeManagerEx.getFileTypeByExtension(jsonFileType.defaultExtension)
+        if (extension !== jsonFileType) {
             val application = ApplicationManager.getApplication()
             application.invokeLater({
                 application.runWriteAction {
-                    fileTypeManagerEx.associateExtension(JsonFileType.INSTANCE, JsonFileType.DEFAULT_EXTENSION)
+                    fileTypeManagerEx.associateExtension(jsonFileType, JsonFileType.DEFAULT_EXTENSION)
 
                     initTopForm(source, file, module, fileEditor)
                 }
-            }, state)
+            }, getState())
         } else {
             initTopForm(source, file, module, fileEditor)
         }
-
-
     }
 
     private fun initTopForm(source: FileEditorManager, file: VirtualFile, module: Module, fileEditor: FileEditor) {
@@ -75,6 +61,20 @@ class HttpEditorListener : FileEditorManagerListener {
         fileEditor.putUserData(HttpEditorTopForm.KEY, httpEditorTopForm)
 
         source.addTopComponent(fileEditor, httpEditorTopForm.mainPanel)
+    }
+
+    private fun getState(): ModalityState {
+        // 兼容下旧版
+        val cls = ModalityState::class.java
+        try {
+            val method = cls.getDeclaredMethod("nonModal")
+            method.isAccessible = true
+            return method.invoke(null) as ModalityState
+        } catch (e: Exception) {
+            val field = cls.getDeclaredField("NON_MODAL")
+            field.isAccessible = true
+            return field.get(null) as ModalityState
+        }
     }
 
 }
