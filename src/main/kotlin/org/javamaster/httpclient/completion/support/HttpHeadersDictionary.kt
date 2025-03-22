@@ -1,43 +1,52 @@
 package org.javamaster.httpclient.completion.support
 
-import com.google.common.collect.Maps
 import org.apache.http.HttpHeaders
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.utils.DubboUtils
 
 object HttpHeadersDictionary {
 
-    @JvmStatic
-    fun getHeaderValues(headerName: String): Array<String> {
-        if (headerName == HttpHeaders.CONTENT_TYPE || headerName == HttpHeaders.ACCEPT) {
-            val field = ContentType::class.java.getDeclaredField("CONTENT_TYPE_MAP")
-            field.isAccessible = true
-            @Suppress("UNCHECKED_CAST")
-            val map = field.get(null) as Map<String, ContentType>
-            return map.keys.toTypedArray()
-        }
+    val contentTypeValues by lazy {
+        val field = ContentType::class.java.getDeclaredField("CONTENT_TYPE_MAP")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val map = field.get(null) as Map<String, ContentType>
 
-        return arrayOf()
+        val list = mutableListOf(ContentType.MULTIPART_FORM_DATA.mimeType + "; boundary=----WebBoundary")
+        list.addAll(map.keys)
+
+        list.toTypedArray()
     }
 
-    private var map: MutableMap<String, HttpHeaderDocumentation> = Maps.newHashMap()
+    val dubboHeaderNames by lazy {
+        listOf(
+            HttpHeaders.CONTENT_TYPE,
+            DubboUtils.INTERFACE_KEY,
+            DubboUtils.INTERFACE_NAME,
+            DubboUtils.METHOD_KEY,
+            DubboUtils.VERSION,
+            DubboUtils.REGISTRY,
+        )
+    }
 
-    init {
+    val myWebSocketProtocols by lazy {
+        listOf("graphql-ws", "subscriptions-transport-ws", "aws-app-sync")
+    }
+
+    val headerNameMap: MutableMap<String, HttpHeaderDocumentation> by lazy {
+        val map: MutableMap<String, HttpHeaderDocumentation> = mutableMapOf()
         val fields = HttpHeaders::class.java.declaredFields
         for (field in fields) {
             field.isAccessible = true
-            try {
-                val value = field[null] as String
-                map[value] = HttpHeaderDocumentation(value, false)
-            } catch (e: Exception) {
-                throw RuntimeException(e)
-            }
+            val value = field[null] as String
+            map[value] = HttpHeaderDocumentation(value, false)
         }
 
-        val header = "Admin-Token"
+        var header = com.google.common.net.HttpHeaders.CONTENT_DISPOSITION
         map[header] = HttpHeaderDocumentation(header, false)
+        header = "Admin-Token"
+        map[header] = HttpHeaderDocumentation(header, false)
+        map
     }
 
-    @JvmStatic
-    val headers: Map<String, HttpHeaderDocumentation>
-        get() = map
 }

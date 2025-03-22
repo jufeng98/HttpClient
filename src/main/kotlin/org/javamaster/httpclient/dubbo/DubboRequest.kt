@@ -38,11 +38,11 @@ class DubboRequest(
         values[0]
     }
     private val version by lazy {
-        val values = reqHeaderMap["Version"] ?: return@lazy null
+        val values = reqHeaderMap[DubboUtils.VERSION] ?: return@lazy null
         values[0]
     }
     private val registry by lazy {
-        val values = reqHeaderMap["Registry"] ?: return@lazy null
+        val values = reqHeaderMap[DubboUtils.REGISTRY] ?: return@lazy null
         values[0]
     }
     private val reqBodyMap: LinkedHashMap<*, *>? = if (reqBodyStr != null) {
@@ -92,8 +92,8 @@ class DubboRequest(
                 val tmpValueList = mutableListOf<Any>()
 
                 for (entry in paramNames) {
-                    val headerName = "${entry.key}"
-                    val argTypes = reqHeaderMap[headerName] ?: throw IllegalArgumentException("缺少${headerName}请求头")
+                    val paramName = "${entry.key}"
+                    val argTypes = reqHeaderMap[paramName] ?: throw IllegalArgumentException("缺少${paramName}请求头")
                     tmpTypeList.add(argTypes[0])
                     tmpValueList.add(entry.value)
                 }

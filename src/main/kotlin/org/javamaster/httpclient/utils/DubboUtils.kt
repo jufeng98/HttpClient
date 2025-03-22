@@ -25,6 +25,8 @@ object DubboUtils {
     const val INTERFACE_KEY = "Interface"
     const val INTERFACE_NAME = "Interface-Name"
     const val METHOD_KEY = "Method"
+    const val VERSION = "Version"
+    const val REGISTRY = "Registry"
 
     fun findInterface(module: Module, name: String): PsiClass? {
         val javaPsiFacade = JavaPsiFacade.getInstance(module.project)
