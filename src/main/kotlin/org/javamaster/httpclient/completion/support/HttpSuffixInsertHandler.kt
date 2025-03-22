@@ -15,10 +15,18 @@ class HttpSuffixInsertHandler(private val mySuffix: String) : InsertHandler<Look
         val project = context.project
         val editor = context.editor
         val document = editor.document
+
+        // LookupElementBuilder 设置了 caseSensitive 属性补全后不知为何会变成小写,这里强制纠正过来
+        val text = item.lookupString
+        document.replaceString(context.startOffset, context.tailOffset, text)
+
+        val documentManager = PsiDocumentManager.getInstance(project)
+        documentManager.commitDocument(editor.document)
+
         val offset = StringUtil.skipWhitespaceForward(document.charsSequence, editor.caretModel.offset)
-        if (document.textLength == offset || !this.isEqualsToSuffix(document, offset)) {
-            EditorModificationUtilEx.insertStringAtCaret(editor, this.mySuffix)
-            PsiDocumentManager.getInstance(project).commitDocument(editor.document)
+        if (document.textLength == offset || !isEqualsToSuffix(document, offset)) {
+            EditorModificationUtilEx.insertStringAtCaret(editor, mySuffix)
+            documentManager.commitDocument(editor.document)
         }
 
         editor.caretModel.moveToOffset(offset + mySuffix.length)

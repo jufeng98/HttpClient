@@ -1,8 +1,10 @@
 package org.javamaster.httpclient.completion
 
+import com.google.common.net.HttpHeaders
 import com.intellij.codeInsight.completion.*
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.patterns.PlatformPatterns
@@ -14,14 +16,15 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
-import com.intellij.util.containers.CollectionFactory
-import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.getHeaderValues
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.headers
+import org.javamaster.httpclient.completion.support.HttpDirectionNameCompletionProvider
+import org.javamaster.httpclient.completion.support.HttpHeadersDictionary
+import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.contentTypeValues
+import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.headerNameMap
+import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.myWebSocketProtocols
 import org.javamaster.httpclient.completion.support.HttpSuffixInsertHandler
 import org.javamaster.httpclient.psi.*
-import org.javamaster.httpclient.completion.support.HttpDirectionNameCompletionProvider
+import org.javamaster.httpclient.utils.DubboUtils
 
 
 class HttpCompletionContributor : CompletionContributor() {
@@ -183,18 +186,28 @@ class HttpCompletionContributor : CompletionContributor() {
             parameters: CompletionParameters, context: ProcessingContext,
             result: CompletionResultSet,
         ) {
-            val alreadyAdded = CollectionFactory.createCaseInsensitiveStringSet()
+            val request = PsiTreeUtil.getParentOfType(parameters.position, HttpRequest::class.java)
+            val method = request?.method?.text
+            if (method == HttpRequestEnum.DUBBO.name) {
+                HttpHeadersDictionary.dubboHeaderNames.forEach {
+                    val builder = LookupElementBuilder.create(it)
+                        .withCaseSensitivity(false)
+                        .withInsertHandler(HttpSuffixInsertHandler.FIELD_SEPARATOR)
+                    result.addElement(builder)
+                }
+                return
+            }
 
-            for (header in headers.values) {
-                result.addElement(
-                    PrioritizedLookupElement.withPriority(
-                        LookupElementBuilder.create(header, header.name)
-                            .withStrikeoutness(header.isDeprecated)
-                            .withInsertHandler(HttpSuffixInsertHandler.FIELD_SEPARATOR),
-                        if (header.isDeprecated) 100.0 else 200.0
-                    )
+
+            for (header in headerNameMap.values) {
+                val priority = PrioritizedLookupElement.withPriority(
+                    LookupElementBuilder.create(header, header.name)
+                        .withCaseSensitivity(false)
+                        .withStrikeoutness(header.isDeprecated)
+                        .withInsertHandler(HttpSuffixInsertHandler.FIELD_SEPARATOR),
+                    if (header.isDeprecated) 100.0 else 200.0
                 )
-                alreadyAdded.add(header.name)
+                result.addElement(priority)
             }
         }
     }
@@ -204,16 +217,51 @@ class HttpCompletionContributor : CompletionContributor() {
             parameters: CompletionParameters, context: ProcessingContext,
             result: CompletionResultSet,
         ) {
-            val header = PsiTreeUtil.getParentOfType(
+            val headerField = PsiTreeUtil.getParentOfType(
                 CompletionUtil.getOriginalOrSelf(parameters.position),
                 HttpHeaderField::class.java
             )
-            val headerName = header?.headerFieldName?.text
+            val headerName = headerField?.headerFieldName?.text
             if (StringUtil.isEmpty(headerName)) {
                 return
             }
 
-            if (headerName.equals("Sec-WebSocket-Protocol", ignoreCase = true)) {
+            if (headerName.equals(org.apache.http.HttpHeaders.CONTENT_TYPE, ignoreCase = true)
+                || headerName.equals(org.apache.http.HttpHeaders.ACCEPT, ignoreCase = true)
+            ) {
+                for (value in contentTypeValues) {
+                    result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
+                }
+                return
+            }
+
+            if (headerName.equals(DubboUtils.INTERFACE_KEY, ignoreCase = true)) {
+                val newResult = result.withPrefixMatcher(CompletionUtil.findReferenceOrAlphanumericPrefix(parameters))
+                JavaClassNameCompletionContributor.addAllClasses(
+                    parameters,
+                    parameters.invocationCount <= 1,
+                    newResult.prefixMatcher,
+                    newResult
+                )
+                return
+            }
+
+            if (headerName.equals(DubboUtils.METHOD_KEY, ignoreCase = true)) {
+                val header = headerField!!.parent as HttpHeader
+                val interfaceField = header.interfaceField ?: return
+                val fieldValue = interfaceField.headerFieldValue ?: return
+                val module = ModuleUtil.findModuleForPsiElement(header) ?: return
+                val interfacePsiClass = DubboUtils.findInterface(module, fieldValue.text) ?: return
+                interfacePsiClass.methods.forEach {
+                    val builder = LookupElementBuilder.create(it.name).withBoldness(true)
+                        .withPsiElement(it).withTailText(it.parameterList.text)
+                        .withTypeText(it.returnTypeElement?.text)
+                    result.addElement(builder)
+                }
+                return
+            }
+
+            if (headerName.equals(HttpHeaders.SEC_WEBSOCKET_PROTOCOL, ignoreCase = true)) {
                 for (protocol in myWebSocketProtocols) {
                     result.addElement(
                         PrioritizedLookupElement.withPriority(
@@ -223,30 +271,6 @@ class HttpCompletionContributor : CompletionContributor() {
                     )
                 }
             }
-
-            for (value in getHeaderValues(headerName!!)) {
-                result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
-            }
-
-            result.addElement(
-                PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(
-                        ContentType.MULTIPART_FORM_DATA.mimeType + "; boundary=----WebBoundary"
-                    ), 200.0
-                )
-            )
-
-            result.addElement(
-                PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(
-                        "Content-Disposition"
-                    ), 200.0
-                )
-            )
-        }
-
-        companion object {
-            private val myWebSocketProtocols = listOf("graphql-ws", "subscriptions-transport-ws", "aws-app-sync")
         }
     }
 
