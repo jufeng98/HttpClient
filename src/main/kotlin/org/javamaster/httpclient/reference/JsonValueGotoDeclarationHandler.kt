@@ -20,6 +20,11 @@ class JsonValueGotoDeclarationHandler : GotoDeclarationHandler {
         offset: Int,
         editor: Editor?,
     ): Array<PsiElement> {
+        @Suppress("ConstantConditionIf")
+        if (true) {
+            return emptyArray()
+        }
+
         if (element == null) {
             return arrayOf()
         }

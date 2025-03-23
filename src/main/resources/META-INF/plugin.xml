@@ -167,6 +167,8 @@
                    implementationClass="org.javamaster.httpclient.annotator.HttpVariableAnnotator"/>
         <gotoDeclarationHandler id="JsonValueGotoDeclarationHandler"
                                 implementation="org.javamaster.httpclient.reference.JsonValueGotoDeclarationHandler"/>
+        <psi.referenceContributor implementation="org.javamaster.httpclient.reference.JsonValueReferenceContributor"
+                                  language="JSON"/>
         <completion.contributor language="JSON" id="HttpCompletionContributor" order="last"
                                 implementationClass="org.javamaster.httpclient.completion.HttpJsonCompletionContributor"/>
         <completion.contributor language="http" id="HttpRequestCompletionContributor" order="last"
