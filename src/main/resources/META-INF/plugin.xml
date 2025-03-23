@@ -161,6 +161,10 @@
         <highlightErrorFilter implementation="org.javamaster.httpclient.suppress.MyHighlightErrorFilter"/>
         <lang.inspectionSuppressor language="JSON"
                                    implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>
+        <annotator language="JSON"
+                   implementationClass="org.javamaster.httpclient.annotator.JsonValueVariableAnnotator"/>
+        <annotator language="http"
+                   implementationClass="org.javamaster.httpclient.annotator.HttpVariableAnnotator"/>
         <gotoDeclarationHandler id="JsonValueGotoDeclarationHandler"
                                 implementation="org.javamaster.httpclient.reference.JsonValueGotoDeclarationHandler"/>
         <completion.contributor language="JSON" id="HttpCompletionContributor" order="last"
@@ -179,5 +183,6 @@
                              implementation="org.javamaster.httpclient.liveTemplates.HttpTemplateContextType"/>
         <multiHostInjector
                 implementation="org.javamaster.httpclient.inject.ScriptBodyInjectionBackupContributor"/>
+        <lang.commenter language="http" implementationClass="org.javamaster.httpclient.commenter.HttpCommenter"/>
     </extensions>
 </idea-plugin>
