@@ -29,22 +29,27 @@ class HttpEditorListener : FileEditorManagerListener {
         val fileEditor = source.getSelectedEditor(file) ?: return
         val project = source.project
 
-        val module = ModuleUtil.findModuleForFile(file, project) ?: return
+        val application = ApplicationManager.getApplication()
 
-        val fileTypeManagerEx = FileTypeManagerEx.getInstanceEx()
-        val jsonFileType = JsonFileType.INSTANCE
-        val extension = fileTypeManagerEx.getFileTypeByExtension(jsonFileType.defaultExtension)
-        if (extension !== jsonFileType) {
-            val application = ApplicationManager.getApplication()
-            application.invokeLater({
-                application.runWriteAction {
-                    fileTypeManagerEx.associateExtension(jsonFileType, jsonFileType.defaultExtension)
+        application.executeOnPooledThread {
+            val module = ModuleUtil.findModuleForFile(file, project) ?: return@executeOnPooledThread
 
+            val fileTypeManagerEx = FileTypeManagerEx.getInstanceEx()
+            val jsonFileType = JsonFileType.INSTANCE
+            val extension = fileTypeManagerEx.getFileTypeByExtension(jsonFileType.defaultExtension)
+            if (extension !== jsonFileType) {
+                application.invokeLater({
+                    application.runWriteAction {
+                        fileTypeManagerEx.associateExtension(jsonFileType, jsonFileType.defaultExtension)
+
+                        initTopForm(source, file, module, fileEditor)
+                    }
+                }, getState())
+            } else {
+                application.invokeAndWait {
                     initTopForm(source, file, module, fileEditor)
                 }
-            }, getState())
-        } else {
-            initTopForm(source, file, module, fileEditor)
+            }
         }
     }
 
