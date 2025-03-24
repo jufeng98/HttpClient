@@ -3,6 +3,6 @@
         <multiHostInjector
                 implementation="org.javamaster.httpclient.inject.ScriptBodyInjectionContributor"/>
         <gotoDeclarationHandler id="JsFilePathGotoDeclarationHandler"
-                                implementation="org.javamaster.httpclient.reference.JsFilePathGotoDeclarationHandler"/>
+                                implementation="org.javamaster.httpclient.reference.JsStringPathCoolRequestGotoDeclarationHandler"/>
     </extensions>
 </idea-plugin>

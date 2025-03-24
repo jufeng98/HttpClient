@@ -49,6 +49,14 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>2.9.0</b></li>
+                <ul>
+                    <li>新增 commenter</li>
+                    <li>新增 annotator</li>
+                    <li>新增 inspection</li>
+                    <li>调整变量的着色逻辑,优化用户体验</li>
+                    <li>功能优化及Bug修复</li>
+                </ul>
                 <li><b>2.8.0</b></li>
                 <ul>
                     <li>调整请求头的智能提示逻辑,提升用户体验</li>
@@ -148,7 +156,7 @@
         <runLineMarkerContributor language="http"
                                   implementationClass="org.javamaster.httpclient.gutter.HttpRunLineMarkerContributor"/>
         <psi.referenceContributor language="http"
-                                  implementation="org.javamaster.httpclient.reference.HttpReferenceContributor"/>
+                                  implementation="org.javamaster.httpclient.reference.HttpPsiReferenceContributor"/>
         <lang.elementManipulator forClass="com.intellij.httpClient.http.request.psi.HttpFilePath"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpFilePathManipulator"/>
         <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
@@ -165,12 +173,14 @@
                    implementationClass="org.javamaster.httpclient.annotator.JsonValueVariableAnnotator"/>
         <annotator language="http"
                    implementationClass="org.javamaster.httpclient.annotator.HttpVariableAnnotator"/>
-        <gotoDeclarationHandler id="JsonValueGotoDeclarationHandler"
-                                implementation="org.javamaster.httpclient.reference.JsonValueGotoDeclarationHandler"/>
-        <psi.referenceContributor implementation="org.javamaster.httpclient.reference.JsonValueReferenceContributor"
-                                  language="JSON"/>
-        <completion.contributor language="JSON" id="HttpCompletionContributor" order="last"
-                                implementationClass="org.javamaster.httpclient.completion.HttpJsonCompletionContributor"/>
+        <localInspection groupName="Http" language="http" shortName="HttpInspection"
+                         displayName="Variable problems" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.javamaster.httpclient.inspection.HttpInspection"/>
+        <localInspection groupName="Http" language="JSON" shortName="MyJsonInspection"
+                         displayName="Variable problems" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.javamaster.httpclient.inspection.MyJsonInspection"/>
+        <psi.referenceContributor language="JSON"
+                                  implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>
         <completion.contributor language="http" id="HttpRequestCompletionContributor" order="last"
                                 implementationClass="org.javamaster.httpclient.completion.HttpCompletionContributor"/>
         <typedHandler implementation="org.javamaster.httpclient.typeHandler.HttpTypedHandler"/>
