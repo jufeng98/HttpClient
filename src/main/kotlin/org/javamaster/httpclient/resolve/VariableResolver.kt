@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.resolve
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
@@ -127,12 +128,33 @@ class VariableResolver(
     private fun resolveInnerVariable(variable: String): String? {
         val variableEnum = InnerVariableEnum.getEnum(variable) ?: return null
 
-        return variableEnum.exec(variable, httpFileParentPath)
+        return try {
+            variableEnum.exec(variable, httpFileParentPath)
+        } catch (e: UnsupportedOperationException) {
+            variableEnum.exec(variable, httpFileParentPath, project)
+        }
     }
 
     companion object {
         val VARIABLE_PATTERN: Pattern = Pattern.compile("(\\{\\{[^{}]+}})")
         const val PROPERTY_PREFIX = "\$property"
         const val ENV_PREFIX = "\$env"
+
+        fun resolveInnerVariable(str: String, parentPath: String, project: Project): String {
+            val matcher = VARIABLE_PATTERN.matcher(str)
+
+            return matcher.replaceAll {
+                val matchStr = it.group()
+                val variable = matchStr.substring(2, matchStr.length - 2)
+
+                val variableEnum = InnerVariableEnum.getEnum(variable)
+                if (variableEnum != null) {
+                    return@replaceAll variableEnum.exec(variable, parentPath, project)
+                }
+
+                // 无法解析变量,原样返回
+                return@replaceAll "{{\\$variable}}"
+            }
+        }
     }
 }
