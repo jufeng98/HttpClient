@@ -10,7 +10,11 @@ import com.intellij.openapi.util.TextRange
  */
 object VariableAnnotator {
 
-    fun annotateVariable(builtin: Boolean, range: TextRange, holder: AnnotationHolder) {
+    fun annotateVariable(
+        builtin: Boolean,
+        range: TextRange,
+        holder: AnnotationHolder,
+    ) {
         val tip = if (builtin) {
             "Builtin variable"
         } else {
