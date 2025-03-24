@@ -5,6 +5,7 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.readText
 import com.jayway.jsonpath.JsonPath
 import org.javamaster.httpclient.annos.JsBridge
+import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
 import org.mozilla.javascript.Context
 import org.mozilla.javascript.NativeJavaObject
@@ -94,9 +95,13 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         return String(Base64.getDecoder().decode(str), StandardCharsets.UTF_8)
     }
 
+    @JsBridge(jsFun = "base64ToFile(base64, path)")
     fun base64ToFile(base64: String, path: String): Boolean {
         try {
-            val filePath = HttpUtils.constructFilePath(path, parentPath, jsExecutor.httpFile)
+            val tmpPath = VariableResolver.resolveInnerVariable(path, parentPath, jsExecutor.project)
+
+            val filePath = HttpUtils.constructFilePath(tmpPath, parentPath)
+
             val file = File(filePath)
             if (file.exists()) {
                 file.delete()

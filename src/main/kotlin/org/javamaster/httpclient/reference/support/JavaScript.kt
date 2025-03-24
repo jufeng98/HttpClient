@@ -4,11 +4,11 @@ import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.util.PsiTreeUtil.*
-import org.javamaster.httpclient.psi.HttpRequestBlock
-import org.javamaster.httpclient.utils.HttpUtils
+import com.intellij.psi.util.PsiTreeUtil.findChildrenOfType
+import com.intellij.psi.util.PsiTreeUtil.getChildOfType
+import org.javamaster.httpclient.psi.HttpScriptBody
 import java.util.*
 
 object JavaScript {
@@ -17,14 +17,16 @@ object JavaScript {
         plugin.pluginClassLoader
     }
 
-    fun resolveJsVariable(variableName: String, element: PsiElement, httpFile: PsiFile): PsiElement? {
+    fun resolveJsVariable(
+        variableName: String,
+        project: Project,
+        scriptBodyList: List<HttpScriptBody>,
+    ): PsiElement? {
         if (pluginClassLoader == null) {
             return null
         }
 
         val loader = pluginClassLoader!!
-
-        val project = httpFile.project
 
         val clzJSCallExpression = loadClass("com.intellij.lang.javascript.psi.JSCallExpression", loader)
         val clzJSReferenceExpression =
@@ -32,12 +34,8 @@ object JavaScript {
         val clzJSArgumentList = loadClass("com.intellij.lang.javascript.psi.JSArgumentList", loader)
         val clzJSLiteralExpression = loadClass("com.intellij.lang.javascript.psi.JSLiteralExpression", loader)
 
-        val requestBlock = getParentOfType(element, HttpRequestBlock::class.java) ?: return null
-
-        val allPreJsScripts = HttpUtils.getAllPreJsScripts(httpFile, requestBlock).reversed()
-
         val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
-        return allPreJsScripts
+        return scriptBodyList
             .map {
                 val injectedPsiFiles = injectedLanguageManager.getInjectedPsiFiles(it)
                 if (injectedPsiFiles.isNullOrEmpty()) {

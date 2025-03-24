@@ -3,11 +3,10 @@ package org.javamaster.httpclient.reference.support
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
-import org.javamaster.httpclient.psi.HttpRequestBlock
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.psi.HttpScriptBody
 import ris58h.webcalm.javascript.psi.*
 import java.util.*
 
@@ -18,19 +17,17 @@ object WebCalm {
         return@lazy plugin == null
     }
 
-    fun resolveJsVariable(variableName: String, element: PsiElement, httpFile: PsiFile): PsiElement? {
+    fun resolveJsVariable(
+        variableName: String,
+        project: Project,
+        scriptBodyList: List<HttpScriptBody>,
+    ): PsiElement? {
         if (pluginNotAlive) {
             return null
         }
 
-        val project = httpFile.project
-
-        val requestBlock = PsiTreeUtil.getParentOfType(element, HttpRequestBlock::class.java) ?: return null
-
-        val allPreJsScripts = HttpUtils.getAllPreJsScripts(httpFile, requestBlock).reversed()
-
         val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
-        return allPreJsScripts
+        return scriptBodyList
             .map {
                 val injectedPsiFiles = injectedLanguageManager.getInjectedPsiFiles(it)
                 if (injectedPsiFiles.isNullOrEmpty()) {
