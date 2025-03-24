@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.tree.IElementType
+import com.intellij.psi.util.elementType
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.utils.DubboUtils
@@ -38,8 +39,23 @@ object HttpPsiImplUtil {
         val identifier = HttpPsiUtils.getNextSiblingByType(
             httpVariable.firstChild,
             HttpTypes.IDENTIFIER, false
+        ) ?: return ""
+
+        val prevSibling = identifier.prevSibling
+        return if (prevSibling.elementType == HttpTypes.DOLLAR) {
+            prevSibling.text + identifier.text
+        } else {
+            identifier.text
+        }
+    }
+
+    @JvmStatic
+    fun isBuiltin(httpVariable: HttpVariable): Boolean {
+        val dollar = HttpPsiUtils.getNextSiblingByType(
+            httpVariable.firstChild,
+            HttpTypes.DOLLAR, false
         )
-        return if (identifier != null) identifier.text else ""
+        return dollar != null
     }
 
     @JvmStatic

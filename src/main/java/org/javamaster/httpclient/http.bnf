@@ -99,6 +99,7 @@ variable ::= START_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE {
     methods = [
         getName
         getReferences
+        isBuiltin
     ]
     pin = 1
 }
