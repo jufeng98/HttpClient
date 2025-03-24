@@ -40,4 +40,9 @@ public class HttpVariableImpl extends ASTWrapperPsiElement implements HttpVariab
     return HttpPsiImplUtil.getReferences(this);
   }
 
+  @Override
+  public boolean isBuiltin() {
+    return HttpPsiImplUtil.isBuiltin(this);
+  }
+
 }

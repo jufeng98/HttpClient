@@ -14,4 +14,6 @@ public interface HttpVariable extends PsiElement {
   @NotNull
   PsiReference[] getReferences();
 
+  boolean isBuiltin();
+
 }
