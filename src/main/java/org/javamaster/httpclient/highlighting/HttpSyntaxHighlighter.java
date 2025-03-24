@@ -23,7 +23,6 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
     public static final TextAttributesKey HTTP_PARAMETER_VALUE;
     public static final TextAttributesKey HTTP_PORT;
     public static final TextAttributesKey HTTP_HEADER_FIELD_NAME;
-    public static final TextAttributesKey HTTP_HEADER_FIELD_VALUE;
     public static final TextAttributesKey HTTP_REQUEST_COMMENT;
     public static final TextAttributesKey HTTP_KEYWORD;
     public static final TextAttributesKey HTTP_LINE_COMMENT;
@@ -40,7 +39,6 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
         HTTP_PARAMETER_VALUE = createTextAttributesKey("HTTP_PARAMETER_VALUE", DefaultLanguageHighlighterColors.STATIC_FIELD);
         HTTP_PORT = createTextAttributesKey("HTTP_PORT");
         HTTP_HEADER_FIELD_NAME = createTextAttributesKey("HTTP_HEADER_FIELD_NAME", DefaultLanguageHighlighterColors.STATIC_FIELD);
-        HTTP_HEADER_FIELD_VALUE = createTextAttributesKey("HTTP_HEADER_FIELD_VALUE", DefaultLanguageHighlighterColors.IDENTIFIER);
         HTTP_REQUEST_COMMENT = createTextAttributesKey("HTTP_REQUEST_COMMENT", DefaultLanguageHighlighterColors.DOC_COMMENT);
         HTTP_KEYWORD = createTextAttributesKey("HTTP_KEYWORD", DefaultLanguageHighlighterColors.KEYWORD);
         HTTP_LINE_COMMENT = createTextAttributesKey("HTTP_LINE_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
@@ -48,7 +46,7 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
         HTTP_INPUT_SIGN = createTextAttributesKey("HTTP_INPUT_SIGN", DefaultLanguageHighlighterColors.OPERATION_SIGN);
         HTTP_INPUT_FILE = createTextAttributesKey("HTTP_INPUT_FILE");
         HTTP_MULTIPART_BOUNDARY = createTextAttributesKey("HTTP_MULTIPART_BOUNDARY", DefaultLanguageHighlighterColors.DOC_COMMENT_TAG_VALUE);
-        HTTP_IDENTIFIER = createTextAttributesKey("HTTP_IDENTIFIER", DefaultLanguageHighlighterColors.METADATA);
+        HTTP_IDENTIFIER = createTextAttributesKey("HTTP_IDENTIFIER", DefaultLanguageHighlighterColors.IDENTIFIER);
         HTTP_VARIABLE_BRACES = createTextAttributesKey("HTTP_VARIABLE_BRACES", DefaultLanguageHighlighterColors.BRACES);
         HTTP_REQUEST_NAME = createTextAttributesKey("HTTP_REQUEST_NAME", DefaultLanguageHighlighterColors.METADATA);
 
@@ -58,7 +56,7 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
         fillMap(ATTRIBUTE_MAP, HTTP_PARAMETER_VALUE, HttpTypes.QUERY_VALUE, HttpTypes.GLOBAL_VALUE, HttpTypes.DIRECTION_VALUE_PART);
         fillMap(ATTRIBUTE_MAP, HTTP_LINE_COMMENT, HttpTypes.DIRECTION_COMMENT_START, HttpTypes.BLOCK_COMMENT);
         fillMap(ATTRIBUTE_MAP, HTTP_HEADER_FIELD_NAME, HttpTypes.FIELD_NAME);
-        fillMap(ATTRIBUTE_MAP, HTTP_HEADER_FIELD_VALUE, HttpTypes.FIELD_VALUE);
+        fillMap(ATTRIBUTE_MAP, HTTP_IDENTIFIER, HttpTypes.FIELD_VALUE);
         fillMap(ATTRIBUTE_MAP, HTTP_INPUT_SIGN, HttpTypes.INPUT_FILE_SIGN, HttpTypes.OUTPUT_FILE_SIGN);
         fillMap(ATTRIBUTE_MAP, HTTP_INPUT_FILE, HttpTypes.INPUT_FILE_PATH_PART, HttpTypes.OUTPUT_FILE_PATH_PART);
         fillMap(ATTRIBUTE_MAP, HTTP_MULTIPART_BOUNDARY, HttpTypes.MESSAGE_BOUNDARY);
