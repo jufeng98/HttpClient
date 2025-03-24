@@ -309,7 +309,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             return null
         }
 
-        val path = HttpUtils.constructFilePath(outPutFileName, parentPath, httpFile)
+        var path = variableResolver.resolve(outPutFileName)
+
+        path = HttpUtils.constructFilePath(path, parentPath)
 
         val file = File(path)
 
