@@ -3,6 +3,9 @@ package org.javamaster.httpclient.enums
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.openapi.module.ModuleUtil
+import com.intellij.openapi.project.Project
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.RandomStringUtils
 import org.javamaster.httpclient.utils.VirtualFileUtils
@@ -238,6 +241,51 @@ enum class InnerVariableEnum(val methodName: String) {
             return ParenthesesInsertHandler.WITH_PARAMETERS
         }
     },
+    MVN_TARGET("\$mvnTarget") {
+        override fun typeText(): String {
+            return "指向模块的 src/target"
+        }
+
+        override fun exec(variable: String, httpFileParentPath: String): String {
+            throw UnsupportedOperationException()
+        }
+
+        override fun exec(variable: String, httpFileParentPath: String, project: Project): String? {
+            val triple = HttpEditorTopForm.getTriple(project) ?: return null
+
+            val dirPath = ModuleUtil.getModuleDirPath(triple.third)
+
+            return "$dirPath/target"
+        }
+    },
+    PROJECT_ROOT("\$projectRoot") {
+        override fun typeText(): String {
+            return "指向项目根目录"
+        }
+
+        override fun exec(variable: String, httpFileParentPath: String): String {
+            throw UnsupportedOperationException()
+        }
+
+        override fun exec(variable: String, httpFileParentPath: String, project: Project): String? {
+            return project.basePath
+        }
+    },
+    HISTORY_FOLDER("\$historyFolder") {
+        override fun typeText(): String {
+            return "指向 .idea/httpClient"
+        }
+
+        override fun exec(variable: String, httpFileParentPath: String): String {
+            throw UnsupportedOperationException()
+        }
+
+        override fun exec(variable: String, httpFileParentPath: String, project: Project): String? {
+            val basePath = project.basePath ?: return null
+
+            return "$basePath/.idea/httpClient"
+        }
+    },
     ;
 
     val patternNotNumber: Pattern = Pattern.compile("\\D")
@@ -245,6 +293,10 @@ enum class InnerVariableEnum(val methodName: String) {
     abstract fun typeText(): String
 
     abstract fun exec(variable: String, httpFileParentPath: String): String
+
+    open fun exec(variable: String, httpFileParentPath: String, project: Project): String? {
+        return null
+    }
 
     open fun insertHandler(): InsertHandler<LookupElement>? {
         return null
@@ -258,6 +310,13 @@ enum class InnerVariableEnum(val methodName: String) {
                     map[it.methodName] = it
                 }
             return@lazy map
+        }
+
+        fun isFolderEnum(innerVariableEnum: InnerVariableEnum?): Boolean {
+            innerVariableEnum ?: return false
+            return innerVariableEnum == HISTORY_FOLDER
+                    || innerVariableEnum == PROJECT_ROOT
+                    || innerVariableEnum == MVN_TARGET
         }
 
         fun getEnum(variable: String): InnerVariableEnum? {

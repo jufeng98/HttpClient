@@ -1,22 +1,27 @@
 package org.javamaster.httpclient.utils
 
+import com.cool.request.view.tool.search.ControllerNavigationItem
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunnerAndConfigurationSettings
+import com.intellij.ide.DataManager
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.progress.TaskInfo
+import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
+import com.intellij.psi.*
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
@@ -27,7 +32,6 @@ import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.resolve.VariableResolver
-import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.ui.HttpEditorTopForm
@@ -54,10 +58,7 @@ object HttpUtils {
     const val READ_TIMEOUT = 7200L
     const val HTTP_TYPE_ID = "intellijHttpClient"
     const val VARIABLE_SIGN_START = "{{"
-    private const val VARIABLE_SIGN_END = "}}"
-    const val PROJECT_ROOT = "\$projectRoot"
-    const val HISTORY_FOLDER = "\$historyFolder"
-    const val MVN_TARGET = "\$mvnTarget"
+    const val VARIABLE_SIGN_END = "}}"
     val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
 
     fun saveConfiguration(
@@ -262,50 +263,12 @@ object HttpUtils {
     }
 
     fun constructFilePath(filePath: String, parentPath: String): String {
-        return if (filePath.startsWith("/") || filePath[1] == ':') {
+        return if (filePath.startsWith("/") || (filePath.length > 1 && filePath[1] == ':')) {
             // 绝对路径
             filePath
         } else {
             "$parentPath/$filePath"
         }
-    }
-
-    fun constructFilePath(filePath: String, parentPath: String, httpFile: PsiFile): String {
-        val project = httpFile.project
-
-        val matcher = VARIABLE_PATTERN.matcher(filePath)
-
-        val path = matcher.replaceAll {
-            val matchStr = it.group()
-            when (val variable = matchStr.substring(2, matchStr.length - 2)) {
-                PROJECT_ROOT -> {
-                    return@replaceAll project.basePath
-                }
-
-                HISTORY_FOLDER -> {
-                    return@replaceAll project.basePath + "/.idea/httpClient"
-                }
-
-                MVN_TARGET -> {
-                    val module = ModuleUtil.findModuleForFile(httpFile)
-                    if (module == null) {
-                        // 无法解析变量,原样返回
-                        if (variable.startsWith("$")) {
-                            return@replaceAll "{{\\$variable}}"
-                        }
-
-                        return@replaceAll matchStr
-                    }
-
-                    val dirPath = ModuleUtil.getModuleDirPath(module)
-                    return@replaceAll "$dirPath/target"
-                }
-            }
-
-            matchStr
-        }
-
-        return constructFilePath(path, parentPath)
     }
 
     fun convertToResHeaderDescList(response: HttpResponse<ByteArray>): MutableList<String> {
@@ -401,6 +364,15 @@ object HttpUtils {
         }
 
         return scripts
+    }
+
+    fun getAllPostJsScripts(httpFile: PsiFile): List<HttpScriptBody> {
+        val handlers = PsiTreeUtil.findChildrenOfType(httpFile, HttpResponseHandler::class.java)
+
+        return handlers
+            .mapNotNull {
+                getJsScript(it)
+            }
     }
 
     fun getDirectionCommentParamMap(httpRequestBlock: HttpRequestBlock): Map<String, String> {
@@ -522,6 +494,7 @@ object HttpUtils {
 
     fun resolveFilePath(path: String, httpFileParentPath: String, project: Project): PsiElement? {
         val filePath = constructFilePath(path, httpFileParentPath)
+
         val file = File(filePath)
         if (!file.exists()) {
             return null
@@ -534,6 +507,77 @@ object HttpUtils {
         }
 
         return PsiUtil.getPsiFile(project, virtualFile)
+    }
+
+    @Suppress("DEPRECATION")
+    fun createActionEvent(): AnActionEvent {
+        @Suppress("removal")
+        return AnActionEvent(
+            null,
+            DataManager.getInstance().dataContext,
+            "",
+            Presentation(""),
+            ActionManager.getInstance(),
+            1
+        )
+    }
+
+    fun createProcessIndicator(title: String, project: Project): BackgroundableProcessIndicator {
+        return BackgroundableProcessIndicator(project, object : TaskInfo {
+            override fun getTitle(): String {
+                return title
+            }
+
+            override fun getCancelText(): String {
+                return "Tip:正在取消......"
+            }
+
+            override fun getCancelTooltipText(): String {
+                return "Tip:取消中......"
+            }
+
+            override fun isCancellable(): Boolean {
+                return true
+            }
+        })
+    }
+
+    fun findControllerPsiMethods(
+        navigationItem: ControllerNavigationItem,
+        module: Module,
+    ): Array<out PsiMethod> {
+        val controllerFullClassName = navigationItem.javaClassName
+        val controllerMethodName = navigationItem.methodName
+
+        val controllerPsiCls = JavaPsiFacade.getInstance(module.project)
+            .findClass(
+                controllerFullClassName,
+                GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)
+            ) ?: return arrayOf()
+
+        val psiMethods = controllerPsiCls.findMethodsByName(controllerMethodName, false)
+        if (psiMethods.isEmpty()) {
+            return arrayOf()
+        }
+
+        return psiMethods
+    }
+
+    fun getControllerNavigationItem(list: MutableList<Any>, searchTxt: String): ControllerNavigationItem {
+        return if (list.size == 1) {
+            list[0] as ControllerNavigationItem
+        } else {
+            val urlMap = list.groupBy {
+                val navigationItem = it as ControllerNavigationItem
+                navigationItem.url
+            }
+            val itemList = urlMap[searchTxt]
+            if (itemList.isNullOrEmpty()) {
+                list[0] as ControllerNavigationItem
+            } else {
+                itemList[0] as ControllerNavigationItem
+            }
+        }
     }
 
 }
