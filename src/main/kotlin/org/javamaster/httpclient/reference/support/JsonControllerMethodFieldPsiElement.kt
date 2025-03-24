@@ -14,12 +14,14 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
-import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.createProcessIndicator
-import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.findControllerPsiMethods
-import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.getControllerNavigationItem
-import org.javamaster.httpclient.reference.support.HttpFakePsiElement.Companion.showTip
+import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.utils.DubboUtils
+import org.javamaster.httpclient.utils.HttpUtils.createActionEvent
+import org.javamaster.httpclient.utils.HttpUtils.createProcessIndicator
+import org.javamaster.httpclient.utils.HttpUtils.findControllerPsiMethods
+import org.javamaster.httpclient.utils.HttpUtils.getControllerNavigationItem
 import org.javamaster.httpclient.utils.PsiUtils
+import org.javamaster.httpclient.utils.TooltipUtils.showTooltip
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import javax.swing.Icon
@@ -27,7 +29,7 @@ import javax.swing.Icon
 /**
  * @author yudong
  */
-class JsonFakePsiElement(
+class JsonControllerMethodFieldPsiElement(
     private val jsonString: JsonStringLiteral,
     private val searchTxt: String,
     private val module: Module,
@@ -60,7 +62,7 @@ class JsonFakePsiElement(
     ) {
         val serviceMethod = DubboUtils.findDubboServiceMethod(jsonString)
         if (serviceMethod == null) {
-            showTip("Tip:未能解析到对应的Dubbo方法,无法跳转", project)
+            showTooltip("Tip:未能解析到对应的Dubbo方法,无法跳转", project)
             return
         }
 
@@ -74,7 +76,7 @@ class JsonFakePsiElement(
                 .firstOrNull { it.name == name }
 
             if (psiParameter == null) {
-                showTip("Tip:未能解析到对应的方法参数,无法跳转", project)
+                showTooltip("Tip:未能解析到对应的方法参数,无法跳转", project)
                 return
             }
 
@@ -92,7 +94,7 @@ class JsonFakePsiElement(
 
         val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters)
         if (targetField == null) {
-            showTip("Tip:未能解析对应的Bean属性,无法跳转", project)
+            showTooltip("Tip:未能解析对应的Bean属性,无法跳转", project)
             return
         }
 
@@ -107,7 +109,7 @@ class JsonFakePsiElement(
         val processIndicator = createProcessIndicator("Tip:正在尝试跳转到对应的Bean字段...", project)
         Disposer.register(Disposer.newDisposable(), processIndicator)
 
-        val event = HttpFakePsiElement.createEvent()
+        val event = createActionEvent()
         val seContributor = ApiAbstractGotoSEContributor(event)
 
         CompletableFuture.runAsync {
@@ -121,7 +123,7 @@ class JsonFakePsiElement(
 
             runInEdt {
                 if (list.isEmpty()) {
-                    showTip("Tip:未能解析到对应的controller mapping,无法跳转", project)
+                    showTooltip("Tip:未能解析到对应的controller mapping,无法跳转", project)
                     return@runInEdt
                 }
 
@@ -130,12 +132,12 @@ class JsonFakePsiElement(
                 runReadAction {
                     val psiMethods = findControllerPsiMethods(controllerNavigationItem, module)
                     if (psiMethods.isEmpty()) {
-                        showTip("Tip:未能解析对应的controller方法,无法跳转", project)
+                        showTooltip("Tip:未能解析对应的controller方法,无法跳转", project)
                         return@runReadAction
                     }
 
                     if (psiMethods.size > 1) {
-                        showTip("Tip:解析到${psiMethods.size}个的controller方法,无法跳转", project)
+                        showTooltip("Tip:解析到${psiMethods.size}个的controller方法,无法跳转", project)
                         return@runReadAction
                     }
 
@@ -156,7 +158,7 @@ class JsonFakePsiElement(
 
                     val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters)
                     if (targetField == null) {
-                        showTip("Tip:未能解析对应的Bean属性,无法跳转", project)
+                        showTooltip("Tip:未能解析对应的Bean属性,无法跳转", project)
                         return@runReadAction
                     }
 
@@ -275,11 +277,11 @@ class JsonFakePsiElement(
     object JsonItemPresentation : ItemPresentation {
 
         override fun getPresentableText(): String {
-            return "跳转到对应的Bean字段"
+            return "跳转到对应的 Controller 接口方法的出/入参字段"
         }
 
         override fun getIcon(unused: Boolean): Icon? {
-            return null
+            return HttpIcons.SPRING_PROPERTY
         }
 
     }

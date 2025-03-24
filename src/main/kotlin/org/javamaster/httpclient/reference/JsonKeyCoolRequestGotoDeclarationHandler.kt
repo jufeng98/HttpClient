@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.reference.support.JsonFakePsiElement
+import org.javamaster.httpclient.reference.support.JsonControllerMethodFieldPsiElement
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
 
@@ -19,7 +19,7 @@ import org.javamaster.httpclient.utils.HttpUtils
  *
  * @author yudong
  */
-class JsonKeyGotoDeclarationHandler : GotoDeclarationHandler {
+class JsonKeyCoolRequestGotoDeclarationHandler : GotoDeclarationHandler {
 
     override fun getGotoDeclarationTargets(
         element: PsiElement?,
@@ -50,7 +50,7 @@ class JsonKeyGotoDeclarationHandler : GotoDeclarationHandler {
 
         if (methodType == HttpRequestEnum.DUBBO.name) {
             val originalModule = DubboUtils.getOriginalModule(httpRequest) ?: return arrayOf()
-            return arrayOf(JsonFakePsiElement(jsonString, "", originalModule))
+            return arrayOf(JsonControllerMethodFieldPsiElement(jsonString, "", originalModule))
         }
 
         val requestTarget = httpRequest.requestTarget ?: return arrayOf()
@@ -60,7 +60,7 @@ class JsonKeyGotoDeclarationHandler : GotoDeclarationHandler {
 
         val pair = HttpUtils.getSearchTxtInfo(requestTarget, originalFile.parent.path) ?: return arrayOf()
 
-        return arrayOf(JsonFakePsiElement(jsonString, pair.first, originalModule))
+        return arrayOf(JsonControllerMethodFieldPsiElement(jsonString, pair.first, originalModule))
     }
 
 }

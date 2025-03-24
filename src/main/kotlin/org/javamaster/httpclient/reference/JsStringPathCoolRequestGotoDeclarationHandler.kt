@@ -6,12 +6,13 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.elementType
 import org.javamaster.httpclient.psi.HttpScriptBody
+import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * @author yudong
  */
-class JsFilePathGotoDeclarationHandler : GotoDeclarationHandler {
+class JsStringPathCoolRequestGotoDeclarationHandler : GotoDeclarationHandler {
 
     override fun getGotoDeclarationTargets(
         element: PsiElement?,
@@ -43,7 +44,9 @@ class JsFilePathGotoDeclarationHandler : GotoDeclarationHandler {
         try {
             val httpFileParentPath = (injectionHost as HttpScriptBody).containingFile.virtualFile.parent.path
 
-            val item = HttpUtils.resolveFilePath(path, httpFileParentPath, project) ?: return arrayOf()
+            val tmpPath = VariableResolver.resolveInnerVariable(path, httpFileParentPath, project)
+
+            val item = HttpUtils.resolveFilePath(tmpPath, httpFileParentPath, project) ?: return arrayOf()
 
             return arrayOf(item)
         } catch (e: Exception) {
