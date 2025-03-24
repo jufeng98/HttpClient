@@ -16,4 +16,7 @@ public class HttpIcons {
     public static final Icon DELETE = IconLoader.getIcon("/icons/delete.svg", HttpIcons.class);
     public static final Icon IMAGE = IconLoader.getIcon("/icons/image.svg", HttpIcons.class);
 
+    public static final Icon REQUEST_MAPPING = IconLoader.getIcon("/icons/requestMapping.svg", HttpIcons.class);
+    public static final Icon SPRING_PROPERTY = IconLoader.getIcon("/icons/springProperty.svg", HttpIcons.class);
+
 }
