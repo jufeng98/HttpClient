@@ -68,7 +68,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_INT("\$randomInt") {
         override fun typeText(): String {
-            return "生成 [0,1000) 范围数字"
+            return "生成 [0, 1000) 范围数字"
         }
 
         override fun exec(variable: String, httpFileParentPath: String): String {
@@ -77,7 +77,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_INTEGER("\$random.integer") {
         override fun typeText(): String {
-            return "用法:$methodName(0,80)"
+            return "用法:$methodName(0, 80)"
         }
 
         override fun exec(variable: String, httpFileParentPath: String): String {
@@ -102,7 +102,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     IMAGE_TO_BASE64("\$imageToBase64") {
         override fun typeText(): String {
-            return "用法:$methodName(图片的绝对或相对路径)"
+            return "用法:$methodName('图片的绝对或相对路径')"
         }
 
         override fun exec(variable: String, httpFileParentPath: String): String {
@@ -121,7 +121,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     READ_STRING("\$readString") {
         override fun typeText(): String {
-            return "用法:$methodName(图片的绝对或相对路径)"
+            return "用法:$methodName('图片的绝对或相对路径')"
         }
 
         override fun exec(variable: String, httpFileParentPath: String): String {

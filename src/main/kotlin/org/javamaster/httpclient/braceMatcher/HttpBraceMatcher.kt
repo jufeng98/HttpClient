@@ -15,6 +15,7 @@ class HttpBraceMatcher : PairedBraceMatcherAdapter(MyPairedBraceMatcher(), HttpL
             BracePair(HttpTypes.START_VARIABLE_BRACE, HttpTypes.END_VARIABLE_BRACE, true),
             BracePair(HttpTypes.OUT_START_SCRIPT_BRACE, HttpTypes.END_SCRIPT_BRACE, true),
             BracePair(HttpTypes.GLOBAL_START_SCRIPT_BRACE, HttpTypes.END_SCRIPT_BRACE, true),
+            BracePair(HttpTypes.LEFT_BRACKET, HttpTypes.RIGHT_BRACKET, true),
             BracePair(HttpTypes.IN_START_SCRIPT_BRACE, HttpTypes.END_SCRIPT_BRACE, true)
         )
 
