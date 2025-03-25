@@ -42,13 +42,13 @@
 
 httpFile ::= globalHandler? globalVariable* requestBlock*
 
-globalVariable::= globalVariableName globalVariableValue? {
-    pin = 1
+globalVariable::= globalVariableName EQUALS globalVariableValue? {
+    pin = 2
 }
 globalVariableName ::= AT GLOBAL_NAME {
     pin = 1
 }
-globalVariableValue ::= EQUALS (GLOBAL_VALUE | variable) {
+globalVariableValue ::= GLOBAL_VALUE | variable {
     pin = 1
 }
 globalHandler ::= globalScript

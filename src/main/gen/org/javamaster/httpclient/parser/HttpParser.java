@@ -157,22 +157,23 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // globalVariableName globalVariableValue?
+  // globalVariableName EQUALS globalVariableValue?
   public static boolean globalVariable(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariable")) return false;
     if (!nextTokenIs(b, AT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE, null);
     r = globalVariableName(b, l + 1);
-    p = r; // pin = 1
-    r = r && globalVariable_1(b, l + 1);
+    r = r && consumeToken(b, EQUALS);
+    p = r; // pin = 2
+    r = r && globalVariable_2(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
 
   // globalVariableValue?
-  private static boolean globalVariable_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalVariable_1")) return false;
+  private static boolean globalVariable_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalVariable_2")) return false;
     globalVariableValue(b, l + 1);
     return true;
   }
@@ -191,25 +192,15 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // EQUALS (GLOBAL_VALUE | variable)
+  // GLOBAL_VALUE | variable
   public static boolean globalVariableValue(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariableValue")) return false;
-    if (!nextTokenIs(b, EQUALS)) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_VALUE, null);
-    r = consumeToken(b, EQUALS);
-    p = r; // pin = 1
-    r = r && globalVariableValue_1(b, l + 1);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
-  }
-
-  // GLOBAL_VALUE | variable
-  private static boolean globalVariableValue_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalVariableValue_1")) return false;
+    if (!nextTokenIs(b, "<global variable value>", GLOBAL_VALUE, START_VARIABLE_BRACE)) return false;
     boolean r;
+    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_VALUE, "<global variable value>");
     r = consumeToken(b, GLOBAL_VALUE);
     if (!r) r = variable(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
