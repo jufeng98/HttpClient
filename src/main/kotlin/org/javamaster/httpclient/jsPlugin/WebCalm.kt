@@ -1,12 +1,17 @@
-package org.javamaster.httpclient.reference.support
+package org.javamaster.httpclient.jsPlugin
 
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.psi.HttpScriptBody
+import ris58h.webcalm.javascript.JavaScriptLanguage
 import ris58h.webcalm.javascript.psi.*
 import java.util.*
 
@@ -56,6 +61,27 @@ object WebCalm {
                 return@map null
             }
             .firstOrNull { Objects.nonNull(it) }
+    }
+
+    fun createJsVariable(project: Project, injectedPsiFile: PsiFile, variableName: String) {
+        if (pluginNotAlive) {
+            return
+        }
+
+        val js = "request.variables.set('$variableName', '');\n"
+
+        val psiFileFactory = PsiFileFactory.getInstance(project)
+
+        val tmpFile = psiFileFactory.createFileFromText("dummy.js", JavaScriptLanguage, js)
+        val newExpressionStatement = PsiTreeUtil.findChildOfType(tmpFile, JavaScriptExpressionStatement::class.java)!!
+
+        val elementCopy = injectedPsiFile.add(newExpressionStatement)
+        injectedPsiFile.add(newExpressionStatement.nextSibling)
+
+        // 将光标移动到引号内
+        (elementCopy.lastChild as Navigatable).navigate(true)
+        val caretModel = FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return
+        caretModel.moveToOffset(caretModel.offset - 2)
     }
 
     private fun findArgumentName(variableName: String, arguments: JavaScriptArguments): JavaScriptArgument? {

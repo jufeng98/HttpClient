@@ -1,11 +1,17 @@
-package org.javamaster.httpclient.reference.support
+package org.javamaster.httpclient.jsPlugin
 
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.project.Project
+import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTreeUtil.findChildrenOfType
 import com.intellij.psi.util.PsiTreeUtil.getChildOfType
 import org.javamaster.httpclient.psi.HttpScriptBody
@@ -15,6 +21,20 @@ object JavaScript {
     private val pluginClassLoader by lazy {
         val plugin = findPlugin() ?: return@lazy null
         plugin.pluginClassLoader
+    }
+
+    val jsLanguage by lazy {
+        val plugin = findPlugin() ?: return@lazy null
+        val pluginClassLoader = plugin.pluginClassLoader ?: return@lazy null
+
+        val name = "com.intellij.lang.javascript.JavaScriptSupportLoader"
+        val clz = pluginClassLoader.loadClass(name)
+
+        val field = clz.getDeclaredField("JAVASCRIPT")
+        field.isAccessible = true
+        val languageFileType = field.get(null) as LanguageFileType
+
+        languageFileType.language
     }
 
     fun resolveJsVariable(
@@ -84,6 +104,33 @@ object JavaScript {
     private fun findPlugin(): IdeaPluginDescriptor? {
         val pluginId = PluginId.findId("JavaScript") ?: return null
         return PluginManager.getInstance().findEnabledPlugin(pluginId)
+    }
+
+    fun createJsVariable(project: Project, injectedPsiFile: PsiFile, variableName: String): PsiElement? {
+        if (pluginClassLoader == null) {
+            return null
+        }
+
+        val loader = pluginClassLoader!!
+        val clzJSExpressionStatement = loadClass("com.intellij.lang.javascript.psi.JSExpressionStatement", loader)
+
+        val js = "request.variables.set('$variableName', '');\n"
+
+        val psiFileFactory = PsiFileFactory.getInstance(project)
+
+        val tmpFile = psiFileFactory.createFileFromText("dummy.js", jsLanguage!!, js)
+        val newExpressionStatement = PsiTreeUtil.findChildOfType(tmpFile, clzJSExpressionStatement)!!
+
+        val elementCopy = injectedPsiFile.add(newExpressionStatement)
+        injectedPsiFile.add(newExpressionStatement.nextSibling)
+
+        // 将光标移动到引号内
+        (elementCopy.lastChild as Navigatable).navigate(true)
+        val caretModel =
+            FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return newExpressionStatement
+        caretModel.moveToOffset(caretModel.offset - 2)
+
+        return newExpressionStatement
     }
 
 }
