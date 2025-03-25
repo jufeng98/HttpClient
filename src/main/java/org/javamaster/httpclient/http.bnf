@@ -100,7 +100,7 @@ requestTarget ::= (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? 
 schema ::= SCHEMA_PART
 host ::= HOST_VALUE | variable
 
-variable ::= START_VARIABLE_BRACE variable_builtin? variable_reference variable_args? END_VARIABLE_BRACE {
+variable ::= START_VARIABLE_BRACE variable_name variable_args? END_VARIABLE_BRACE {
     methods = [
         getName
         getReferences
@@ -108,6 +108,7 @@ variable ::= START_VARIABLE_BRACE variable_builtin? variable_reference variable_
     ]
     pin = 1
 }
+variable_name ::= variable_builtin? variable_reference
 variable_builtin ::= DOLLAR
 variable_reference ::= IDENTIFIER
 variable_args ::= LEFT_BRACKET variable_arg? (COMMA variable_arg)* RIGHT_BRACKET {

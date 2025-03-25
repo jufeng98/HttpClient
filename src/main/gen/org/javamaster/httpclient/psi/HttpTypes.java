@@ -52,6 +52,7 @@ public interface HttpTypes {
   IElementType VARIABLE_ARG = new HttpElementType("VARIABLE_ARG");
   IElementType VARIABLE_ARGS = new HttpElementType("VARIABLE_ARGS");
   IElementType VARIABLE_BUILTIN = new HttpElementType("VARIABLE_BUILTIN");
+  IElementType VARIABLE_NAME = new HttpElementType("VARIABLE_NAME");
   IElementType VARIABLE_REFERENCE = new HttpElementType("VARIABLE_REFERENCE");
   IElementType VERSION = new HttpElementType("VERSION");
 
@@ -237,6 +238,9 @@ public interface HttpTypes {
       }
       else if (type == VARIABLE_BUILTIN) {
         return new HttpVariableBuiltinImpl(node);
+      }
+      else if (type == VARIABLE_NAME) {
+        return new HttpVariableNameImpl(node);
       }
       else if (type == VARIABLE_REFERENCE) {
         return new HttpVariableReferenceImpl(node);

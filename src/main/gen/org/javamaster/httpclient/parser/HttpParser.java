@@ -921,7 +921,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // START_VARIABLE_BRACE variable_builtin? variable_reference variable_args? END_VARIABLE_BRACE
+  // START_VARIABLE_BRACE variable_name variable_args? END_VARIABLE_BRACE
   public static boolean variable(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "variable")) return false;
     if (!nextTokenIs(b, START_VARIABLE_BRACE)) return false;
@@ -929,24 +929,16 @@ public class HttpParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, VARIABLE, null);
     r = consumeToken(b, START_VARIABLE_BRACE);
     p = r; // pin = 1
-    r = r && report_error_(b, variable_1(b, l + 1));
-    r = p && report_error_(b, variable_reference(b, l + 1)) && r;
-    r = p && report_error_(b, variable_3(b, l + 1)) && r;
+    r = r && report_error_(b, variable_name(b, l + 1));
+    r = p && report_error_(b, variable_2(b, l + 1)) && r;
     r = p && consumeToken(b, END_VARIABLE_BRACE) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
 
-  // variable_builtin?
-  private static boolean variable_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "variable_1")) return false;
-    variable_builtin(b, l + 1);
-    return true;
-  }
-
   // variable_args?
-  private static boolean variable_3(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "variable_3")) return false;
+  private static boolean variable_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "variable_2")) return false;
     variable_args(b, l + 1);
     return true;
   }
@@ -1019,6 +1011,26 @@ public class HttpParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, DOLLAR);
     exit_section_(b, m, VARIABLE_BUILTIN, r);
     return r;
+  }
+
+  /* ********************************************************** */
+  // variable_builtin? variable_reference
+  public static boolean variable_name(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "variable_name")) return false;
+    if (!nextTokenIs(b, "<variable name>", DOLLAR, IDENTIFIER)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, VARIABLE_NAME, "<variable name>");
+    r = variable_name_0(b, l + 1);
+    r = r && variable_reference(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // variable_builtin?
+  private static boolean variable_name_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "variable_name_0")) return false;
+    variable_builtin(b, l + 1);
+    return true;
   }
 
   /* ********************************************************** */

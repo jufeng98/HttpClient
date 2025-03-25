@@ -183,6 +183,10 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitVariableName(@NotNull HttpVariableName o) {
+    visitPsiElement(o);
+  }
+
   public void visitVariableReference(@NotNull HttpVariableReference o) {
     visitPsiElement(o);
   }

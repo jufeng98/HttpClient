@@ -10,16 +10,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
-import com.intellij.psi.PsiReference;
 
-public class HttpVariableImpl extends ASTWrapperPsiElement implements HttpVariable {
+public class HttpVariableNameImpl extends ASTWrapperPsiElement implements HttpVariableName {
 
-  public HttpVariableImpl(@NotNull ASTNode node) {
+  public HttpVariableNameImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitVariable(this);
+    visitor.visitVariableName(this);
   }
 
   @Override
@@ -30,31 +29,14 @@ public class HttpVariableImpl extends ASTWrapperPsiElement implements HttpVariab
 
   @Override
   @Nullable
-  public HttpVariableArgs getVariableArgs() {
-    return findChildByClass(HttpVariableArgs.class);
-  }
-
-  @Override
-  @Nullable
-  public HttpVariableName getVariableName() {
-    return findChildByClass(HttpVariableName.class);
+  public HttpVariableBuiltin getVariableBuiltin() {
+    return findChildByClass(HttpVariableBuiltin.class);
   }
 
   @Override
   @NotNull
-  public String getName() {
-    return HttpPsiImplUtil.getName(this);
-  }
-
-  @Override
-  @NotNull
-  public PsiReference[] getReferences() {
-    return HttpPsiImplUtil.getReferences(this);
-  }
-
-  @Override
-  public boolean isBuiltin() {
-    return HttpPsiImplUtil.isBuiltin(this);
+  public HttpVariableReference getVariableReference() {
+    return findNotNullChildByClass(HttpVariableReference.class);
   }
 
 }

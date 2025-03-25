@@ -12,10 +12,7 @@ public interface HttpVariable extends PsiElement {
   HttpVariableArgs getVariableArgs();
 
   @Nullable
-  HttpVariableBuiltin getVariableBuiltin();
-
-  @Nullable
-  HttpVariableReference getVariableReference();
+  HttpVariableName getVariableName();
 
   @NotNull
   String getName();
