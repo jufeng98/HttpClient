@@ -70,9 +70,11 @@ public class HttpEditorTopForm extends JComponent {
                 VirtualFile virtualFile = VfsUtil.findFileByURL(url);
                 //noinspection DataFlowIssue
                 FileEditorManager.getInstance(project).openFile(virtualFile, true);
-                exampleComboBox.setSelectedIndex(0);
             }
+
+            exampleComboBox.setSelectedIndex(0);
         });
+
         showVariableBtn.addActionListener(e -> {
             ViewVariableForm viewVariableForm = new ViewVariableForm(project);
             viewVariableForm.show();

@@ -35,12 +35,12 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %unicode
 //%debug
 %state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_COMMENT
-%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE
+%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE, IN_TRIM_PREFIX_ONLY_SPACE
 %xstate IN_PATH
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
 %state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION
-%state IN_MULTIPART, IN_VARIABLE, IN_DINAMIC_VARIABLE, IN_GLOBAL_VARIABLE
+%state IN_MULTIPART, IN_VARIABLE, IN_DINAMIC_VARIABLE, IN_GLOBAL_VARIABLE, IN_GLOBAL_VARIABLE_VALUE
 
 EOL=\R
 EOL_MULTI=[ ]*\R+
@@ -62,7 +62,7 @@ FIELD_VALUE=[^\r\n{ ]+
 FILE_PATH_PART=[^\r\n<>{} ]+
 MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
 VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
-GLOBAL_VARIABLE_PART=[^\r\n={} ]+
+GLOBAL_VARIABLE_NAME=[^\r\n={} ]+
 DIRECTION_PART=[^\r\n ]+
 %%
 
@@ -71,7 +71,7 @@ DIRECTION_PART=[^\r\n ]+
   "# @"                       { nameFlag = true; yybegin(IN_DIRECTION_COMMENT); return DIRECTION_COMMENT_START; }
   "<! {%"{EOL_MULTI}          { yybegin(IN_GLOBAL_SCRIPT); return GLOBAL_START_SCRIPT_BRACE; }
   "< {%"{EOL_MULTI}           { yybegin(IN_PRE_SCRIPT); return IN_START_SCRIPT_BRACE; }
-  "@"                         { nameFlag = true; yybegin(IN_GLOBAL_VARIABLE); return AT; }
+  "@"                         { yybegin(IN_GLOBAL_VARIABLE); return AT; }
   {REQUEST_METHOD}            { yybegin(IN_FIRST_LINE); return REQUEST_METHOD; }
   {WHITE_SPACE}               { return WHITE_SPACE; }
 }
@@ -89,11 +89,16 @@ DIRECTION_PART=[^\r\n ]+
 }
 
 <IN_GLOBAL_VARIABLE> {
-  {GLOBAL_VARIABLE_PART}        { if(nameFlag) return GLOBAL_NAME; else return GLOBAL_VALUE; }
-  "="                           { nameFlag = false; return EQUALS; }
-  "{{"                          { nextState = IN_GLOBAL_VARIABLE; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
+  {GLOBAL_VARIABLE_NAME}        { return GLOBAL_NAME; }
+  "="                           { nextState = IN_GLOBAL_VARIABLE_VALUE; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return EQUALS; }
   {ONLY_SPACE}                  { return WHITE_SPACE; }
   {EOL_MULTI}                   { yybegin(YYINITIAL); return WHITE_SPACE; }
+}
+
+<IN_GLOBAL_VARIABLE_VALUE> {
+  [^\r\n{]+                     { return GLOBAL_VALUE; }
+  "{{"                          { nextState = IN_GLOBAL_VARIABLE_VALUE; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
+  {EOL}                         { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 
 <IN_VARIABLE> {
@@ -234,6 +239,11 @@ DIRECTION_PART=[^\r\n ]+
 
 <IN_TRIM_PREFIX_SPACE> {
   \s*                         { return WHITE_SPACE; }
+  [^]                         { yypushback(yylength()); yybegin(nextState); }
+}
+
+<IN_TRIM_PREFIX_ONLY_SPACE> {
+  [ ]*                        { return WHITE_SPACE; }
   [^]                         { yypushback(yylength()); yybegin(nextState); }
 }
 
