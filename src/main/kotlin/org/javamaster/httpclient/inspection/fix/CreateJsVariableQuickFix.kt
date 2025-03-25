@@ -14,8 +14,7 @@ import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.HttpLanguage
-import org.javamaster.httpclient.jsPlugin.JavaScript
-import org.javamaster.httpclient.jsPlugin.WebCalm
+import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 
@@ -70,12 +69,7 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
         val injectedPsiFiles = InjectedLanguageManager.getInstance(project).getInjectedPsiFiles(scriptBody)
         val injectedPsiFile = injectedPsiFiles?.get(0)?.first as PsiFile? ?: return
 
-        val jsVariable = JavaScript.createJsVariable(project, injectedPsiFile, variableName)
-        if (jsVariable != null) {
-            return
-        }
-
-        WebCalm.createJsVariable(project, injectedPsiFile, variableName)
+        JsFacade.createJsVariable(project, injectedPsiFile, variableName)
     }
 
     private fun createAndAddHandler(project: Project, httpFile: HttpFile, requestBlock: HttpRequestBlock) {
@@ -111,7 +105,7 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
         }
 
         // 将光标移动到引号内
-        val jsVariable = WebCalm.resolveJsVariable(variableName, project, listOf(scriptBody))!!
+        val jsVariable = JsFacade.resolveJsVariable(variableName, project, listOf(scriptBody))!!
         (jsVariable.parent.lastChild.prevSibling as Navigatable).navigate(true)
         val caretModel = FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return
         caretModel.moveToOffset(caretModel.offset + 1)

@@ -43,7 +43,11 @@ object InspectionHelper {
 
                 if (resolve != null) continue
 
-                val fixes = mutableListOf< LocalQuickFix>(
+                if (variableName.startsWith("$")) {
+                    continue
+                }
+
+                val fixes = mutableListOf<LocalQuickFix>(
                     CreateEnvVariableQuickFix(false, variableName),
                     CreateEnvVariableQuickFix(true, variableName),
                 )

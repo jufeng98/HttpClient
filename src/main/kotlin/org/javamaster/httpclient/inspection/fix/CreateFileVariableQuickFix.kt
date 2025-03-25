@@ -21,7 +21,7 @@ import org.javamaster.httpclient.psi.HttpGlobalVariable
 class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickFix {
 
     override fun getFamilyName(): String {
-        return "Create variable unsolved in GlobalVariable"
+        return "Create variable unsolved in global variable"
     }
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {

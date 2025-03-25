@@ -12,8 +12,9 @@ import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.jsPlugin.JavaScript
-import org.javamaster.httpclient.jsPlugin.WebCalm
+import org.javamaster.httpclient.jsPlugin.support.JavaScript
+import org.javamaster.httpclient.jsPlugin.JsFacade
+import org.javamaster.httpclient.jsPlugin.support.WebCalm
 import org.javamaster.httpclient.psi.HttpOutputFilePath
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.HttpVariable
@@ -148,12 +149,7 @@ class HttpVariablePsiReference(element: HttpVariable, val variableName: String, 
             if (searchInPreJs) {
                 val scriptBodyList = HttpUtils.getAllPreJsScripts(httpFile, requestBlock).reversed()
 
-                var jsVariable = JavaScript.resolveJsVariable(variableName, project, scriptBodyList)
-                if (jsVariable != null) {
-                    return jsVariable
-                }
-
-                jsVariable = WebCalm.resolveJsVariable(variableName, project, scriptBodyList)
+                val jsVariable = JsFacade.resolveJsVariable(variableName, project, scriptBodyList)
                 if (jsVariable != null) {
                     return jsVariable
                 }
