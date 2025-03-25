@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
-import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvVariables
+import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
@@ -54,7 +54,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     var xPath: XPath? = null
 
     fun initJsRequestObj(reqBody: Any?, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
-        val environment = gson.toJson(getEnvVariables(project))
+        val environment = gson.toJson(getEnvMap(project))
 
         val headers = gson.toJson(reqHeaderMap)
 
