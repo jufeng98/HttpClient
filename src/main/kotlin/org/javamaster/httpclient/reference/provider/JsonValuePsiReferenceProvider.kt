@@ -56,7 +56,8 @@ class JsonValuePsiReferenceProvider : PsiReferenceProvider() {
         while (pair != null) {
             val textRange = TextRange(pair.first, pair.second)
             val variableName = value.substring(pair.first, pair.second)
-            val reference = JsonValueVariablePsiReference(literal, variableName, textRange, element)
+            val builtin = variableName.startsWith("$")
+            val reference = JsonValueVariablePsiReference(literal, builtin, variableName, textRange, element)
 
             list.add(reference)
 

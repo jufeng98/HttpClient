@@ -23,11 +23,9 @@ class JsonValueVariableAnnotator : Annotator {
                 return@forEach
             }
 
-            val variableName = it.variableName
-
             val range = it.textRange.shiftRight(element.startOffset)
 
-            annotateVariable(variableName.startsWith("$"), range, holder)
+            annotateVariable(it.builtin, range, holder)
         }
     }
 

@@ -18,7 +18,6 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
         context: ProcessingContext,
     ): Array<PsiReference> {
         val variable = element as HttpVariable
-        val variableName = variable.name
 
         val rangeInParent = element.textRangeInParent
         val start = rangeInParent.startOffset + 2
@@ -30,7 +29,7 @@ class HttpVariablePsiReferenceProvider : PsiReferenceProvider() {
 
         val range = TextRange(start, end)
 
-        return arrayOf(HttpVariablePsiReference(element, variableName, range))
+        return arrayOf(HttpVariablePsiReference(element, variable.isBuiltin, variable.name, range))
     }
 
 }

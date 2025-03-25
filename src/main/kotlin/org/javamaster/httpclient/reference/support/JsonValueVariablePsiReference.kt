@@ -10,13 +10,14 @@ import com.intellij.psi.PsiReferenceBase
  */
 class JsonValueVariablePsiReference(
     jsonString: JsonStringLiteral,
+    val builtin: Boolean,
     val variableName: String,
     val textRange: TextRange,
     private val psiElement: PsiElement,
 ) : PsiReferenceBase<JsonStringLiteral>(jsonString, textRange, true) {
 
     override fun resolve(): PsiElement? {
-        return HttpVariablePsiReference.tryResolveVariable(variableName, psiElement, false)
+        return HttpVariablePsiReference.tryResolveVariable(variableName, builtin, psiElement, false)
     }
 
     override fun getVariants(): Array<Any> {

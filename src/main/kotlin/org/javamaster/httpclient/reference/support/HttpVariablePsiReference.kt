@@ -12,8 +12,8 @@ import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.jsPlugin.support.JavaScript
 import org.javamaster.httpclient.jsPlugin.JsFacade
+import org.javamaster.httpclient.jsPlugin.support.JavaScript
 import org.javamaster.httpclient.jsPlugin.support.WebCalm
 import org.javamaster.httpclient.psi.HttpOutputFilePath
 import org.javamaster.httpclient.psi.HttpRequestBlock
@@ -27,11 +27,16 @@ import java.nio.file.Paths
 /**
  * @author yudong
  */
-class HttpVariablePsiReference(element: HttpVariable, val variableName: String, val textRange: TextRange) :
+class HttpVariablePsiReference(
+    element: HttpVariable,
+    val builtin: Boolean,
+    val variableName: String,
+    val textRange: TextRange,
+) :
     PsiReferenceBase<HttpVariable>(element, textRange) {
 
     override fun resolve(): PsiElement? {
-        return tryResolveVariable(variableName, element, true)
+        return tryResolveVariable(variableName, builtin, element, true)
     }
 
     override fun getVariants(): Array<Any> {
@@ -94,7 +99,12 @@ class HttpVariablePsiReference(element: HttpVariable, val variableName: String, 
             return allList.toTypedArray()
         }
 
-        fun tryResolveVariable(variableName: String, element: PsiElement, searchInPreJs: Boolean): PsiElement? {
+        fun tryResolveVariable(
+            variableName: String,
+            builtin: Boolean,
+            element: PsiElement,
+            searchInPreJs: Boolean,
+        ): PsiElement? {
             val httpFile = element.containingFile
             val project = httpFile.project
             val httpFileParentPath = httpFile.virtualFile?.parent?.path ?: return null
@@ -116,7 +126,7 @@ class HttpVariablePsiReference(element: HttpVariable, val variableName: String, 
                 return PsiManager.getInstance(project).findDirectory(virtualFile)
             }
 
-            if (variableName.startsWith("$")) {
+            if (builtin) {
                 return null
             }
 

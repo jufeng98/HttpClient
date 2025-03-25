@@ -21,16 +21,20 @@ object InspectionHelper {
 
         for (element in psiElements) {
             for (reference in element.references) {
+                val builtin: Boolean
                 val variableName = when (reference) {
                     is HttpVariablePsiReference -> {
+                        builtin = reference.builtin
                         reference.variableName
                     }
 
                     is JsonValueVariablePsiReference -> {
+                        builtin = reference.builtin
                         reference.variableName
                     }
 
                     else -> {
+                        builtin = false
                         null
                     }
                 }
@@ -39,13 +43,13 @@ object InspectionHelper {
                     continue
                 }
 
+                if (builtin) {
+                    continue
+                }
+
                 val resolve = reference.resolve()
 
                 if (resolve != null) continue
-
-                if (variableName.startsWith("$")) {
-                    continue
-                }
 
                 val fixes = mutableListOf<LocalQuickFix>(
                     CreateEnvVariableQuickFix(false, variableName),
