@@ -27,7 +27,7 @@ import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME
  */
 public class HttpEditorTopForm extends JComponent {
     public static final Key<HttpEditorTopForm> KEY = Key.create("httpRequest.httpEditorTopForm");
-    private final VirtualFile file;
+    public final VirtualFile file;
     private final Module module;
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
@@ -61,9 +61,9 @@ public class HttpEditorTopForm extends JComponent {
             } else if (Objects.equals(selectedItem, "show CryptoJS file")) {
                 url = classLoader.getResource("examples/crypto-js.js");
             } else if (Objects.equals(selectedItem, "Create env.json file")) {
-                createAndReInitEnvCompo(ENV_FILE_NAME, false);
+                createAndReInitEnvCompo(false);
             } else if (Objects.equals(selectedItem, "Create env.private.json file")) {
-                createAndReInitEnvCompo(PRIVATE_ENV_FILE_NAME, true);
+                createAndReInitEnvCompo(true);
             }
 
             if (url != null) {
@@ -81,18 +81,20 @@ public class HttpEditorTopForm extends JComponent {
         });
     }
 
-    private void createAndReInitEnvCompo(String fileName, boolean isPrivate) {
-        VirtualFile envFile = EnvFileService.Companion.createEnvFile(fileName, isPrivate, project);
+    public void createAndReInitEnvCompo(boolean isPrivate) {
+        String envFileName = isPrivate ? PRIVATE_ENV_FILE_NAME : ENV_FILE_NAME;
+
+        VirtualFile envFile = EnvFileService.Companion.createEnvFile(envFileName, isPrivate, project);
         exampleComboBox.setSelectedIndex(0);
         if (envFile == null) {
-            NotifyUtil.INSTANCE.notifyWarn(project, fileName + "环境文件已存在!");
+            NotifyUtil.INSTANCE.notifyWarn(project, envFileName + "环境文件已存在!");
             return;
         }
 
         FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
         fileEditorManager.openFile(envFile, true);
 
-        NotifyUtil.INSTANCE.notifyInfo(project, "成功创建环境文件:" + fileName);
+        NotifyUtil.INSTANCE.notifyInfo(project, "成功创建环境文件:" + envFileName);
 
         try {
             Module module = ModuleUtil.findModuleForFile(envFile, project);
@@ -114,54 +116,6 @@ public class HttpEditorTopForm extends JComponent {
             //noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
-    }
-
-    public static @Nullable String getSelectedEnv(Project project) {
-        HttpEditorTopForm httpEditorTopForm = getSelectedEditorTopForm(project);
-        if (httpEditorTopForm == null) {
-            return null;
-        }
-
-        return httpEditorTopForm.getSelectedEnv();
-    }
-
-    public static @Nullable Triple<String, VirtualFile, Module> getTriple(Project project) {
-        HttpEditorTopForm topForm = getSelectedEditorTopForm(project);
-        if (topForm == null) {
-            return null;
-        }
-
-        return new Triple<>(topForm.getSelectedEnv(), topForm.file, topForm.module);
-    }
-
-    private static @Nullable HttpEditorTopForm getSelectedEditorTopForm(Project project) {
-        FileEditorManager editorManager = FileEditorManager.getInstance(project);
-        FileEditor selectedEditor = editorManager.getSelectedEditor();
-        if (selectedEditor == null) {
-            return null;
-        }
-
-        return selectedEditor.getUserData(HttpEditorTopForm.KEY);
-    }
-
-    public static void setCurrentEditorSelectedEnv(String httpFilePath, Project project, String env) {
-        FileEditorManager editorManager = FileEditorManager.getInstance(project);
-        FileEditor selectedEditor = editorManager.getSelectedEditor();
-        if (selectedEditor == null) {
-            return;
-        }
-
-        VirtualFile virtualFile = selectedEditor.getFile();
-        if (virtualFile == null || !Objects.equals(httpFilePath, virtualFile.getPath())) {
-            return;
-        }
-
-        HttpEditorTopForm httpEditorTopForm = selectedEditor.getUserData(HttpEditorTopForm.KEY);
-        if (httpEditorTopForm == null) {
-            return;
-        }
-
-        httpEditorTopForm.setSelectEnv(env);
     }
 
     public void initEnvCombo() {
@@ -192,4 +146,51 @@ public class HttpEditorTopForm extends JComponent {
         }
     }
 
+    public static @Nullable String getSelectedEnv(Project project) {
+        HttpEditorTopForm httpEditorTopForm = getSelectedEditorTopForm(project);
+        if (httpEditorTopForm == null) {
+            return null;
+        }
+
+        return httpEditorTopForm.getSelectedEnv();
+    }
+
+    public static @Nullable Triple<String, VirtualFile, Module> getTriple(Project project) {
+        HttpEditorTopForm topForm = getSelectedEditorTopForm(project);
+        if (topForm == null) {
+            return null;
+        }
+
+        return new Triple<>(topForm.getSelectedEnv(), topForm.file, topForm.module);
+    }
+
+    public static @Nullable HttpEditorTopForm getSelectedEditorTopForm(Project project) {
+        FileEditorManager editorManager = FileEditorManager.getInstance(project);
+        FileEditor selectedEditor = editorManager.getSelectedEditor();
+        if (selectedEditor == null) {
+            return null;
+        }
+
+        return selectedEditor.getUserData(HttpEditorTopForm.KEY);
+    }
+
+    public static void setCurrentEditorSelectedEnv(String httpFilePath, Project project, String env) {
+        FileEditorManager editorManager = FileEditorManager.getInstance(project);
+        FileEditor selectedEditor = editorManager.getSelectedEditor();
+        if (selectedEditor == null) {
+            return;
+        }
+
+        VirtualFile virtualFile = selectedEditor.getFile();
+        if (virtualFile == null || !Objects.equals(httpFilePath, virtualFile.getPath())) {
+            return;
+        }
+
+        HttpEditorTopForm httpEditorTopForm = selectedEditor.getUserData(HttpEditorTopForm.KEY);
+        if (httpEditorTopForm == null) {
+            return;
+        }
+
+        httpEditorTopForm.setSelectEnv(env);
+    }
 }

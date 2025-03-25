@@ -1,5 +1,7 @@
 package org.javamaster.httpclient.env
 
+import com.intellij.json.JsonElementTypes
+import com.intellij.json.JsonLanguage
 import com.intellij.json.psi.*
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.Service
@@ -9,12 +11,16 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.writeText
+import com.intellij.pom.Navigatable
+import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.indexing.FileBasedIndex
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.index.HttpEnvironmentIndex.Companion.INDEX_ID
+import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
@@ -29,37 +35,31 @@ import java.io.File
 class EnvFileService(val project: Project) {
 
     fun getPresetEnvList(httpFileParentPath: String): MutableSet<String> {
-        val keySet1 = collectEnvNames(ENV_FILE_NAME, httpFileParentPath)
+        val envSet = LinkedHashSet<String>()
 
-        val keySet2 = collectEnvNames(PRIVATE_ENV_FILE_NAME, httpFileParentPath)
+        val privateEnvList = collectEnvNames(getEnvJsonFile(PRIVATE_ENV_FILE_NAME, httpFileParentPath, project))
+        envSet.addAll(privateEnvList)
 
-        val set = mutableSetOf<String>()
-        set.addAll(keySet1)
-        set.addAll(keySet2)
+        val envList = collectEnvNames(getEnvJsonFile(ENV_FILE_NAME, httpFileParentPath, project))
+        envSet.addAll(envList)
 
-        set.remove(COMMON_ENV_NAME)
+        envSet.remove(COMMON_ENV_NAME)
 
-        return set
+        return envSet
     }
 
-    private fun collectEnvNames(envFileName: String, httpFileParentPath: String): Set<String> {
-        val fileName = "$httpFileParentPath/$envFileName"
-        val virtualFile = VfsUtil.findFileByIoFile(File(fileName), true) ?: return setOf()
-        return collectEnvNames(virtualFile)
-    }
-
-    private fun collectEnvNames(virtualFile: VirtualFile): Set<String> {
-        val privateJsonFile = PsiUtil.getPsiFile(project, virtualFile) as JsonFile
-        val jsonValue = privateJsonFile.topLevelValue
-
-        if (jsonValue !is JsonObject) {
-            throw IllegalArgumentException("配置文件:${virtualFile.name}格式不符合规范!")
+    private fun collectEnvNames(jsonFile: JsonFile?): List<String> {
+        if (jsonFile == null) {
+            return emptyList()
         }
 
-        val propertyList = jsonValue.propertyList
-        val names = propertyList.map { it.name }.toList()
+        val jsonValue = jsonFile.topLevelValue
 
-        return LinkedHashSet(names)
+        if (jsonValue !is JsonObject) {
+            throw IllegalArgumentException("配置文件:${jsonFile.virtualFile.path}格式不符合规范!")
+        }
+
+        return jsonValue.propertyList.map { it.name }.toList()
     }
 
     fun getEnvValue(key: String, selectedEnv: String?, httpFileParentPath: String): String? {
@@ -81,29 +81,69 @@ class EnvFileService(val project: Project) {
         return getEnvValue(key, COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME)
     }
 
+    fun createEnvValue(key: String, selectedEnv: String, httpFileParentPath: String, envFileName: String) {
+        val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return
+
+        val topLevelValue = jsonFile.topLevelValue
+        if (topLevelValue !is JsonObject) {
+            return
+        }
+
+        val envProperty = topLevelValue.findProperty(selectedEnv) ?: return
+        val value = envProperty.value
+        if (value !is JsonObject) {
+            return
+        }
+
+        val text = """
+            {
+                "$key": "",
+            }
+        """.trimIndent()
+
+        val psiFileFactory = PsiFileFactory.getInstance(project)
+        val tmpFile = psiFileFactory.createFileFromText("dummy.json", JsonLanguage.INSTANCE, text)
+
+        val newProperty = PsiTreeUtil.findChildOfType(tmpFile, JsonProperty::class.java)!!
+        val newComma = HttpPsiUtils.getNextSiblingByType(newProperty, JsonElementTypes.COMMA, false)!!
+
+        val propertyList = value.propertyList
+
+        if (propertyList.isNotEmpty()) {
+            value.addAfter(newComma, propertyList.last())
+        }
+
+        val elementCopy = value.addBefore(newProperty, value.lastChild)
+
+        // 将光标移动到引号内
+        (elementCopy.lastChild as Navigatable).navigate(true)
+        val caretModel = FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return
+        caretModel.moveToOffset(caretModel.offset + 1)
+    }
+
     private fun getEnvValue(
         key: String,
         selectedEnv: String?,
         httpFileParentPath: String,
         envFileName: String,
     ): String? {
-        val innerJsonValue = getEnvEle(key, selectedEnv, httpFileParentPath, envFileName, project) ?: return null
+        val literal = getEnvEleLiteral(key, selectedEnv, httpFileParentPath, envFileName, project) ?: return null
 
-        val value = when (innerJsonValue) {
+        val value = when (literal) {
             is JsonStringLiteral -> {
-                innerJsonValue.value
+                literal.value
             }
 
             is JsonNumberLiteral -> {
-                "" + innerJsonValue.value
+                "" + literal.value
             }
 
             is JsonBooleanLiteral -> {
-                innerJsonValue.value.toString()
+                literal.value.toString()
             }
 
             else -> {
-                throw RuntimeException("error:$innerJsonValue")
+                throw IllegalArgumentException("error:$literal")
             }
         }
 
@@ -113,7 +153,7 @@ class EnvFileService(val project: Project) {
     companion object {
         const val ENV_FILE_NAME = "http-client.env.json"
         const val PRIVATE_ENV_FILE_NAME = "http-client.private.env.json"
-        val ENV_FILE_NAMES: Array<String> = arrayOf(ENV_FILE_NAME, PRIVATE_ENV_FILE_NAME)
+        val ENV_FILE_NAMES = arrayOf(ENV_FILE_NAME, PRIVATE_ENV_FILE_NAME)
 
         const val COMMON_ENV_NAME = "common"
 
@@ -131,9 +171,9 @@ class EnvFileService(val project: Project) {
 
             return WriteAction.computeAndWait<VirtualFile, Exception> {
                 val psiDirectory = PsiManager.getInstance(project).findDirectory(parent)!!
-                val newFile = psiDirectory.createFile(name).virtualFile
+                val newJsonFile = psiDirectory.createFile(name).virtualFile
                 if (isPrivate) {
-                    newFile.writeText(
+                    newJsonFile.writeText(
                         """
                             {
                               "dev": {
@@ -149,7 +189,7 @@ class EnvFileService(val project: Project) {
                 """.trimIndent()
                     )
                 } else {
-                    newFile.writeText(
+                    newJsonFile.writeText(
                         """
                             {
                               "dev": {
@@ -169,7 +209,7 @@ class EnvFileService(val project: Project) {
                     )
                 }
 
-                newFile
+                newJsonFile
             }
         }
 
@@ -183,25 +223,26 @@ class EnvFileService(val project: Project) {
             return matcher.replaceAll {
                 val matchStr = it.group()
                 val variable = matchStr.substring(2, matchStr.length - 2)
+
                 val innerVariableEnum = InnerVariableEnum.getEnum(variable) ?: return@replaceAll "{{\\$variable}}"
 
                 innerVariableEnum.exec(variable, httpFileParentPath)
             }
         }
 
-        private fun getEnvVariablesFromIndex(
+        private fun getEnvMapFromIndex(
             project: Project,
             selectedEnv: String?,
             httpFileParentPath: String,
             module: Module,
         ): MutableMap<String, String>? {
-            if (selectedEnv == null) return null
+            selectedEnv ?: return null
 
             val projectScope = GlobalSearchScope.projectScope(project)
-            val map = collectEnvMapFromIndex(selectedEnv, httpFileParentPath, projectScope)
+            val map = getEnvMapFromIndex(selectedEnv, httpFileParentPath, projectScope)
 
             val moduleScope = GlobalSearchScope.moduleScope(module)
-            map.putAll(collectEnvMapFromIndex(selectedEnv, httpFileParentPath, moduleScope))
+            map.putAll(getEnvMapFromIndex(selectedEnv, httpFileParentPath, moduleScope))
 
             if (map.isEmpty()) {
                 return null
@@ -210,7 +251,7 @@ class EnvFileService(val project: Project) {
             return map
         }
 
-        private fun collectEnvMapFromIndex(
+        private fun getEnvMapFromIndex(
             selectedEnv: String,
             httpFileParentPath: String,
             scope: GlobalSearchScope,
@@ -235,7 +276,7 @@ class EnvFileService(val project: Project) {
             return map
         }
 
-        fun getEnvVariables(project: Project, tryIndex: Boolean = true): MutableMap<String, String> {
+        fun getEnvMap(project: Project, tryIndex: Boolean = true): MutableMap<String, String> {
             val triple = HttpEditorTopForm.getTriple(project) ?: return mutableMapOf()
 
             val selectedEnv = triple.first
@@ -243,7 +284,7 @@ class EnvFileService(val project: Project) {
             val module = triple.third
 
             if (tryIndex) {
-                val mapFromIndex = getEnvVariablesFromIndex(project, selectedEnv, httpFileParentPath, module)
+                val mapFromIndex = getEnvMapFromIndex(project, selectedEnv, httpFileParentPath, module)
                 if (mapFromIndex != null) {
                     return mapFromIndex
                 }
@@ -251,39 +292,36 @@ class EnvFileService(val project: Project) {
 
             val map = linkedMapOf<String, String>()
 
-            map.putAll(getEnvVariables(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project))
+            map.putAll(getEnvMap(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project))
 
-            map.putAll(getEnvVariables(COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
+            map.putAll(getEnvMap(COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
 
-            map.putAll(getEnvVariables(selectedEnv, httpFileParentPath, ENV_FILE_NAME, project))
+            map.putAll(getEnvMap(selectedEnv, httpFileParentPath, ENV_FILE_NAME, project))
 
-            map.putAll(getEnvVariables(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
+            map.putAll(getEnvMap(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
 
             return map
         }
 
-        private fun getEnvVariables(
+        private fun getEnvMap(
             selectedEnv: String?,
             httpFileParentPath: String,
             envFileName: String,
             project: Project,
         ): Map<String, String> {
             val env = selectedEnv ?: COMMON_ENV_NAME
-            val fileName = "$httpFileParentPath/$envFileName"
 
-            val virtualFile = VfsUtil.findFileByIoFile(File(fileName), true) ?: return mapOf()
-
-            val psiFile = PsiUtil.getPsiFile(project, virtualFile) as JsonFile
+            val psiFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return emptyMap()
 
             val topLevelValue = psiFile.topLevelValue
             if (topLevelValue !is JsonObject) {
-                throw IllegalArgumentException("配置文件:${fileName}外层格式不符合规范!")
+                throw IllegalArgumentException("配置文件:${psiFile.virtualFile.path}外层格式不符合规范!")
             }
 
             val envProperty = topLevelValue.findProperty(env) ?: return mapOf()
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
-                throw IllegalArgumentException("配置文件:${fileName}内层格式不符合规范!")
+                throw IllegalArgumentException("配置文件:${psiFile.virtualFile.path}内层格式不符合规范!")
             }
 
             val envFileService = getService(project)
@@ -299,31 +337,31 @@ class EnvFileService(val project: Project) {
             return map
         }
 
-        fun getEnvEle(
+        fun getEnvEleLiteral(
             key: String,
             selectedEnv: String?,
             httpFileParentPath: String,
             project: Project,
         ): JsonLiteral? {
-            var jsonLiteral = getEnvEle(key, selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
-            if (jsonLiteral != null) {
-                return jsonLiteral
+            var literal = getEnvEleLiteral(key, selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+            if (literal != null) {
+                return literal
             }
 
-            jsonLiteral = getEnvEle(key, selectedEnv, httpFileParentPath, ENV_FILE_NAME, project)
-            if (jsonLiteral != null) {
-                return jsonLiteral
+            literal = getEnvEleLiteral(key, selectedEnv, httpFileParentPath, ENV_FILE_NAME, project)
+            if (literal != null) {
+                return literal
             }
 
-            jsonLiteral = getEnvEle(key, COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
-            if (jsonLiteral != null) {
-                return jsonLiteral
+            literal = getEnvEleLiteral(key, COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+            if (literal != null) {
+                return literal
             }
 
-            return getEnvEle(key, COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project)
+            return getEnvEleLiteral(key, COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project)
         }
 
-        fun getEnvEle(
+        private fun getEnvEleLiteral(
             key: String,
             selectedEnv: String?,
             httpFileParentPath: String,
@@ -331,35 +369,25 @@ class EnvFileService(val project: Project) {
             project: Project,
         ): JsonLiteral? {
             val env = selectedEnv ?: COMMON_ENV_NAME
-            var fileName = "$httpFileParentPath/$envFileName"
 
-            var virtualFile = VfsUtil.findFileByIoFile(File(fileName), true)
-            if (virtualFile == null) {
-                fileName = "${project.basePath}/$envFileName"
+            val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return null
 
-                virtualFile = VfsUtil.findFileByIoFile(File(fileName), true)
-            }
-
-            if (virtualFile == null) {
-                return null
-            }
-
-            val psiFile = PsiUtil.getPsiFile(project, virtualFile) as JsonFile
-
-            val topLevelValue = psiFile.topLevelValue
+            val topLevelValue = jsonFile.topLevelValue
             if (topLevelValue !is JsonObject) {
-                throw IllegalArgumentException("配置文件:${fileName}外层格式不符合规范!")
+                throw IllegalArgumentException("配置文件:${jsonFile.virtualFile.path}外层格式不符合规范!")
             }
 
             val envProperty = topLevelValue.findProperty(env) ?: return null
+
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
-                throw IllegalArgumentException("配置文件:${fileName}内层格式不符合规范!")
+                throw IllegalArgumentException("配置文件:${jsonFile.virtualFile.path}内层格式不符合规范!")
             }
 
             val jsonProperty = jsonValue.findProperty(key) ?: return null
 
             val innerJsonValue = jsonProperty.value ?: return null
+
             return when (innerJsonValue) {
                 is JsonStringLiteral -> {
                     innerJsonValue
@@ -374,9 +402,28 @@ class EnvFileService(val project: Project) {
                 }
 
                 else -> {
-                    throw IllegalArgumentException("配置文件:${fileName}最内层格式不符合规范!")
+                    throw IllegalArgumentException("配置文件:${jsonFile.virtualFile.path}最内层格式不符合规范!")
                 }
             }
+        }
+
+        fun getEnvJsonFile(envFileName: String, httpFileParentPath: String, project: Project): JsonFile? {
+            var fileName = "$httpFileParentPath/$envFileName"
+
+            var virtualFile = VfsUtil.findFileByIoFile(File(fileName), true)
+
+            if (virtualFile != null) {
+                return PsiUtil.getPsiFile(project, virtualFile) as JsonFile
+            }
+
+            fileName = "${project.basePath}/$envFileName"
+
+            virtualFile = VfsUtil.findFileByIoFile(File(fileName), true)
+            if (virtualFile != null) {
+                return PsiUtil.getPsiFile(project, virtualFile) as JsonFile
+            }
+
+            return null
         }
     }
 
