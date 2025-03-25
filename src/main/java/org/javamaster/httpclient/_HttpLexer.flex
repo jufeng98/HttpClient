@@ -40,7 +40,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
 %state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION
-%state IN_MULTIPART, IN_VARIABLE, IN_DINAMIC_VARIABLE, IN_GLOBAL_VARIABLE, IN_GLOBAL_VARIABLE_VALUE
+%state IN_MULTIPART, IN_VARIABLE, IN_DINAMIC_VARIABLE, IN_DINAMIC_VARIABLE_ARGS, IN_GLOBAL_VARIABLE, IN_GLOBAL_VARIABLE_VALUE
 
 EOL=\R
 EOL_MULTI=[ ]*\R+
@@ -64,6 +64,8 @@ MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
 VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
 GLOBAL_VARIABLE_NAME=[^\r\n={} ]+
 DIRECTION_PART=[^\r\n ]+
+INTEGER=[0-9]+
+STRING=('([^'])*'?|\"([^\"])*\"?)
 %%
 
 <YYINITIAL> {
@@ -110,8 +112,17 @@ DIRECTION_PART=[^\r\n ]+
 
 <IN_DINAMIC_VARIABLE> {
   {VARIABLE_NAME}          { return IDENTIFIER; }
+  "("                      { yybegin(IN_DINAMIC_VARIABLE_ARGS); return LEFT_BRACKET; }
   {ONLY_SPACE}             { return WHITE_SPACE; }
   "}}"                     { yybegin(nextState); return END_VARIABLE_BRACE; }
+}
+
+<IN_DINAMIC_VARIABLE_ARGS> {
+  {INTEGER}                    { return INTEGER; }
+  {STRING}                     { return STRING; }
+  ","                          { return COMMA; }
+  ")"                          { yybegin(IN_DINAMIC_VARIABLE); return RIGHT_BRACKET; }
+  {ONLY_SPACE}                 { return WHITE_SPACE; }
 }
 
 <IN_PRE_SCRIPT> {

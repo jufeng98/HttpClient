@@ -29,6 +29,24 @@ public class HttpVariableImpl extends ASTWrapperPsiElement implements HttpVariab
   }
 
   @Override
+  @Nullable
+  public HttpVariableArgs getVariableArgs() {
+    return findChildByClass(HttpVariableArgs.class);
+  }
+
+  @Override
+  @Nullable
+  public HttpVariableBuiltin getVariableBuiltin() {
+    return findChildByClass(HttpVariableBuiltin.class);
+  }
+
+  @Override
+  @Nullable
+  public HttpVariableReference getVariableReference() {
+    return findChildByClass(HttpVariableReference.class);
+  }
+
+  @Override
   @NotNull
   public String getName() {
     return HttpPsiImplUtil.getName(this);

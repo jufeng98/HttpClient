@@ -8,6 +8,15 @@ import com.intellij.psi.PsiReference;
 
 public interface HttpVariable extends PsiElement {
 
+  @Nullable
+  HttpVariableArgs getVariableArgs();
+
+  @Nullable
+  HttpVariableBuiltin getVariableBuiltin();
+
+  @Nullable
+  HttpVariableReference getVariableReference();
+
   @NotNull
   String getName();
 

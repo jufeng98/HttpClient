@@ -49,12 +49,17 @@ public interface HttpTypes {
   IElementType SCHEMA = new HttpElementType("SCHEMA");
   IElementType SCRIPT_BODY = new HttpElementType("SCRIPT_BODY");
   IElementType VARIABLE = new HttpElementType("VARIABLE");
+  IElementType VARIABLE_ARG = new HttpElementType("VARIABLE_ARG");
+  IElementType VARIABLE_ARGS = new HttpElementType("VARIABLE_ARGS");
+  IElementType VARIABLE_BUILTIN = new HttpElementType("VARIABLE_BUILTIN");
+  IElementType VARIABLE_REFERENCE = new HttpElementType("VARIABLE_REFERENCE");
   IElementType VERSION = new HttpElementType("VERSION");
 
   IElementType AND = new HttpTokenType("&");
   IElementType AT = new HttpTokenType("@");
   IElementType BLOCK_COMMENT = new HttpTokenType("BLOCK_COMMENT");
   IElementType COLON = new HttpTokenType(":");
+  IElementType COMMA = new HttpTokenType(",");
   IElementType DIRECTION_COMMENT_START = new HttpTokenType("DIRECTION_COMMENT_START");
   IElementType DIRECTION_NAME_PART = new HttpTokenType("DIRECTION_NAME_PART");
   IElementType DIRECTION_VALUE_PART = new HttpTokenType("DIRECTION_VALUE_PART");
@@ -74,7 +79,9 @@ public interface HttpTypes {
   IElementType IDENTIFIER = new HttpTokenType("IDENTIFIER");
   IElementType INPUT_FILE_PATH_PART = new HttpTokenType("INPUT_FILE_PATH_PART");
   IElementType INPUT_FILE_SIGN = new HttpTokenType("< ");
+  IElementType INTEGER = new HttpTokenType("INTEGER");
   IElementType IN_START_SCRIPT_BRACE = new HttpTokenType("< {%");
+  IElementType LEFT_BRACKET = new HttpTokenType("(");
   IElementType LINE_COMMENT = new HttpTokenType("LINE_COMMENT");
   IElementType MESSAGE_BOUNDARY = new HttpTokenType("MESSAGE_BOUNDARY");
   IElementType MESSAGE_TEXT = new HttpTokenType("MESSAGE_TEXT");
@@ -87,12 +94,14 @@ public interface HttpTypes {
   IElementType QUESTION = new HttpTokenType("?");
   IElementType REQUEST_COMMENT = new HttpTokenType("REQUEST_COMMENT");
   IElementType REQUEST_METHOD = new HttpTokenType("REQUEST_METHOD");
+  IElementType RIGHT_BRACKET = new HttpTokenType(")");
   IElementType SCHEMA_PART = new HttpTokenType("SCHEMA_PART");
   IElementType SCHEMA_SEPARATE = new HttpTokenType("://");
   IElementType SCRIPT_BODY_PAET = new HttpTokenType("SCRIPT_BODY_PAET");
   IElementType SEGMENT = new HttpTokenType("SEGMENT");
   IElementType SLASH = new HttpTokenType("/");
   IElementType START_VARIABLE_BRACE = new HttpTokenType("{{");
+  IElementType STRING = new HttpTokenType("STRING");
 
   class Factory {
     public static PsiElement createElement(ASTNode node) {
@@ -219,6 +228,18 @@ public interface HttpTypes {
       }
       else if (type == VARIABLE) {
         return new HttpVariableImpl(node);
+      }
+      else if (type == VARIABLE_ARG) {
+        return new HttpVariableArgImpl(node);
+      }
+      else if (type == VARIABLE_ARGS) {
+        return new HttpVariableArgsImpl(node);
+      }
+      else if (type == VARIABLE_BUILTIN) {
+        return new HttpVariableBuiltinImpl(node);
+      }
+      else if (type == VARIABLE_REFERENCE) {
+        return new HttpVariableReferenceImpl(node);
       }
       else if (type == VERSION) {
         return new HttpVersionImpl(node);

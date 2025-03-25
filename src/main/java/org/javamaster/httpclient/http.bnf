@@ -29,6 +29,11 @@
     DOLLAR='$'
     AT='@'
 
+    INTEGER='regexp:\d+'
+    STRING="regexp:('([^'])*'?|\"([^\"])*\"?)"
+    COMMA=','
+    LEFT_BRACKET='('
+    RIGHT_BRACKET=')'
     INPUT_FILE_SIGN='< '
     OUTPUT_FILE_SIGN='>> '
     GLOBAL_START_SCRIPT_BRACE='<! {%'
@@ -95,7 +100,7 @@ requestTarget ::= (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? 
 schema ::= SCHEMA_PART
 host ::= HOST_VALUE | variable
 
-variable ::= START_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE {
+variable ::= START_VARIABLE_BRACE variable_builtin? variable_reference variable_args? END_VARIABLE_BRACE {
     methods = [
         getName
         getReferences
@@ -103,6 +108,12 @@ variable ::= START_VARIABLE_BRACE DOLLAR? IDENTIFIER END_VARIABLE_BRACE {
     ]
     pin = 1
 }
+variable_builtin ::= DOLLAR
+variable_reference ::= IDENTIFIER
+variable_args ::= LEFT_BRACKET variable_arg? (COMMA variable_arg)* RIGHT_BRACKET {
+    pin = 1
+}
+variable_arg ::= INTEGER | STRING
 
 port ::= COLON PORT_SEGMENT
 pathAbsolute ::= (SLASH (SEGMENT | variable)?)+
