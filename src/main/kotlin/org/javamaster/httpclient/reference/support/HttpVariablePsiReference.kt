@@ -12,6 +12,8 @@ import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
+import org.javamaster.httpclient.jsPlugin.JavaScript
+import org.javamaster.httpclient.jsPlugin.WebCalm
 import org.javamaster.httpclient.psi.HttpOutputFilePath
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.HttpVariable
@@ -24,7 +26,7 @@ import java.nio.file.Paths
 /**
  * @author yudong
  */
-class HttpVariablePsiReference(element: HttpVariable, private val variableName: String, val textRange: TextRange) :
+class HttpVariablePsiReference(element: HttpVariable, val variableName: String, val textRange: TextRange) :
     PsiReferenceBase<HttpVariable>(element, textRange) {
 
     override fun resolve(): PsiElement? {
@@ -62,7 +64,7 @@ class HttpVariablePsiReference(element: HttpVariable, private val variableName: 
                 return allList.toTypedArray()
             }
 
-            val envVariables = EnvFileService.getEnvVariables(element.project)
+            val envVariables = EnvFileService.getEnvMap(element.project)
             val list = envVariables.entries
                 .map {
                     LookupElementBuilder.create(it.key).withTypeText(it.value, true)
@@ -129,7 +131,7 @@ class HttpVariablePsiReference(element: HttpVariable, private val variableName: 
 
             val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
 
-            val jsonLiteral = EnvFileService.getEnvEle(variableName, selectedEnv, httpFileParentPath, project)
+            val jsonLiteral = EnvFileService.getEnvEleLiteral(variableName, selectedEnv, httpFileParentPath, project)
 
             return PsiTreeUtil.getParentOfType(jsonLiteral, JsonProperty::class.java)
         }
