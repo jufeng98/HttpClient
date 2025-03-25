@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.jsPlugin
+package org.javamaster.httpclient.jsPlugin.support
 
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginManager

@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.jsPlugin
+package org.javamaster.httpclient.jsPlugin.support
 
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.lang.injection.InjectedLanguageManager
@@ -63,9 +63,9 @@ object WebCalm {
             .firstOrNull { Objects.nonNull(it) }
     }
 
-    fun createJsVariable(project: Project, injectedPsiFile: PsiFile, variableName: String) {
+    fun createJsVariable(project: Project, injectedPsiFile: PsiFile, variableName: String): PsiElement? {
         if (pluginNotAlive) {
-            return
+            return null
         }
 
         val js = "request.variables.set('$variableName', '');\n"
@@ -80,8 +80,10 @@ object WebCalm {
 
         // 将光标移动到引号内
         (elementCopy.lastChild as Navigatable).navigate(true)
-        val caretModel = FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return
+        val caretModel = FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return elementCopy
         caretModel.moveToOffset(caretModel.offset - 2)
+
+        return elementCopy
     }
 
     private fun findArgumentName(variableName: String, arguments: JavaScriptArguments): JavaScriptArgument? {
