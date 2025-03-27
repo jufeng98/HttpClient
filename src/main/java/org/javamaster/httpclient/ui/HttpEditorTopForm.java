@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.net.URL;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,7 +36,7 @@ public class HttpEditorTopForm extends JComponent {
     private JButton showVariableBtn;
     private Project project;
 
-    public HttpEditorTopForm(VirtualFile file, Module module) {
+    public HttpEditorTopForm(VirtualFile file, @Nullable Module module) {
         this.file = file;
         this.module = module;
 
@@ -109,8 +110,11 @@ public class HttpEditorTopForm extends JComponent {
                     continue;
                 }
 
-                httpEditorTopForm.initEnvCombo();
-
+                LinkedHashSet<String> set = new LinkedHashSet<>();
+                set.add("dev");
+                set.add("uat");
+                set.add("pro");
+                httpEditorTopForm.initEnvCombo(set);
             }
         } catch (Exception e) {
             //noinspection CallToPrintStackTrace
@@ -118,11 +122,8 @@ public class HttpEditorTopForm extends JComponent {
         }
     }
 
-    public void initEnvCombo() {
+    public void initEnvCombo(Set<String> presetEnvSet) {
         project = module.getProject();
-
-        EnvFileService envFileService = EnvFileService.Companion.getService(project);
-        Set<String> presetEnvSet = envFileService.getPresetEnvList(file.getParent().getPath());
 
         presetEnvSet.forEach(it -> envComboBox.addItem(it));
 
@@ -155,7 +156,7 @@ public class HttpEditorTopForm extends JComponent {
         return httpEditorTopForm.getSelectedEnv();
     }
 
-    public static @Nullable Triple<String, VirtualFile, Module> getTriple(Project project) {
+    public static @Nullable Triple<String, VirtualFile, @Nullable Module> getTriple(Project project) {
         HttpEditorTopForm topForm = getSelectedEditorTopForm(project);
         if (topForm == null) {
             return null;

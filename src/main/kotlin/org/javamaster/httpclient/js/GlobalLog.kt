@@ -18,7 +18,7 @@ object GlobalLog {
     }
 
     fun getAndClearLogs(): String {
-        val logs = logsMap[tabName] ?: mutableListOf()
+        val logs = logsMap[tabName] ?: emptyList()
 
         logsMap.remove(tabName)
         tabName = null

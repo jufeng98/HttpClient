@@ -9,6 +9,7 @@ import com.intellij.lang.xml.XMLLanguage
 import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLanguageInjectionHost
+import com.intellij.util.SmartList
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpMultipartField
@@ -51,8 +52,8 @@ class MessageBodyInjectionContributor : MultiHostInjector {
         registrar.doneInjecting()
     }
 
-    override fun elementsToInjectIn(): MutableList<out Class<out PsiElement>> {
-        return mutableListOf(HttpMessageBody::class.java)
+    override fun elementsToInjectIn(): List<Class<out PsiElement>> {
+        return SmartList(HttpMessageBody::class.java)
     }
 
 

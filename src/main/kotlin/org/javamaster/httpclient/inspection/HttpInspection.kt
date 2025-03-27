@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.inspection.support.InspectionHelper
-import org.javamaster.httpclient.psi.HttpVariable
+import org.javamaster.httpclient.psi.HttpVariableName
 
 /**
  * @author yudong
@@ -18,7 +18,7 @@ class HttpInspection : LocalInspectionTool() {
         val variables = mutableListOf<PsiElement>()
 
         PsiTreeUtil.processElements(file) {
-            if (it is HttpVariable) {
+            if (it is HttpVariableName) {
                 variables.add(it)
             }
 

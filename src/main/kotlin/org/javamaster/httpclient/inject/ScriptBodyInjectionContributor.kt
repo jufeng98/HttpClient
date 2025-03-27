@@ -4,6 +4,7 @@ import com.intellij.lang.injection.MultiHostInjector
 import com.intellij.lang.injection.MultiHostRegistrar
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLanguageInjectionHost
+import com.intellij.util.SmartList
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.utils.InjectionUtils
 import ris58h.webcalm.javascript.JavaScriptLanguage
@@ -22,7 +23,7 @@ class ScriptBodyInjectionContributor : MultiHostInjector {
     }
 
     override fun elementsToInjectIn(): MutableList<out Class<out PsiElement>> {
-        return mutableListOf(HttpScriptBody::class.java)
+        return SmartList(HttpScriptBody::class.java)
     }
 
 }

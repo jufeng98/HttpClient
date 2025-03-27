@@ -269,13 +269,13 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         val httpRequest = PsiTreeUtil.getParentOfType(requestTarget, HttpRequest::class.java)!!
 
-        var outPutFileName: String? = null
+        var outPutFilePath: String? = null
         val httpOutputFile = PsiTreeUtil.getChildOfType(httpRequest, HttpOutputFile::class.java)
         if (httpOutputFile != null) {
-            outPutFileName = httpOutputFile.outputFilePath!!.text
+            outPutFilePath = httpOutputFile.filePath!!.text
         }
 
-        val saveResult = saveResToFile(outPutFileName, parentPath, httpInfo.byteArray)
+        val saveResult = saveResToFile(outPutFilePath, parentPath, httpInfo.byteArray)
         if (!saveResult.isNullOrEmpty()) {
             httpInfo.httpResDescList.add(0, saveResult)
         }
@@ -300,8 +300,8 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         }
     }
 
-    private fun saveResToFile(outPutFileName: String?, parentPath: String, byteArray: ByteArray?): String? {
-        if (outPutFileName == null) {
+    private fun saveResToFile(outPutFilePath: String?, parentPath: String, byteArray: ByteArray?): String? {
+        if (outPutFilePath == null) {
             return null
         }
 
@@ -309,7 +309,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             return null
         }
 
-        var path = variableResolver.resolve(outPutFileName)
+        var path = variableResolver.resolve(outPutFilePath)
 
         path = HttpUtils.constructFilePath(path, parentPath)
 

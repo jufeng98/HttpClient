@@ -73,11 +73,12 @@ class HttpEnvironmentIndex : FileBasedIndexExtension<String, MutableMap<String, 
 
                 when (val innerJsonValue = it.value) {
                     is JsonStringLiteral -> {
-                        map[key] = innerJsonValue.value
+                        val text = innerJsonValue.text
+                        map[key] = text.substring(1, text.length - 1)
                     }
 
                     is JsonNumberLiteral -> {
-                        map[key] = "" + innerJsonValue.value
+                        map[key] = innerJsonValue.value.toString()
                     }
 
                     is JsonBooleanLiteral -> {

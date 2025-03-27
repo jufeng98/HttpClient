@@ -4,6 +4,7 @@ import com.intellij.lang.injection.MultiHostInjector
 import com.intellij.lang.injection.MultiHostRegistrar
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLanguageInjectionHost
+import com.intellij.util.SmartList
 import org.javamaster.httpclient.jsPlugin.support.JavaScript
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.utils.InjectionUtils
@@ -22,8 +23,8 @@ class ScriptBodyInjectionBackupContributor : MultiHostInjector {
         registrar.doneInjecting()
     }
 
-    override fun elementsToInjectIn(): MutableList<out Class<out PsiElement>> {
-        return mutableListOf(HttpScriptBody::class.java)
+    override fun elementsToInjectIn(): List<Class<out PsiElement>> {
+        return SmartList(HttpScriptBody::class.java)
     }
 
 }

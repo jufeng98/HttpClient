@@ -6,4 +6,4 @@ import org.javamaster.httpclient._HttpLexer
 /**
  * @author yudong
  */
-class HttpAdapter : FlexAdapter(_HttpLexer(null))
+open class HttpAdapter : FlexAdapter(_HttpLexer(null))

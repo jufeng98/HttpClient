@@ -54,7 +54,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     var xPath: XPath? = null
 
     fun initJsRequestObj(reqBody: Any?, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
-        val environment = gson.toJson(getEnvMap(project))
+        val environment = gson.toJson(getEnvMap(project, false))
 
         val headers = gson.toJson(reqHeaderMap)
 

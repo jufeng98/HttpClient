@@ -1,6 +1,7 @@
 package org.javamaster.httpclient
 
 import org.javamaster.httpclient.psi.HttpMethod
+import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT_NAME
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT_NAME
@@ -194,7 +195,7 @@ enum class HttpRequestEnum {
 
             val request = createRequest(url, version, reqHttpHeaders, bodyPublisher, paramMap)
 
-            val connectTimeout = paramMap[CONNECT_TIMEOUT_NAME]?.toLong() ?: 6L
+            val connectTimeout = paramMap[CONNECT_TIMEOUT_NAME]?.toLong() ?: CONNECT_TIMEOUT
             val client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeout))
                 .build()

@@ -5,13 +5,13 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.psi.HttpRequestTarget
-import org.javamaster.httpclient.reference.support.HttpPathPsiReference
+import org.javamaster.httpclient.reference.support.HttpUrlPsiReference
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * @author yudong
  */
-class HttpPathPsiReferenceProvider : PsiReferenceProvider() {
+class HttpUrlPsiReferenceProvider : PsiReferenceProvider() {
 
     override fun getReferencesByElement(element: PsiElement, context: ProcessingContext): Array<PsiReference> {
         val httpRequestTarget = element as HttpRequestTarget
@@ -25,7 +25,7 @@ class HttpPathPsiReferenceProvider : PsiReferenceProvider() {
         val searchTxt = pair.first
         val textRange = pair.second
 
-        return arrayOf(HttpPathPsiReference(searchTxt, httpRequestTarget, textRange))
+        return arrayOf(HttpUrlPsiReference(searchTxt, httpRequestTarget, textRange))
     }
 
 }

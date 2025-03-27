@@ -55,10 +55,12 @@ object HttpUtils {
     const val READ_TIMEOUT_NAME = "readTimeout"
     const val TIMEOUT_NAME = "timeout"
     const val CONNECT_TIMEOUT_NAME = "connectTimeout"
-    const val READ_TIMEOUT = 7200L
+
+    const val READ_TIMEOUT = 10L
+    const val CONNECT_TIMEOUT = 30L
+
     const val HTTP_TYPE_ID = "intellijHttpClient"
-    const val VARIABLE_SIGN_START = "{{"
-    const val VARIABLE_SIGN_END = "}}"
+    private const val VARIABLE_SIGN_END = "}}"
     val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
 
     fun saveConfiguration(
@@ -563,7 +565,7 @@ object HttpUtils {
         return psiMethods
     }
 
-    fun getControllerNavigationItem(list: MutableList<Any>, searchTxt: String): ControllerNavigationItem {
+    fun findControllerNavigationItem(list: MutableList<Any>, searchTxt: String): ControllerNavigationItem {
         return if (list.size == 1) {
             list[0] as ControllerNavigationItem
         } else {

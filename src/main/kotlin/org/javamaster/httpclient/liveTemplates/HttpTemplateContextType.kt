@@ -8,7 +8,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiUtilCore
 import org.javamaster.httpclient.HttpLanguage
-import org.javamaster.httpclient.highlighting.HttpSyntaxHighlighter
+import org.javamaster.httpclient.highlighting.support.HttpSyntaxHighlighter
 import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpTypes
 

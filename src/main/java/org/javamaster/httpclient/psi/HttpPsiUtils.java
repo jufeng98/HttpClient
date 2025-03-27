@@ -2,10 +2,8 @@ package org.javamaster.httpclient.psi;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,11 +15,6 @@ public class HttpPsiUtils {
             sibling = sibling.getNextSibling();
         }
         return sibling;
-    }
-
-    public static HttpRequestBlock @NotNull [] getRequestBlocks(@NotNull PsiFile file) {
-        HttpRequestBlock[] blocks = PsiTreeUtil.getChildrenOfType(file, HttpRequestBlock.class);
-        return blocks == null ? new HttpRequestBlock[0] : blocks;
     }
 
     public static boolean isOfType(@NotNull PsiElement element, @NotNull IElementType type) {

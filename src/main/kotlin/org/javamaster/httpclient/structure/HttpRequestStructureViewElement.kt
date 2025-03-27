@@ -12,13 +12,11 @@ import com.intellij.openapi.util.Iconable
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.util.ArrayUtil
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
@@ -32,8 +30,8 @@ class HttpRequestStructureViewElement private constructor(
     override fun getChildrenBase(): Collection<StructureViewTreeElement> {
         val element = element
         if (element is HttpFile) {
-            val blocks = HttpPsiUtils.getRequestBlocks(element as PsiFile)
-            if (ArrayUtil.isEmpty(blocks)) {
+            val blocks = element.getRequestBlocks()
+            if (blocks.isEmpty()) {
                 return emptyList()
             }
 

@@ -1,8 +1,8 @@
 package org.javamaster.httpclient.listener
 
 import com.intellij.json.JsonFileType
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -10,7 +10,9 @@ import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.application
 import org.javamaster.httpclient.HttpFileType
+import org.javamaster.httpclient.env.EnvFileService.Companion.getService
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.NotifyUtil
 
@@ -26,15 +28,17 @@ class HttpEditorListener : FileEditorManagerListener {
             return
         }
 
-        val fileEditor = source.getSelectedEditor(file) ?: return
-        val project = source.project
-
-        val application = ApplicationManager.getApplication()
+        val fileEditor = source.getSelectedEditor(file)
+        if (fileEditor == null) {
+            System.err.println("Can't find file editor for ${file.path}")
+            return
+        }
 
         application.executeOnPooledThread {
-            val module = ModuleUtil.findModuleForFile(file, project) ?: return@executeOnPooledThread
-
+            val project = source.project
+            val module = ModuleUtil.findModuleForFile(file, project)
             val fileTypeManagerEx = FileTypeManagerEx.getInstanceEx()
+
             val jsonFileType = JsonFileType.INSTANCE
             val extension = fileTypeManagerEx.getFileTypeByExtension(jsonFileType.defaultExtension)
             if (extension !== jsonFileType) {
@@ -46,26 +50,38 @@ class HttpEditorListener : FileEditorManagerListener {
                     }
                 }, getState())
             } else {
-                application.invokeAndWait {
-                    initTopForm(source, file, module, fileEditor)
-                }
+                initTopForm(source, file, module, fileEditor)
             }
         }
     }
 
-    private fun initTopForm(source: FileEditorManager, file: VirtualFile, module: Module, fileEditor: FileEditor) {
-        val httpEditorTopForm = HttpEditorTopForm(file, module)
+    private fun initTopForm(
+        source: FileEditorManager,
+        file: VirtualFile,
+        module: Module?,
+        fileEditor: FileEditor,
+    ) {
+        application.executeOnPooledThread {
+            val presetEnvSet = ReadAction.compute<MutableSet<String>, Throwable> {
+                val envFileService = getService(source.project)
+                envFileService.getPresetEnvSet(file.parent.path)
+            }
 
-        try {
-            httpEditorTopForm.initEnvCombo()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            NotifyUtil.notifyError(module.project, e.message)
+            application.invokeLater {
+                val httpEditorTopForm = HttpEditorTopForm(file, module)
+
+                try {
+                    httpEditorTopForm.initEnvCombo(presetEnvSet)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    NotifyUtil.notifyError(source.project, e.message)
+                }
+
+                fileEditor.putUserData(HttpEditorTopForm.KEY, httpEditorTopForm)
+
+                source.addTopComponent(fileEditor, httpEditorTopForm.mainPanel)
+            }
         }
-
-        fileEditor.putUserData(HttpEditorTopForm.KEY, httpEditorTopForm)
-
-        source.addTopComponent(fileEditor, httpEditorTopForm.mainPanel)
     }
 
     private fun getState(): ModalityState {
