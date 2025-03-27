@@ -12,7 +12,6 @@ import org.javamaster.httpclient.utils.VirtualFileUtils
 import java.io.File
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
-import java.util.regex.Pattern
 
 enum class InnerVariableEnum(val methodName: String) {
     RANDOM_ALPHABETIC("\$random.alphabetic") {
@@ -20,9 +19,13 @@ enum class InnerVariableEnum(val methodName: String) {
             return "用法:$methodName(8)"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
-            val count = patternNotNumber.matcher(variable).replaceAll("")
-            return RandomStringUtils.randomAlphabetic(count.toInt())
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is Int) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val count = args[0] as Int
+            return RandomStringUtils.randomAlphabetic(count)
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -34,9 +37,13 @@ enum class InnerVariableEnum(val methodName: String) {
             return "用法:$methodName(8)"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
-            val count = patternNotNumber.matcher(variable).replaceAll("")
-            return RandomStringUtils.randomAlphanumeric(count.toInt())
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is Int) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val count = args[0] as Int
+            return RandomStringUtils.randomAlphanumeric(count)
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -48,9 +55,13 @@ enum class InnerVariableEnum(val methodName: String) {
             return "用法:$methodName(8)"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
-            val count = patternNotNumber.matcher(variable).replaceAll("")
-            return RandomStringUtils.randomNumeric(count.toInt())
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is Int) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val count = args[0] as Int
+            return RandomStringUtils.randomNumeric(count)
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -62,7 +73,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "调用 UUID.randomUUID() 并去掉其-"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return UUID.randomUUID().toString().replace("-", "")
         }
     },
@@ -71,7 +82,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 [0, 1000) 范围数字"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return ThreadLocalRandom.current().nextInt(0, 1000).toString()
         }
     },
@@ -80,10 +91,13 @@ enum class InnerVariableEnum(val methodName: String) {
             return "用法:$methodName(0, 80)"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
-            val split = variable.split(",")
-            val start = patternNotNumber.matcher(split[0]).replaceAll("").toInt()
-            val end = patternNotNumber.matcher(split[1]).replaceAll("").toInt()
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val start = args[0] as Int
+            val end = args[1] as Int
             return (start + ThreadLocalRandom.current().nextInt(0, end - start)).toString()
         }
 
@@ -96,7 +110,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "时间戳"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return System.currentTimeMillis().toString()
         }
     },
@@ -105,8 +119,12 @@ enum class InnerVariableEnum(val methodName: String) {
             return "用法:$methodName('图片的绝对或相对路径')"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
-            val path = variable.substring(methodName.length + 1, variable.length - 1)
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is String) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val path = args[0] as String
             val filePath = HttpUtils.constructFilePath(path, httpFileParentPath)
             val file = File(filePath)
 
@@ -124,8 +142,12 @@ enum class InnerVariableEnum(val methodName: String) {
             return "用法:$methodName('图片的绝对或相对路径')"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
-            val path = variable.substring(methodName.length + 1, variable.length - 1)
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is String) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val path = args[0] as String
             val filePath = HttpUtils.constructFilePath(path, httpFileParentPath)
             val file = File(filePath)
 
@@ -141,7 +163,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成完整地址"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().address().fullAddress()
         }
     },
@@ -150,7 +172,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成布尔值"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().bool().bool().toString()
         }
     },
@@ -159,7 +181,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成用户名"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().name().name()
         }
     },
@@ -168,7 +190,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成标题"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().book().title()
         }
     },
@@ -177,7 +199,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成app名称"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().app().name()
         }
     },
@@ -186,7 +208,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成公司名称"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().company().name()
         }
     },
@@ -195,7 +217,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成hero名称"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().superhero().name()
         }
     },
@@ -204,7 +226,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成国家首都"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().nation().capitalCity()
         }
     },
@@ -213,7 +235,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成大学"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().university().name()
         }
     },
@@ -222,19 +244,12 @@ enum class InnerVariableEnum(val methodName: String) {
             return "从给定的选项中随机挑选一个，用法:$methodName(23, 46) 或 $methodName('Jack', 'Rose')"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
-            val paramsStr = variable.substring(methodName.length + 1, variable.length - 1)
-
-            val split = paramsStr.split(",").stream()
-                .map { it.trim() }
-                .toList()
-
-            val value = split[RandomStringUtils.RANDOM.nextInt(split.size)]
-            if (value.startsWith("'")) {
-                return value.substring(1, value.length - 1)
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.isEmpty()) {
+                throw IllegalArgumentException("$methodName must to past arguments.${typeText()}")
             }
 
-            return value
+            return args[RandomStringUtils.RANDOM.nextInt(args.size)].toString()
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -246,14 +261,16 @@ enum class InnerVariableEnum(val methodName: String) {
             return "指向模块的 src/target"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             throw UnsupportedOperationException()
         }
 
-        override fun exec(variable: String, httpFileParentPath: String, project: Project): String? {
+        override fun exec(httpFileParentPath: String, project: Project): String? {
             val triple = HttpEditorTopForm.getTriple(project) ?: return null
 
-            val dirPath = ModuleUtil.getModuleDirPath(triple.third)
+            val module = triple.third ?: return null
+
+            val dirPath = ModuleUtil.getModuleDirPath(module)
 
             return "$dirPath/target"
         }
@@ -263,11 +280,11 @@ enum class InnerVariableEnum(val methodName: String) {
             return "指向项目根目录"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             throw UnsupportedOperationException()
         }
 
-        override fun exec(variable: String, httpFileParentPath: String, project: Project): String? {
+        override fun exec(httpFileParentPath: String, project: Project): String? {
             return project.basePath
         }
     },
@@ -276,11 +293,11 @@ enum class InnerVariableEnum(val methodName: String) {
             return "指向 .idea/httpClient"
         }
 
-        override fun exec(variable: String, httpFileParentPath: String): String {
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
             throw UnsupportedOperationException()
         }
 
-        override fun exec(variable: String, httpFileParentPath: String, project: Project): String? {
+        override fun exec(httpFileParentPath: String, project: Project): String? {
             val basePath = project.basePath ?: return null
 
             return "$basePath/.idea/httpClient"
@@ -288,13 +305,11 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     ;
 
-    val patternNotNumber: Pattern = Pattern.compile("\\D")
-
     abstract fun typeText(): String
 
-    abstract fun exec(variable: String, httpFileParentPath: String): String
+    abstract fun exec(httpFileParentPath: String, vararg args: Any): String
 
-    open fun exec(variable: String, httpFileParentPath: String, project: Project): String? {
+    open fun exec(httpFileParentPath: String, project: Project): String? {
         return null
     }
 
@@ -320,8 +335,7 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         fun getEnum(variable: String): InnerVariableEnum? {
-            val name = variable.split("(")[0]
-            return map[name]
+            return map[variable]
         }
     }
 }
