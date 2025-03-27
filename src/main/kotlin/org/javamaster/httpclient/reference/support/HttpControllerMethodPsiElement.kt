@@ -3,17 +3,20 @@ package org.javamaster.httpclient.reference.support
 import com.cool.request.view.tool.search.ApiAbstractGotoSEContributor
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.navigation.ItemPresentation
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.module.ModuleUtil
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.util.application
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.createActionEvent
 import org.javamaster.httpclient.utils.HttpUtils.createProcessIndicator
+import org.javamaster.httpclient.utils.HttpUtils.findControllerNavigationItem
 import org.javamaster.httpclient.utils.HttpUtils.findControllerPsiMethods
-import org.javamaster.httpclient.utils.HttpUtils.getControllerNavigationItem
 import org.javamaster.httpclient.utils.TooltipUtils.showTooltip
 import java.util.concurrent.CompletableFuture
 import javax.swing.Icon
@@ -56,28 +59,36 @@ class HttpControllerMethodPsiElement(private val requestTarget: HttpRequestTarge
 
             processIndicator.processFinish()
 
-            runInEdt {
-                if (list.isEmpty()) {
-                    showTooltip("Tip:未能解析到对应的controller mapping,无法跳转", project)
-                    return@runInEdt
-                }
+            if (list.isEmpty()) {
+                showTooltip(
+                    "Tip:未能解析到对应的Controller,无法跳转",
+                    ReadAction.compute<Project, Exception> { project })
+                return@runAsync
+            }
 
-                val controllerNavigationItem = getControllerNavigationItem(list, searchTxt)
+            val controllerNavigationItem = findControllerNavigationItem(list, searchTxt)
 
+            application.executeOnPooledThread {
                 runReadAction {
                     val psiMethods = findControllerPsiMethods(controllerNavigationItem, module)
                     if (psiMethods.isEmpty()) {
-                        showTooltip("Tip:未能解析对应的controller方法,无法跳转", project)
+                        showTooltip(
+                            "Tip:未能解析对应的Controller方法,无法跳转",
+                            ReadAction.compute<Project, Exception> { project })
                         return@runReadAction
                     }
 
                     if (psiMethods.size > 1) {
-                        showTooltip("Tip:解析到${psiMethods.size}个的controller方法,无法跳转", project)
+                        showTooltip(
+                            "Tip:解析到${psiMethods.size}个的Controller方法,无法跳转",
+                            ReadAction.compute<Project, Exception> { project })
                         return@runReadAction
                     }
 
                     val psiMethod = psiMethods[0]
-                    psiMethod.navigate(true)
+                    runInEdt {
+                        psiMethod.navigate(true)
+                    }
                 }
             }
         }
