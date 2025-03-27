@@ -13,7 +13,7 @@ import org.javamaster.httpclient.utils.HttpUtils
  */
 class JsStringPathGotoDeclarationHandler : GotoDeclarationHandler {
 
-    private val clsNameSet = setOf("JavaScriptLiteral", "JSLiteralExpression")
+    private val clsNameSet = setOf("JavaScriptLiteral", "JSLiteralExpressionImpl")
 
     override fun getGotoDeclarationTargets(
         element: PsiElement?,
