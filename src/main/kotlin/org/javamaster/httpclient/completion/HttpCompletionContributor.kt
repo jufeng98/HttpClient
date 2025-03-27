@@ -2,17 +2,13 @@ package org.javamaster.httpclient.completion
 
 import com.google.common.net.HttpHeaders
 import com.intellij.codeInsight.completion.*
-import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.module.ModuleUtil
-import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.patterns.PlatformPatterns
-import com.intellij.patterns.StandardPatterns
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.TokenType
 import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
@@ -49,27 +45,6 @@ class HttpCompletionContributor : CompletionContributor() {
         )
 
         this.extend(
-            CompletionType.BASIC, StandardPatterns.or(
-                PlatformPatterns.psiElement(HttpTypes.MESSAGE_TEXT),
-                PlatformPatterns.psiElement(TokenType.WHITE_SPACE)
-                    .afterLeaf(PlatformPatterns.psiElement(HttpTypes.MESSAGE_TEXT))
-            ),
-            HttpMessageBodySeparatorCompletion()
-        )
-
-        this.extend(
-            CompletionType.BASIC, PlatformPatterns.psiElement().afterLeafSkipping(
-                StandardPatterns.or(
-                    PlatformPatterns.psiElement(
-                        PsiErrorElement::class.java
-                    ),
-                    PlatformPatterns.psiElement(TokenType.BAD_CHARACTER)
-                ), PlatformPatterns.psiElement(HttpTypes.MESSAGE_BOUNDARY)
-            ),
-            HttpMessageBodySeparatorOptionsCompletion()
-        )
-
-        this.extend(
             CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.DIRECTION_NAME_PART),
             HttpDirectionNameCompletionProvider()
         )
@@ -83,7 +58,8 @@ class HttpCompletionContributor : CompletionContributor() {
             val startOffset = psiElement.textRange.startOffset
             val separator = psiElement.text.indexOf(",", context.startOffset - startOffset)
             context.replacementOffset = if (separator < 0) psiElement.textRange.endOffset else startOffset + separator
-        } else if (!isDummyIdentifierCanExtendMessageBody(psiElement, context)
+        } else if (
+            !isDummyIdentifierCanExtendMessageBody(psiElement, context)
             && !isBeforePossiblePreRequestHandler(context)
         ) {
             val parent = psiElement?.parent
@@ -101,8 +77,7 @@ class HttpCompletionContributor : CompletionContributor() {
                     val previousElement = context.file.findElementAt(context.startOffset - 1)
                     val previousElementParent = previousElement?.parent
                     if (previousElementParent is HttpSchema) {
-                        context.replacementOffset =
-                            getSchemeReplacementOffset(previousElementParent)
+                        context.replacementOffset = getSchemeReplacementOffset(previousElementParent)
                     }
                 }
             } else {
@@ -126,53 +101,15 @@ class HttpCompletionContributor : CompletionContributor() {
                 return
             }
 
-            result.addElement(
-                PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(HttpRequestEnum.POST.name)
-                        .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 300.0
+            HttpRequestEnum.entries.forEach {
+                result.addElement(
+                    PrioritizedLookupElement.withPriority(
+                        LookupElementBuilder.create(it.name)
+                            .withBoldness(true)
+                            .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 300.0
+                    )
                 )
-            )
-
-            result.addElement(
-                PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(HttpRequestEnum.GET.name)
-                        .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 300.0
-                )
-            )
-
-            result.addElement(
-                PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(HttpRequestEnum.DELETE.name)
-                        .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
-                )
-            )
-
-            result.addElement(
-                PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(HttpRequestEnum.PUT.name)
-                        .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
-                )
-            )
-
-            result.addElement(
-                PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(HttpRequestEnum.WEBSOCKET.name)
-                        .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 200.0
-                )
-            )
-
-            result.addElement(
-                PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(HttpRequestEnum.DUBBO.name)
-                        .withBoldness(true)
-                        .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 200.0
-                )
-            )
+            }
         }
 
         private fun isRequestStart(parameters: CompletionParameters): Boolean {
@@ -271,58 +208,6 @@ class HttpCompletionContributor : CompletionContributor() {
                     )
                 }
             }
-        }
-    }
-
-    private class HttpMessageBodySeparatorCompletion : CompletionProvider<CompletionParameters>() {
-        override fun addCompletions(
-            parameters: CompletionParameters, context: ProcessingContext,
-            result: CompletionResultSet,
-        ) {
-            val offset = parameters.offset
-            val currentLine = parameters.editor.document.getLineNumber(offset)
-            val lineStartOffset = parameters.editor.document.getLineStartOffset(currentLine)
-            val lineEndOffset = parameters.editor.document.getLineEndOffset(currentLine)
-            val text = parameters.editor.document.getText(TextRange.create(lineStartOffset, lineEndOffset))
-
-            if (!text.chars().allMatch { i: Int -> Character.isWhitespace(i.toChar()) || i == 61 }) {
-                return
-            }
-
-            val insertHandler = InsertHandler { insertionContext: InsertionContext, item: LookupElement ->
-                val document = insertionContext.document
-                val line = document.getLineNumber(insertionContext.startOffset)
-                val newStartOffset = document.getLineStartOffset(line)
-                document.replaceString(newStartOffset, insertionContext.tailOffset, item.lookupString)
-                insertionContext.editor.caretModel.moveToOffset(newStartOffset + item.lookupString.length)
-            }
-
-            result.addElement(LookupElementBuilder.create("=== ").withInsertHandler(insertHandler))
-            result.addElement(LookupElementBuilder.create("=== wait-for-server").withInsertHandler(insertHandler))
-        }
-    }
-
-    private class HttpMessageBodySeparatorOptionsCompletion : CompletionProvider<CompletionParameters>() {
-        override fun addCompletions(
-            parameters: CompletionParameters, context: ProcessingContext,
-            result: CompletionResultSet,
-        ) {
-            result.addElement(
-                LookupElementBuilder.create("wait-for-server")
-                    .withInsertHandler { insertionContext: InsertionContext, _: LookupElement? ->
-                        val document = insertionContext.editor.document
-                        val line = document.getLineNumber(insertionContext.startOffset)
-                        val lastEqualSign = StringUtil.lastIndexOf(
-                            document.charsSequence, '=',
-                            document.getLineStartOffset(line), insertionContext.startOffset
-                        )
-                        if (lastEqualSign != -1) {
-                            document.replaceString(
-                                lastEqualSign + 1, insertionContext.tailOffset,
-                                " wait-for-server"
-                            )
-                        }
-                    })
         }
     }
 

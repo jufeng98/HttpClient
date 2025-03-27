@@ -46,6 +46,8 @@ object HttpHeadersDictionary {
         map[header] = HttpHeaderDocumentation(header, false)
         header = "Admin-Token"
         map[header] = HttpHeaderDocumentation(header, false)
+        header = com.google.common.net.HttpHeaders.SEC_WEBSOCKET_PROTOCOL
+        map[header] = HttpHeaderDocumentation(header, false)
         map
     }
 
