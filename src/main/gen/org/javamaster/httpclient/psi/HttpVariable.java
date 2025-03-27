@@ -4,7 +4,6 @@ package org.javamaster.httpclient.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
 
 public interface HttpVariable extends PsiElement {
 
@@ -13,13 +12,5 @@ public interface HttpVariable extends PsiElement {
 
   @Nullable
   HttpVariableName getVariableName();
-
-  @NotNull
-  String getName();
-
-  @NotNull
-  PsiReference[] getReferences();
-
-  boolean isBuiltin();
 
 }

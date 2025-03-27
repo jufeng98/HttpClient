@@ -30,8 +30,8 @@ public interface HttpTypes {
   IElementType METHOD = new HttpElementType("METHOD");
   IElementType MULTIPART_FIELD = new HttpElementType("MULTIPART_FIELD");
   IElementType MULTIPART_MESSAGE = new HttpElementType("MULTIPART_MESSAGE");
+  IElementType MY_JSON_VALUE = new HttpElementType("MY_JSON_VALUE");
   IElementType OUTPUT_FILE = new HttpElementType("OUTPUT_FILE");
-  IElementType OUTPUT_FILE_PATH = new HttpElementType("OUTPUT_FILE_PATH");
   IElementType PATH_ABSOLUTE = new HttpElementType("PATH_ABSOLUTE");
   IElementType PORT = new HttpElementType("PORT");
   IElementType PRE_REQUEST_HANDLER = new HttpElementType("PRE_REQUEST_HANDLER");
@@ -70,6 +70,7 @@ public interface HttpTypes {
   IElementType EQUALS = new HttpTokenType("=");
   IElementType FIELD_NAME = new HttpTokenType("FIELD_NAME");
   IElementType FIELD_VALUE = new HttpTokenType("FIELD_VALUE");
+  IElementType FILE_PATH_PART = new HttpTokenType("FILE_PATH_PART");
   IElementType FRAGMENT_PART = new HttpTokenType("FRAGMENT_PART");
   IElementType GLOBAL_NAME = new HttpTokenType("GLOBAL_NAME");
   IElementType GLOBAL_START_SCRIPT_BRACE = new HttpTokenType("<! {%");
@@ -78,7 +79,6 @@ public interface HttpTypes {
   IElementType HOST_VALUE = new HttpTokenType("HOST_VALUE");
   IElementType HTTP_VERSION = new HttpTokenType("HTTP_VERSION");
   IElementType IDENTIFIER = new HttpTokenType("IDENTIFIER");
-  IElementType INPUT_FILE_PATH_PART = new HttpTokenType("INPUT_FILE_PATH_PART");
   IElementType INPUT_FILE_SIGN = new HttpTokenType("< ");
   IElementType INTEGER = new HttpTokenType("INTEGER");
   IElementType IN_START_SCRIPT_BRACE = new HttpTokenType("< {%");
@@ -86,7 +86,6 @@ public interface HttpTypes {
   IElementType LINE_COMMENT = new HttpTokenType("LINE_COMMENT");
   IElementType MESSAGE_BOUNDARY = new HttpTokenType("MESSAGE_BOUNDARY");
   IElementType MESSAGE_TEXT = new HttpTokenType("MESSAGE_TEXT");
-  IElementType OUTPUT_FILE_PATH_PART = new HttpTokenType("OUTPUT_FILE_PATH_PART");
   IElementType OUTPUT_FILE_SIGN = new HttpTokenType(">> ");
   IElementType OUT_START_SCRIPT_BRACE = new HttpTokenType("> {%");
   IElementType PORT_SEGMENT = new HttpTokenType("PORT_SEGMENT");
@@ -103,6 +102,7 @@ public interface HttpTypes {
   IElementType SLASH = new HttpTokenType("/");
   IElementType START_VARIABLE_BRACE = new HttpTokenType("{{");
   IElementType STRING = new HttpTokenType("STRING");
+  IElementType STRING_LITERAL_PART = new HttpTokenType("STRING_LITERAL_PART");
 
   class Factory {
     public static PsiElement createElement(ASTNode node) {
@@ -173,11 +173,11 @@ public interface HttpTypes {
       else if (type == MULTIPART_MESSAGE) {
         return new HttpMultipartMessageImpl(node);
       }
+      else if (type == MY_JSON_VALUE) {
+        return new HttpMyJsonValueImpl(node);
+      }
       else if (type == OUTPUT_FILE) {
         return new HttpOutputFileImpl(node);
-      }
-      else if (type == OUTPUT_FILE_PATH) {
-        return new HttpOutputFilePathImpl(node);
       }
       else if (type == PATH_ABSOLUTE) {
         return new HttpPathAbsoluteImpl(node);

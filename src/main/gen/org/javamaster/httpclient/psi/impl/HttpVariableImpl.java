@@ -10,7 +10,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
-import com.intellij.psi.PsiReference;
 
 public class HttpVariableImpl extends ASTWrapperPsiElement implements HttpVariable {
 
@@ -38,23 +37,6 @@ public class HttpVariableImpl extends ASTWrapperPsiElement implements HttpVariab
   @Nullable
   public HttpVariableName getVariableName() {
     return findChildByClass(HttpVariableName.class);
-  }
-
-  @Override
-  @NotNull
-  public String getName() {
-    return HttpPsiImplUtil.getName(this);
-  }
-
-  @Override
-  @NotNull
-  public PsiReference[] getReferences() {
-    return HttpPsiImplUtil.getReferences(this);
-  }
-
-  @Override
-  public boolean isBuiltin() {
-    return HttpPsiImplUtil.isBuiltin(this);
   }
 
 }

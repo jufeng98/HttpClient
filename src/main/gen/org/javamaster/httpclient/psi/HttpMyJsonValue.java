@@ -4,14 +4,10 @@ package org.javamaster.httpclient.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
 
-public interface HttpOutputFilePath extends HttpFilePath {
-
-  @Nullable
-  HttpVariable getVariable();
+public interface HttpMyJsonValue extends PsiElement {
 
   @NotNull
-  PsiReference[] getReferences();
+  List<HttpVariable> getVariableList();
 
 }

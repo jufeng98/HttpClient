@@ -29,8 +29,8 @@ public class HttpOutputFileImpl extends ASTWrapperPsiElement implements HttpOutp
 
   @Override
   @Nullable
-  public HttpOutputFilePath getOutputFilePath() {
-    return findChildByClass(HttpOutputFilePath.class);
+  public HttpFilePath getFilePath() {
+    return findChildByClass(HttpFilePath.class);
   }
 
 }

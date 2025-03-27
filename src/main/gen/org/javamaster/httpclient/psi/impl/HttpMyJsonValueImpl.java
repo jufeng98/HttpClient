@@ -10,16 +10,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
-import com.intellij.psi.PsiReference;
 
-public class HttpOutputFilePathImpl extends ASTWrapperPsiElement implements HttpOutputFilePath {
+public class HttpMyJsonValueImpl extends ASTWrapperPsiElement implements HttpMyJsonValue {
 
-  public HttpOutputFilePathImpl(@NotNull ASTNode node) {
+  public HttpMyJsonValueImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitOutputFilePath(this);
+    visitor.visitMyJsonValue(this);
   }
 
   @Override
@@ -29,15 +28,9 @@ public class HttpOutputFilePathImpl extends ASTWrapperPsiElement implements Http
   }
 
   @Override
-  @Nullable
-  public HttpVariable getVariable() {
-    return findChildByClass(HttpVariable.class);
-  }
-
-  @Override
   @NotNull
-  public PsiReference[] getReferences() {
-    return HttpPsiImplUtil.getReferences(this);
+  public List<HttpVariable> getVariableList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpVariable.class);
   }
 
 }

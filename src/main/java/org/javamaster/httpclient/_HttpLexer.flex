@@ -36,11 +36,11 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 //%debug
 %state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_COMMENT
 %state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE, IN_TRIM_PREFIX_ONLY_SPACE
-%xstate IN_PATH
+%xstate IN_PATH, IN_JSON_VALUE
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
 %state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION
-%state IN_MULTIPART, IN_VARIABLE, IN_DINAMIC_VARIABLE, IN_DINAMIC_VARIABLE_ARGS, IN_GLOBAL_VARIABLE, IN_GLOBAL_VARIABLE_VALUE
+%state IN_MULTIPART, IN_VARIABLE, IN_DYNAMIC_VARIABLE, IN_DYNAMIC_VARIABLE_ARGS, IN_GLOBAL_VARIABLE, IN_GLOBAL_VARIABLE_VALUE
 
 EOL=\R
 EOL_MULTI=[ ]*\R+
@@ -65,7 +65,7 @@ VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
 GLOBAL_VARIABLE_NAME=[^\r\n={} ]+
 DIRECTION_PART=[^\r\n ]+
 INTEGER=[0-9]+
-STRING=('([^'])*'?|\"([^\"])*\"?)
+STRING=('([^'])*'|\"([^\"])*\")
 %%
 
 <YYINITIAL> {
@@ -105,23 +105,23 @@ STRING=('([^'])*'?|\"([^\"])*\"?)
 
 <IN_VARIABLE> {
   {VARIABLE_NAME}        { return IDENTIFIER; }
-  "$"                    { yybegin(IN_DINAMIC_VARIABLE); return DOLLAR; }
+  "$"                    { yybegin(IN_DYNAMIC_VARIABLE); return DOLLAR; }
   {ONLY_SPACE}           { return WHITE_SPACE; }
   "}}"                   { yybegin(nextState); return END_VARIABLE_BRACE; }
 }
 
-<IN_DINAMIC_VARIABLE> {
+<IN_DYNAMIC_VARIABLE> {
   {VARIABLE_NAME}          { return IDENTIFIER; }
-  "("                      { yybegin(IN_DINAMIC_VARIABLE_ARGS); return LEFT_BRACKET; }
+  "("                      { yybegin(IN_DYNAMIC_VARIABLE_ARGS); return LEFT_BRACKET; }
   {ONLY_SPACE}             { return WHITE_SPACE; }
   "}}"                     { yybegin(nextState); return END_VARIABLE_BRACE; }
 }
 
-<IN_DINAMIC_VARIABLE_ARGS> {
+<IN_DYNAMIC_VARIABLE_ARGS> {
   {INTEGER}                    { return INTEGER; }
   {STRING}                     { return STRING; }
   ","                          { return COMMA; }
-  ")"                          { yybegin(IN_DINAMIC_VARIABLE); return RIGHT_BRACKET; }
+  ")"                          { yybegin(IN_DYNAMIC_VARIABLE); return RIGHT_BRACKET; }
   {ONLY_SPACE}                 { return WHITE_SPACE; }
 }
 
@@ -259,7 +259,7 @@ STRING=('([^'])*'?|\"([^\"])*\"?)
 }
 
 <IN_INPUT_FILE_PATH> {
-  {FILE_PATH_PART}           { return INPUT_FILE_PATH_PART; }
+  {FILE_PATH_PART}           { return FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
   {EOL_MULTI}                { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
 }
@@ -290,9 +290,16 @@ STRING=('([^'])*'?|\"([^\"])*\"?)
 <IN_OUTPUT_FILE_PATH> {
   ">> "                      { return OUTPUT_FILE_SIGN; }
   "{{"                       { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
-  {FILE_PATH_PART}           { return OUTPUT_FILE_PATH_PART; }
+  {FILE_PATH_PART}           { return FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
   {EOL_MULTI}                { yybegin(YYINITIAL); return WHITE_SPACE; }
+}
+
+<IN_JSON_VALUE> {
+  [^{}]+                     { return STRING_LITERAL_PART; }
+  "{"                        { return STRING_LITERAL_PART; }
+  "}"                        { return STRING_LITERAL_PART; }
+  "{{"                       { nextState = IN_JSON_VALUE; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
 }
 
   {LINE_COMMENT}{EOL}         { yypushback(1); return LINE_COMMENT; }

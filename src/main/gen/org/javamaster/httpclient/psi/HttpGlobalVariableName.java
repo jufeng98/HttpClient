@@ -7,4 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface HttpGlobalVariableName extends PsiElement {
 
+  @NotNull
+  String getName();
+
 }

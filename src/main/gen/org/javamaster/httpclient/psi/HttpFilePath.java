@@ -8,6 +8,9 @@ import com.intellij.psi.PsiReference;
 
 public interface HttpFilePath extends PsiElement {
 
+  @Nullable
+  HttpVariable getVariable();
+
   @NotNull
   PsiReference[] getReferences();
 

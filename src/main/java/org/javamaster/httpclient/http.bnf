@@ -52,9 +52,15 @@ globalVariable::= globalVariableName EQUALS globalVariableValue? {
 }
 globalVariableName ::= AT GLOBAL_NAME {
     pin = 1
+    methods = [
+        getName
+    ]
 }
 globalVariableValue ::= GLOBAL_VALUE | variable {
     pin = 1
+    methods = [
+        getValue
+    ]
 }
 globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
@@ -62,7 +68,7 @@ globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
 }
 requestBlock ::= comment? directionComment* preRequestHandler? request {
     pin = 1
-    recoverWhile = "requestBlockRecover"
+    recoverWhile = requestBlockRecover
 }
 private requestBlockRecover ::= !(REQUEST_COMMENT)
 comment ::= REQUEST_COMMENT
@@ -101,20 +107,30 @@ schema ::= SCHEMA_PART
 host ::= HOST_VALUE | variable
 
 variable ::= START_VARIABLE_BRACE variable_name variable_args? END_VARIABLE_BRACE {
+    pin = 1
+}
+variable_name ::= variable_builtin? variable_reference {
     methods = [
         getName
-        getReferences
         isBuiltin
+        getReferences
     ]
     pin = 1
 }
-variable_name ::= variable_builtin? variable_reference
 variable_builtin ::= DOLLAR
 variable_reference ::= IDENTIFIER
 variable_args ::= LEFT_BRACKET variable_arg? (COMMA variable_arg)* RIGHT_BRACKET {
+    methods = [
+        toArgsList
+    ]
     pin = 1
 }
-variable_arg ::= INTEGER | STRING
+variable_arg ::= INTEGER | STRING {
+    methods = [
+        getReferences
+        getValue
+    ]
+}
 
 port ::= COLON PORT_SEGMENT
 pathAbsolute ::= (SLASH (SEGMENT | variable)?)+
@@ -155,16 +171,16 @@ requestMessagesGroup ::= inputFile | messageBody
 
 inputFile ::= INPUT_FILE_SIGN filePath {
     pin = 1
+}
+outputFile ::= OUTPUT_FILE_SIGN filePath {
+    pin = 1
+}
+filePath ::= variable? FILE_PATH_PART {
     methods = [
         getReferences
     ]
-    implements = "org.javamaster.httpclient.psi.HttpFilePath"
 }
-filePath ::= INPUT_FILE_PATH_PART {
-    methods = [
-        getReferences
-    ]
-}
+
 messageBody ::= MESSAGE_TEXT {
     mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
 }
@@ -184,12 +200,5 @@ scriptBody ::= SCRIPT_BODY_PAET {
   mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
 }
 
-outputFile ::= OUTPUT_FILE_SIGN outputFilePath {
-    pin = 1
-}
-outputFilePath ::= variable? OUTPUT_FILE_PATH_PART {
-    methods = [
-        getReferences
-    ]
-    implements = "org.javamaster.httpclient.psi.HttpFilePath"
-}
+//noinspection BnfUnusedRule
+myJsonValue ::= (STRING_LITERAL_PART | variable)+

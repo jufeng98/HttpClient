@@ -76,7 +76,7 @@ public class HttpVisitor extends PsiElementVisitor {
   }
 
   public void visitInputFile(@NotNull HttpInputFile o) {
-    visitFilePath(o);
+    visitPsiElement(o);
   }
 
   public void visitMessageBody(@NotNull HttpMessageBody o) {
@@ -95,12 +95,12 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitOutputFile(@NotNull HttpOutputFile o) {
+  public void visitMyJsonValue(@NotNull HttpMyJsonValue o) {
     visitPsiElement(o);
   }
 
-  public void visitOutputFilePath(@NotNull HttpOutputFilePath o) {
-    visitFilePath(o);
+  public void visitOutputFile(@NotNull HttpOutputFile o) {
+    visitPsiElement(o);
   }
 
   public void visitPathAbsolute(@NotNull HttpPathAbsolute o) {

@@ -33,4 +33,10 @@ public class HttpVariableArgsImpl extends ASTWrapperPsiElement implements HttpVa
     return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpVariableArg.class);
   }
 
+  @Override
+  @NotNull
+  public Object[] toArgsList() {
+    return HttpPsiImplUtil.toArgsList(this);
+  }
+
 }

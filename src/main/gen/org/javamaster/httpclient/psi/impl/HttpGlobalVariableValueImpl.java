@@ -33,4 +33,10 @@ public class HttpGlobalVariableValueImpl extends ASTWrapperPsiElement implements
     return findChildByClass(HttpVariable.class);
   }
 
+  @Override
+  @Nullable
+  public String getValue() {
+    return HttpPsiImplUtil.getValue(this);
+  }
+
 }

@@ -106,15 +106,23 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // INPUT_FILE_PATH_PART
+  // variable? FILE_PATH_PART
   public static boolean filePath(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "filePath")) return false;
-    if (!nextTokenIs(b, INPUT_FILE_PATH_PART)) return false;
+    if (!nextTokenIs(b, "<file path>", FILE_PATH_PART, START_VARIABLE_BRACE)) return false;
     boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, INPUT_FILE_PATH_PART);
-    exit_section_(b, m, FILE_PATH, r);
+    Marker m = enter_section_(b, l, _NONE_, FILE_PATH, "<file path>");
+    r = filePath_0(b, l + 1);
+    r = r && consumeToken(b, FILE_PATH_PART);
+    exit_section_(b, l, m, r, false, null);
     return r;
+  }
+
+  // variable?
+  private static boolean filePath_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "filePath_0")) return false;
+    variable(b, l + 1);
+    return true;
   }
 
   /* ********************************************************** */
@@ -449,7 +457,33 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // OUTPUT_FILE_SIGN outputFilePath
+  // (STRING_LITERAL_PART | variable)+
+  public static boolean myJsonValue(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "myJsonValue")) return false;
+    if (!nextTokenIs(b, "<my json value>", START_VARIABLE_BRACE, STRING_LITERAL_PART)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, MY_JSON_VALUE, "<my json value>");
+    r = myJsonValue_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!myJsonValue_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "myJsonValue", c)) break;
+    }
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // STRING_LITERAL_PART | variable
+  private static boolean myJsonValue_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "myJsonValue_0")) return false;
+    boolean r;
+    r = consumeToken(b, STRING_LITERAL_PART);
+    if (!r) r = variable(b, l + 1);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // OUTPUT_FILE_SIGN filePath
   public static boolean outputFile(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "outputFile")) return false;
     if (!nextTokenIs(b, OUTPUT_FILE_SIGN)) return false;
@@ -457,29 +491,9 @@ public class HttpParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, OUTPUT_FILE, null);
     r = consumeToken(b, OUTPUT_FILE_SIGN);
     p = r; // pin = 1
-    r = r && outputFilePath(b, l + 1);
+    r = r && filePath(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
-  }
-
-  /* ********************************************************** */
-  // variable? OUTPUT_FILE_PATH_PART
-  public static boolean outputFilePath(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "outputFilePath")) return false;
-    if (!nextTokenIs(b, "<output file path>", OUTPUT_FILE_PATH_PART, START_VARIABLE_BRACE)) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, OUTPUT_FILE_PATH, "<output file path>");
-    r = outputFilePath_0(b, l + 1);
-    r = r && consumeToken(b, OUTPUT_FILE_PATH_PART);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // variable?
-  private static boolean outputFilePath_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "outputFilePath_0")) return false;
-    variable(b, l + 1);
-    return true;
   }
 
   /* ********************************************************** */
@@ -1017,13 +1031,13 @@ public class HttpParser implements PsiParser, LightPsiParser {
   // variable_builtin? variable_reference
   public static boolean variable_name(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "variable_name")) return false;
-    if (!nextTokenIs(b, "<variable name>", DOLLAR, IDENTIFIER)) return false;
-    boolean r;
+    boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, VARIABLE_NAME, "<variable name>");
     r = variable_name_0(b, l + 1);
+    p = r; // pin = 1
     r = r && variable_reference(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
-    return r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   // variable_builtin?

@@ -8,6 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface HttpOutputFile extends PsiElement {
 
   @Nullable
-  HttpOutputFilePath getOutputFilePath();
+  HttpFilePath getFilePath();
 
 }

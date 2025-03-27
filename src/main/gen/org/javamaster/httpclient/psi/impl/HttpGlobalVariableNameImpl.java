@@ -27,4 +27,10 @@ public class HttpGlobalVariableNameImpl extends ASTWrapperPsiElement implements 
     else super.accept(visitor);
   }
 
+  @Override
+  @NotNull
+  public String getName() {
+    return HttpPsiImplUtil.getName(this);
+  }
+
 }

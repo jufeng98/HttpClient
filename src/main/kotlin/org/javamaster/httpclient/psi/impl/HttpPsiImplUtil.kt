@@ -6,9 +6,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.tree.IElementType
-import com.intellij.psi.util.elementType
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.utils.DubboUtils
 import java.net.http.HttpClient.Version
 
@@ -35,27 +35,23 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
-    fun getName(httpVariable: HttpVariable): String {
-        val identifier = HttpPsiUtils.getNextSiblingByType(
-            httpVariable.firstChild,
-            HttpTypes.IDENTIFIER, false
-        ) ?: return ""
-
-        val prevSibling = identifier.prevSibling
-        return if (prevSibling.elementType == HttpTypes.DOLLAR) {
-            prevSibling.text + identifier.text
-        } else {
-            identifier.text
-        }
+    fun getName(variableName: HttpVariableName): String {
+        return variableName.text
     }
 
     @JvmStatic
-    fun isBuiltin(httpVariable: HttpVariable): Boolean {
-        val dollar = HttpPsiUtils.getNextSiblingByType(
-            httpVariable.firstChild,
-            HttpTypes.DOLLAR, false
-        )
-        return dollar != null
+    fun getName(variableName: HttpGlobalVariableName): String {
+        return getNextSiblingByType(variableName.firstChild, HttpTypes.GLOBAL_NAME, false)!!.text
+    }
+
+    @JvmStatic
+    fun getValue(variableValue: HttpGlobalVariableValue): String? {
+        return getNextSiblingByType(variableValue.firstChild, HttpTypes.GLOBAL_VALUE, false)?.text
+    }
+
+    @JvmStatic
+    fun isBuiltin(variableName: HttpVariableName): Boolean {
+        return variableName.variableBuiltin != null
     }
 
     @JvmStatic
@@ -164,22 +160,37 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
-    fun getReferences(param: HttpVariable): Array<PsiReference> {
+    fun getReferences(param: HttpVariableName): Array<PsiReference> {
         return ReferenceProvidersRegistry.getReferencesFromProviders(param)
+    }
+
+    @JvmStatic
+    fun getReferences(param: HttpVariableArg): Array<PsiReference> {
+        return ReferenceProvidersRegistry.getReferencesFromProviders(param)
+    }
+
+    @JvmStatic
+    fun getValue(param: HttpVariableArg): Any {
+        val integer = param.integer
+        if (integer != null) {
+            return integer.text.toInt()
+        } else {
+            val text = param.string!!.text
+            return text.substring(1, text.length - 1)
+        }
+    }
+
+    @JvmStatic
+    fun toArgsList(param: HttpVariableArgs): Array<Any> {
+        return param.variableArgList
+            .map {
+                getValue(it)
+            }
+            .toTypedArray()
     }
 
     @JvmStatic
     fun getReferences(param: HttpFilePath): Array<PsiReference> {
-        return ReferenceProvidersRegistry.getReferencesFromProviders(param)
-    }
-
-    @JvmStatic
-    fun getReferences(param: HttpOutputFilePath): Array<PsiReference> {
-        return ReferenceProvidersRegistry.getReferencesFromProviders(param)
-    }
-
-    @JvmStatic
-    fun getReferences(param: HttpInputFile): Array<PsiReference> {
         return ReferenceProvidersRegistry.getReferencesFromProviders(param)
     }
 

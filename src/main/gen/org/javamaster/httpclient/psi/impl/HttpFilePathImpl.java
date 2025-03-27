@@ -29,6 +29,12 @@ public class HttpFilePathImpl extends ASTWrapperPsiElement implements HttpFilePa
   }
 
   @Override
+  @Nullable
+  public HttpVariable getVariable() {
+    return findChildByClass(HttpVariable.class);
+  }
+
+  @Override
   @NotNull
   public PsiReference[] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
