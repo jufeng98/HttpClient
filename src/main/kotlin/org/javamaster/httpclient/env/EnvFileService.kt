@@ -21,7 +21,9 @@ import com.intellij.util.indexing.FileBasedIndex
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.index.HttpEnvironmentIndex.Companion.INDEX_ID
 import org.javamaster.httpclient.psi.HttpPsiUtils
+import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
+import org.javamaster.httpclient.resolve.VariableResolver.Companion.escapeRegexp
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
 
@@ -34,13 +36,19 @@ import java.io.File
 @Service(Service.Level.PROJECT)
 class EnvFileService(val project: Project) {
 
-    fun getPresetEnvList(httpFileParentPath: String): MutableSet<String> {
+    fun getPresetEnvSet(httpFileParentPath: String): MutableSet<String> {
         val envSet = LinkedHashSet<String>()
 
-        val privateEnvList = collectEnvNames(getEnvJsonFile(PRIVATE_ENV_FILE_NAME, httpFileParentPath, project))
+        val jsonFile = getEnvJsonFile(PRIVATE_ENV_FILE_NAME, httpFileParentPath, project)
+
+        val privateEnvList = collectEnvNames(jsonFile)
+
         envSet.addAll(privateEnvList)
 
-        val envList = collectEnvNames(getEnvJsonFile(ENV_FILE_NAME, httpFileParentPath, project))
+        val jsonPrivateFile = getEnvJsonFile(ENV_FILE_NAME, httpFileParentPath, project)
+
+        val envList = collectEnvNames(jsonPrivateFile)
+
         envSet.addAll(envList)
 
         envSet.remove(COMMON_ENV_NAME)
@@ -131,11 +139,12 @@ class EnvFileService(val project: Project) {
 
         val value = when (literal) {
             is JsonStringLiteral -> {
-                literal.value
+                val txt = literal.text
+                txt.substring(1, txt.length - 1)
             }
 
             is JsonNumberLiteral -> {
-                "" + literal.value
+                literal.value.toString()
             }
 
             is JsonBooleanLiteral -> {
@@ -153,7 +162,8 @@ class EnvFileService(val project: Project) {
     companion object {
         const val ENV_FILE_NAME = "http-client.env.json"
         const val PRIVATE_ENV_FILE_NAME = "http-client.private.env.json"
-        val ENV_FILE_NAMES = arrayOf(ENV_FILE_NAME, PRIVATE_ENV_FILE_NAME)
+
+        val ENV_FILE_NAMES = setOf(ENV_FILE_NAME, PRIVATE_ENV_FILE_NAME)
 
         const val COMMON_ENV_NAME = "common"
 
@@ -164,50 +174,47 @@ class EnvFileService(val project: Project) {
             val parentPath = parent.path
 
             val file = File(parentPath, name)
-            val virtualFile = VfsUtil.findFileByIoFile(file, true)
-            if (virtualFile != null) {
+            if (file.exists()) {
                 return null
             }
 
             return WriteAction.computeAndWait<VirtualFile, Exception> {
+                val content = if (isPrivate) {
+                    """
+                        {
+                          "dev": {
+                            "token": "rRTJHGerfgET"
+                          },
+                          "uat": {
+                            "token": "ERTYHGSDKFue"
+                          },
+                          "pro": {
+                            "token": "efJFGHJKHYTR"
+                          }
+                        }
+                    """.trimIndent()
+                } else {
+                    """
+                        {
+                          "dev": {
+                            "baseUrl": "http://localhost:8800"
+                          },
+                          "uat": {
+                            "baseUrl": "https://uat.javamaster.org/bm-wash"
+                          },
+                          "pro": {
+                            "baseUrl": "https://pro.javamaster.org/bm-wash"
+                          },
+                          "common": {
+                            "contextPath": "/bm-wash"
+                          }
+                        }
+                    """.trimIndent()
+                }
+
                 val psiDirectory = PsiManager.getInstance(project).findDirectory(parent)!!
                 val newJsonFile = psiDirectory.createFile(name).virtualFile
-                if (isPrivate) {
-                    newJsonFile.writeText(
-                        """
-                            {
-                              "dev": {
-                                "token": "rRTJHGerfgET"
-                              },
-                              "uat": {
-                                "token": "ERTYHGSDKFue"
-                              },
-                              "pro": {
-                                "token": "efJFGHJKHYTR"
-                              }
-                            }
-                """.trimIndent()
-                    )
-                } else {
-                    newJsonFile.writeText(
-                        """
-                            {
-                              "dev": {
-                                "baseUrl": "http://localhost:8800"
-                              },
-                              "uat": {
-                                "baseUrl": "https://uat.javamaster.org/bm-wash"
-                              },
-                              "pro": {
-                                "baseUrl": "https://pro.javamaster.org/bm-wash"
-                              },
-                              "common": {
-                                "contextPath": "/bm-wash"
-                              }
-                            }
-                """.trimIndent()
-                    )
-                }
+                newJsonFile.writeText(content)
 
                 newJsonFile
             }
@@ -222,11 +229,21 @@ class EnvFileService(val project: Project) {
 
             return matcher.replaceAll {
                 val matchStr = it.group()
-                val variable = matchStr.substring(2, matchStr.length - 2)
 
-                val innerVariableEnum = InnerVariableEnum.getEnum(variable) ?: return@replaceAll "{{\\$variable}}"
+                val myJsonValue = MyJsonLazyFileElement.parse(matchStr)
 
-                innerVariableEnum.exec(variable, httpFileParentPath)
+                val variable = myJsonValue.variableList[0]
+                val variableName = variable.variableName!!
+                val name = variableName.name
+                val variableArgs = variable.variableArgs
+                val args = variableArgs?.toArgsList()
+
+                // 支持环境文件内引用内置变量
+                val innerVariableEnum = InnerVariableEnum.getEnum(name)
+
+                val result = innerVariableEnum?.exec(httpFileParentPath, *args ?: emptyArray()) ?: matchStr
+
+                escapeRegexp(result)
             }
         }
 
@@ -234,15 +251,17 @@ class EnvFileService(val project: Project) {
             project: Project,
             selectedEnv: String?,
             httpFileParentPath: String,
-            module: Module,
+            module: Module?,
         ): MutableMap<String, String>? {
             selectedEnv ?: return null
 
             val projectScope = GlobalSearchScope.projectScope(project)
             val map = getEnvMapFromIndex(selectedEnv, httpFileParentPath, projectScope)
 
-            val moduleScope = GlobalSearchScope.moduleScope(module)
-            map.putAll(getEnvMapFromIndex(selectedEnv, httpFileParentPath, moduleScope))
+            if (module != null) {
+                val moduleScope = GlobalSearchScope.moduleScope(module)
+                map.putAll(getEnvMapFromIndex(selectedEnv, httpFileParentPath, moduleScope))
+            }
 
             if (map.isEmpty()) {
                 return null

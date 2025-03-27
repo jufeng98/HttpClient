@@ -7,9 +7,7 @@ import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.psi.HttpGlobalVariable
-import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
-import org.javamaster.httpclient.psi.HttpTypes
-import java.util.*
+import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement
 import java.util.regex.Pattern
 
 /**
@@ -33,16 +31,14 @@ class VariableResolver(
         val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
 
         globalVariables.forEach {
-            val name =
-                getNextSiblingByType(it.globalVariableName.firstChild, HttpTypes.GLOBAL_NAME, false)?.text
-                    ?: return@forEach
+            val name = it.globalVariableName.name
             val globalVariableValue = it.globalVariableValue ?: return@forEach
 
             val variable = globalVariableValue.variable
             val value = if (variable != null) {
-                resolveVariable(variable.name, Collections.emptyMap()) ?: variable.text
+                resolveVariable(variable.variableName?.name, emptyMap(), false, null) ?: variable.text
             } else {
-                getNextSiblingByType(globalVariableValue.firstChild, HttpTypes.GLOBAL_VALUE, false)?.text ?: ""
+                globalVariableValue.value ?: ""
             }
 
             map[name] = value
@@ -56,23 +52,52 @@ class VariableResolver(
 
         return matcher.replaceAll {
             val matchStr = it.group()
-            val variable = matchStr.substring(2, matchStr.length - 2)
 
-            val resolved = resolveVariable(variable, fileScopeVariableMap)
-            if (resolved != null) {
-                return@replaceAll resolved
-            }
+            val myJsonValue = MyJsonLazyFileElement.parse(matchStr)
 
-            // 无法解析变量,原样返回
-            if (variable.startsWith("$")) {
-                return@replaceAll "{{\\$variable}}"
-            }
+            val variable = myJsonValue.variableList[0]
+            val variableName = variable.variableName!!
+            val name = variableName.name
+            val builtin = variableName.isBuiltin
+            val args = variable.variableArgs?.toArgsList()
 
-            matchStr
+            val result = resolveVariable(name, fileScopeVariableMap, builtin, args) ?: matchStr
+
+            escapeRegexp(result)
         }
     }
 
-    private fun resolveVariable(variable: String, fileMap: Map<String, String>): String? {
+    private fun resolveVariable(
+        variable: String?,
+        fileMap: Map<String, String>,
+        builtin: Boolean,
+        args: Array<Any>?,
+    ): String? {
+        if (variable == null) return null
+
+        if (builtin) {
+            var innerVariable = resolveInnerVariable(variable, args)
+            if (innerVariable != null) {
+                return innerVariable
+            }
+
+            if (variable.startsWith(PROPERTY_PREFIX)) {
+                innerVariable = System.getProperty(variable.substring(PROPERTY_PREFIX.length + 1))
+                if (innerVariable != null) {
+                    return innerVariable
+                }
+            }
+
+            if (variable.startsWith(ENV_PREFIX)) {
+                innerVariable = System.getenv(variable.substring(ENV_PREFIX.length + 1))
+                if (innerVariable != null) {
+                    return innerVariable
+                }
+            }
+
+            return null
+        }
+
         var innerVariable = fileMap[variable]
         if (innerVariable != null) {
             return innerVariable
@@ -94,25 +119,6 @@ class VariableResolver(
             return envValue
         }
 
-        innerVariable = resolveInnerVariable(variable)
-        if (innerVariable != null) {
-            return innerVariable
-        }
-
-        if (variable.startsWith(PROPERTY_PREFIX)) {
-            innerVariable = System.getProperty(variable.substring(PROPERTY_PREFIX.length + 1))
-            if (innerVariable != null) {
-                return innerVariable
-            }
-        }
-
-        if (variable.startsWith(ENV_PREFIX)) {
-            innerVariable = System.getenv(variable.substring(ENV_PREFIX.length + 1))
-            if (innerVariable != null) {
-                return innerVariable
-            }
-        }
-
         return null
     }
 
@@ -125,13 +131,13 @@ class VariableResolver(
         return map
     }
 
-    private fun resolveInnerVariable(variable: String): String? {
+    private fun resolveInnerVariable(variable: String, args: Array<Any>?): String? {
         val variableEnum = InnerVariableEnum.getEnum(variable) ?: return null
 
         return try {
-            variableEnum.exec(variable, httpFileParentPath)
+            variableEnum.exec(httpFileParentPath, *args ?: emptyArray())
         } catch (e: UnsupportedOperationException) {
-            variableEnum.exec(variable, httpFileParentPath, project)
+            variableEnum.exec(httpFileParentPath, project)
         }
     }
 
@@ -140,20 +146,26 @@ class VariableResolver(
         const val PROPERTY_PREFIX = "\$property"
         const val ENV_PREFIX = "\$env"
 
+        fun escapeRegexp(result: String): String {
+            return result.replace("\\", "\\\\")
+                .replace("\$", "\\$")
+        }
+
         fun resolveInnerVariable(str: String, parentPath: String, project: Project): String {
             val matcher = VARIABLE_PATTERN.matcher(str)
 
             return matcher.replaceAll {
                 val matchStr = it.group()
-                val variable = matchStr.substring(2, matchStr.length - 2)
 
-                val variableEnum = InnerVariableEnum.getEnum(variable)
-                if (variableEnum != null) {
-                    return@replaceAll variableEnum.exec(variable, parentPath, project)
-                }
+                val myJsonValue = MyJsonLazyFileElement.parse(matchStr)
 
-                // 无法解析变量,原样返回
-                return@replaceAll "{{\\$variable}}"
+                val variable = myJsonValue.variableList[0]
+                val variableName = variable.variableName!!
+                val name = variableName.name
+
+                val result = InnerVariableEnum.getEnum(name)?.exec(parentPath, project) ?: matchStr
+
+                escapeRegexp(result)
             }
         }
     }
