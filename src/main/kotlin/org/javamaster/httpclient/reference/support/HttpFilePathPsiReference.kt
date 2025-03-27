@@ -16,9 +16,9 @@ class HttpFilePathPsiReference(httpFilePath: HttpFilePath, textRange: TextRange)
     override fun resolve(): PsiElement? {
         val parentPath = element.containingFile?.virtualFile?.parent?.path ?: return null
 
-        val tmpPath = VariableResolver.resolveInnerVariable(element.text, parentPath, element.project)
+        val path = VariableResolver.resolveInnerVariable(element.text, parentPath, element.project)
 
-        return HttpUtils.resolveFilePath(tmpPath, parentPath, element.project)
+        return HttpUtils.resolveFilePath(path, parentPath, element.project)
     }
 
 }

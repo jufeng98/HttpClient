@@ -2,15 +2,15 @@ package org.javamaster.httpclient.reference.provider
 
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.env.EnvFileService.Companion.ENV_FILE_NAMES
 import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.reference.support.JsonValueVariablePsiReference
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement
+import org.javamaster.httpclient.reference.support.JsonValueArgNamePsiReference
+import org.javamaster.httpclient.reference.support.JsonValueVariableNamePsiReference
 
 /**
  * @author yudong
@@ -35,56 +35,53 @@ class JsonValuePsiReferenceProvider : PsiReferenceProvider() {
         }
 
         if (ENV_FILE_NAMES.contains(element.containingFile?.virtualFile?.name)) {
-            return createReferences(stringLiteral, element)
+            return createReferences(stringLiteral, null)
         }
 
         return PsiReference.EMPTY_ARRAY
     }
 
     private fun createReferences(
-        literal: JsonStringLiteral,
-        element: PsiElement,
-    ): Array<JsonValueVariablePsiReference> {
-        if (literal.isPropertyName) {
-            return emptyArray()
-        }
+        stringLiteral: JsonStringLiteral,
+        messageBody: HttpMessageBody?,
+    ): Array<out PsiReference> {
+        val jsonValueText = stringLiteral.text
+        val value = jsonValueText.substring(1, jsonValueText.length - 1)
 
-        val value = literal.text
-        val list = mutableListOf<JsonValueVariablePsiReference>()
+        val literalRange = stringLiteral.textRange
 
-        var pair = findVariablePair(value, 0)
-        while (pair != null) {
-            val textRange = TextRange(pair.first, pair.second)
-            val variableName = value.substring(pair.first, pair.second)
-            val builtin = variableName.startsWith("$")
-            val reference = JsonValueVariablePsiReference(literal, builtin, variableName, textRange, element)
+        val myJsonValue = MyJsonLazyFileElement.parse(value)
 
-            list.add(reference)
+        return myJsonValue.variableList
+            .mapNotNull {
+                val variableName = it.variableName ?: return@mapNotNull null
 
-            pair = findVariablePair(value, pair.second + 2)
-        }
+                val nameRange = variableName.textRange
+                if (nameRange.startOffset == nameRange.endOffset) {
+                    return@mapNotNull null
+                }
 
-        return list.toTypedArray()
-    }
+                val delta = literalRange.startOffset + 1
 
-    private fun findVariablePair(value: String, start: Int): Pair<Int, Int>? {
-        var startIdx = value.indexOf(HttpUtils.VARIABLE_SIGN_START, start)
-        if (startIdx == -1) {
-            return null
-        }
+                val range = nameRange.shiftRight(delta)
+                val reference = JsonValueVariableNamePsiReference(stringLiteral, it, range, messageBody)
 
-        startIdx += 2
+                val references = mutableListOf<PsiReference>(reference)
 
-        val endIdx = value.indexOf(HttpUtils.VARIABLE_SIGN_END, startIdx)
-        if (endIdx == -1) {
-            return null
-        }
+                val argReferences = it.variableArgs?.variableArgList
+                    ?.map { arg ->
+                        val argRange = arg.textRange.shiftRight(delta)
+                        JsonValueArgNamePsiReference(stringLiteral, arg, argRange, messageBody)
+                    }
+                    ?: emptyList()
 
-        if (startIdx == endIdx) {
-            return null
-        }
+                references.addAll(argReferences)
 
-        return Pair(startIdx, endIdx)
+                references
+            }
+            .flatten()
+            .toTypedArray()
+
     }
 
 }
