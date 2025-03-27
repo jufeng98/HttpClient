@@ -5,21 +5,24 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.navigation.ItemPresentation
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.util.application
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils.createActionEvent
 import org.javamaster.httpclient.utils.HttpUtils.createProcessIndicator
+import org.javamaster.httpclient.utils.HttpUtils.findControllerNavigationItem
 import org.javamaster.httpclient.utils.HttpUtils.findControllerPsiMethods
-import org.javamaster.httpclient.utils.HttpUtils.getControllerNavigationItem
 import org.javamaster.httpclient.utils.PsiUtils
 import org.javamaster.httpclient.utils.TooltipUtils.showTooltip
 import java.util.*
@@ -60,53 +63,66 @@ class JsonControllerMethodFieldPsiElement(
         virtualFile: VirtualFile?,
         jsonPropertyNameLevels: LinkedList<String>,
     ) {
-        val serviceMethod = DubboUtils.findDubboServiceMethod(jsonString)
-        if (serviceMethod == null) {
-            showTooltip("Tip:未能解析到对应的Dubbo方法,无法跳转", project)
-            return
-        }
+        application.executeOnPooledThread {
+            runReadAction {
+                val serviceMethod = DubboUtils.findDubboServiceMethod(jsonString)
+                if (serviceMethod == null) {
+                    showTooltip(
+                        "Tip:未能解析到对应的 Dubbo 方法,无法跳转",
+                        ReadAction.compute<Project, Exception> { project })
+                    return@runReadAction
+                }
 
-        val paramPsiType: PsiType?
+                val paramPsiType: PsiType?
 
-        if (virtualFile?.name?.endsWith("res.http") == true) {
-            paramPsiType = serviceMethod.returnType
-        } else {
-            val name = jsonPropertyNameLevels.pop()
-            val psiParameter = serviceMethod.parameterList.parameters
-                .firstOrNull { it.name == name }
+                if (virtualFile?.name?.endsWith("res.http") == true) {
+                    paramPsiType = serviceMethod.returnType
+                } else {
+                    val name = jsonPropertyNameLevels.pop()
+                    val psiParameter = serviceMethod.parameterList.parameters
+                        .firstOrNull { it.name == name }
 
-            if (psiParameter == null) {
-                showTooltip("Tip:未能解析到对应的方法参数,无法跳转", project)
-                return
+                    if (psiParameter == null) {
+                        showTooltip(
+                            "Tip:未能解析到对应的方法参数,无法跳转",
+                            ReadAction.compute<Project, Exception> { project })
+                        return@runReadAction
+                    }
+
+                    if (jsonPropertyNameLevels.isEmpty()) {
+                        runInEdt {
+                            psiParameter.navigate(true)
+                        }
+                        return@runReadAction
+                    }
+
+                    paramPsiType = psiParameter.type
+                }
+
+                val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return@runReadAction
+
+                val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
+
+                val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters)
+                if (targetField == null) {
+                    showTooltip(
+                        "Tip:未能解析对应的 Bean 属性,无法跳转",
+                        ReadAction.compute<Project, Exception> { project })
+                    return@runReadAction
+                }
+
+                runInEdt {
+                    targetField.navigate(true)
+                }
             }
-
-            if (jsonPropertyNameLevels.isEmpty()) {
-                psiParameter.navigate(true)
-                return
-            }
-
-            paramPsiType = psiParameter.type
         }
-
-        val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return
-
-        val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
-
-        val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters)
-        if (targetField == null) {
-            showTooltip("Tip:未能解析对应的Bean属性,无法跳转", project)
-            return
-        }
-
-        targetField.navigate(true)
-
     }
 
     private fun jumpToControllerAsync(
         virtualFile: VirtualFile?,
         jsonPropertyNameLevels: LinkedList<String>,
     ) {
-        val processIndicator = createProcessIndicator("Tip:正在尝试跳转到对应的Bean字段...", project)
+        val processIndicator = createProcessIndicator("Tip:正在尝试跳转到对应的 Bean 字段...", project)
         Disposer.register(Disposer.newDisposable(), processIndicator)
 
         val event = createActionEvent()
@@ -121,23 +137,29 @@ class JsonControllerMethodFieldPsiElement(
 
             processIndicator.processFinish()
 
-            runInEdt {
-                if (list.isEmpty()) {
-                    showTooltip("Tip:未能解析到对应的controller mapping,无法跳转", project)
-                    return@runInEdt
-                }
+            if (list.isEmpty()) {
+                showTooltip(
+                    "Tip:未能解析到对应的 Controller,无法跳转",
+                    ReadAction.compute<Project, Exception> { project })
+                return@runAsync
+            }
 
-                val controllerNavigationItem = getControllerNavigationItem(list, searchTxt)
+            val controllerNavigationItem = findControllerNavigationItem(list, searchTxt)
 
+            application.executeOnPooledThread {
                 runReadAction {
                     val psiMethods = findControllerPsiMethods(controllerNavigationItem, module)
                     if (psiMethods.isEmpty()) {
-                        showTooltip("Tip:未能解析对应的controller方法,无法跳转", project)
+                        showTooltip(
+                            "Tip:未能解析对应的 Controller 方法,无法跳转",
+                            ReadAction.compute<Project, Exception> { project })
                         return@runReadAction
                     }
 
                     if (psiMethods.size > 1) {
-                        showTooltip("Tip:解析到${psiMethods.size}个的controller方法,无法跳转", project)
+                        showTooltip(
+                            "Tip:解析到${psiMethods.size}个的 Controller 方法,无法跳转",
+                            ReadAction.compute<Project, Exception> { project })
                         return@runReadAction
                     }
 
@@ -158,11 +180,15 @@ class JsonControllerMethodFieldPsiElement(
 
                     val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters)
                     if (targetField == null) {
-                        showTooltip("Tip:未能解析对应的Bean属性,无法跳转", project)
+                        showTooltip(
+                            "Tip:未能解析对应的 Bean 属性,无法跳转",
+                            ReadAction.compute<Project, Exception> { project })
                         return@runReadAction
                     }
 
-                    targetField.navigate(true)
+                    runInEdt {
+                        targetField.navigate(true)
+                    }
                 }
             }
         }
