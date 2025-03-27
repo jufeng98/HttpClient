@@ -6,6 +6,7 @@ import com.intellij.openapi.fileTypes.EditorHighlighterProvider;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import org.javamaster.httpclient.highlighting.support.HttpHighlighter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

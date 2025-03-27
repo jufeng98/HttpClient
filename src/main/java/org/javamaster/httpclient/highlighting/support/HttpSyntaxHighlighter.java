@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.highlighting;
+package org.javamaster.httpclient.highlighting.support;
 
 import com.google.common.collect.Maps;
 import com.intellij.lexer.Lexer;
@@ -36,7 +36,7 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
 
     static {
         HTTP_PARAMETER_NAME = createTextAttributesKey("HTTP_PARAMETER_NAME", DefaultLanguageHighlighterColors.STATIC_FIELD);
-        HTTP_PARAMETER_VALUE = createTextAttributesKey("HTTP_PARAMETER_VALUE", DefaultLanguageHighlighterColors.STATIC_FIELD);
+        HTTP_PARAMETER_VALUE = createTextAttributesKey("HTTP_PARAMETER_VALUE", DefaultLanguageHighlighterColors.METADATA);
         HTTP_PORT = createTextAttributesKey("HTTP_PORT");
         HTTP_HEADER_FIELD_NAME = createTextAttributesKey("HTTP_HEADER_FIELD_NAME", DefaultLanguageHighlighterColors.STATIC_FIELD);
         HTTP_REQUEST_COMMENT = createTextAttributesKey("HTTP_REQUEST_COMMENT", DefaultLanguageHighlighterColors.DOC_COMMENT);
@@ -54,15 +54,17 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
         fillMap(ATTRIBUTE_MAP, HTTP_PORT, HttpTypes.PORT);
         fillMap(ATTRIBUTE_MAP, HTTP_PARAMETER_NAME, HttpTypes.QUERY_NAME, HttpTypes.GLOBAL_NAME, HttpTypes.DIRECTION_NAME_PART);
         fillMap(ATTRIBUTE_MAP, HTTP_PARAMETER_VALUE, HttpTypes.QUERY_VALUE, HttpTypes.GLOBAL_VALUE, HttpTypes.DIRECTION_VALUE_PART);
-        fillMap(ATTRIBUTE_MAP, HTTP_LINE_COMMENT, HttpTypes.DIRECTION_COMMENT_START, HttpTypes.BLOCK_COMMENT);
+        fillMap(ATTRIBUTE_MAP, HTTP_LINE_COMMENT, HttpTypes.DIRECTION_COMMENT_START, HttpTypes.BLOCK_COMMENT, HttpTypes.LINE_COMMENT);
         fillMap(ATTRIBUTE_MAP, HTTP_HEADER_FIELD_NAME, HttpTypes.FIELD_NAME);
         fillMap(ATTRIBUTE_MAP, HTTP_IDENTIFIER, HttpTypes.FIELD_VALUE);
         fillMap(ATTRIBUTE_MAP, HTTP_INPUT_SIGN, HttpTypes.INPUT_FILE_SIGN, HttpTypes.OUTPUT_FILE_SIGN);
-        fillMap(ATTRIBUTE_MAP, HTTP_INPUT_FILE, HttpTypes.INPUT_FILE_PATH_PART, HttpTypes.OUTPUT_FILE_PATH_PART);
+        fillMap(ATTRIBUTE_MAP, HTTP_INPUT_FILE, HttpTypes.FILE_PATH_PART, HttpTypes.FILE_PATH_PART);
         fillMap(ATTRIBUTE_MAP, HTTP_MULTIPART_BOUNDARY, HttpTypes.MESSAGE_BOUNDARY);
         fillMap(ATTRIBUTE_MAP, HTTP_IDENTIFIER, HttpTypes.IDENTIFIER);
         fillMap(ATTRIBUTE_MAP, HTTP_REQUEST_NAME, HttpTypes.REQUEST_COMMENT);
         fillMap(ATTRIBUTE_MAP, HttpTypeSets.VARIABLE_BRACES, HTTP_VARIABLE_BRACES);
+        fillMap(ATTRIBUTE_MAP, DefaultLanguageHighlighterColors.STRING, HttpTypes.STRING);
+        fillMap(ATTRIBUTE_MAP, DefaultLanguageHighlighterColors.NUMBER, HttpTypes.INTEGER);
     }
 
     public @NotNull Lexer getHighlightingLexer() {
