@@ -1,8 +1,8 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
         <psi.referenceContributor language="http"
-                                  implementation="org.javamaster.httpclient.reference.HttpPathPsiReferenceCoolRequestContributor"/>
-        <gotoDeclarationHandler id="JsonGotoDeclarationHandler"
+                                  implementation="org.javamaster.httpclient.reference.HttpUrlPsiReferenceCoolRequestContributor"/>
+        <gotoDeclarationHandler id="JsonKeyCoolRequestGotoDeclarationHandler"
                                 implementation="org.javamaster.httpclient.reference.JsonKeyCoolRequestGotoDeclarationHandler"/>
     </extensions>
 </idea-plugin>

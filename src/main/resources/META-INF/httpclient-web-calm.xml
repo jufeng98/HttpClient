@@ -2,7 +2,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <multiHostInjector
                 implementation="org.javamaster.httpclient.inject.ScriptBodyInjectionContributor"/>
-        <gotoDeclarationHandler id="JsFilePathGotoDeclarationHandler"
+        <gotoDeclarationHandler id="JsStringPathCoolRequestGotoDeclarationHandler"
                                 implementation="org.javamaster.httpclient.reference.JsStringPathCoolRequestGotoDeclarationHandler"/>
     </extensions>
 </idea-plugin>

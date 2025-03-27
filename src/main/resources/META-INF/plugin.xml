@@ -49,12 +49,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-                <li><b>2.9.0</b></li>
+                <li><b>3.3.0</b></li>
                 <ul>
                     <li>新增 commenter</li>
                     <li>新增 annotator</li>
-                    <li>新增 inspection</li>
-                    <li>调整变量的着色逻辑,优化用户体验</li>
+                    <li>新增变量的 inspection 检查及 fixes 快速修复</li>
+                    <li>调整变量等的着色逻辑,提升用户体验</li>
+                    <li>完善控制器跳转逻辑,减少UI卡顿</li>
+                    <li>完善控制器方法字段跳转逻辑,减少UI卡顿</li>
                     <li>功能优化及Bug修复</li>
                 </ul>
                 <li><b>2.8.0</b></li>
@@ -170,9 +172,9 @@
         <lang.inspectionSuppressor language="JSON"
                                    implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>
         <annotator language="JSON"
-                   implementationClass="org.javamaster.httpclient.annotator.JsonValueVariableAnnotator"/>
+                   implementationClass="org.javamaster.httpclient.annotator.JsonValueAnnotator"/>
         <annotator language="http"
-                   implementationClass="org.javamaster.httpclient.annotator.HttpVariableAnnotator"/>
+                   implementationClass="org.javamaster.httpclient.annotator.HttpAnnotator"/>
         <localInspection groupName="Http" language="http" shortName="HttpInspection"
                          displayName="Variable problems" enabledByDefault="true" level="WARNING"
                          implementationClass="org.javamaster.httpclient.inspection.HttpInspection"/>
@@ -181,7 +183,7 @@
                          implementationClass="org.javamaster.httpclient.inspection.MyJsonInspection"/>
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>
-        <completion.contributor language="http" id="HttpRequestCompletionContributor" order="last"
+        <completion.contributor language="http" id="HttpCompletionContributor" order="last"
                                 implementationClass="org.javamaster.httpclient.completion.HttpCompletionContributor"/>
         <typedHandler implementation="org.javamaster.httpclient.typeHandler.HttpTypedHandler"/>
         <braceMatcher filetype="http"
