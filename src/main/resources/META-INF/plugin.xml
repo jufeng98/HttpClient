@@ -198,5 +198,7 @@
         <multiHostInjector
                 implementation="org.javamaster.httpclient.inject.ScriptBodyInjectionBackupContributor"/>
         <lang.commenter language="http" implementationClass="org.javamaster.httpclient.commenter.HttpCommenter"/>
+        <gotoDeclarationHandler id="JsStringPathGotoDeclarationHandler"
+                                implementation="org.javamaster.httpclient.reference.JsStringPathGotoDeclarationHandler"/>
     </extensions>
 </idea-plugin>

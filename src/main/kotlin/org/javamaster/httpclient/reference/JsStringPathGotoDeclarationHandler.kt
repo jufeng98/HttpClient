@@ -4,7 +4,6 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.elementType
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
@@ -12,7 +11,9 @@ import org.javamaster.httpclient.utils.HttpUtils
 /**
  * @author yudong
  */
-class JsStringPathCoolRequestGotoDeclarationHandler : GotoDeclarationHandler {
+class JsStringPathGotoDeclarationHandler : GotoDeclarationHandler {
+
+    private val clsNameSet = setOf("JavaScriptLiteral", "JSLiteralExpression")
 
     override fun getGotoDeclarationTargets(
         element: PsiElement?,
@@ -30,7 +31,9 @@ class JsStringPathCoolRequestGotoDeclarationHandler : GotoDeclarationHandler {
             return arrayOf()
         }
 
-        if (element.elementType.toString() != "StringLiteral") {
+        val simpleName = element.parent?.javaClass?.simpleName ?: return arrayOf()
+
+        if (!clsNameSet.contains(simpleName)) {
             return arrayOf()
         }
 
