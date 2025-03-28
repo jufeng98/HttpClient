@@ -1,7 +1,7 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
         <psi.referenceContributor language="http"
-                                  implementation="org.javamaster.httpclient.reference.HttpUrlPsiReferenceContributorCoolRequest"/>
+                                  implementation="org.javamaster.httpclient.reference.HttpUrlControllerMethodPsiReferenceContributorCoolRequest"/>
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonKeyControllerMethodFieldPsiReferenceContributorCoolRequest"/>
 

@@ -8,7 +8,11 @@ import org.javamaster.httpclient.psi.HttpRequestTarget
 /**
  * @author yudong
  */
-class HttpUrlPsiReference(private val searchTxt: String, requestTarget: HttpRequestTarget, textRange: TextRange) :
+class HttpUrlControllerMethodPsiReference(
+    private val searchTxt: String,
+    requestTarget: HttpRequestTarget,
+    textRange: TextRange,
+) :
     PsiReferenceBase<HttpRequestTarget>(requestTarget, textRange) {
 
     override fun resolve(): PsiElement {
