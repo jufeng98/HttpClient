@@ -188,6 +188,8 @@
                                   implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonKeyServiceMethodFieldPsiReferenceContributorDubbo"/>
+        <lang.documentationProvider language="JSON"
+                                    implementationClass="org.javamaster.httpclient.doc.JsonKeyDubboServiceMethodDocumentationProvider"/>
         <completion.contributor language="http" id="HttpCompletionContributor" order="last"
                                 implementationClass="org.javamaster.httpclient.completion.HttpCompletionContributor"/>
         <typedHandler implementation="org.javamaster.httpclient.typeHandler.HttpTypedHandler"/>
