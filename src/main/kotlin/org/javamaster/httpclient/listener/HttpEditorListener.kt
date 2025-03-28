@@ -2,7 +2,8 @@ package org.javamaster.httpclient.listener
 
 import com.intellij.json.JsonFileType
 import com.intellij.openapi.application.ModalityState
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -12,6 +13,7 @@ import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpFileType
+import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.env.EnvFileService.Companion.getService
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.NotifyUtil
@@ -40,17 +42,21 @@ class HttpEditorListener : FileEditorManagerListener {
             val fileTypeManagerEx = FileTypeManagerEx.getInstanceEx()
 
             val jsonFileType = JsonFileType.INSTANCE
-            val extension = fileTypeManagerEx.getFileTypeByExtension(jsonFileType.defaultExtension)
-            if (extension !== jsonFileType) {
-                application.invokeLater({
-                    application.runWriteAction {
-                        fileTypeManagerEx.associateExtension(jsonFileType, jsonFileType.defaultExtension)
+            val jsonExtension = jsonFileType.defaultExtension
 
-                        initTopForm(source, file, module, fileEditor)
-                    }
-                }, getState())
-            } else {
+            val extension = fileTypeManagerEx.getFileTypeByExtension(jsonExtension)
+            if (extension === jsonFileType) {
                 initTopForm(source, file, module, fileEditor)
+                return@executeOnPooledThread
+            }
+
+            runInEdt(getState()) {
+                runWriteAction {
+                    fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
+                    println("已将 json 后缀文件与 $jsonFileType 关联起来")
+
+                    initTopForm(source, file, module, fileEditor)
+                }
             }
         }
     }
@@ -61,27 +67,23 @@ class HttpEditorListener : FileEditorManagerListener {
         module: Module?,
         fileEditor: FileEditor,
     ) {
-        application.executeOnPooledThread {
-            val presetEnvSet = ReadAction.compute<MutableSet<String>, Throwable> {
+        HttpBackground
+            .runInBackgroundReadActionAsync {
                 val envFileService = getService(source.project)
                 envFileService.getPresetEnvSet(file.parent.path)
             }
-
-            application.invokeLater {
+            .finishOnUiThread {
                 val httpEditorTopForm = HttpEditorTopForm(file, module)
 
-                try {
-                    httpEditorTopForm.initEnvCombo(presetEnvSet)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    NotifyUtil.notifyError(source.project, e.message)
-                }
+                httpEditorTopForm.initEnvCombo(it)
 
                 fileEditor.putUserData(HttpEditorTopForm.KEY, httpEditorTopForm)
 
                 source.addTopComponent(fileEditor, httpEditorTopForm.mainPanel)
             }
-        }
+            .exceptionallyOnUiThread {
+                NotifyUtil.notifyError(source.project, it.message)
+            }
     }
 
     private fun getState(): ModalityState {
