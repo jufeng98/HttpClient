@@ -27,7 +27,9 @@ import javax.xml.xpath.XPathFactory
  * @author yudong
  */
 class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: String) {
-    val reqScriptableObject: ScriptableObject by lazy {
+    val reqScriptableObject: ScriptableObject
+
+    init {
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global
 
@@ -45,7 +47,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         """.trimIndent()
         context.evaluateString(scriptableObject, jsonJs, "initPropertiesAndEnv.js", 1, null)
 
-        scriptableObject
+        reqScriptableObject = scriptableObject
     }
 
     var bodyArray: ByteArray? = null
@@ -339,6 +341,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             url.readText(StandardCharsets.UTF_8)
         }
 
+        @Suppress("HttpUrlsUsage")
         private val documentBuilderFactory by lazy {
             val factory = DocumentBuilderFactory.newInstance()
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
