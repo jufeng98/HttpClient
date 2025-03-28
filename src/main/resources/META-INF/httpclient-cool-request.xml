@@ -8,6 +8,6 @@
         <lang.documentationProvider language="http"
                                     implementationClass="org.javamaster.httpclient.doc.HttpUrlControllerMethodDocumentationProviderCoolRequest"/>
         <lang.documentationProvider language="JSON"
-                                    implementationClass="org.javamaster.httpclient.doc.JsonKeyControllerMethodDocumentationProviderCoolRequest"/>
+                                    implementationClass="org.javamaster.httpclient.doc.JsonKeyControllerMethodFieldDocumentationProviderCoolRequest"/>
     </extensions>
 </idea-plugin>
