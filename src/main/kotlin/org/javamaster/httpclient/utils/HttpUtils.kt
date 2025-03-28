@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.utils
 
-import com.cool.request.view.tool.search.ControllerNavigationItem
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
@@ -8,6 +7,8 @@ import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.ide.DataManager
+import com.intellij.json.psi.JsonProperty
+import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
@@ -22,6 +23,7 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
@@ -40,6 +42,7 @@ import java.io.File
 import java.net.URI
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
+import java.util.*
 import kotlin.jvm.optionals.getOrElse
 
 /**
@@ -549,12 +552,10 @@ object HttpUtils {
     }
 
     fun findControllerPsiMethods(
-        navigationItem: ControllerNavigationItem,
+        controllerFullClassName: String,
+        controllerMethodName: String,
         module: Module,
     ): Array<out PsiMethod> {
-        val controllerFullClassName = navigationItem.javaClassName
-        val controllerMethodName = navigationItem.methodName
-
         val controllerPsiCls = JavaPsiFacade.getInstance(module.project)
             .findClass(
                 controllerFullClassName,
@@ -569,21 +570,110 @@ object HttpUtils {
         return psiMethods
     }
 
-    fun findControllerNavigationItem(controllers: MutableList<out Any>, searchTxt: String): ControllerNavigationItem {
-        return if (controllers.size == 1) {
-            controllers[0] as ControllerNavigationItem
-        } else {
-            val urlMap = controllers.groupBy {
-                val navigationItem = it as ControllerNavigationItem
-                navigationItem.url
+    fun collectJsonPropertyNameLevels(jsonString: JsonStringLiteral): LinkedList<String> {
+        val beanFieldLevels = LinkedList<String>()
+
+        var jsonProperty = PsiTreeUtil.getParentOfType(jsonString, JsonProperty::class.java)
+        while (jsonProperty != null) {
+            val propertyName = getJsonPropertyName(jsonProperty)
+            beanFieldLevels.push(propertyName)
+            jsonProperty = PsiTreeUtil.getParentOfType(jsonProperty, JsonProperty::class.java)
+        }
+
+        return beanFieldLevels
+    }
+
+    private fun getJsonPropertyName(jsonProperty: JsonProperty): String {
+        val nameElement = jsonProperty.nameElement
+        val name = nameElement.text
+        return name.substring(1, name.length - 1)
+    }
+
+    fun resolveTargetParam(psiMethod: PsiMethod): PsiParameter? {
+        val superPsiMethods = psiMethod.findSuperMethods(false)
+        val psiParameters = psiMethod.parameterList.parameters
+        var psiParameter: PsiParameter? = null
+        val requestBodyAnnoName = "org.springframework.web.bind.annotation.RequestBody"
+
+        for ((index, psiParam) in psiParameters.withIndex()) {
+            var hasAnno = psiParam.hasAnnotation(requestBodyAnnoName)
+            if (hasAnno) {
+                psiParameter = psiParam
+                break
             }
-            val itemList = urlMap[searchTxt]
-            if (itemList.isNullOrEmpty()) {
-                controllers[0] as ControllerNavigationItem
-            } else {
-                itemList[0] as ControllerNavigationItem
+
+            for (superPsiMethod in superPsiMethods) {
+                val superPsiParam = superPsiMethod.parameterList.parameters[index]
+                hasAnno = superPsiParam.hasAnnotation(requestBodyAnnoName)
+                if (hasAnno) {
+                    psiParameter = psiParam
+                    break
+                }
             }
         }
+
+        return psiParameter
+    }
+
+    fun resolveTargetField(
+        paramPsiCls: PsiClass,
+        jsonPropertyNameLevels: LinkedList<String>,
+        classGenericParameters: Array<PsiType>,
+    ): PsiField? {
+        var psiField: PsiField? = null
+
+        try {
+            var fieldTypeCls: PsiClass
+            var propertyName = jsonPropertyNameLevels.pop()
+
+            val isCollection = InheritanceUtil.isInheritor(paramPsiCls, "java.util.Collection")
+            if (isCollection) {
+                if (classGenericParameters.isEmpty()) {
+                    return null
+                }
+
+                // 取得泛型参数类型
+                fieldTypeCls = PsiUtils.resolvePsiType(classGenericParameters[0]) ?: return null
+            } else {
+                fieldTypeCls = paramPsiCls
+            }
+
+
+            while (true) {
+                psiField = fieldTypeCls.findFieldByName(propertyName, true) ?: return null
+                if (psiField.type !is PsiClassType) {
+                    return psiField
+                }
+
+                val psiType = psiField.type as PsiClassType
+
+                val parameters = psiType.parameters
+                if (parameters.isNotEmpty()) {
+                    // 取得泛型参数类型
+                    fieldTypeCls = PsiUtils.resolvePsiType(parameters[0]) ?: return null
+                } else {
+                    val psiFieldTypeCls = PsiUtils.resolvePsiType(psiType) ?: return null
+                    if (psiFieldTypeCls is PsiTypeParameter && classGenericParameters.isNotEmpty()) {
+                        // 参数本身是泛型类型,如 T, 直接取第一个
+                        val genericActualType = classGenericParameters[0] as PsiClassType
+                        if (genericActualType.parameters.isNotEmpty()) {
+                            val psiFieldGenericTypeCls =
+                                PsiUtils.resolvePsiType(genericActualType.parameters[0]) ?: return null
+                            fieldTypeCls = psiFieldGenericTypeCls
+                        } else {
+                            fieldTypeCls = PsiUtils.resolvePsiType(genericActualType) ?: return null
+                        }
+                    } else {
+                        fieldTypeCls = psiFieldTypeCls
+                    }
+                }
+
+                propertyName = jsonPropertyNameLevels.pop()
+            }
+        } catch (_: NoSuchElementException) {
+        }
+
+        return psiField
     }
 
 }

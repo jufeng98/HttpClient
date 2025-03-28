@@ -4,16 +4,14 @@ import com.cool.request.view.tool.search.ApiAbstractGotoSEContributor
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.util.Disposer
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.background.HttpBackground
+import org.javamaster.httpclient.doc.support.CoolRequestHelper
+import org.javamaster.httpclient.doc.support.CoolRequestHelper.findControllerNavigationItem
 import org.javamaster.httpclient.psi.HttpRequestTarget
-import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.createActionEvent
 import org.javamaster.httpclient.utils.HttpUtils.createProcessIndicator
-import org.javamaster.httpclient.utils.HttpUtils.findControllerNavigationItem
-import org.javamaster.httpclient.utils.HttpUtils.findControllerPsiMethods
 import org.javamaster.httpclient.utils.TooltipUtils.showTooltip
 import java.util.concurrent.CompletableFuture
 import javax.swing.Icon
@@ -30,15 +28,7 @@ class HttpControllerMethodPsiElement(val requestTarget: HttpRequestTarget, val s
 
     override fun navigate(requestFocus: Boolean) {
         val virtualFile = requestTarget.containingFile.virtualFile
-        val module = if (HttpUtils.isFileInIdeaDir(virtualFile)) {
-            HttpUtils.getOriginalModule(requestTarget)
-        } else {
-            ModuleUtil.findModuleForPsiElement(requestTarget)
-        }
-
-        if (module == null) {
-            return
-        }
+        val module = CoolRequestHelper.findModule(requestTarget, virtualFile) ?: return
 
         val event = createActionEvent()
 
@@ -67,7 +57,7 @@ class HttpControllerMethodPsiElement(val requestTarget: HttpRequestTarget, val s
 
             HttpBackground
                 .runInBackgroundReadActionAsync {
-                    findControllerPsiMethods(controllerNavigationItem, module)
+                    CoolRequestHelper.findControllerPsiMethods(controllerNavigationItem, module)
                 }
                 .finishOnUiThread {
                     if (it!!.isEmpty()) {

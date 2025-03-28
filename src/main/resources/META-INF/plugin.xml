@@ -54,6 +54,8 @@
                     <li>新增 commenter</li>
                     <li>新增 annotator</li>
                     <li>新增变量的 inspection 检查及 fixes 快速修复</li>
+                    <li>新增 http url 对应的 Controller方法文档提示</li>
+                    <li>新增 http 出入参的 json key 对应的 Controller 方法字段文档提示</li>
                     <li>调整变量等的着色逻辑,提升用户体验</li>
                     <li>完善发起请求逻辑,减少UI卡顿</li>
                     <li>完善控制器跳转逻辑,减少UI卡顿</li>

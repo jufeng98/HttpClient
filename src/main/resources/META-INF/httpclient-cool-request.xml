@@ -4,7 +4,10 @@
                                   implementation="org.javamaster.httpclient.reference.HttpUrlPsiReferenceCoolRequestContributor"/>
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonKeyPsiReferenceCoolRequestContributor"/>
+
         <lang.documentationProvider language="http"
-                                    implementationClass="org.javamaster.httpclient.doc.HttpDocumentationProvider"/>
+                                    implementationClass="org.javamaster.httpclient.doc.HttpUrlCoolRequestDocumentationProvider"/>
+        <lang.documentationProvider language="JSON"
+                                    implementationClass="org.javamaster.httpclient.doc.JsonKeyCoolRequestDocumentationProvider"/>
     </extensions>
 </idea-plugin>
