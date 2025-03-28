@@ -676,4 +676,13 @@ object HttpUtils {
         return psiField
     }
 
+    fun generateAnno(annotation: PsiAnnotation): String {
+        val html = """
+            <div class='definition'>
+                <span style="color:#808000;">@</span><a href="psi_element://${annotation.qualifiedName}"><span style="color:#808000;">${annotation.nameReferenceElement?.text}</span></a><span>${annotation.parameterList.text}</span>
+            </div>
+        """.trimIndent()
+
+        return html
+    }
 }
