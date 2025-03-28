@@ -3,14 +3,11 @@ package org.javamaster.httpclient.reference.support
 import com.cool.request.view.tool.search.ApiAbstractGotoSEContributor
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.navigation.ItemPresentation
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.module.ModuleUtil
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.util.application
 import org.javamaster.httpclient.HttpIcons
+import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.createActionEvent
@@ -24,7 +21,7 @@ import javax.swing.Icon
 /**
  * @author yudong
  */
-class HttpControllerMethodPsiElement(private val requestTarget: HttpRequestTarget, private val searchTxt: String) :
+class HttpControllerMethodPsiElement(val requestTarget: HttpRequestTarget, val searchTxt: String) :
     ASTWrapperPsiElement(requestTarget.node) {
 
     override fun getPresentation(): ItemPresentation {
@@ -45,13 +42,13 @@ class HttpControllerMethodPsiElement(private val requestTarget: HttpRequestTarge
 
         val event = createActionEvent()
 
-        val processIndicator = createProcessIndicator("Tip:正在搜索对应的Controller...", project)
+        val processIndicator = createProcessIndicator("Tip:正在搜索对应的 Controller ...", project)
         Disposer.register(Disposer.newDisposable(), processIndicator)
 
         val seContributor = ApiAbstractGotoSEContributor(event)
 
         CompletableFuture.runAsync {
-            val list = seContributor.search(searchTxt, processIndicator)
+            val controllers = seContributor.search(searchTxt, processIndicator)
             if (processIndicator.isCanceled) {
                 processIndicator.processFinish()
                 return@runAsync
@@ -59,38 +56,35 @@ class HttpControllerMethodPsiElement(private val requestTarget: HttpRequestTarge
 
             processIndicator.processFinish()
 
-            if (list.isEmpty()) {
-                showTooltip(
-                    "Tip:未能解析到对应的Controller,无法跳转",
-                    ReadAction.compute<Project, Exception> { project })
+            if (controllers.isEmpty()) {
+                runInEdt {
+                    showTooltip("Tip:未能解析到对应的 Controller,无法跳转", project)
+                }
                 return@runAsync
             }
 
-            val controllerNavigationItem = findControllerNavigationItem(list, searchTxt)
+            val controllerNavigationItem = findControllerNavigationItem(controllers, searchTxt)
 
-            application.executeOnPooledThread {
-                runReadAction {
-                    val psiMethods = findControllerPsiMethods(controllerNavigationItem, module)
-                    if (psiMethods.isEmpty()) {
-                        showTooltip(
-                            "Tip:未能解析对应的Controller方法,无法跳转",
-                            ReadAction.compute<Project, Exception> { project })
-                        return@runReadAction
-                    }
-
-                    if (psiMethods.size > 1) {
-                        showTooltip(
-                            "Tip:解析到${psiMethods.size}个的Controller方法,无法跳转",
-                            ReadAction.compute<Project, Exception> { project })
-                        return@runReadAction
-                    }
-
-                    val psiMethod = psiMethods[0]
-                    runInEdt {
-                        psiMethod.navigate(true)
-                    }
+            HttpBackground
+                .runInBackgroundReadActionAsync {
+                    findControllerPsiMethods(controllerNavigationItem, module)
                 }
-            }
+                .finishOnUiThread {
+                    if (it!!.isEmpty()) {
+                        showTooltip("Tip:未能解析对应的 Controller 方法,无法跳转", project)
+                        return@finishOnUiThread
+                    }
+
+                    if (it.size > 1) {
+                        showTooltip("Tip:解析到 ${it.size} 个 Controller 方法,无法跳转", project)
+                        return@finishOnUiThread
+                    }
+
+                    it[0].navigate(true)
+                }
+                .exceptionallyOnUiThread {
+                    showTooltip("Tip:$it", project)
+                }
         }
 
     }
@@ -98,7 +92,7 @@ class HttpControllerMethodPsiElement(private val requestTarget: HttpRequestTarge
     object HttpItemPresentation : ItemPresentation {
 
         override fun getPresentableText(): String {
-            return "跳转到对应的 Controller 接口方法"
+            return "跳转到对应的 Controller 方法"
         }
 
         override fun getIcon(unused: Boolean): Icon {

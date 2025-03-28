@@ -235,7 +235,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val rowNum = document.getLineNumber(jsScript.textOffset)
             evalJsInAnonymousFun(jsScript.text, rowNum, virtualFile.name)
         } catch (e: Exception) {
-            GlobalLog.log(e.message)
+            GlobalLog.log(e.toString())
         }
 
         context.evaluateString(reqScriptableObject, "delete response;", "dummy.js", 1, null)
@@ -250,10 +250,10 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         } catch (e: WrappedException) {
             val cause = e.cause
             if (cause is FileNotFoundException) {
-                throw FileNotFoundException(cause.message + "($fileName)")
+                throw FileNotFoundException("$cause($fileName)")
             }
 
-            throw EvaluatorException(cause?.message ?: "null", fileName, e.lineNumber())
+            throw EvaluatorException(cause.toString(), fileName, e.lineNumber())
         }
     }
 

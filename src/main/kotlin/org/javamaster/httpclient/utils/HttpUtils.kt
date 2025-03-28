@@ -159,6 +159,10 @@ object HttpUtils {
     }
 
     fun convertToReqBody(request: HttpRequest, variableResolver: VariableResolver): Any? {
+        if (request.contentLength != null) {
+            throw IllegalArgumentException("不能有 Content-Length 请求头!")
+        }
+
         val body = request.body
         val requestMessagesGroup = body?.requestMessagesGroup
         if (requestMessagesGroup != null) {
@@ -565,17 +569,17 @@ object HttpUtils {
         return psiMethods
     }
 
-    fun findControllerNavigationItem(list: MutableList<Any>, searchTxt: String): ControllerNavigationItem {
-        return if (list.size == 1) {
-            list[0] as ControllerNavigationItem
+    fun findControllerNavigationItem(controllers: MutableList<Any>, searchTxt: String): ControllerNavigationItem {
+        return if (controllers.size == 1) {
+            controllers[0] as ControllerNavigationItem
         } else {
-            val urlMap = list.groupBy {
+            val urlMap = controllers.groupBy {
                 val navigationItem = it as ControllerNavigationItem
                 navigationItem.url
             }
             val itemList = urlMap[searchTxt]
             if (itemList.isNullOrEmpty()) {
-                list[0] as ControllerNavigationItem
+                controllers[0] as ControllerNavigationItem
             } else {
                 itemList[0] as ControllerNavigationItem
             }

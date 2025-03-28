@@ -33,7 +33,7 @@ class HttpVariableArgPsiReference(variableArg: HttpVariableArg, val textRange: T
             try {
                 return HttpUtils.resolveFilePath(guessPath, httpFileParentPath, project)
             } catch (e: Exception) {
-                System.err.println(e.message)
+                System.err.println(e.toString())
                 return null
             }
         }
