@@ -21,7 +21,7 @@ import java.util.*
  *
  * @author yudong
  */
-class JsonKeyCoolRequestDocumentationProvider : DocumentationProvider {
+class JsonKeyDocumentationProviderCoolRequest : DocumentationProvider {
 
 
     override fun generateDoc(element: PsiElement?, originalElement: PsiElement?): String? {

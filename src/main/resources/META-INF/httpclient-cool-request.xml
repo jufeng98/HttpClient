@@ -1,13 +1,13 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
         <psi.referenceContributor language="http"
-                                  implementation="org.javamaster.httpclient.reference.HttpUrlPsiReferenceCoolRequestContributor"/>
+                                  implementation="org.javamaster.httpclient.reference.HttpUrlPsiReferenceContributorCoolRequest"/>
         <psi.referenceContributor language="JSON"
-                                  implementation="org.javamaster.httpclient.reference.JsonKeyPsiReferenceCoolRequestContributor"/>
+                                  implementation="org.javamaster.httpclient.reference.JsonKeyPsiReferenceContributorCoolRequest"/>
 
         <lang.documentationProvider language="http"
-                                    implementationClass="org.javamaster.httpclient.doc.HttpUrlCoolRequestDocumentationProvider"/>
+                                    implementationClass="org.javamaster.httpclient.doc.HttpUrlDocumentationProviderCoolRequest"/>
         <lang.documentationProvider language="JSON"
-                                    implementationClass="org.javamaster.httpclient.doc.JsonKeyCoolRequestDocumentationProvider"/>
+                                    implementationClass="org.javamaster.httpclient.doc.JsonKeyDocumentationProviderCoolRequest"/>
     </extensions>
 </idea-plugin>

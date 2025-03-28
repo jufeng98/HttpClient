@@ -11,7 +11,7 @@ import org.javamaster.httpclient.reference.provider.JsonKeyPsiReferenceProvider
  *
  * @author yudong
  */
-class JsonKeyPsiReferenceCoolRequestContributor : PsiReferenceContributor() {
+class JsonKeyPsiReferenceContributorCoolRequest : PsiReferenceContributor() {
 
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
         registrar.registerReferenceProvider(
