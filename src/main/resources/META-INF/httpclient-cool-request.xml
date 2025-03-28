@@ -2,8 +2,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <psi.referenceContributor language="http"
                                   implementation="org.javamaster.httpclient.reference.HttpUrlPsiReferenceCoolRequestContributor"/>
-        <gotoDeclarationHandler id="JsonKeyCoolRequestGotoDeclarationHandler"
-                                implementation="org.javamaster.httpclient.reference.JsonKeyCoolRequestGotoDeclarationHandler"/>
+        <psi.referenceContributor language="JSON"
+                                  implementation="org.javamaster.httpclient.reference.JsonKeyPsiReferenceCoolRequestContributor"/>
         <lang.documentationProvider language="http"
                                     implementationClass="org.javamaster.httpclient.doc.HttpDocumentationProvider"/>
     </extensions>

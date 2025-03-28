@@ -1,40 +1,27 @@
-package org.javamaster.httpclient.reference
+package org.javamaster.httpclient.reference.provider
 
-import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
+import com.intellij.psi.PsiReferenceProvider
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.reference.support.JsonControllerMethodFieldPsiElement
+import org.javamaster.httpclient.reference.support.JsonKeyPsiReference
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
- *实现 Ctrl + 点击 json 属性进而跳转到 Spring 对应的 Controller 方法的出入参的 Bean 字段
- *
  * @author yudong
  */
-class JsonKeyCoolRequestGotoDeclarationHandler : GotoDeclarationHandler {
+class JsonKeyPsiReferenceProvider : PsiReferenceProvider() {
 
-    override fun getGotoDeclarationTargets(
-        element: PsiElement?,
-        offset: Int,
-        editor: Editor?,
-    ): Array<PsiElement> {
-        if (element == null) {
-            return arrayOf()
-        }
-
-        val jsonString = element.parent
-        if (jsonString !is JsonStringLiteral) {
-            return arrayOf()
-        }
-
+    override fun getReferencesByElement(element: PsiElement, context: ProcessingContext): Array<PsiReference> {
+        val jsonString = element as JsonStringLiteral
         if (!jsonString.isPropertyName) {
             return arrayOf()
         }
@@ -44,13 +31,16 @@ class JsonKeyCoolRequestGotoDeclarationHandler : GotoDeclarationHandler {
             return arrayOf()
         }
 
+        val textRange = jsonString.textRange
+        val range = textRange.shiftLeft(textRange.startOffset)
+
         val httpRequest = PsiTreeUtil.getParentOfType(injectionHost, HttpRequest::class.java)
         val httpMethod = httpRequest?.method ?: return arrayOf()
         val methodType = httpMethod.text
 
         if (methodType == HttpRequestEnum.DUBBO.name) {
             val originalModule = DubboUtils.getOriginalModule(httpRequest) ?: return arrayOf()
-            return arrayOf(JsonControllerMethodFieldPsiElement(jsonString, "", originalModule))
+            return arrayOf(JsonKeyPsiReference(jsonString, "", originalModule, range))
         }
 
         val requestTarget = httpRequest.requestTarget ?: return arrayOf()
@@ -60,7 +50,7 @@ class JsonKeyCoolRequestGotoDeclarationHandler : GotoDeclarationHandler {
 
         val pair = HttpUtils.getSearchTxtInfo(requestTarget, originalFile.parent.path) ?: return arrayOf()
 
-        return arrayOf(JsonControllerMethodFieldPsiElement(jsonString, pair.first, originalModule))
+        return arrayOf(JsonKeyPsiReference(jsonString, pair.first, originalModule, range))
     }
 
 }
