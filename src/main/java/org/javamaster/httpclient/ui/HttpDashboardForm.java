@@ -1,19 +1,20 @@
 package org.javamaster.httpclient.ui;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.WriteAction;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.ScrollType;
+import com.intellij.openapi.editor.ScrollingModel;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.javamaster.httpclient.HttpInfo;
@@ -30,18 +31,31 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class HttpDashboardForm implements Disposable {
+    private final static Map<String, HttpDashboardForm> historyMap = Maps.newHashMap();
+
     private final List<Editor> editorList = Lists.newArrayList();
     public JPanel mainPanel;
     public Throwable throwable;
     public JPanel requestPanel;
     public JPanel responsePanel;
 
-    public void initHttpResContent(HttpInfo httpInfo, String tabName, Project project, Disposable parentDisposer) {
-        Disposer.register(parentDisposer, this);
+    private final String tabName;
+    private final Project project;
 
+    public HttpDashboardForm(String tabName, Project project) {
+        this.tabName = tabName;
+        this.project = project;
+
+        disposePreviousReqEditors();
+
+        historyMap.put(tabName, this);
+    }
+
+    public void initHttpResContent(HttpInfo httpInfo) {
         GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
         GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
 
@@ -92,7 +106,7 @@ public class HttpDashboardForm implements Disposable {
         responsePanel.add(resComponent, constraintsRes);
     }
 
-    public void initWsResData(WsRequest wsRequest, Project project, String tabName) {
+    public void initWsResData(WsRequest wsRequest) {
         GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
         GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
         constraints = (GridConstraints) constraints.clone();
@@ -109,21 +123,27 @@ public class HttpDashboardForm implements Disposable {
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
         Editor editor = WriteAction.computeAndWait(() ->
-                HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log", project, tabName, editorList));
-        Document document = editor.getDocument();
+                HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
+                        project, tabName, editorList)
+        );
 
         responsePanel.add(editor.getComponent(), constraintsRes);
 
         wsRequest.setResConsumer(res ->
-                WriteCommandAction.runWriteCommandAction(project, () -> {
+                DocumentUtil.writeInRunUndoTransparentAction(() -> {
                             String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");
                             String replace = res.replace("\r\n", "\n");
                             String s = time + " - " + replace;
+
+                            Document document = editor.getDocument();
                             document.insertString(document.getTextLength(), s);
 
+
                             Caret caret = editor.getCaretModel().getPrimaryCaret();
-                            caret.moveToOffset(editor.getDocument().getTextLength());
-                            editor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
+                            caret.moveToOffset(document.getTextLength());
+
+                            ScrollingModel scrollingModel = editor.getScrollingModel();
+                            scrollingModel.scrollToCaret(ScrollType.RELATIVE);
                         }
                 )
         );
@@ -135,7 +155,7 @@ public class HttpDashboardForm implements Disposable {
 
         JTextArea jTextAreaReq = new JTextArea();
         jTextAreaReq.setToolTipText("请输入ws消息");
-        jPanelReq.add(jTextAreaReq, BorderLayout.CENTER);
+        jPanelReq.add(new JBScrollPane(jTextAreaReq), BorderLayout.CENTER);
 
         JButton jButtonSend = new JButton("发送ws消息");
         jButtonSend.addActionListener(e -> {
@@ -151,9 +171,23 @@ public class HttpDashboardForm implements Disposable {
         return jPanelReq;
     }
 
-    @Override
-    public void dispose() {
+    private void disposePreviousReqEditors() {
+        HttpDashboardForm previousHttpDashboardForm = historyMap.remove(tabName);
+        if (previousHttpDashboardForm == null) {
+            return;
+        }
+
+        previousHttpDashboardForm.disposeEditors();
+    }
+
+    private void disposeEditors() {
         EditorFactory editorFactory = EditorFactory.getInstance();
         editorList.forEach(editorFactory::releaseEditor);
+    }
+
+    @Override
+    public void dispose() {
+        historyMap.values().forEach(HttpDashboardForm::disposeEditors);
+        historyMap.clear();
     }
 }
