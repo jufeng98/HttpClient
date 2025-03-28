@@ -4,15 +4,13 @@ import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.documentation.DocumentationProvider
 import com.intellij.lang.java.JavaDocumentationProvider
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiType
+import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.javamaster.httpclient.doc.support.CoolRequestHelper
 import org.javamaster.httpclient.reference.support.JsonControllerMethodFieldPsiElement
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils.collectJsonPropertyNameLevels
+import org.javamaster.httpclient.utils.HttpUtils.generateAnno
 import org.javamaster.httpclient.utils.HttpUtils.resolveTargetField
 import org.javamaster.httpclient.utils.HttpUtils.resolveTargetParam
 import org.javamaster.httpclient.utils.PsiUtils
@@ -43,18 +41,29 @@ class JsonKeyCoolRequestDocumentationProvider : DocumentationProvider {
             return null
         }
 
-        if (searchTxt.isBlank()) {
-            return resolveDubboField(jsonString, virtualFile, jsonPropertyNameLevels)
-        }
+        val field = if (searchTxt.isBlank()) {
+            resolveDubboField(jsonString, virtualFile, jsonPropertyNameLevels)
+        } else {
+            resolveControllerField(virtualFile, psiMethod, jsonPropertyNameLevels)
+        } ?: return null
 
-        return resolveControllerField(virtualFile, psiMethod, jsonPropertyNameLevels)
+        val str = JavaDocumentationProvider.generateExternalJavadoc(field, null)
+
+        val annotation = field.getAnnotation("io.swagger.annotations.ApiModelProperty")
+
+        return if (annotation != null) {
+            val generateAnno = generateAnno(annotation)
+            str + generateAnno
+        } else {
+            str
+        }
     }
 
     private fun resolveDubboField(
         jsonString: JsonStringLiteral,
         virtualFile: VirtualFile?,
         jsonPropertyNameLevels: LinkedList<String>,
-    ): String? {
+    ): PsiField? {
         val serviceMethod = DubboUtils.findDubboServiceMethod(jsonString) ?: return null
 
         val paramPsiType: PsiType?
@@ -63,7 +72,8 @@ class JsonKeyCoolRequestDocumentationProvider : DocumentationProvider {
             paramPsiType = serviceMethod.returnType
         } else {
             val name = jsonPropertyNameLevels.pop()
-            val psiParameter = serviceMethod.parameterList.parameters.firstOrNull { parameter -> parameter.name == name }
+            val psiParameter =
+                serviceMethod.parameterList.parameters.firstOrNull { parameter -> parameter.name == name }
 
             if (psiParameter == null) {
                 return null
@@ -80,16 +90,14 @@ class JsonKeyCoolRequestDocumentationProvider : DocumentationProvider {
 
         val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
 
-        val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters) ?: return null
-
-        return JavaDocumentationProvider.generateExternalJavadoc(targetField, null)
+        return resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters)
     }
 
     private fun resolveControllerField(
         virtualFile: VirtualFile?,
         psiMethod: PsiMethod,
         jsonPropertyNameLevels: LinkedList<String>,
-    ): String? {
+    ): PsiField? {
         val paramPsiType: PsiType?
 
         if (virtualFile?.name?.endsWith("res.http") == true) {
@@ -104,9 +112,7 @@ class JsonKeyCoolRequestDocumentationProvider : DocumentationProvider {
 
         val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
 
-        val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters) ?: return null
-
-        return JavaDocumentationProvider.generateExternalJavadoc(targetField, null)
+        return resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters)
     }
 
 }

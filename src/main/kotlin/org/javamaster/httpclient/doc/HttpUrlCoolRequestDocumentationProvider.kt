@@ -5,6 +5,7 @@ import com.intellij.lang.java.JavaDocumentationProvider
 import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.doc.support.CoolRequestHelper
 import org.javamaster.httpclient.reference.support.HttpControllerMethodPsiElement
+import org.javamaster.httpclient.utils.HttpUtils.generateAnno
 
 /**
  * 悬浮提示对应的 Controller 方法
@@ -25,7 +26,16 @@ class HttpUrlCoolRequestDocumentationProvider : DocumentationProvider {
 
         val psiMethod = CoolRequestHelper.findMethod(module, element.searchTxt) ?: return null
 
-        return JavaDocumentationProvider.generateExternalJavadoc(psiMethod, null)
+        val str = JavaDocumentationProvider.generateExternalJavadoc(psiMethod, null)
+
+        val annotation = psiMethod.getAnnotation("io.swagger.annotations.ApiOperation")
+
+        return if (annotation != null) {
+            val generateAnno = generateAnno(annotation)
+            str + generateAnno
+        } else {
+            str
+        }
     }
 
 }

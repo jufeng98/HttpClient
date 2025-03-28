@@ -7,6 +7,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiMethod
 import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.utils.HttpUtils
