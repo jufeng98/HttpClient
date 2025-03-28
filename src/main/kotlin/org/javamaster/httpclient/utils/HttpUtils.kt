@@ -569,7 +569,7 @@ object HttpUtils {
         return psiMethods
     }
 
-    fun findControllerNavigationItem(controllers: MutableList<Any>, searchTxt: String): ControllerNavigationItem {
+    fun findControllerNavigationItem(controllers: MutableList<out Any>, searchTxt: String): ControllerNavigationItem {
         return if (controllers.size == 1) {
             controllers[0] as ControllerNavigationItem
         } else {

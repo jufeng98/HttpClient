@@ -4,5 +4,7 @@
                                   implementation="org.javamaster.httpclient.reference.HttpUrlPsiReferenceCoolRequestContributor"/>
         <gotoDeclarationHandler id="JsonKeyCoolRequestGotoDeclarationHandler"
                                 implementation="org.javamaster.httpclient.reference.JsonKeyCoolRequestGotoDeclarationHandler"/>
+        <lang.documentationProvider language="http"
+                                    implementationClass="org.javamaster.httpclient.doc.HttpDocumentationProvider"/>
     </extensions>
 </idea-plugin>
