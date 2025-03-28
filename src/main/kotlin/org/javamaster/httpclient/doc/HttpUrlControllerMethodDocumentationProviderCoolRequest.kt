@@ -12,7 +12,7 @@ import org.javamaster.httpclient.utils.HttpUtils.generateAnno
  *
  * @author yudong
  */
-class HttpUrlDocumentationProviderCoolRequest : DocumentationProvider {
+class HttpUrlControllerMethodDocumentationProviderCoolRequest : DocumentationProvider {
 
     override fun generateDoc(element: PsiElement?, originalElement: PsiElement?): String? {
         if (element !is HttpControllerMethodPsiElement) {

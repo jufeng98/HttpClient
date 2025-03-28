@@ -6,7 +6,7 @@
                                   implementation="org.javamaster.httpclient.reference.JsonKeyControllerMethodFieldPsiReferenceContributorCoolRequest"/>
 
         <lang.documentationProvider language="http"
-                                    implementationClass="org.javamaster.httpclient.doc.HttpUrlDocumentationProviderCoolRequest"/>
+                                    implementationClass="org.javamaster.httpclient.doc.HttpUrlControllerMethodDocumentationProviderCoolRequest"/>
         <lang.documentationProvider language="JSON"
                                     implementationClass="org.javamaster.httpclient.doc.JsonKeyControllerMethodDocumentationProviderCoolRequest"/>
     </extensions>
