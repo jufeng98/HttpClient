@@ -5,13 +5,14 @@ import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.application.runWriteActionAndWait
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.util.Disposer.newDisposable
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
+import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.dubbo.DubboRequest
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.js.JsExecutor
@@ -57,7 +58,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private val paramMap = HttpUtils.getDirectionCommentParamMap(requestBlock)
 
-    private val httpDashboardForm = HttpDashboardForm()
+    private val httpDashboardForm = HttpDashboardForm(tabName, project)
 
     private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
@@ -71,22 +72,19 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
     override fun startNotify() {
         super.startNotify()
 
-        try {
-            startHandleRequest()
-        } catch (e: Exception) {
-            destroyProcess()
-            e.printStackTrace()
-            NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e.message}</div>")
-        }
+        HttpBackground
+            .runInBackgroundReadActionAsync {
+                HttpUtils.convertToReqBody(request, variableResolver)
+            }
+            .finishOnUiThread {
+                startHandleRequest(it)
+            }
+            .exceptionallyOnUiThread {
+                handleException(it)
+            }
     }
 
-    private fun startHandleRequest() {
-        if (request.contentLength != null) {
-            throw IllegalArgumentException("不能有 Content-Length 请求头!")
-        }
-
-        val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
-
+    private fun startHandleRequest(reqBody: Any?) {
         val httpHeaderFields = request.header?.headerFieldList
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
@@ -114,12 +112,18 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
     }
 
+    private fun handleException(e: Exception) {
+        destroyProcess()
+        e.printStackTrace()
+        NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e.message}</div>")
+    }
+
     private fun handleWs(url: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
         loadingRemover?.run()
 
         wsRequest = WsRequest(url, reqHeaderMap, this, paramMap)
 
-        httpDashboardForm.initWsResData(wsRequest, project, tabName)
+        httpDashboardForm.initWsResData(wsRequest)
 
         wsRequest!!.connect()
     }
@@ -254,7 +258,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     dealResponse(httpInfo, parentPath)
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    NotifyUtil.notifyError(project, e.message)
+                    NotifyUtil.notifyError(project, e.toString())
                 }
             }
 
@@ -280,17 +284,27 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             httpInfo.httpResDescList.add(0, saveResult)
         }
 
-        val parentDisposer = newDisposable()
-        httpDashboardForm.initHttpResContent(httpInfo, tabName, project, parentDisposer)
-
         val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.getToolWindow(ToolWindowId.SERVICES)
+
+        val content = toolWindow!!.contentManager.getContent(getComponent())
+        if (content != null) {
+            content.setDisposer(httpDashboardForm)
+        } else {
+            Disposer.register(Disposer.newDisposable(), httpDashboardForm)
+        }
+
+        httpDashboardForm.initHttpResContent(httpInfo)
+
         val myThrowable = httpDashboardForm.throwable
         hasError = myThrowable != null
         if (hasError) {
+            myThrowable.printStackTrace()
+
             val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
                 "已中断${tabName}请求!"
             } else {
-                "${tabName}请求失败,异常信息:${myThrowable.message}!"
+                "${tabName}请求失败,异常信息:${myThrowable}"
             }
             val msg = "<div style='font-size:13pt'>$error</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)

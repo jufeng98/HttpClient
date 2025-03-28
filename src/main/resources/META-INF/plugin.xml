@@ -55,6 +55,7 @@
                     <li>新增 annotator</li>
                     <li>新增变量的 inspection 检查及 fixes 快速修复</li>
                     <li>调整变量等的着色逻辑,提升用户体验</li>
+                    <li>完善发起请求逻辑,减少UI卡顿</li>
                     <li>完善控制器跳转逻辑,减少UI卡顿</li>
                     <li>完善控制器方法字段跳转逻辑,减少UI卡顿</li>
                     <li>功能优化及Bug修复</li>
