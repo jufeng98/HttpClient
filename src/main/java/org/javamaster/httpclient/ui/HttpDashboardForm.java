@@ -19,6 +19,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.javamaster.httpclient.HttpInfo;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
+import org.javamaster.httpclient.utils.HttpUiUtils;
 import org.javamaster.httpclient.ws.WsRequest;
 import org.jetbrains.annotations.NotNull;
 

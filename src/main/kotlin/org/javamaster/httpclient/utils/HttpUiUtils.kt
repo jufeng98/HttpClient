@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.ui
+package org.javamaster.httpclient.utils
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
