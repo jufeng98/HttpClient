@@ -9,6 +9,7 @@ import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.ide.DataManager
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
@@ -28,6 +29,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.parser.HttpFile
@@ -124,6 +126,24 @@ object HttpUtils {
         }
 
         return "HTTP Request ▏#0"
+    }
+
+    fun getInjectHost(jsonString: JsonStringLiteral, project: Project): HttpMessageBody? {
+        if (!jsonString.isPropertyName) {
+            return null
+        }
+
+        val injectionHost = InjectedLanguageManager.getInstance(project).getInjectionHost(jsonString)
+        if (injectionHost !is HttpMessageBody) {
+            return null
+        }
+
+        return injectionHost
+    }
+
+    fun isDubboRequest(httpRequest: HttpRequest): Boolean {
+        val httpMethod = httpRequest.method
+        return httpMethod.text == HttpRequestEnum.DUBBO.name
     }
 
     fun convertToReqHeaderMap(

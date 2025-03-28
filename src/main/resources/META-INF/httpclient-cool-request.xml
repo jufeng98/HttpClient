@@ -3,7 +3,7 @@
         <psi.referenceContributor language="http"
                                   implementation="org.javamaster.httpclient.reference.HttpUrlPsiReferenceContributorCoolRequest"/>
         <psi.referenceContributor language="JSON"
-                                  implementation="org.javamaster.httpclient.reference.JsonKeyPsiReferenceContributorCoolRequest"/>
+                                  implementation="org.javamaster.httpclient.reference.JsonKeyControllerMethodFieldPsiReferenceContributorCoolRequest"/>
 
         <lang.documentationProvider language="http"
                                     implementationClass="org.javamaster.httpclient.doc.HttpUrlDocumentationProviderCoolRequest"/>
