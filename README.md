@@ -45,13 +45,21 @@
 
 ![variable-jump.gif](./images/variable-jump.gif)
 
-#### url跳转 Spring 控制器
+#### url 跳转 SpringMVC Controller 方法
 
 ![controller-jump.gif](./images/controller-jump.gif)
 
-#### json 属性跳转 Spring 控制器方法出入参 Bean 字段
+#### url 悬浮提示 SpringMVC Controller 方法
+
+![url-hover.png](./images/url-hover.png)
+
+#### json 属性跳转 SpringMVC Controller 方法出入参 Bean 字段
 
 ![field-jump.gif](./images/field-jump.gif)
+
+#### json 属性悬浮提示 SpringMVC Controller 方法出入参 Bean 字段
+
+![json-key-hover.png](./images/json-key-hover.png)
 
 #### js处理器和全局变量
 
