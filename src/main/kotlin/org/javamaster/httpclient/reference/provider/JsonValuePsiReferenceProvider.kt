@@ -8,9 +8,7 @@ import com.intellij.psi.PsiReferenceProvider
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.env.EnvFileService.Companion.ENV_FILE_NAMES
 import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement
-import org.javamaster.httpclient.reference.support.JsonValueArgNamePsiReference
-import org.javamaster.httpclient.reference.support.JsonValueVariableNamePsiReference
+import org.javamaster.httpclient.reference.provider.TextPsiReferenceProvider.Companion.createTextVariableReferences
 
 /**
  * @author yudong
@@ -31,57 +29,22 @@ class JsonValuePsiReferenceProvider : PsiReferenceProvider() {
 
         val injectionHost = InjectedLanguageManager.getInstance(project).getInjectionHost(stringLiteral)
         if (injectionHost is HttpMessageBody) {
-            return createReferences(stringLiteral, injectionHost)
+            var text = stringLiteral.text
+            text = text.substring(1, text.length - 1)
+            val delta = stringLiteral.textRange.startOffset + 1
+
+            return createTextVariableReferences(stringLiteral, injectionHost, text, delta)
         }
 
         if (ENV_FILE_NAMES.contains(element.containingFile?.virtualFile?.name)) {
-            return createReferences(stringLiteral, null)
+            var text = stringLiteral.text
+            text = text.substring(1, text.length - 1)
+            val delta = stringLiteral.textRange.startOffset + 1
+
+            return createTextVariableReferences(stringLiteral, null, text, delta)
         }
 
         return PsiReference.EMPTY_ARRAY
-    }
-
-    private fun createReferences(
-        stringLiteral: JsonStringLiteral,
-        messageBody: HttpMessageBody?,
-    ): Array<out PsiReference> {
-        val jsonValueText = stringLiteral.text
-        val value = jsonValueText.substring(1, jsonValueText.length - 1)
-
-        val literalRange = stringLiteral.textRange
-
-        val myJsonValue = MyJsonLazyFileElement.parse(value)
-
-        return myJsonValue.variableList
-            .mapNotNull {
-                val variableName = it.variableName ?: return@mapNotNull null
-
-                val nameRange = variableName.textRange
-                if (nameRange.startOffset == nameRange.endOffset) {
-                    return@mapNotNull null
-                }
-
-                val delta = literalRange.startOffset + 1
-
-                val range = nameRange.shiftRight(delta)
-                val reference = JsonValueVariableNamePsiReference(stringLiteral, it, range, messageBody)
-
-                val references = mutableListOf<PsiReference>(reference)
-
-                val argReferences = it.variableArgs?.variableArgList
-                    ?.map { arg ->
-                        val argRange = arg.textRange.shiftRight(delta)
-                        JsonValueArgNamePsiReference(stringLiteral, arg, argRange, messageBody)
-                    }
-                    ?: emptyList()
-
-                references.addAll(argReferences)
-
-                references
-            }
-            .flatten()
-            .toTypedArray()
-
     }
 
 }

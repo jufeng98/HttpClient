@@ -10,12 +10,12 @@ import org.javamaster.httpclient.inspection.fix.CreateEnvVariableQuickFix
 import org.javamaster.httpclient.inspection.fix.CreateFileVariableQuickFix
 import org.javamaster.httpclient.inspection.fix.CreateJsVariableQuickFix
 import org.javamaster.httpclient.reference.support.HttpVariableNamePsiReference
-import org.javamaster.httpclient.reference.support.JsonValueVariableNamePsiReference
+import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
 
 object InspectionHelper {
 
     fun checkVariables(
-        psiElements: MutableCollection<out PsiElement>,
+        psiElements: Collection<PsiElement>,
         manager: InspectionManager,
     ): Array<ProblemDescriptor> {
         val list = mutableListOf<ProblemDescriptor>()
@@ -31,7 +31,7 @@ object InspectionHelper {
                         reference.element.name
                     }
 
-                    is JsonValueVariableNamePsiReference -> {
+                    is TextVariableNamePsiReference -> {
                         textRange = reference.textRange.shiftLeft(element.textRange.startOffset)
                         builtin = reference.variable.variableName?.isBuiltin ?: true
                         reference.variable.variableName?.name

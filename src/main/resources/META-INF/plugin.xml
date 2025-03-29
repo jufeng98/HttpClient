@@ -162,6 +162,8 @@
                                   implementationClass="org.javamaster.httpclient.gutter.HttpRunLineMarkerContributor"/>
         <psi.referenceContributor language="http"
                                   implementation="org.javamaster.httpclient.reference.HttpPsiReferenceContributor"/>
+        <psi.referenceContributor language="TEXT"
+                                  implementation="org.javamaster.httpclient.reference.TextPsiReferenceContributor"/>
         <lang.elementManipulator forClass="com.intellij.httpClient.http.request.psi.HttpFilePath"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpFilePathManipulator"/>
         <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
@@ -175,7 +177,9 @@
         <lang.inspectionSuppressor language="JSON"
                                    implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>
         <annotator language="JSON"
-                   implementationClass="org.javamaster.httpclient.annotator.JsonValueAnnotator"/>
+                   implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
+        <annotator language="TEXT"
+                   implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
         <annotator language="http"
                    implementationClass="org.javamaster.httpclient.annotator.HttpAnnotator"/>
         <localInspection groupName="Http" language="http" shortName="HttpInspection"
@@ -184,6 +188,9 @@
         <localInspection groupName="Http" language="JSON" shortName="MyJsonInspection"
                          displayName="Variable problems" enabledByDefault="true" level="WARNING"
                          implementationClass="org.javamaster.httpclient.inspection.MyJsonInspection"/>
+        <localInspection groupName="Http" language="TEXT" shortName="MyTextInspection"
+                         displayName="Variable problems" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.javamaster.httpclient.inspection.MyTextInspection"/>
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>
         <psi.referenceContributor language="JSON"

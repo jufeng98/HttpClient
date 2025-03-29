@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.reference.support
 
-import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
@@ -11,15 +10,15 @@ import org.javamaster.httpclient.psi.HttpVariable
 /**
  * @author yudong
  */
-class JsonValueVariableNamePsiReference(
-    private val stringLiteral: JsonStringLiteral,
+class TextVariableNamePsiReference(
+    private val psiElement: PsiElement,
     val variable: HttpVariable,
     val textRange: TextRange,
     private val messageBody: HttpMessageBody?,
-) : PsiReferenceBase<JsonStringLiteral>(stringLiteral, textRange.shiftLeft(stringLiteral.startOffset), true) {
+) : PsiReferenceBase<PsiElement>(psiElement, textRange.shiftLeft(psiElement.startOffset), true) {
 
     override fun resolve(): PsiElement? {
-        val psiElement = messageBody ?: stringLiteral
+        val psiElement = messageBody ?: psiElement
 
         val variableName = variable.variableName ?: return null
         val name = variableName.name
