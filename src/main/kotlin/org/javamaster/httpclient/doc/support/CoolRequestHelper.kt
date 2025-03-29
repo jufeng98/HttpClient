@@ -3,16 +3,13 @@ package org.javamaster.httpclient.doc.support
 import com.cool.request.components.http.Controller
 import com.cool.request.scan.Scans
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
-import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
@@ -32,15 +29,6 @@ object CoolRequestHelper {
 
             }, false)
     }
-
-    fun findModule(requestTarget: HttpRequestTarget, virtualFile: VirtualFile): Module? {
-        return if (HttpUtils.isFileInIdeaDir(virtualFile)) {
-            HttpUtils.getOriginalModule(requestTarget)
-        } else {
-            ModuleUtil.findModuleForPsiElement(requestTarget)
-        }
-    }
-
 
     fun findMethod(module: Module, searchTxt: String, method: String): PsiMethod? {
         val allControllers = getCacheControllers(module.project)

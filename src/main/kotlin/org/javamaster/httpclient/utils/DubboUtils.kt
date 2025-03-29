@@ -1,11 +1,9 @@
 package org.javamaster.httpclient.utils
 
-import com.intellij.execution.RunManager
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
@@ -16,10 +14,8 @@ import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.psi.HttpHeaderFieldValue
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.utils.HttpUtils.getTabName
 import org.javamaster.httpclient.utils.HttpUtils.isFileInIdeaDir
-import java.io.File
 
 object DubboUtils {
     const val INTERFACE_KEY = "Interface"
@@ -80,21 +76,10 @@ object DubboUtils {
 
         val tabName = getTabName(httpRequest.method)
 
-        val runManager = RunManager.getInstance(httpRequest.project)
-        val configurationSettings = runManager.allSettings
-            .firstOrNull {
-                it.configuration is HttpRunConfiguration && it.configuration.name == tabName
-            }
-        if (configurationSettings == null) {
-            return null
-        }
-
-        val httpRunConfiguration = configurationSettings.configuration as HttpRunConfiguration
-
-        return VfsUtil.findFileByIoFile(File(httpRunConfiguration.httpFilePath), true)
+        return HttpUtils.getOriginalFile(httpRequest.project, tabName)
     }
 
-    fun getOriginalModule(httpRequest: HttpRequest): Module? {
+    private fun getOriginalModule(httpRequest: HttpRequest): Module? {
         val project = httpRequest.project
 
         val virtualFile = getOriginalFile(httpRequest) ?: return null

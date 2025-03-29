@@ -422,7 +422,11 @@ object HttpUtils {
 
         val tabName = getTabName(httpMethod)
 
-        val runManager = RunManager.getInstance(requestTarget.project)
+        return getOriginalFile(requestTarget.project, tabName)
+    }
+
+    fun getOriginalFile(project: Project, tabName: String): VirtualFile? {
+        val runManager = RunManager.getInstance(project)
         val configurationSettings = runManager.allSettings
             .firstOrNull {
                 it.configuration is HttpRunConfiguration && it.configuration.name == tabName
