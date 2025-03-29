@@ -9,7 +9,6 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
-import com.intellij.psi.util.PsiModificationTracker
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
@@ -21,11 +20,11 @@ object CoolRequestHelper {
     private fun getCacheControllers(project: Project): MutableList<Controller> {
         return CachedValuesManager.getManager(project)
             .getCachedValue(project, key, {
-                val controllers: MutableList<Controller> = mutableListOf()
+                val controllers: MutableList<Controller> = ArrayList(1500)
 
                 Scans.getInstance(project).scanController(project, null, controllers)
 
-                CachedValueProvider.Result.create(controllers, PsiModificationTracker.MODIFICATION_COUNT)
+                CachedValueProvider.Result.create(controllers, ControllerPsiModificationTracker)
 
             }, false)
     }
