@@ -258,7 +258,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     MVN_TARGET("\$mvnTarget") {
         override fun typeText(): String {
-            return "指向模块的 src/target"
+            return "指向模块的 target 目录"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
