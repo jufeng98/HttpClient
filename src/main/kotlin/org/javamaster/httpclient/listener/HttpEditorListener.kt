@@ -10,6 +10,7 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpFileType
@@ -46,7 +47,7 @@ class HttpEditorListener : FileEditorManagerListener {
 
             val extension = fileTypeManagerEx.getFileTypeByExtension(jsonExtension)
             if (extension === jsonFileType) {
-                initTopForm(source, file, module, fileEditor)
+                initTopForm(source, file, module, project, fileEditor)
                 return@executeOnPooledThread
             }
 
@@ -55,7 +56,7 @@ class HttpEditorListener : FileEditorManagerListener {
                     fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
                     println("已将 json 后缀文件与 $jsonFileType 关联起来")
 
-                    initTopForm(source, file, module, fileEditor)
+                    initTopForm(source, file, module, project, fileEditor)
                 }
             }
         }
@@ -65,6 +66,7 @@ class HttpEditorListener : FileEditorManagerListener {
         source: FileEditorManager,
         file: VirtualFile,
         module: Module?,
+        project: Project,
         fileEditor: FileEditor,
     ) {
         HttpBackground
@@ -73,7 +75,7 @@ class HttpEditorListener : FileEditorManagerListener {
                 envFileService.getPresetEnvSet(file.parent.path)
             }
             .finishOnUiThread {
-                val httpEditorTopForm = HttpEditorTopForm(file, module)
+                val httpEditorTopForm = HttpEditorTopForm(file, module, project)
 
                 httpEditorTopForm.initEnvCombo(it)
 

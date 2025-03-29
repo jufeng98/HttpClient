@@ -29,16 +29,18 @@ import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME
 public class HttpEditorTopForm extends JComponent {
     public static final Key<HttpEditorTopForm> KEY = Key.create("httpRequest.httpEditorTopForm");
     public final VirtualFile file;
-    private final Module module;
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
     private JComboBox<String> exampleComboBox;
     private JButton showVariableBtn;
-    private Project project;
 
-    public HttpEditorTopForm(VirtualFile file, @Nullable Module module) {
+    private final @Nullable Module module;
+    private final Project project;
+
+    public HttpEditorTopForm(VirtualFile file, @Nullable Module module, Project project) {
         this.file = file;
         this.module = module;
+        this.project = project;
 
         exampleComboBox.addActionListener(e -> {
             ClassLoader classLoader = getClass().getClassLoader();
@@ -123,8 +125,6 @@ public class HttpEditorTopForm extends JComponent {
     }
 
     public void initEnvCombo(Set<String> presetEnvSet) {
-        project = module.getProject();
-
         presetEnvSet.forEach(it -> envComboBox.addItem(it));
 
         setSelectEnv("uat");
