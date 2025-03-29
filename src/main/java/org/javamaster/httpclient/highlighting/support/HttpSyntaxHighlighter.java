@@ -51,7 +51,7 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
         HTTP_REQUEST_NAME = createTextAttributesKey("HTTP_REQUEST_NAME", DefaultLanguageHighlighterColors.METADATA);
 
         fillMap(ATTRIBUTE_MAP, HTTP_KEYWORD, HttpTypes.REQUEST_METHOD);
-        fillMap(ATTRIBUTE_MAP, HTTP_PORT, HttpTypes.PORT);
+        fillMap(ATTRIBUTE_MAP, HTTP_PORT, HttpTypes.PORT_SEGMENT);
         fillMap(ATTRIBUTE_MAP, HTTP_PARAMETER_NAME, HttpTypes.QUERY_NAME, HttpTypes.GLOBAL_NAME, HttpTypes.DIRECTION_NAME_PART);
         fillMap(ATTRIBUTE_MAP, HTTP_PARAMETER_VALUE, HttpTypes.QUERY_VALUE, HttpTypes.GLOBAL_VALUE, HttpTypes.DIRECTION_VALUE_PART);
         fillMap(ATTRIBUTE_MAP, HTTP_LINE_COMMENT, HttpTypes.DIRECTION_COMMENT_START, HttpTypes.BLOCK_COMMENT, HttpTypes.LINE_COMMENT);
