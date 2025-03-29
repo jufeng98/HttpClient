@@ -15,24 +15,29 @@ import org.javamaster.httpclient.utils.HttpUtils
  * @author yudong
  */
 object CoolRequestHelper {
-    private val key = Key.create<CachedValue<MutableList<Controller>>>("httpClient.coolRequest.controllers")
+    private val key = Key.create<CachedValue<Map<String, List<Controller>>>>("httpClient.coolRequest.controllers")
 
-    private fun getCacheControllers(project: Project): MutableList<Controller> {
+    private fun getCacheControllerMap(project: Project): Map<String, List<Controller>> {
         return CachedValuesManager.getManager(project)
             .getCachedValue(project, key, {
                 val controllers: MutableList<Controller> = ArrayList(1500)
 
                 Scans.getInstance(project).scanController(project, null, controllers)
 
-                CachedValueProvider.Result.create(controllers, ControllerPsiModificationTracker)
+                val controllerMap = controllers.groupBy { it.httpMethod + "-" + it.url }
+
+                CachedValueProvider.Result.create(controllerMap, ControllerPsiModificationTracker)
 
             }, false)
     }
 
     fun findMethod(module: Module, searchTxt: String, method: String): PsiMethod? {
-        val allControllers = getCacheControllers(module.project)
+        val controllerMap = getCacheControllerMap(module.project)
 
-        val controller = findMatchedController(allControllers, searchTxt, method) ?: return null
+        val controllers = controllerMap["$method-$searchTxt"] ?: return null
+
+        // 这里可能有多个控制器方法,简单起见直接取第一个,不在根据 SpringMVC 的映射规则做复杂判断
+        val controller = controllers[0]
 
         val psiMethods = findControllerPsiMethods(controller, module)
         if (psiMethods.isEmpty()) {
@@ -40,16 +45,6 @@ object CoolRequestHelper {
         }
 
         return psiMethods[0]
-    }
-
-    private fun findMatchedController(
-        controllers: MutableList<Controller>,
-        searchTxt: String,
-        method: String,
-    ): Controller? {
-        return controllers.firstOrNull {
-            it.httpMethod == method && it.url == searchTxt
-        }
     }
 
     private fun findControllerPsiMethods(controller: Controller, module: Module): Array<PsiMethod> {
