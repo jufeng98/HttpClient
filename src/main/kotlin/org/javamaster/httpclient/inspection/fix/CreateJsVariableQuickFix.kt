@@ -38,7 +38,7 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
         }
 
         val requestBlock = when (psiElement) {
-            is HttpVariable -> {
+            is HttpVariableName -> {
                 PsiTreeUtil.getParentOfType(psiElement, HttpRequestBlock::class.java)!!
             }
 
