@@ -173,8 +173,8 @@ class EnvFileService(val project: Project) {
             val parent = selectedEditor.file.parent
             val parentPath = parent.path
 
-            val file = File(parentPath, name)
-            if (file.exists()) {
+            val virtualFile = VfsUtil.findFileByIoFile(File(parentPath, name), true)
+            if (virtualFile != null) {
                 return null
             }
 
@@ -234,9 +234,9 @@ class EnvFileService(val project: Project) {
 
                 val variable = myJsonValue.variableList[0]
                 val variableName = variable.variableName!!
-                val name = variableName.name
                 val variableArgs = variable.variableArgs
                 val args = variableArgs?.toArgsList()
+                val name = variableName.name
 
                 // 支持环境文件内引用内置变量
                 val innerVariableEnum = InnerVariableEnum.getEnum(name)

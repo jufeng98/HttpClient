@@ -2,6 +2,7 @@ package org.javamaster.httpclient.js
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.readText
 import com.jayway.jsonpath.JsonPath
 import org.javamaster.httpclient.annos.JsBridge
@@ -103,13 +104,24 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             val filePath = HttpUtils.constructFilePath(tmpPath, parentPath)
 
             val file = File(filePath)
-            if (file.exists()) {
-                file.delete()
+            val parentFile = file.parentFile
+
+            if (!parentFile.exists()) {
+                parentFile.mkdirs()
+            } else {
+                if (file.exists()) {
+                    file.delete()
+                }
             }
 
             val bytes = Base64.getDecoder().decode(base64)
-            Files.write(file.toPath(), bytes, StandardOpenOption.CREATE)
+            val toPath = file.toPath()
+
+            Files.write(toPath, bytes, StandardOpenOption.CREATE)
             GlobalLog.log("完成转换base64并保存到文件:${file.normalize()}")
+
+            VirtualFileManager.getInstance().asyncRefresh(null)
+
             return true
         } catch (e: Exception) {
             GlobalLog.log("base64ToFile处理失败:$e")
