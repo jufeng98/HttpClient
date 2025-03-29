@@ -6,15 +6,15 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.reference.support.JsonKeyPsiReference
-import org.javamaster.httpclient.utils.DubboUtils
+import org.javamaster.httpclient.reference.support.JsonKeyDubboMethodFieldPsiReference
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * @author yudong
  */
-class JsonKeyServiceMethodFieldPsiReferenceProviderDubbo : PsiReferenceProvider() {
+class JsonKeyDubboServiceMethodFieldPsiReferenceProvider : PsiReferenceProvider() {
 
     override fun getReferencesByElement(element: PsiElement, context: ProcessingContext): Array<PsiReference> {
         val jsonString = element as JsonStringLiteral
@@ -24,16 +24,14 @@ class JsonKeyServiceMethodFieldPsiReferenceProviderDubbo : PsiReferenceProvider(
 
         val httpRequest = PsiTreeUtil.getParentOfType(messageBody, HttpRequest::class.java)!!
 
-        val dubboRequest = HttpUtils.isDubboRequest(httpRequest)
-        if (!dubboRequest) {
-            return arrayOf()
+        if (httpRequest.method.text != HttpRequestEnum.DUBBO.name) {
+            return emptyArray()
         }
 
         val textRange = jsonString.textRange
         val range = textRange.shiftLeft(textRange.startOffset)
 
-        val originalModule = DubboUtils.getOriginalModule(httpRequest) ?: return arrayOf()
-        return arrayOf(JsonKeyPsiReference(jsonString, "", originalModule, range))
+        return arrayOf(JsonKeyDubboMethodFieldPsiReference(jsonString, range))
     }
 
 }

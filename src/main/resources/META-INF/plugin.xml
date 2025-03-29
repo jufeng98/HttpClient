@@ -187,9 +187,9 @@
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>
         <psi.referenceContributor language="JSON"
-                                  implementation="org.javamaster.httpclient.reference.JsonKeyServiceMethodFieldPsiReferenceContributorDubbo"/>
+                                  implementation="org.javamaster.httpclient.reference.JsonKeyDubboServiceMethodFieldPsiReferenceContributor"/>
         <lang.documentationProvider language="JSON"
-                                    implementationClass="org.javamaster.httpclient.doc.JsonKeyDubboServiceMethodDocumentationProvider"/>
+                                    implementationClass="org.javamaster.httpclient.doc.JsonKeyMethodFieldDocumentationProvider"/>
         <completion.contributor language="http" id="HttpCompletionContributor" order="last"
                                 implementationClass="org.javamaster.httpclient.completion.HttpCompletionContributor"/>
         <typedHandler implementation="org.javamaster.httpclient.typeHandler.HttpTypedHandler"/>

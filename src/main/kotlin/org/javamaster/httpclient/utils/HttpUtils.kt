@@ -6,17 +6,11 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunnerAndConfigurationSettings
-import com.intellij.ide.DataManager
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
-import com.intellij.openapi.progress.TaskInfo
-import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
@@ -29,7 +23,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.parser.HttpFile
@@ -139,11 +132,6 @@ object HttpUtils {
         }
 
         return injectionHost
-    }
-
-    fun isDubboRequest(httpRequest: HttpRequest): Boolean {
-        val httpMethod = httpRequest.method
-        return httpMethod.text == HttpRequestEnum.DUBBO.name
     }
 
     fun convertToReqHeaderMap(
@@ -538,53 +526,20 @@ object HttpUtils {
         return PsiUtil.getPsiFile(project, virtualFile)
     }
 
-    @Suppress("DEPRECATION")
-    fun createActionEvent(): AnActionEvent {
-        @Suppress("removal")
-        return AnActionEvent(
-            null,
-            DataManager.getInstance().dataContext,
-            "",
-            Presentation(""),
-            ActionManager.getInstance(),
-            1
-        )
-    }
-
-    fun createProcessIndicator(title: String, project: Project): BackgroundableProcessIndicator {
-        return BackgroundableProcessIndicator(project, object : TaskInfo {
-            override fun getTitle(): String {
-                return title
-            }
-
-            override fun getCancelText(): String {
-                return "Tip:正在取消......"
-            }
-
-            override fun getCancelTooltipText(): String {
-                return "Tip:取消中......"
-            }
-
-            override fun isCancellable(): Boolean {
-                return true
-            }
-        })
-    }
-
     fun findControllerPsiMethods(
         controllerFullClassName: String,
         controllerMethodName: String,
         module: Module,
-    ): Array<out PsiMethod> {
+    ): Array<PsiMethod> {
         val controllerPsiCls = JavaPsiFacade.getInstance(module.project)
             .findClass(
                 controllerFullClassName,
                 GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)
-            ) ?: return arrayOf()
+            ) ?: return emptyArray()
 
         val psiMethods = controllerPsiCls.findMethodsByName(controllerMethodName, false)
         if (psiMethods.isEmpty()) {
-            return arrayOf()
+            return emptyArray()
         }
 
         return psiMethods
