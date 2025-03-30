@@ -12,7 +12,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %%
 
 %{
-        private boolean nameFlag;
+        public boolean nameFlag;
         private int nextState;
 
         public int matchTimes;

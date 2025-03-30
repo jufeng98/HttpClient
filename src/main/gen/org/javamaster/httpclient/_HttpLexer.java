@@ -537,7 +537,7 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
   private boolean zzEOFDone;
 
   /* user code: */
-        private boolean nameFlag;
+        public boolean nameFlag;
         private int nextState;
 
         public int matchTimes;
