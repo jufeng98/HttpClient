@@ -90,9 +90,9 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
             text: String,
             delta: Int,
         ): Array<out PsiReference> {
-            val myJsonValue = TextVariableLazyFileElement.parse(text)
+            val textVariable = TextVariableLazyFileElement.parse(text)
 
-            return myJsonValue.variableList
+            return textVariable.variableList
                 .map {
                     createVariableReferences(it, psiElement, messageBody, delta)
                 }

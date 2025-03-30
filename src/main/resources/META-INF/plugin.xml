@@ -164,6 +164,8 @@
                                   implementation="org.javamaster.httpclient.reference.HttpPsiReferenceContributor"/>
         <psi.referenceContributor language="TEXT"
                                   implementation="org.javamaster.httpclient.reference.TextPsiReferenceContributor"/>
+        <psi.referenceContributor language="XML"
+                                  implementation="org.javamaster.httpclient.reference.XmlPsiReferenceContributor"/>
         <lang.elementManipulator forClass="com.intellij.httpClient.http.request.psi.HttpFilePath"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpFilePathManipulator"/>
         <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
@@ -179,6 +181,8 @@
         <annotator language="JSON"
                    implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
         <annotator language="TEXT"
+                   implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
+        <annotator language="XML"
                    implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
         <annotator language="http"
                    implementationClass="org.javamaster.httpclient.annotator.HttpAnnotator"/>
