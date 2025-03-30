@@ -46,6 +46,20 @@ object VariableAnnotator {
             .create()
     }
 
+    fun annotateQueryName(range: TextRange, holder: AnnotationHolder) {
+        holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES)
+            .range(range)
+            .textAttributes(DefaultLanguageHighlighterColors.STATIC_FIELD)
+            .create()
+    }
+
+    fun annotateQueryValue(range: TextRange, holder: AnnotationHolder) {
+        holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES)
+            .range(range)
+            .textAttributes(DefaultLanguageHighlighterColors.METADATA)
+            .create()
+    }
+
     fun annotateRequestName(range: TextRange, holder: AnnotationHolder) {
         holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES)
             .range(TextRange(range.startOffset, range.startOffset + 3))
