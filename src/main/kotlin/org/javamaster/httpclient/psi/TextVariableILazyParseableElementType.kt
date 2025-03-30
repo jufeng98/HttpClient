@@ -9,15 +9,15 @@ import org.javamaster.httpclient._HttpLexer
 import org.javamaster.httpclient.parser.HttpAdapter
 import org.javamaster.httpclient.parser.HttpParser
 import org.javamaster.httpclient.parser.HttpParserDefinition
-import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement
+import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 
 /**
  * @author yudong
  */
-class JsonValueILazyParseableElementType(debugName: String) : ILazyParseableElementType(debugName) {
+class TextVariableILazyParseableElementType(debugName: String) : ILazyParseableElementType(debugName) {
 
     override fun parseContents(chameleon: ASTNode): ASTNode {
-        val myJsonLazyFileElement = chameleon as MyJsonLazyFileElement
+        val textVariableLazyFileElement = chameleon as TextVariableLazyFileElement
 
         val httpAdapter = object : HttpAdapter() {
             override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
@@ -27,7 +27,7 @@ class JsonValueILazyParseableElementType(debugName: String) : ILazyParseableElem
 
         val psiBuilder = PsiBuilderImpl(
             null, null, parserDefinition, httpAdapter,
-            null, myJsonLazyFileElement.buffer, null, null
+            null, textVariableLazyFileElement.buffer, null, null
         )
 
         parseLight(psiBuilder)

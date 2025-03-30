@@ -7,7 +7,7 @@ import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.psi.HttpGlobalVariable
-import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement
+import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import java.util.regex.Pattern
 
 /**
@@ -53,7 +53,7 @@ class VariableResolver(
         return matcher.replaceAll {
             val matchStr = it.group()
 
-            val myJsonValue = MyJsonLazyFileElement.parse(matchStr)
+            val myJsonValue = TextVariableLazyFileElement.parse(matchStr)
 
             val variable = myJsonValue.variableList[0]
             val variableName = variable.variableName!!
@@ -157,7 +157,7 @@ class VariableResolver(
             return matcher.replaceAll {
                 val matchStr = it.group()
 
-                val myJsonValue = MyJsonLazyFileElement.parse(matchStr)
+                val myJsonValue = TextVariableLazyFileElement.parse(matchStr)
 
                 val variable = myJsonValue.variableList[0]
                 val variableName = variable.variableName!!

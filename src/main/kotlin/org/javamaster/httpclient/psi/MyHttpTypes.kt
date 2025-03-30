@@ -6,6 +6,6 @@ package org.javamaster.httpclient.psi
 interface MyHttpTypes {
     companion object {
         @JvmField
-        val MY_JSON_FILE: JsonValueILazyParseableElementType = JsonValueILazyParseableElementType("MY_JSON_FILE")
+        val MY_JSON_FILE: TextVariableILazyParseableElementType = TextVariableILazyParseableElementType("MY_JSON_FILE")
     }
 }

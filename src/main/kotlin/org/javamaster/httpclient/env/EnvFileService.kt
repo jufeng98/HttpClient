@@ -21,7 +21,7 @@ import com.intellij.util.indexing.FileBasedIndex
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.index.HttpEnvironmentIndex.Companion.INDEX_ID
 import org.javamaster.httpclient.psi.HttpPsiUtils
-import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement
+import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.escapeRegexp
 import org.javamaster.httpclient.ui.HttpEditorTopForm
@@ -230,7 +230,7 @@ class EnvFileService(val project: Project) {
             return matcher.replaceAll {
                 val matchStr = it.group()
 
-                val myJsonValue = MyJsonLazyFileElement.parse(matchStr)
+                val myJsonValue = TextVariableLazyFileElement.parse(matchStr)
 
                 val variable = myJsonValue.variableList[0]
                 val variableName = variable.variableName!!

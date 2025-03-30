@@ -12,7 +12,7 @@ import org.javamaster.httpclient.HttpLanguage;
 import org.javamaster.httpclient.parser.HttpAdapter;
 import org.javamaster.httpclient.parser.HttpParserDefinition;
 import org.javamaster.httpclient.psi.HttpMyJsonValue;
-import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement;
+import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -56,11 +56,11 @@ public class LexerTest {
 
         String str = "this is a {{$requestName}} and {{age}} good.";
 
-        HttpMyJsonValue element = MyJsonLazyFileElement.Companion.parse(str);
+        HttpMyJsonValue element = TextVariableLazyFileElement.Companion.parse(str);
         System.out.println(element.getVariableList());
 
         str = "{{requestName}}";
-        element = MyJsonLazyFileElement.Companion.parse(str);
+        element = TextVariableLazyFileElement.Companion.parse(str);
         System.out.println(element.getVariableList());
     }
 

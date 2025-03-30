@@ -8,11 +8,11 @@ import org.javamaster.httpclient.psi.MyHttpTypes
 /**
  * @author yudong
  */
-class MyJsonLazyFileElement(val buffer: CharSequence) : FileElement(MyHttpTypes.MY_JSON_FILE, buffer) {
+class TextVariableLazyFileElement(val buffer: CharSequence) : FileElement(MyHttpTypes.MY_JSON_FILE, buffer) {
 
     companion object {
         fun parse(value: String): HttpMyJsonValue {
-            val fileElement = MyJsonLazyFileElement(value)
+            val fileElement = TextVariableLazyFileElement(value)
             return HttpTypes.Factory.createElement(fileElement.firstChildNode) as HttpMyJsonValue
         }
     }

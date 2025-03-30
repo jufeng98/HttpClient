@@ -7,7 +7,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.psi.impl.MyJsonLazyFileElement
+import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import org.javamaster.httpclient.reference.support.TextVariableArgNamePsiReference
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
 
@@ -42,7 +42,7 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
             text: String,
             delta: Int,
         ): Array<out PsiReference> {
-            val myJsonValue = MyJsonLazyFileElement.parse(text)
+            val myJsonValue = TextVariableLazyFileElement.parse(text)
 
             return myJsonValue.variableList
                 .mapNotNull {
