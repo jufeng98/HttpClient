@@ -36,7 +36,6 @@ intellij {
             "com.intellij.java",
             "com.intellij.modules.json",
             "ris58h.webcalm:0.11.1",
-            "com.hxl.plugin.cool-request:2024.12.1",
         )
     )
 }

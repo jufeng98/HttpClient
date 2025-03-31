@@ -1,6 +1,5 @@
 package test;
 
-import com.cool.request.utils.StreamUtils;
 import com.intellij.lang.LanguageParserDefinitions;
 import com.intellij.mock.MockApplication;
 import com.intellij.openapi.application.ApplicationManager;
@@ -14,6 +13,7 @@ import org.javamaster.httpclient.parser.HttpParserDefinition;
 import org.javamaster.httpclient.psi.HttpMyJsonValue;
 import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement;
 import org.junit.Test;
+import org.springframework.util.StreamUtils;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
