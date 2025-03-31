@@ -8,9 +8,9 @@
 - 支持发起 WebSocket 请求
 - 支持发起 Dubbo 请求
 - 支持环境变量、内置变量和内置方法
-- 支持从 url 跳转到 SpringMVC Controller(依赖Cool Request插件)
-- 支持从 json 属性跳转到 Spring Bean 字段(依赖Cool Request插件)
-- 支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器，其中 JavaScript 语法高亮功能依赖 WebCalm 插件
+- 支持从 url 跳转到对应的 SpringMVC Controller 方法
+- 支持从 json 属性跳转到对应的 SpringMVC Controller 方法的出入参 Bean 字段
+- 支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器(JavaScript 语法高亮功能依赖 WebCalm 插件)
 - 支持从文件读取内容作为请求体
 - 支持保存响应到文件
 - 支持预览图片
