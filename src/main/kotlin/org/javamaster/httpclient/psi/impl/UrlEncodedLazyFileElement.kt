@@ -11,9 +11,14 @@ import org.javamaster.httpclient.psi.MyHttpTypes
 class UrlEncodedLazyFileElement(val buffer: CharSequence) : FileElement(MyHttpTypes.URL_ENCODED_FILE, buffer) {
 
     companion object {
-        fun parse(value: String): HttpQuery {
+        fun parse(value: String): HttpQuery? {
             val fileElement = UrlEncodedLazyFileElement(value)
-            return HttpTypes.Factory.createElement(fileElement.firstChildNode.firstChildNode) as HttpQuery
+            try {
+                return HttpTypes.Factory.createElement(fileElement.firstChildNode.firstChildNode) as HttpQuery
+            } catch (e: Exception) {
+                System.err.println(e.message)
+                return null
+            }
         }
     }
 
