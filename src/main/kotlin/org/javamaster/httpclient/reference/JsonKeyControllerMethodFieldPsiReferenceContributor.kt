@@ -11,7 +11,7 @@ import org.javamaster.httpclient.reference.provider.JsonKeyControllerMethodField
  *
  * @author yudong
  */
-class JsonKeyControllerMethodFieldPsiReferenceContributorCoolRequest : PsiReferenceContributor() {
+class JsonKeyControllerMethodFieldPsiReferenceContributor : PsiReferenceContributor() {
 
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
         registrar.registerReferenceProvider(

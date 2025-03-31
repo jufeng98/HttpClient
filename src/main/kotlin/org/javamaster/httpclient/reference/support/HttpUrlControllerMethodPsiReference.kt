@@ -7,7 +7,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.util.PsiTreeUtil
-import org.javamaster.httpclient.doc.support.CoolRequestHelper
+import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.utils.HttpUtils
@@ -29,7 +29,7 @@ class HttpUrlControllerMethodPsiReference(
 
         val httpMethod = PsiTreeUtil.getPrevSiblingOfType(requestTarget, HttpMethod::class.java)!!
 
-        return CoolRequestHelper.findMethod(module, searchTxt, httpMethod.text)
+        return ScanRequest.findMethod(module, searchTxt, httpMethod.text)
     }
 
     private fun findModule(requestTarget: HttpRequestTarget, virtualFile: VirtualFile): Module? {

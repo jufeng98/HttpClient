@@ -10,7 +10,7 @@ import org.javamaster.httpclient.reference.provider.HttpUrlControllerMethodPsiRe
  *
  * @author yudong
  */
-class HttpUrlControllerMethodPsiReferenceContributorCoolRequest : PsiReferenceContributor() {
+class HttpUrlControllerMethodPsiReferenceContributor : PsiReferenceContributor() {
 
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
         registrar.registerReferenceProvider(

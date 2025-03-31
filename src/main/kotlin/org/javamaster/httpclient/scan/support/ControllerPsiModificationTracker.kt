@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.doc.support
+package org.javamaster.httpclient.scan.support
 
 import com.intellij.lang.Language
 import com.intellij.openapi.util.ModificationTracker

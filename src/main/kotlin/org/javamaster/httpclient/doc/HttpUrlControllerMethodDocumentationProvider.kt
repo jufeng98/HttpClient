@@ -15,7 +15,7 @@ import org.javamaster.httpclient.utils.HttpUtils.generateAnno
  *
  * @author yudong
  */
-class HttpUrlControllerMethodDocumentationProviderCoolRequest : DocumentationProvider {
+class HttpUrlControllerMethodDocumentationProvider : DocumentationProvider {
 
     override fun getCustomDocumentationElement(
         editor: Editor,

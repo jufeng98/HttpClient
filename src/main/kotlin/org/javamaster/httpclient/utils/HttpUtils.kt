@@ -17,7 +17,6 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
-import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
@@ -524,25 +523,6 @@ object HttpUtils {
         }
 
         return PsiUtil.getPsiFile(project, virtualFile)
-    }
-
-    fun findControllerPsiMethods(
-        controllerFullClassName: String,
-        controllerMethodName: String,
-        module: Module,
-    ): Array<PsiMethod> {
-        val controllerPsiCls = JavaPsiFacade.getInstance(module.project)
-            .findClass(
-                controllerFullClassName,
-                GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)
-            ) ?: return emptyArray()
-
-        val psiMethods = controllerPsiCls.findMethodsByName(controllerMethodName, false)
-        if (psiMethods.isEmpty()) {
-            return emptyArray()
-        }
-
-        return psiMethods
     }
 
     fun collectJsonPropertyNameLevels(jsonString: JsonStringLiteral): LinkedList<String> {
