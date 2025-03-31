@@ -11,9 +11,9 @@
                 <li>Support sending WebSocket request</li>
                 <li>Support sending Dubbo request</li>
                 <li>Support Environment, build-in variable and build-in method</li>
-                <li>Support jump to Spring Controller from url(Depend on Cool Request plugin)</li>
-                <li>Support jump to Spring Controller bean field from json property(Depend on Cool Request plugin)</li>
-                <li>Support JavaScript previous handler, post handler and global handler. JavaScript syntax highlighting depend on WebCalm plugin</li>
+                <li>Support jump to Spring Controller method from url(Depend on Cool Request plugin)</li>
+                <li>Support jump to Spring Controller method bean field from json property(Depend on Cool Request plugin)</li>
+                <li>Support JavaScript previous handler, post handler and global handler(JavaScript syntax highlighting depend on WebCalm plugin)</li>
                 <li>Support reading file content as http request body</li>
                 <li>Support save http response body to file</li>
                 <li>Support preview image</li>
@@ -30,9 +30,9 @@
                 <li>支持发起 WebSocket 请求</li>
                 <li>支持发起 Dubbo 请求</li>
                 <li>支持环境变量、内置变量和内置方法</li>
-                <li>支持从 url 跳转到 SpringMVC Controller(依赖Cool Request插件)</li>
-                <li>支持从 json 属性跳转到 Spring Bean 字段(依赖Cool Request插件)</li>
-                <li>支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器，其中 JavaScript 语法高亮功能依赖 WebCalm 插件</li>
+                <li>支持从 url 跳转到对应的 SpringMVC Controller 方法</li>
+                <li>支持从 json 属性跳转到对应的 SpringMVC Controller 方法的出入参 Bean 字段</li>
+                <li>支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器(JavaScript 语法高亮功能依赖 WebCalm 插件)</li>
                 <li>支持从文件读取内容作为请求体</li>
                 <li>支持保存响应到文件</li>
                 <li>支持预览图片</li>
@@ -130,7 +130,6 @@
     <depends>com.intellij.java</depends>
     <depends>com.intellij.modules.json</depends>
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true" config-file="httpclient-cool-request.xml">com.hxl.plugin.cool-request</depends>
     <depends optional="true" config-file="httpclient-web-calm.xml">ris58h.webcalm</depends>
 
     <projectListeners>
@@ -218,5 +217,14 @@
         <lang.commenter language="http" implementationClass="org.javamaster.httpclient.commenter.HttpCommenter"/>
         <gotoDeclarationHandler id="JsStringPathGotoDeclarationHandler"
                                 implementation="org.javamaster.httpclient.reference.JsStringPathGotoDeclarationHandler"/>
+        <psi.referenceContributor language="http"
+                                  implementation="org.javamaster.httpclient.reference.HttpUrlControllerMethodPsiReferenceContributor"/>
+        <psi.referenceContributor language="JSON"
+                                  implementation="org.javamaster.httpclient.reference.JsonKeyControllerMethodFieldPsiReferenceContributor"/>
+        <lang.documentationProvider language="http"
+                                    implementationClass="org.javamaster.httpclient.doc.HttpUrlControllerMethodDocumentationProvider"/>
+        <psi.treeChangePreprocessor
+                implementation="org.javamaster.httpclient.scan.support.ControllerPsiTreeChangePreprocessor"/>
+        <searchEverywhereContributor implementation="org.javamaster.httpclient.symbol.ApiWeightedSearchEverywhereContributor$Factory"/>
     </extensions>
 </idea-plugin>
