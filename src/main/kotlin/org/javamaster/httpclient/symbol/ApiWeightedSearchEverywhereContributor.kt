@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.symbol
 
-import com.intellij.ide.actions.SearchEverywherePsiRenderer
 import com.intellij.ide.actions.searcheverywhere.FoundItemDescriptor
 import com.intellij.ide.actions.searcheverywhere.SearchEverywhereContributor
 import com.intellij.ide.actions.searcheverywhere.SearchEverywhereContributorFactory
@@ -20,27 +19,7 @@ class ApiWeightedSearchEverywhereContributor(initEvent: AnActionEvent) :
     private val project = initEvent.project!!
 
     override fun getElementsRenderer(): ListCellRenderer<in RequestNavigationItem> {
-        return SearchEverywherePsiRenderer(this)
-    }
-
-    override fun getGroupName(): String {
-        return "Apis"
-    }
-
-    override fun getSortWeight(): Int {
-        return 900
-    }
-
-    override fun isEmptyPatternSupported(): Boolean {
-        return true
-    }
-
-    override fun isShownInSeparateTab(): Boolean {
-        return true
-    }
-
-    override fun isDumbAware(): Boolean {
-        return isDumb(project)
+        return RequestPsiElementListCellRenderer()
     }
 
     override fun processSelectedItem(selected: RequestNavigationItem, modifiers: Int, searchText: String): Boolean {
@@ -64,14 +43,14 @@ class ApiWeightedSearchEverywhereContributor(initEvent: AnActionEvent) :
                 .forEach { module ->
                     progressIndicator.checkCanceled()
 
-                    val requestMap = ScanRequest.getCacheRequestMap(module, progressIndicator)
+                    val requestMap = ScanRequest.getCacheRequestMap(module, project, progressIndicator)
 
                     if (pattern.isEmpty()) {
                         requestMap.entries
-                            .take(50)
+                            .take(30)
                             .forEach {
                                 it.value
-                                    .filter { request -> request.psiElement != null }
+                                    .filter { request -> request.psiElement?.node != null }
                                     .forEach { request ->
                                         consumer.process(FoundItemDescriptor(RequestNavigationItem(request, module), 1))
                                     }
@@ -87,7 +66,7 @@ class ApiWeightedSearchEverywhereContributor(initEvent: AnActionEvent) :
                         }
                         .forEach {
                             it.value
-                                .filter { request -> request.psiElement != null }
+                                .filter { request -> request.psiElement?.node != null }
                                 .forEach { request ->
                                     consumer.process(FoundItemDescriptor(RequestNavigationItem(request, module), 10))
                                 }
@@ -99,6 +78,30 @@ class ApiWeightedSearchEverywhereContributor(initEvent: AnActionEvent) :
         ProgressIndicatorUtils.yieldToPendingWriteActions()
         @Suppress("UsagesOfObsoleteApi", "DEPRECATION")
         ProgressIndicatorUtils.runInReadActionWithWriteActionPriority(fetchRunnable, progressIndicator)
+    }
+
+    override fun getGroupName(): String {
+        return "Apis"
+    }
+
+    override fun getSortWeight(): Int {
+        return 900
+    }
+
+    override fun isEmptyPatternSupported(): Boolean {
+        return true
+    }
+
+    override fun isShownInSeparateTab(): Boolean {
+        return true
+    }
+
+    override fun isDumbAware(): Boolean {
+        return isDumb(project)
+    }
+
+    override fun getDataForItem(element: RequestNavigationItem, dataId: String): Any {
+        return element.psiMethod
     }
 
     override fun getSearchProviderId(): String {

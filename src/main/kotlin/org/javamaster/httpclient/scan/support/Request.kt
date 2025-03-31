@@ -47,4 +47,24 @@ class Request(
         return this.path + "-" + method.name
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Request
+
+        if (psiElement != other.psiElement) return false
+        if (method != other.method) return false
+        if (path != other.path) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = psiElement?.hashCode() ?: 0
+        result = 31 * result + method.hashCode()
+        result = 31 * result + path.hashCode()
+        return result
+    }
+
 }
