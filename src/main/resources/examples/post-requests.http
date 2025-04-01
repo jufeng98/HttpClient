@@ -1,4 +1,4 @@
-### 带有json入参
+### with json param
 POST https://miao.baidu.com/abdr
 Content-Type: application/json
 
@@ -7,7 +7,7 @@ Content-Type: application/json
   "value": "content"
 }
 
-### 请求体内引用内置方法和内置变量
+### Request body with builtin methods and builtin variables
 POST https://miao.baidu.com/abdr
 Content-Type: application/json
 
@@ -22,7 +22,7 @@ Content-Type: application/json
   "price2": {{$randomInt}}
 }
 
-### 复杂multipart请求
+### Complex multipart request
 # @connectTimeout 6
 # @readTimeout 6
 POST https://miao.baidu.com/abdr

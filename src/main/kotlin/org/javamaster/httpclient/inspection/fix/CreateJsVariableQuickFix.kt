@@ -104,7 +104,7 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
             preRequestHandler.preRequestScript.scriptBody!!
         }
 
-        // 将光标移动到引号内
+        // Move the cursor into the quotation marks
         val jsVariable = JsFacade.resolveJsVariable(variableName, project, listOf(scriptBody))!!
         (jsVariable.parent.lastChild.prevSibling as Navigatable).navigate(true)
         val caretModel = FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return

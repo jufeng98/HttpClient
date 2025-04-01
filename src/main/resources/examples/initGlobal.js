@@ -1,7 +1,7 @@
 // noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst,JSUnresolvedReference
 // noinspection ES6ConvertVarToLetConst
 
-// 切记由于范围问题该文件不能访问 javaBridge 桥接对象
+// Note that the file cannot access javaBridge objects due to the scope issues
 var client = {
     log: function (args) {
         const strList = [];
@@ -30,7 +30,7 @@ var client = {
             if (val !== null) {
                 val = val + '';
                 if (val.length > 300) {
-                    desc = val.substring(0, 300) + "...(已截断显示)"
+                    desc = val.substring(0, 300) + "...(The display has been truncated)"
                 } else {
                     desc = val;
                 }
@@ -39,7 +39,7 @@ var client = {
             }
 
             this.dataHolder[key] = val;
-            globalLog.log(key + ' 已设置为(global): ' + desc);
+            globalLog.log(key + ' was set to(global): ' + desc);
         },
     },
     test: function (successMsg, assertCallback) {

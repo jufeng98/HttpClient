@@ -31,7 +31,7 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         val file = File(filePath)
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)
-            ?: throw FileNotFoundException("js文件不存在:${file.normalize()}")
+            ?: throw FileNotFoundException("Js file not exist: ${file.normalize()}")
 
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)
         val jsStr = document?.text ?: virtualFile.readText()
@@ -47,7 +47,7 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         val file = File(filePath)
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)
-            ?: throw FileNotFoundException("文件不存在:${file.normalize()}")
+            ?: throw FileNotFoundException("File not exist: ${file.normalize()}")
 
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)
         return document?.text ?: virtualFile.readText()
@@ -118,13 +118,13 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             val toPath = file.toPath()
 
             Files.write(toPath, bytes, StandardOpenOption.CREATE)
-            GlobalLog.log("完成转换base64并保存到文件:${file.normalize()}")
+            GlobalLog.log("Finish converted base64 and save to file: ${file.normalize()}")
 
             VirtualFileManager.getInstance().asyncRefresh(null)
 
             return true
         } catch (e: Exception) {
-            GlobalLog.log("base64ToFile处理失败:$e")
+            GlobalLog.log("base64ToFile handling failed:$e")
             return false
         }
     }

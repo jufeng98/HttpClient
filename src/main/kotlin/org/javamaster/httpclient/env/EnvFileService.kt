@@ -29,7 +29,7 @@ import java.io.File
 
 
 /**
- * 解析环境文件
+ * Resolve environment file
  *
  * @author yudong
  */
@@ -64,7 +64,7 @@ class EnvFileService(val project: Project) {
         val jsonValue = jsonFile.topLevelValue
 
         if (jsonValue !is JsonObject) {
-            throw IllegalArgumentException("配置文件:${jsonFile.virtualFile.path}格式不符合规范!")
+            throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} format does not conform to the specification!")
         }
 
         return jsonValue.propertyList.map { it.name }.toList()
@@ -206,7 +206,7 @@ class EnvFileService(val project: Project) {
                             "baseUrl": "https://pro.javamaster.org/bm-wash"
                           },
                           "common": {
-                            "contextPath": "/bm-wash"
+                            "contextPath": "/admin"
                           }
                         }
                     """.trimIndent()
@@ -238,7 +238,7 @@ class EnvFileService(val project: Project) {
                 val args = variableArgs?.toArgsList()
                 val name = variableName.name
 
-                // 支持环境文件内引用内置变量
+                // Support environment files that reference built-in variables
                 val innerVariableEnum = InnerVariableEnum.getEnum(name)
 
                 val result = innerVariableEnum?.exec(httpFileParentPath, *args ?: emptyArray()) ?: matchStr
@@ -334,13 +334,13 @@ class EnvFileService(val project: Project) {
 
             val topLevelValue = psiFile.topLevelValue
             if (topLevelValue !is JsonObject) {
-                throw IllegalArgumentException("配置文件:${psiFile.virtualFile.path}外层格式不符合规范!")
+                throw IllegalArgumentException("The environment file: ${psiFile.virtualFile.path} outer format does not conform to the specification!")
             }
 
             val envProperty = topLevelValue.findProperty(env) ?: return mapOf()
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
-                throw IllegalArgumentException("配置文件:${psiFile.virtualFile.path}内层格式不符合规范!")
+                throw IllegalArgumentException("The environment file: ${psiFile.virtualFile.path} inner format does not conform to the specification!")
             }
 
             val envFileService = getService(project)
@@ -393,14 +393,14 @@ class EnvFileService(val project: Project) {
 
             val topLevelValue = jsonFile.topLevelValue
             if (topLevelValue !is JsonObject) {
-                throw IllegalArgumentException("配置文件:${jsonFile.virtualFile.path}外层格式不符合规范!")
+                throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} outer format does not conform to the specification!")
             }
 
             val envProperty = topLevelValue.findProperty(env) ?: return null
 
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
-                throw IllegalArgumentException("配置文件:${jsonFile.virtualFile.path}内层格式不符合规范!")
+                throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} inner format does not conform to the specification!")
             }
 
             val jsonProperty = jsonValue.findProperty(key) ?: return null
@@ -421,7 +421,7 @@ class EnvFileService(val project: Project) {
                 }
 
                 else -> {
-                    throw IllegalArgumentException("配置文件:${jsonFile.virtualFile.path}最内层格式不符合规范!")
+                    throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} innermost format does not conform to the specification!!")
                 }
             }
         }

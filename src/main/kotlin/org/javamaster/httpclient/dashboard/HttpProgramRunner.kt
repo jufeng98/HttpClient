@@ -41,23 +41,18 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         val project = httpMethod.project
 
         if (httpMethod.containingFile.virtualFile.fileSystem is JarFileSystem) {
-            NotifyUtil.notifyWarn(project, "模板 http 文件仅作示例,不支持直接执行!")
+            NotifyUtil.notifyWarn(project, "Http template file only as an example, not support execute!")
             loadingRemover?.run()
             return
         }
 
         val tabName = HttpUtils.getTabName(httpMethod)
-        if (tabName.isEmpty()) {
-            NotifyUtil.notifyWarn(project, "请求名称不能为空!")
-            loadingRemover?.run()
-            return
-        }
 
         try {
             // tabName会用作文件名,因此需要检测下
             Path.of(tabName)
         } catch (e: InvalidPathException) {
-            NotifyUtil.notifyError(project, "包含不合法参数,请修改:" + e.message)
+            NotifyUtil.notifyError(project, "Request name contains illegal param, please fix:" + e.message)
             loadingRemover?.run()
             return
         }

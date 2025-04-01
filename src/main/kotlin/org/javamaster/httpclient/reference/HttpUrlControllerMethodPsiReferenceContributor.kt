@@ -6,7 +6,7 @@ import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.reference.provider.HttpUrlControllerMethodPsiReferenceProvider
 
 /**
- * 实现 Ctrl + 点击 url 的特定部分跳转到 Spring 对应的 Controller 方法
+ * Jump to the Spring Controller method when pressing Ctrl + click url
  *
  * @author yudong
  */

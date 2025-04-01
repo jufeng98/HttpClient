@@ -170,7 +170,7 @@ object HttpUtils {
 
     fun convertToReqBody(request: HttpRequest, variableResolver: VariableResolver): Any? {
         if (request.contentLength != null) {
-            throw IllegalArgumentException("不能有 Content-Length 请求头!")
+            throw IllegalArgumentException("Can't have Content-Length header!")
         }
 
         val body = request.body
@@ -185,7 +185,7 @@ object HttpUtils {
         val httpMultipartMessage = body?.multipartMessage
         if (httpMultipartMessage != null) {
             val boundary =
-                request.contentTypeBoundary ?: throw IllegalArgumentException("$CONTENT_TYPE 请求头缺少 boundary!")
+                request.contentTypeBoundary ?: throw IllegalArgumentException("$CONTENT_TYPE header missing boundary!")
             return constructMultipartBody(boundary, httpMultipartMessage, variableResolver)
         }
 
@@ -587,7 +587,7 @@ object HttpUtils {
                     return null
                 }
 
-                // 取得泛型参数类型
+                // Get the generic parameter type
                 fieldTypeCls = PsiUtils.resolvePsiType(classGenericParameters[0]) ?: return null
             } else {
                 fieldTypeCls = paramPsiCls
@@ -604,12 +604,12 @@ object HttpUtils {
 
                 val parameters = psiType.parameters
                 if (parameters.isNotEmpty()) {
-                    // 取得泛型参数类型
+                    // Get the generic parameter type
                     fieldTypeCls = PsiUtils.resolvePsiType(parameters[0]) ?: return null
                 } else {
                     val psiFieldTypeCls = PsiUtils.resolvePsiType(psiType) ?: return null
                     if (psiFieldTypeCls is PsiTypeParameter && classGenericParameters.isNotEmpty()) {
-                        // 参数本身是泛型类型,如 T, 直接取第一个
+                        // The parameter itself is a generic type, such as T, and the first one is taken directly
                         val genericActualType = classGenericParameters[0] as PsiClassType
                         if (genericActualType.parameters.isNotEmpty()) {
                             val psiFieldGenericTypeCls =

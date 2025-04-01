@@ -6,7 +6,7 @@ import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 
 /**
- * 通知弹框
+ * Notification pop-up
  *
  * @author yudong
  */

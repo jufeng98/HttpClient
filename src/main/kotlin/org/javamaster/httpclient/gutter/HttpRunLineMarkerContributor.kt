@@ -33,7 +33,7 @@ class HttpRunLineMarkerContributor : RunLineMarkerContributor() {
 
         val action = HttpAction(parent)
 
-        return Info(AllIcons.Actions.Execute, arrayOf(action)) { _ -> "执行请求" }
+        return Info(AllIcons.Actions.Execute, arrayOf(action)) { _ -> "Send request" }
     }
 
 }

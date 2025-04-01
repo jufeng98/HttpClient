@@ -15,13 +15,13 @@ class HttpDirectionNameCompletionProvider : CompletionProvider<CompletionParamet
         result: CompletionResultSet,
     ) {
         val builder1 = LookupElementBuilder.create(HttpUtils.CONNECT_TIMEOUT_NAME)
-            .withTypeText("http 和 ws 连接超时时间(整数,单位秒)", true)
+            .withTypeText("http and websocket connect timeout(positive number,unit: seconds)", true)
             .withInsertHandler(AddSpaceInsertHandler.INSTANCE)
         val builder2 = LookupElementBuilder.create(HttpUtils.READ_TIMEOUT_NAME)
-            .withTypeText("http 和 ws 读取超时时间(整数,单位秒)", true)
+            .withTypeText("http and websocket read timeout(positive number,unit: seconds)", true)
             .withInsertHandler(AddSpaceInsertHandler.INSTANCE)
         val builder3 = LookupElementBuilder.create(HttpUtils.TIMEOUT_NAME)
-            .withTypeText("dubbo 超时时间(整数, 单位毫秒)", true)
+            .withTypeText("dubbo connect timeout(positive number,unit: millisecond)", true)
             .withInsertHandler(AddSpaceInsertHandler.INSTANCE)
 
         result.addElement(builder1)

@@ -24,7 +24,7 @@ class HttpExecutor : Executor() {
     }
 
     override fun getDescription(): String {
-        return "Run select request"
+        return "Run selected request"
     }
 
     override fun getActionName(): String {

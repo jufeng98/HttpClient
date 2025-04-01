@@ -11,7 +11,7 @@ import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.utils.HttpUtils.generateAnno
 
 /**
- * 悬浮提示出入参的 json key 对应的 SpringMVC Controller 或 Dubbo Service 方法字段
+ * show SpringMVC Controller or Dubbo Service method param field information when hover in json key
  *
  * @author yudong
  */

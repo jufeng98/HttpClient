@@ -1,5 +1,5 @@
-### 预览图片
+### Preview image
 GET https://www.baidu.com/img/flexible/logo/pc/result.png
 
-### PDF响应
+### PDF response
 GET https://resources.jetbrains.com/storage/products/intellij-idea/docs/IntelliJIDEA_ReferenceCard.pdf

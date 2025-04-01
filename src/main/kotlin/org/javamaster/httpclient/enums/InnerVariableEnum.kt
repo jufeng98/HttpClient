@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadLocalRandom
 enum class InnerVariableEnum(val methodName: String) {
     RANDOM_ALPHABETIC("\$random.alphabetic") {
         override fun typeText(): String {
-            return "用法:$methodName(8)"
+            return "Usage: $methodName(8)"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -34,7 +34,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_ALPHA_NUMERIC("\$random.alphanumeric") {
         override fun typeText(): String {
-            return "用法:$methodName(8)"
+            return "Usage: $methodName(8)"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -52,7 +52,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NUMBER("\$random.numeric") {
         override fun typeText(): String {
-            return "用法:$methodName(8)"
+            return "Usage: $methodName(8)"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -70,7 +70,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_UUID("\$random.uuid") {
         override fun typeText(): String {
-            return "调用 UUID.randomUUID() 并去掉其-"
+            return "Called UUID.randomUUID() and remove the - symbol"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -79,7 +79,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_INT("\$randomInt") {
         override fun typeText(): String {
-            return "生成 [0, 1000) 范围数字"
+            return "Generate the number of range [0, 1000)"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -88,7 +88,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_INTEGER("\$random.integer") {
         override fun typeText(): String {
-            return "用法:$methodName(0, 80)"
+            return "Usage: $methodName(0, 80)"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -107,7 +107,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     TIMESTAMP("\$timestamp") {
         override fun typeText(): String {
-            return "时间戳"
+            return "Timestamp"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -116,7 +116,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     IMAGE_TO_BASE64("\$imageToBase64") {
         override fun typeText(): String {
-            return "用法:$methodName('图片的绝对或相对路径')"
+            return "Usage: $methodName('The absolute or relate path of image file')"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -139,7 +139,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     READ_STRING("\$readString") {
         override fun typeText(): String {
-            return "用法:$methodName('图片的绝对或相对路径')"
+            return "Usage: $methodName('The absolute or relate path of image file')"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -160,7 +160,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_ADDRESS("\$random.address.full") {
         override fun typeText(): String {
-            return "生成完整地址"
+            return "Generate complete address"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -169,7 +169,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_BOOL("\$random.bool") {
         override fun typeText(): String {
-            return "生成布尔值"
+            return "Generate boolean value"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -178,7 +178,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NAME("\$random.name") {
         override fun typeText(): String {
-            return "生成用户名"
+            return "Generate user name"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -187,7 +187,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_BOOK_TITLE("\$random.book.title") {
         override fun typeText(): String {
-            return "生成标题"
+            return "Generate title"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -196,7 +196,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_APP_NAME("\$random.app.name") {
         override fun typeText(): String {
-            return "生成app名称"
+            return "Generate app name"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -205,7 +205,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_COMPANY_NAME("\$random.company.name") {
         override fun typeText(): String {
-            return "生成公司名称"
+            return "Generate company name"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -214,7 +214,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_HERO_NAME("\$random.hero.name") {
         override fun typeText(): String {
-            return "生成hero名称"
+            return "Generate hero name"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -223,7 +223,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NATION_NAME("\$random.nation.name") {
         override fun typeText(): String {
-            return "生成国家首都"
+            return "Generate national capital"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -232,7 +232,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_UNIVERSITY_NAME("\$random.university.name") {
         override fun typeText(): String {
-            return "生成大学"
+            return "Generate university name"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -241,7 +241,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     PICK("\$random.pick") {
         override fun typeText(): String {
-            return "从给定的选项中随机挑选一个，用法:$methodName(23, 46) 或 $methodName('Jack', 'Rose')"
+            return "Pick one at random from the given options, Usage: $methodName(23, 46) or $methodName('Jack', 'Rose')"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -258,7 +258,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     MVN_TARGET("\$mvnTarget") {
         override fun typeText(): String {
-            return "指向模块的 target 目录"
+            return "Module target folder"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -277,7 +277,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     PROJECT_ROOT("\$projectRoot") {
         override fun typeText(): String {
-            return "指向项目根目录"
+            return "Project root folder"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -290,7 +290,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     HISTORY_FOLDER("\$historyFolder") {
         override fun typeText(): String {
-            return "指向 .idea/httpClient"
+            return "Mean .idea/httpClient"
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {

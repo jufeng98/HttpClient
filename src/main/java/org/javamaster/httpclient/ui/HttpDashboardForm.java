@@ -155,10 +155,10 @@ public class HttpDashboardForm implements Disposable {
         jPanelReq.setLayout(new BorderLayout());
 
         JTextArea jTextAreaReq = new JTextArea();
-        jTextAreaReq.setToolTipText("请输入ws消息");
+        jTextAreaReq.setToolTipText("Please input ws message");
         jPanelReq.add(new JBScrollPane(jTextAreaReq), BorderLayout.CENTER);
 
-        JButton jButtonSend = new JButton("发送ws消息");
+        JButton jButtonSend = new JButton("Send ws message");
         jButtonSend.addActionListener(e -> {
             String text = jTextAreaReq.getText();
             wsRequest.sendWsMsg(text);

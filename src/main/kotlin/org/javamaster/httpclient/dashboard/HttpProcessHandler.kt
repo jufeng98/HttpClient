@@ -37,6 +37,9 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import javax.swing.JPanel
 
+/**
+ * @author yudong
+ */
 class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String?) : ProcessHandler() {
     val tabName = HttpUtils.getTabName(httpMethod)
     val project = httpMethod.project
@@ -160,7 +163,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 val byteArray = pair.first
                 val consumeTimes = pair.second
 
-                val httpResDescList = mutableListOf("// 耗时: ${consumeTimes}ms,大小:${byteArray.size / 1024.0}kb\r\n")
+                val httpResDescList = mutableListOf("// time consuming: ${consumeTimes}ms,size: ${byteArray.size / 1024.0}kb\r\n")
 
                 val evalJsRes = jsExecutor.evalJsAfterRequest(
                     jsAfterReq,
@@ -169,7 +172,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     mutableMapOf()
                 )
                 if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("/*\r\n后置js执行结果:\r\n")
+                    httpResDescList.add("/*\r\npost js executed result:\r\n")
                     httpResDescList.add("$evalJsRes\r\n")
                     httpResDescList.add("*/\r\n")
                 }
@@ -227,7 +230,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     val resPair = convertToResPair(response)
 
                     val httpResDescList =
-                        mutableListOf("// status: ${response.statusCode()} 耗时: ${consumeTimes}ms 大小: $size KB\r\n")
+                        mutableListOf("// status: ${response.statusCode()}, time consuming: ${consumeTimes}ms, size: $size KB\r\n")
 
                     val evalJsRes = jsExecutor.evalJsAfterRequest(
                         jsAfterReq,
@@ -237,7 +240,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     )
 
                     if (!evalJsRes.isNullOrEmpty()) {
-                        httpResDescList.add("/*\r\n后置js执行结果:\r\n")
+                        httpResDescList.add("/*\r\npost js executed result:\r\n")
                         httpResDescList.add("$evalJsRes\r\n")
                         httpResDescList.add("*/\r\n")
                     }
@@ -302,14 +305,14 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             myThrowable.printStackTrace()
 
             val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
-                "已中断${tabName}请求!"
+                "The request $tabName has been interrupted!"
             } else {
-                "${tabName}请求失败,异常信息:${myThrowable}"
+                "$tabName request failed, exception: $myThrowable"
             }
             val msg = "<div style='font-size:13pt'>$error</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)
         } else {
-            val msg = "<div style='font-size:13pt'>${tabName}请求成功!</div>"
+            val msg = "<div style='font-size:13pt'>$tabName request success!</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
         }
     }
@@ -339,12 +342,12 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            return "// 保存失败: $e\r\n"
+            return "// Save to file failed: $e\r\n"
         }
 
         VirtualFileManager.getInstance().asyncRefresh(null)
 
-        return "// 响应已保存到 ${file.normalize().absolutePath}\r\n"
+        return "// Response has been saved to file: ${file.normalize().absolutePath}\r\n"
     }
 
     private fun cancelFutureIfTerminated(future: CompletableFuture<*>) {

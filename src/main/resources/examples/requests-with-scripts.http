@@ -1,31 +1,31 @@
 <! {%
-    // 全局前置处理器
+    // Global js previous handler
     client.global.clearAll();
     client.global.set('globalName', 'jufeng98');
     request.variables.set('requestName', 'jufeng9878');
 
     const secret = "RHDcnjfmkES"
     const signSource = secret + request.body.string() + secret;
-    // 使用内置的 CryptoJS 对象
+    // Use builtin CryptoJS object
     const sign = CryptoJS.MD5(signSource)
     request.variables.set('sign', sign);
     console.log("sign:", sign);
 
     const params = new URLSearchParams();
     params.append("name", "yu");
-    console.log("查询参数:", params.toString());
+    console.log("query param:", params.toString());
 
-    // 执行自定义的 js 文件
+    // Execute pre defined js file
     const global = require('./myUtils.js');
     const res = global.MyUtils.isBlank('hello');
-    client.log(`结果:${res}`);
+    client.log(`result: ${res}`);
 %}
 
-// 全局变量
+// Global variables
 @tokenAdmin={{token}}
 @name=jufeng
 
-### 使用变量
+### use variable
 < {%
     // 请求前置处理器
     request.variables.set('cnName', 'jufeng987878');
@@ -47,7 +47,7 @@ Cn-Name: {{cnName}}
 
 >> result.html
 
-### 后置js处理器
+### post js handler
 GET https://miao.baidu.com/abdr
 
 > {%
@@ -63,7 +63,7 @@ GET https://miao.baidu.com/abdr
     })
 %}
 
-### 检查响应体
+### Check response body
 GET https://miao.baidu.com/abdr
 
 > {%
@@ -72,7 +72,7 @@ GET https://miao.baidu.com/abdr
     })
 %}
 
-### 检查 Content-Type from headers
+### Check Content-Type from headers
 GET https://miao.baidu.com/abdr
 
 > {%
@@ -82,7 +82,7 @@ GET https://miao.baidu.com/abdr
     })
 %}
 
-### 操作xml
+### Operate xml
 GET https://examples.http-client.intellij.net/xml
 
 > {%

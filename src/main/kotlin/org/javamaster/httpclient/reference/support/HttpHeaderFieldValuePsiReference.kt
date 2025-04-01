@@ -54,7 +54,7 @@ class HttpHeaderFieldValuePsiReference(fieldValue: HttpHeaderFieldValue, range: 
                 }
 
                 if (methods.size > 1) {
-                    println("解析到${methods.size}多个同名方法,直接取第一个")
+                    println("Founded ${methods.size} methods of the same name, get the first one")
                 }
 
                 return methods[0]

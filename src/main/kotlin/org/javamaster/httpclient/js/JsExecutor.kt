@@ -22,7 +22,7 @@ import javax.xml.xpath.XPath
 import javax.xml.xpath.XPathFactory
 
 /**
- * 执行请求的前置js和后置js脚本(永远是在 EDT 线程中执行)
+ * Execute the previous and post request js scripts (always executed in the EDT thread)
  *
  * @author yudong
  */
@@ -33,7 +33,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global
 
-        // 注册js桥接对象 javaBridge
+        // Register js bridge object javaBridge
         val javaBridge = Context.javaToJS(JavaBridge(this), scriptableObject)
         ScriptableObject.putProperty(scriptableObject, "javaBridge", javaBridge)
 
@@ -110,7 +110,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
         GlobalLog.setTabName(tabName)
 
-        val resList = mutableListOf("/*\r\n前置js执行结果:\r\n")
+        val resList = mutableListOf("/*\r\nprevious js executed result:\r\n")
 
         val virtualFile = jsListBeforeReq[0].containingFile.virtualFile
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
@@ -309,7 +309,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             var url = Companion::class.java.classLoader.getResource("examples/crypto-js.js")!!
             var jsStr = url.readText(StandardCharsets.UTF_8)
             context.evaluateString(global, jsStr, "crypto-js.js", 1, null)
-            // 注册 CryptoJS 对象
+            // Register CryptoJS object
             global.prototype.put("CryptoJS", global, global.get("CryptoJS"))
 
             val globalLog = Context.javaToJS(GlobalLog, global)

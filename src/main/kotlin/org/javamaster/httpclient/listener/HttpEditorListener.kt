@@ -20,7 +20,7 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.NotifyUtil
 
 /**
- * 为 http 文件添加顶部工具栏
+ * Add a top toolbar to the http file
  *
  * @author yudong
  */
@@ -54,7 +54,7 @@ class HttpEditorListener : FileEditorManagerListener {
             runInEdt(getState()) {
                 runWriteAction {
                     fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
-                    println("已将 json 后缀文件与 $jsonFileType 关联起来")
+                    println("The json suffix file has been associated with the $jsonFileType")
 
                     initTopForm(source, file, module, project, fileEditor)
                 }
@@ -89,7 +89,7 @@ class HttpEditorListener : FileEditorManagerListener {
     }
 
     private fun getState(): ModalityState {
-        // 兼容下旧版
+        // Compatible with older versions
         val cls = ModalityState::class.java
         try {
             val method = cls.getDeclaredMethod("nonModal")

@@ -16,7 +16,7 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
 /**
- * 发起 http 请求
+ * Sending http request
  *
  * @author yudong
  */
@@ -188,7 +188,7 @@ enum class HttpRequestEnum {
 
                 else -> {
                     if (reqBody != null) {
-                        println("未知类型:${reqBody.javaClass}")
+                        println("Unknown type: ${reqBody.javaClass}")
                     }
                 }
             }
@@ -222,14 +222,14 @@ enum class HttpRequestEnum {
                 httpReqDescList.add("Content-Length: $contentLength\r\n")
 
                 val contentLengthKb = contentLength / 1024.0
-                httpReqDescList.add(0, "// 大小: $contentLengthKb KB\r\n")
+                httpReqDescList.add(0, "// Size: $contentLengthKb KB\r\n")
             }
             httpReqDescList.add("\r\n")
 
             if (reqBody is String) {
                 val max = 50000
                 if (reqBody.length > max) {
-                    httpReqDescList.add(reqBody.substring(0, max) + "\r\n......(内容过长,已截断显示)")
+                    httpReqDescList.add(reqBody.substring(0, max) + "\r\n......(The content is too long and has been truncated)")
                 } else {
                     httpReqDescList.add(reqBody)
                 }
@@ -240,7 +240,7 @@ enum class HttpRequestEnum {
                     val max = 10000
                     if (it.size > max) {
                         val bytes = it.copyOfRange(0, max)
-                        httpReqDescList.add(String(bytes) + " \r\n......(内容过长,已截断显示)\r\n")
+                        httpReqDescList.add(String(bytes) + " \r\n......(The content is too long and has been truncated)\r\n")
                     } else {
                         httpReqDescList.add(String(it))
                     }
@@ -267,7 +267,7 @@ enum class HttpRequestEnum {
             try {
                 return HttpRequestEnum.valueOf(name)
             } catch (e: Exception) {
-                throw UnsupportedOperationException("方法不受支持:$name", e)
+                throw UnsupportedOperationException("Method not supported:$name", e)
             }
         }
     }

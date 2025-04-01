@@ -9,7 +9,7 @@ import org.javamaster.httpclient.dashboard.HttpProgramRunner.Companion.HTTP_RUNN
 import org.javamaster.httpclient.psi.HttpMethod
 
 /**
- * 处理点击事件并发起请求
+ * Handle click event and sending request
  *
  * @author yudong
  */

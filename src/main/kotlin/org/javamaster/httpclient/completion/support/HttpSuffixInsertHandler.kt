@@ -16,7 +16,8 @@ class HttpSuffixInsertHandler(private val mySuffix: String) : InsertHandler<Look
         val editor = context.editor
         val document = editor.document
 
-        // LookupElementBuilder 设置了 caseSensitive 属性补全后不知为何会变成小写,这里强制纠正过来
+        // When LookupElementBuilder Set the caseSensitive property to true, For some reason,
+        // it becomes lowercase after completion. Here, we force correction
         val text = item.lookupString
         document.replaceString(context.startOffset, context.tailOffset, text)
 

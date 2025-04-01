@@ -7,7 +7,7 @@ import com.intellij.psi.util.PsiModificationTracker
 import java.util.function.Predicate
 
 /**
- * 只追踪 SpringMVC Controller 类的变化
+ * Only track the SpringMVC Controller class changed
  *
  * @see ControllerPsiTreeChangePreprocessor
  * @author yudong

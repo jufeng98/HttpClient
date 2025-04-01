@@ -21,11 +21,11 @@ object VirtualFileUtils {
 
     fun readNewestBytes(file: File): ByteArray {
         if (!file.exists()) {
-            throw IllegalArgumentException("文件 ${file.absoluteFile.normalize().absolutePath} 不存在!")
+            throw IllegalArgumentException("File ${file.absoluteFile.normalize().absolutePath} not exist!")
         }
 
         if (file.isDirectory) {
-            throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} 不是文件!")
+            throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} not file!")
         }
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
@@ -44,11 +44,11 @@ object VirtualFileUtils {
 
     fun readNewestContent(file: File): String {
         if (!file.exists()) {
-            throw IllegalArgumentException("文件 ${file.absoluteFile.normalize().absolutePath} 不存在!")
+            throw IllegalArgumentException("File ${file.absoluteFile.normalize().absolutePath} not exist!")
         }
 
         if (file.isDirectory) {
-            throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} 不是文件!")
+            throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} not file!")
         }
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)!!

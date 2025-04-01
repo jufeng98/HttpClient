@@ -9,7 +9,7 @@ import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.utils.HttpUtils.getTargetHttpMethod
 
 /**
- * 支持 Service 工具窗口的双击动作,跳转到对应的文件请求
+ * Support Service tool window double click action, jump to request of the corresponding file.
  *
  * @author yudong
  */

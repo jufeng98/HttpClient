@@ -39,7 +39,7 @@ public class ViewVariableForm extends DialogWrapper {
         setModal(false);
         setResizable(false);
         setOKButtonText("Close");
-        setTitle("可用变量");
+        setTitle("Available Variables");
 
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setCellSelectionEnabled(true);
@@ -100,21 +100,21 @@ public class ViewVariableForm extends DialogWrapper {
         VariableResolver variableResolver = new VariableResolver(jsExecutor, httpFile, selectedEnv);
 
         LinkedHashMap<String, String> fileGlobalVariables = variableResolver.getFileGlobalVariables();
-        resList.add(new Pair<>("http文件全局变量(优先级最高)", fileGlobalVariables));
+        resList.add(new Pair<>("http file global variables(Highest priority)", fileGlobalVariables));
 
         Map<String, String> variableMap = variableResolver.getJsGlobalVariables();
-        resList.add(new Pair<>("js全局变量(优先级次之)", variableMap));
+        resList.add(new Pair<>("js global variables(middle priority)", variableMap));
 
         Map<String, String> envMap = EnvFileService.Companion.getEnvMap(project, false);
-        resList.add(new Pair<>("环境文件变量(优先级较低)", envMap));
+        resList.add(new Pair<>("environment file variables(lower priority)", envMap));
 
         Map<String, String> propMap = Maps.newLinkedHashMap();
         System.getProperties().forEach((key, value) -> propMap.put(PROPERTY_PREFIX + "." + key, value + ""));
-        resList.add(new Pair<>("系统属性变量(优先级最低)", propMap));
+        resList.add(new Pair<>("System property variables(lowest priority)", propMap));
 
         Map<String, String> eMap = Maps.newLinkedHashMap();
         System.getenv().forEach((key, value) -> eMap.put(ENV_PREFIX + "." + key, value));
-        resList.add(new Pair<>("系统环境变量(优先级最低)", eMap));
+        resList.add(new Pair<>("System environment variables(lowest priority)", eMap));
 
         return resList;
     }
@@ -149,7 +149,7 @@ public class ViewVariableForm extends DialogWrapper {
 
             Map<String, String> map = pair.getSecond();
             if (map.isEmpty()) {
-                rowData[i][0] = "暂无数据";
+                rowData[i][0] = "No data available";
                 rowData[i][1] = "";
                 i++;
             } else {

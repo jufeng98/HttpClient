@@ -11,6 +11,7 @@ import javax.swing.*;
 public class HttpFileType extends LanguageFileType {
 
     public static final HttpFileType INSTANCE = new HttpFileType();
+    public static final String DEFAULT_EXTENSION = "http";
 
     private HttpFileType() {
         super(HttpLanguage.INSTANCE);
@@ -31,7 +32,7 @@ public class HttpFileType extends LanguageFileType {
     @NotNull
     @Override
     public String getDefaultExtension() {
-        return "http";
+        return DEFAULT_EXTENSION;
     }
 
     @Override

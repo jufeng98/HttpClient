@@ -7,7 +7,7 @@ import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.impl.source.tree.LeafElement
 
 /**
- * 为元素添加注入功能支持
+ * Add element injection support
  *
  * @author yudong
  */

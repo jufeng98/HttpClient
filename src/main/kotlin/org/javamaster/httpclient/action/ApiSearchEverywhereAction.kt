@@ -9,7 +9,7 @@ import org.javamaster.httpclient.symbol.ApisGotoSEContributor
  */
 class ApiSearchEverywhereAction : SearchEverywhereBaseAction() {
     override fun update(event: AnActionEvent) {
-        event.presentation.text = "Search Apis"
+        event.presentation.text = "Search Api"
     }
 
     override fun actionPerformed(e: AnActionEvent) {

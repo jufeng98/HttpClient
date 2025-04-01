@@ -25,7 +25,8 @@ object ScanRequest {
 
         val requests = requestMap["$searchTxt-$method"] ?: return null
 
-        // 这里可能有多个控制器方法,简单起见直接取第一个,不在根据 SpringMVC 的映射规则做复杂判断
+        // There may be more than one controller method here, so for simplicity, take the first one directly,
+        // without making complex judgments based on the mapping rules of SpringMVC
         val request = requests[0]
 
         return request.psiElement

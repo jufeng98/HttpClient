@@ -7,7 +7,7 @@ import com.intellij.psi.PsiReferenceRegistrar
 import org.javamaster.httpclient.reference.provider.JsonKeyDubboServiceMethodFieldPsiReferenceProvider
 
 /**
- *实现 Ctrl + 点击 json 属性进而跳转到对应的  Dubbo 方法的出入参字段
+ * Jump to the Dubbo service method param field when pressing Ctrl + click json key
  *
  * @author yudong
  */

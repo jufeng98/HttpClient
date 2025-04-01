@@ -124,7 +124,7 @@ object JavaScript {
         val elementCopy = injectedPsiFile.add(newExpressionStatement)
         injectedPsiFile.add(newExpressionStatement.nextSibling)
 
-        // 将光标移动到引号内
+        // Move the cursor into the quotation marks
         (elementCopy.lastChild as Navigatable).navigate(true)
         val caretModel =
             FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return newExpressionStatement

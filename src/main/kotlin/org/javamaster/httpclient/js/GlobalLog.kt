@@ -3,7 +3,7 @@ package org.javamaster.httpclient.js
 import org.springframework.util.LinkedMultiValueMap
 
 /**
- * 收集 js 执行日志
+ * Collect js executed log
  */
 object GlobalLog {
     private var tabName: String? = null

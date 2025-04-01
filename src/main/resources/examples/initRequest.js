@@ -20,7 +20,7 @@ var request = {
             if (val !== null) {
                 val = val + '';
                 if (val.length > 300) {
-                    desc = val.substring(0, 300) + "...(已截断显示)"
+                    desc = val.substring(0, 300) + "...(The display has been truncated)"
                 } else {
                     desc = val;
                 }
@@ -29,7 +29,7 @@ var request = {
             }
 
             this.dataHolder[key] = val;
-            globalLog.log(key + ' 已设置为(request): ' + desc);
+            globalLog.log(key + ' was set to(request): ' + desc);
         },
     }
 };

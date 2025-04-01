@@ -11,7 +11,7 @@ import com.intellij.psi.PsiMethod
 import org.javamaster.httpclient.utils.HttpUtils.generateAnno
 
 /**
- * 悬浮提示对应的 SpringMVC Controller 方法
+ * show SpringMVC Controller method information when hover in url
  *
  * @author yudong
  */

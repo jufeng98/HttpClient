@@ -11,7 +11,7 @@ import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import java.util.regex.Pattern
 
 /**
- * 解析变量
+ * Resolve variable
  *
  * @author yudong
  */

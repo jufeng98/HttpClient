@@ -15,7 +15,9 @@ import org.springframework.util.LinkedMultiValueMap
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 
-
+/**
+ * @author yudong
+ */
 class DubboRequest(
     private val tabName: String,
     private val url: String,
@@ -26,7 +28,7 @@ class DubboRequest(
     private val paramMap: Map<String, String>,
 ) {
     private val methodName: String by lazy {
-        val values = reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException("缺少 Method 请求头!")
+        val values = reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException("Missing Method header!")
         values[0]
     }
     private val interfaceCls: String? by lazy {
@@ -59,7 +61,7 @@ class DubboRequest(
         if (interfaceCls != null) {
             targetInterfaceName = interfaceCls!!
             val psiClass = DubboUtils.findInterface(module, interfaceCls!!)
-                ?: throw IllegalArgumentException("无法解析接口:${interfaceCls}!")
+                ?: throw IllegalArgumentException("Can't resolve interface: ${interfaceCls}!")
 
             val targetMethod = findTargetMethod(psiClass, reqBodyMap)
 
@@ -78,7 +80,7 @@ class DubboRequest(
                 .toTypedArray()
         } else {
             if (interfaceName == null) {
-                throw IllegalArgumentException("请求头 ${DubboUtils.INTERFACE_KEY} 和 ${DubboUtils.INTERFACE_NAME} 不能同时为空!")
+                throw IllegalArgumentException("Header ${DubboUtils.INTERFACE_KEY} and ${DubboUtils.INTERFACE_NAME} can't be blank at the same time!")
             }
 
             targetInterfaceName = interfaceName!!
@@ -93,7 +95,7 @@ class DubboRequest(
 
                 for (entry in paramNames) {
                     val paramName = "${entry.key}"
-                    val argTypes = reqHeaderMap[paramName] ?: throw IllegalArgumentException("缺少${paramName}请求头")
+                    val argTypes = reqHeaderMap[paramName] ?: throw IllegalArgumentException("Missing $paramName header!")
                     tmpTypeList.add(argTypes[0])
                     tmpValueList.add(entry.value)
                 }
@@ -170,7 +172,7 @@ class DubboRequest(
     private fun findTargetMethod(psiClass: PsiClass, reqMap: LinkedHashMap<*, *>?): PsiMethod {
         val methods = psiClass.findMethodsByName(methodName, false)
         if (methods.isEmpty()) {
-            throw IllegalArgumentException("方法${methodName}不存在!")
+            throw IllegalArgumentException("Method $methodName not exist!")
         }
 
         val method: PsiMethod?
@@ -192,7 +194,7 @@ class DubboRequest(
             }.firstOrNull()
 
             if (method == null) {
-                throw IllegalArgumentException("根据方法参数名${paramNames}无法匹配方法:${methodName}!")
+                throw IllegalArgumentException("According to the method param $paramNames can't match method: ${methodName}!")
             }
         }
 

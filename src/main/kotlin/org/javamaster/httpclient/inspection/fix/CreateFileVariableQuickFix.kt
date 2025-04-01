@@ -68,7 +68,7 @@ class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickF
         val caretModel = editor.caretModel
         val offset = caretModel.offset
 
-        // 将光标移动到 value 处
+        // Move the cursor to the value
         document.insertString(offset, " ")
         caretModel.moveToOffset(offset + 1)
     }

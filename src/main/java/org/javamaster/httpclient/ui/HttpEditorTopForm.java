@@ -90,14 +90,14 @@ public class HttpEditorTopForm extends JComponent {
         VirtualFile envFile = EnvFileService.Companion.createEnvFile(envFileName, isPrivate, project);
         exampleComboBox.setSelectedIndex(0);
         if (envFile == null) {
-            NotifyUtil.INSTANCE.notifyWarn(project, envFileName + "环境文件已存在!");
+            NotifyUtil.INSTANCE.notifyWarn(project, envFileName + " Environment file already exist!");
             return;
         }
 
         FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
         fileEditorManager.openFile(envFile, true);
 
-        NotifyUtil.INSTANCE.notifyInfo(project, "成功创建环境文件:" + envFileName);
+        NotifyUtil.INSTANCE.notifyInfo(project, "The environment file was successfully created: " + envFileName);
 
         try {
             Module module = ModuleUtil.findModuleForFile(envFile, project);

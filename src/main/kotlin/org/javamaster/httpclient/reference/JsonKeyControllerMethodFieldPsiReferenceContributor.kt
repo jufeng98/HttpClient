@@ -7,7 +7,7 @@ import com.intellij.psi.PsiReferenceRegistrar
 import org.javamaster.httpclient.reference.provider.JsonKeyControllerMethodFieldPsiReferenceProviderCoolRequest
 
 /**
- *实现 Ctrl + 点击 json 属性进而跳转到 SpringMVC 对应的 Controller 方法的出入参的 Bean 字段
+ * Jump to the SpringMVC Controller method param Bean field when pressing Ctrl + click json key
  *
  * @author yudong
  */
