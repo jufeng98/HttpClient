@@ -53,7 +53,7 @@ object HttpUtils {
     const val TIMEOUT_NAME = "timeout"
     const val CONNECT_TIMEOUT_NAME = "connectTimeout"
 
-    const val READ_TIMEOUT = 10L
+    const val READ_TIMEOUT = 3600L
     const val CONNECT_TIMEOUT = 30L
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
@@ -468,7 +468,7 @@ object HttpUtils {
                 tmpIdx = if (contextPath == null) {
                     url.indexOf(uri.path)
                 } else {
-                    url.indexOf(contextPath) + contextPath.length
+                    url.indexOf(contextPath)
                 }
             } catch (e: Exception) {
                 return null
