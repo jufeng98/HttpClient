@@ -9,11 +9,14 @@
 - 支持发起 Dubbo 请求
 - 支持环境变量、内置变量和内置方法
 - 支持从 url 跳转到对应的 SpringMVC Controller 方法
+- url 悬浮提示对应的 SpringMVC Controller 方法信息
 - 支持从 json 属性跳转到对应的 SpringMVC Controller 方法的出入参 Bean 字段
+- json 属性悬浮提示对应的 SpringMVC Controller 方法的出入参 Bean 字段信息
 - 支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器(JavaScript 语法高亮功能依赖 WebCalm 插件)
 - 支持从文件读取内容作为请求体
 - 支持保存响应到文件
 - 支持预览图片
+- 支持在 SearchEverywhere 窗口搜索 SpringMVC Api
 
 ### 开始使用
 
@@ -60,6 +63,10 @@
 #### json 属性悬浮提示 SpringMVC Controller 方法出入参 Bean 字段
 
 ![json-key-hover.png](./images/json-key-hover.png)
+
+#### 在 SearchEverywhere 窗口搜索 SpringMVC Api
+
+![search-everywhere.png](./images/search-everywhere.png)
 
 #### js处理器和全局变量
 
