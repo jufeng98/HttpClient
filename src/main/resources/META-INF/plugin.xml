@@ -11,18 +11,21 @@
                 <li>Support sending WebSocket request</li>
                 <li>Support sending Dubbo request</li>
                 <li>Support Environment, build-in variable and build-in method</li>
-                <li>Support jump to Spring Controller method from url(Depend on Cool Request plugin)</li>
-                <li>Support jump to Spring Controller method bean field from json property(Depend on Cool Request plugin)</li>
-                <li>Support JavaScript previous handler, post handler and global handler(JavaScript syntax highlighting depend on WebCalm plugin)</li>
+                <li>Support jump to SpringMVC Controller method from url</li>
+                <li>Show SpringMVC Controller method information when hover in url</li>
+                <li>Support jump to SpringMVC Controller method bean field from json property</li>
+                <li>Show SpringMVC Controller method bean field information when hover in json key</li>
+                <li>Support JavaScript previous handler, post handler and global handler(JavaScript syntax highlighting depends on WebCalm plugin)</li>
                 <li>Support reading file content as http request body</li>
-                <li>Support save http response body to file</li>
-                <li>Support preview image</li>
+                <li>Support saving http response body to file</li>
+                <li>When the response Content-Type is image type, it supports direct preview of the corresponding image</li>
+                <li>Support searching SpringMVC Api in the SearchEverywhere Dialog</li>
             </ul>
             Getting Started:<br>
             <ol>
                 <li>Create a file with an HTTP suffix</li>
-                <li>Input gtr or ptr to trigger live templates and quickly create HTTP requests</li>
-                <li>Click the run button on the left side of the file to sending request and view the response</li>
+                <li>Type gtr or ptr to trigger live templates and quickly create HTTP requests</li>
+                <li>Click the run button on the left side of the editor to sending request and view the response</li>
             </ol>
             提供从 IDEA Editor 编写和执行 HTTP 请求的能力：<br>
             <ul>
@@ -31,17 +34,20 @@
                 <li>支持发起 Dubbo 请求</li>
                 <li>支持环境变量、内置变量和内置方法</li>
                 <li>支持从 url 跳转到对应的 SpringMVC Controller 方法</li>
+                <li>url 悬浮提示对应的 SpringMVC Controller 方法信息</li>
                 <li>支持从 json 属性跳转到对应的 SpringMVC Controller 方法的出入参 Bean 字段</li>
+                <li>json 属性悬浮提示对应的 SpringMVC Controller 方法的出入参 Bean 字段信息</li>
                 <li>支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器(JavaScript 语法高亮功能依赖 WebCalm 插件)</li>
                 <li>支持从文件读取内容作为请求体</li>
                 <li>支持保存响应到文件</li>
-                <li>支持预览图片</li>
+                <li>当响应的 Content-Type 为图片时支持直接预览响应的图片</li>
+                <li>支持在 SearchEverywhere 窗口搜索 SpringMVC Api</li>
             </ul>
             开始使用：<br>
             <ol>
                 <li>创建一个 http 后缀的文件</li>
                 <li>输入 gtr 或 ptr 等触发实时模板从而快速创建 http 请求</li>
-                <li>点击文件左侧的运行按钮发起请求并查看响应</li>
+                <li>点击编辑器左侧的运行按钮发起请求并查看响应</li>
             </ol>
         ]]>
     </description>
@@ -54,8 +60,9 @@
                     <li>新增 commenter</li>
                     <li>新增 annotator</li>
                     <li>新增变量的 inspection 检查及 fixes 快速修复</li>
-                    <li>新增 http url 对应的 Controller方法文档提示</li>
-                    <li>新增 http 出入参的 json key 对应的 Controller 方法字段文档提示</li>
+                    <li>新增 http url 对应的 SpringMVC Controller 方法文档悬浮提示</li>
+                    <li>新增 http 出入参的 json key 对应的 SpringMVC Controller 方法字段文档悬浮提示</li>
+                    <li>新增在 SearchEverywhere 窗口搜索 SpringMVC Api 功能</li>
                     <li>调整变量等的着色逻辑,提升用户体验</li>
                     <li>完善发起请求逻辑,减少UI卡顿</li>
                     <li>完善控制器跳转逻辑,减少UI卡顿</li>
@@ -225,6 +232,13 @@
                                     implementationClass="org.javamaster.httpclient.doc.HttpUrlControllerMethodDocumentationProvider"/>
         <psi.treeChangePreprocessor
                 implementation="org.javamaster.httpclient.scan.support.ControllerPsiTreeChangePreprocessor"/>
-        <searchEverywhereContributor implementation="org.javamaster.httpclient.symbol.ApiWeightedSearchEverywhereContributor$Factory"/>
+        <searchEverywhereContributor implementation="org.javamaster.httpclient.symbol.ApisGotoSEContributor$Factory"/>
     </extensions>
+    
+    <actions>
+        <action class="org.javamaster.httpclient.action.ApiSearchEverywhereAction" text="Search Api">
+            <keyboard-shortcut first-keystroke="control alt SLASH" keymap="$default"/>
+        </action>
+    </actions>
+    
 </idea-plugin>
