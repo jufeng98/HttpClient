@@ -29,7 +29,7 @@ class HttpUrlControllerMethodPsiReference(
 
         val httpMethod = PsiTreeUtil.getPrevSiblingOfType(requestTarget, HttpMethod::class.java)!!
 
-        return ScanRequest.findMethod(module, searchTxt, httpMethod.text)
+        return ScanRequest.findApiMethod(module, searchTxt, httpMethod.text)
     }
 
     private fun findModule(requestTarget: HttpRequestTarget, virtualFile: VirtualFile): Module? {

@@ -5,14 +5,15 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
 import com.intellij.psi.impl.PsiTreeChangePreprocessor
 import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.enums.Control
 
 /**
  * @author yudong
  */
 class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
     private val controllerAnnoSet = setOf(
-        "org.springframework.web.bind.annotation.RestController",
-        "org.springframework.stereotype.Controller",
+        Control.RestController.qualifiedName,
+        Control.Controller.qualifiedName,
     )
 
     override fun treeChanged(event: PsiTreeChangeEventImpl) {

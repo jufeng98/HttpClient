@@ -4,16 +4,16 @@ import org.javamaster.httpclient.HttpIcons
 import javax.swing.Icon
 
 enum class HttpMethod(val icon: Icon) {
-    UNKNOWN(HttpIcons.FILE),
-    REQUEST(HttpIcons.FILE),
     GET(HttpIcons.GET),
-    OPTIONS(HttpIcons.FILE),
     POST(HttpIcons.POST),
     PUT(HttpIcons.PUT),
     DELETE(HttpIcons.DELETE),
+    OPTIONS(HttpIcons.FILE),
     PATCH(HttpIcons.FILE),
     HEAD(HttpIcons.FILE),
-    TRACE(HttpIcons.FILE);
+    TRACE(HttpIcons.FILE),
+    REQUEST(HttpIcons.FILE),
+    UNKNOWN(HttpIcons.FILE);
 
     companion object {
         fun parse(method: Any): HttpMethod {
@@ -26,6 +26,12 @@ enum class HttpMethod(val icon: Icon) {
             } catch (ignore: Exception) {
                 return REQUEST
             }
+        }
+
+        fun getMethods(): List<HttpMethod> {
+            return entries
+                .filter { it != UNKNOWN && it != REQUEST }
+                .toList()
         }
     }
 }

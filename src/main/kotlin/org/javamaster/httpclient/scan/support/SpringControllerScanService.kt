@@ -1,14 +1,13 @@
 package org.javamaster.httpclient.scan.support
 
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.module.Module
-import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierList
 import com.intellij.psi.impl.java.stubs.index.JavaAnnotationIndex
+import com.intellij.psi.search.GlobalSearchScope
 import org.javamaster.httpclient.enums.Control
 import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.enums.HttpMethod.Companion.parse
@@ -20,6 +19,7 @@ import org.javamaster.httpclient.utils.AnnoUtils.collectMethodAnnotations
 import org.javamaster.httpclient.utils.AnnoUtils.findAnnotationValue
 import org.javamaster.httpclient.utils.AnnoUtils.getClassAnnotation
 import org.javamaster.httpclient.utils.AnnoUtils.getQualifiedAnnotation
+import java.util.function.Consumer
 
 /**
  * @author yudong
@@ -27,87 +27,74 @@ import org.javamaster.httpclient.utils.AnnoUtils.getQualifiedAnnotation
 @Service(Service.Level.PROJECT)
 class SpringControllerScanService {
 
-    fun getSpringMvcRequest(project: Project, module: Module, progressIndicator: ProgressIndicator?): List<Request> {
-        val controllerClasses = getControllerClasses(project, module, progressIndicator)
-        if (controllerClasses.isEmpty()) {
-            return emptyList()
-        }
+    fun findRequests(project: Project, searchScope: GlobalSearchScope): List<Request> {
+        val requests = mutableListOf<Request>()
 
-        return controllerClasses
-            .map {
-                progressIndicator?.checkCanceled()
-
-                getRequests(it)
-            }
-            .flatten()
-    }
-
-    private fun getRequests(controllerClass: PsiClass): List<Request> {
-        val requests: MutableList<Request> = mutableListOf()
-        var parentRequests: List<Request> = mutableListOf()
-        val childrenRequests: MutableList<Request> = mutableListOf()
-
-        val psiAnnotation = getClassAnnotation(
-            controllerClass,
-            SpringHttpMethod.REQUEST_MAPPING.shortName,
-            SpringHttpMethod.REQUEST_MAPPING.qualifiedName
-        )
-
-        if (psiAnnotation != null) {
-            parentRequests = getRequests(psiAnnotation, null)
-        }
-
-        val requestList = controllerClass.allMethods
-            .map { getRequests(it) }
-            .flatten()
-
-        childrenRequests.addAll(requestList)
-
-        if (parentRequests.isEmpty()) {
-            requests.addAll(childrenRequests)
-        } else {
-            parentRequests.forEach { parentRequest ->
-                childrenRequests.forEach {
-                    val request = it.copyWithParent(parentRequest)
-                    requests.add(request)
-                }
-            }
+        fetchRequests(project, searchScope) {
+            requests.add(it)
         }
 
         return requests
     }
 
-    private fun getControllerClasses(
-        project: Project,
-        module: Module,
-        progressIndicator: ProgressIndicator?,
-    ): List<PsiClass> {
-        progressIndicator?.checkCanceled()
+    fun fetchRequests(project: Project, scope: GlobalSearchScope, consumer: Consumer<Request>) {
+        val annotationIndex = JavaAnnotationIndex.getInstance()
 
-        val annoList: MutableCollection<PsiAnnotation> = mutableListOf()
-        val moduleScope = module.moduleWithLibrariesScope
+        val annotations = annotationIndex.getAnnotations(Control.Controller.simpleName, project, scope)
 
-        val annotations = JavaAnnotationIndex.getInstance().getAnnotations(
-            Control.Controller.simpleName,
-            project,
-            moduleScope
-        )
+        iterateControllers(annotations, consumer)
 
-        annoList.addAll(annotations)
+        val annotationsRest = annotationIndex.getAnnotations(Control.RestController.simpleName, project, scope)
 
-        val annotationsRest = JavaAnnotationIndex.getInstance().getAnnotations(
-            Control.RestController.simpleName,
-            project,
-            moduleScope
-        )
+        iterateControllers(annotationsRest, consumer)
+    }
 
-        annoList.addAll(annotationsRest)
+    private fun iterateControllers(controllerAnnoList: Collection<PsiAnnotation>, consumer: Consumer<Request>) {
+        controllerAnnoList
+            .forEach { controllerAnno ->
+                val psiModifierList = controllerAnno.parent as PsiModifierList
+                val controllerClass = psiModifierList.parent as PsiClass? ?: return@forEach
 
-        return annoList
-            .mapNotNull {
-                val psiModifierList = it.parent as PsiModifierList
-                psiModifierList.parent as PsiClass?
+                val psiAnnotation = getClassAnnotation(
+                    controllerClass,
+                    SpringHttpMethod.REQUEST_MAPPING.shortName,
+                    SpringHttpMethod.REQUEST_MAPPING.qualifiedName
+                )
+
+                val childrenRequests: MutableList<Request> = mutableListOf()
+                var parentRequests: List<Request> = mutableListOf()
+
+                if (psiAnnotation != null) {
+                    parentRequests = getRequests(psiAnnotation, null)
+
+                }
+
+                val requests = controllerClass.allMethods
+                    .map { getRequests(it) }
+                    .flatten()
+
+                childrenRequests.addAll(requests)
+
+                if (parentRequests.isEmpty()) {
+                    childrenRequests.forEach { consumer.accept(it) }
+                } else {
+                    parentRequests.forEach { parentRequest ->
+                        childrenRequests.forEach {
+                            val request = it.copyWithParent(parentRequest)
+
+                            consumer.accept(request)
+                        }
+                    }
+                }
             }
+    }
+
+    private fun getRequests(method: PsiMethod): List<Request> {
+        val methodAnnotations = collectMethodAnnotations(method)
+
+        return methodAnnotations
+            .map { getRequests(it, method) }
+            .flatten()
     }
 
     private fun getRequests(annotation: PsiAnnotation, psiMethod: PsiMethod?): List<Request> {
@@ -195,14 +182,6 @@ class SpringControllerScanService {
                     .filter { it != HttpMethod.REQUEST || methods.size <= 1 }
                     .map { method -> Request(method, it, psiMethod, null) }
             }
-            .flatten()
-    }
-
-    private fun getRequests(method: PsiMethod): List<Request> {
-        val methodAnnotations = collectMethodAnnotations(method)
-
-        return methodAnnotations
-            .map { getRequests(it, method) }
             .flatten()
     }
 

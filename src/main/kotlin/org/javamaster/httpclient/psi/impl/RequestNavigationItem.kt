@@ -1,23 +1,30 @@
 package org.javamaster.httpclient.psi.impl
 
 import com.intellij.navigation.ItemPresentation
-import com.intellij.openapi.module.Module
+import com.intellij.psi.JavaDocTokenType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.FakePsiElement
+import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.scan.support.Request
 import javax.swing.Icon
 
-
-class RequestNavigationItem(val request: Request, val module: Module) :
+/**
+ * @author yudong
+ */
+class RequestNavigationItem(val request: Request) :
     FakePsiElement() {
-    val psiMethod = request.psiElement!!
+    private val psiMethod = request.psiElement!!
 
     override fun getPresentation(): ItemPresentation {
         return RequestItemPresentation(request)
     }
 
+    override fun getIcon(open: Boolean): Icon {
+        return request.method.icon
+    }
+
     override fun canNavigate(): Boolean {
-        return true
+        return psiMethod.canNavigate()
     }
 
     override fun navigate(requestFocus: Boolean) {
@@ -32,35 +39,45 @@ class RequestNavigationItem(val request: Request, val module: Module) :
         return psiMethod.context
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as RequestNavigationItem
-
-        if (request != other.request) return false
-        if (module != other.module) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = request.hashCode()
-        result = 31 * result + module.hashCode()
-        return result
-    }
-
     override fun getParent(): PsiElement {
         return psiMethod
     }
 
     override fun getNavigationElement(): PsiElement {
-        return psiMethod
+        return psiMethod.navigationElement
+    }
+
+    override fun isValid(): Boolean {
+        return psiMethod.isValid
     }
 
     class RequestItemPresentation(val request: Request) : ItemPresentation {
         override fun getPresentableText(): String {
-            return request.path
+            val psiMethod = request.psiElement!!
+
+            var str = ""
+
+            val docComment = psiMethod.docComment
+            if (docComment != null) {
+                val comment =
+                    HttpPsiUtils.getNextSiblingByType(docComment.firstChild, JavaDocTokenType.DOC_COMMENT_DATA, false)
+                        ?.text?.trim()
+                str += comment
+            }
+
+            val annotation = psiMethod.getAnnotation("io.swagger.annotations.ApiOperation")
+            if (annotation != null) {
+                val desc = annotation.findAttributeValue("value")?.text?.trim()
+                str += " $desc "
+            }
+
+            str = if (str.isNotEmpty()) {
+                "($str)"
+            } else {
+                ""
+            }
+
+            return request.path + str
         }
 
         override fun getIcon(unused: Boolean): Icon {
