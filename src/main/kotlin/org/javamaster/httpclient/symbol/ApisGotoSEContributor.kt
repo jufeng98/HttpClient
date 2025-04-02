@@ -19,10 +19,10 @@ import org.javamaster.httpclient.scan.ScanRequest
 /**
  * @author yudong
  */
-class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(event), PossibleSlowContributor,
-    SearchEverywherePreviewProvider {
+class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(event), PossibleSlowContributor {
     private val methodFilter: PersistentSearchEverywhereContributorFilter<HttpMethod>
     private val filterMethods: MutableSet<HttpMethod> = mutableSetOf()
+    private val dumbService = myProject.getService(DumbService::class.java)
 
     init {
         filterMethods.addAll(HttpMethod.getMethods())
@@ -56,7 +56,7 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
         consumer: Processor<in FoundItemDescriptor<Any>>,
     ) {
         val fetchRunnable = Runnable {
-            if (isDumb(myProject)) {
+            if (dumbService.isDumb) {
                 return@Runnable
             }
 
@@ -66,12 +66,12 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
 
             val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
 
-            val scope = scope.scope as GlobalSearchScope? ?: GlobalSearchScope.projectScope(project)
+            val scope = scope.scope as GlobalSearchScope? ?: GlobalSearchScope.projectScope(myProject)
 
-            ScanRequest.fetchRequests(project, scope) {
+            ScanRequest.fetchRequests(myProject, scope) {
                 progressIndicator.checkCanceled()
 
-                if (filterMethods.contains(it.method) && matcher.matches(it.path)) {
+                if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
                     consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
                 }
             }
@@ -116,7 +116,9 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
 
     class Factory : SearchEverywhereContributorFactory<Any> {
         override fun createContributor(initEvent: AnActionEvent): SearchEverywhereContributor<Any> {
-            return PSIPresentationBgRendererWrapper.wrapIfNecessary(ApisGotoSEContributor(initEvent))
+            val seContributor = ApisGotoSEContributor(initEvent)
+
+            return PSIPresentationBgRendererWrapper(seContributor)
         }
     }
 }

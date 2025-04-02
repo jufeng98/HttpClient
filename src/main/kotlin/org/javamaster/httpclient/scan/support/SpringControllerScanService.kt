@@ -7,7 +7,9 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierList
 import com.intellij.psi.impl.java.stubs.index.JavaAnnotationIndex
+import com.intellij.psi.impl.search.JavaSourceFilterScope
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.stubs.StubIndex
 import org.javamaster.httpclient.enums.Control
 import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.enums.HttpMethod.Companion.parse
@@ -40,11 +42,17 @@ class SpringControllerScanService {
     fun fetchRequests(project: Project, scope: GlobalSearchScope, consumer: Consumer<Request>) {
         val annotationIndex = JavaAnnotationIndex.getInstance()
 
-        val annotations = annotationIndex.getAnnotations(Control.Controller.simpleName, project, scope)
+        val annotations = StubIndex.getElements(
+            annotationIndex.key, Control.Controller.simpleName, project, JavaSourceFilterScope(scope),
+            PsiAnnotation::class.java
+        )
 
         iterateControllers(annotations, consumer)
 
-        val annotationsRest = annotationIndex.getAnnotations(Control.RestController.simpleName, project, scope)
+        val annotationsRest = StubIndex.getElements(
+            annotationIndex.key, Control.RestController.simpleName, project, JavaSourceFilterScope(scope),
+            PsiAnnotation::class.java
+        )
 
         iterateControllers(annotationsRest, consumer)
     }

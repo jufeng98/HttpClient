@@ -15,7 +15,7 @@
 - 支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器(JavaScript 语法高亮功能依赖 WebCalm 插件)
 - 支持从文件读取内容作为请求体
 - 支持保存响应到文件
-- 支持预览图片
+- 当响应的 Content-Type 为图片时支持直接预览响应的图片
 - 支持在 SearchEverywhere 窗口搜索 SpringMVC Api
 
 ### 开始使用

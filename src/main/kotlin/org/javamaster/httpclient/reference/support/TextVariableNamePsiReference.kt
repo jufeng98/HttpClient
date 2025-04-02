@@ -3,7 +3,6 @@ package org.javamaster.httpclient.reference.support
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
-import com.intellij.psi.util.startOffset
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpVariable
 
@@ -15,7 +14,7 @@ class TextVariableNamePsiReference(
     val variable: HttpVariable,
     val textRange: TextRange,
     private val messageBody: HttpMessageBody?,
-) : PsiReferenceBase<PsiElement>(psiElement, textRange.shiftLeft(psiElement.startOffset), true) {
+) : PsiReferenceBase<PsiElement>(psiElement, textRange.shiftLeft(psiElement.textRange.startOffset), true) {
 
     override fun resolve(): PsiElement? {
         val psiElement = messageBody ?: psiElement
