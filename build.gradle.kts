@@ -18,10 +18,8 @@ repositories {
 dependencies {
     implementation("org.mozilla:rhino:1.7.15")
     implementation("com.github.javafaker:javafaker:1.0.2")
-    implementation("com.alibaba:dubbo:2.6.12")
-    implementation("org.apache.curator:curator-client:4.0.1")
-    implementation("org.apache.curator:curator-framework:4.0.1")
     implementation("com.jayway.jsonpath:json-path:2.9.0")
+
     testImplementation("junit:junit:4.13.1")
 }
 

@@ -14,8 +14,11 @@ import org.javamaster.httpclient.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.dubbo.DubboRequest
+import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
@@ -23,9 +26,9 @@ import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.convertToResHeaderDescList
 import org.javamaster.httpclient.utils.HttpUtils.convertToResPair
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
+import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.ws.WsRequest
-import org.springframework.util.LinkedMultiValueMap
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.OutputStream
@@ -77,21 +80,23 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         HttpBackground
             .runInBackgroundReadActionAsync {
-                HttpUtils.convertToReqBody(request, variableResolver)
+                val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
+                val environment = gson.toJson(getEnvMap(project, false))
+                Pair(reqBody, environment)
             }
             .finishOnUiThread {
-                startHandleRequest(it)
+                startHandleRequest(it!!)
             }
             .exceptionallyOnUiThread {
                 handleException(it)
             }
     }
 
-    private fun startHandleRequest(reqBody: Any?) {
+    private fun startHandleRequest(pair: Pair<Any?, String>) {
         val httpHeaderFields = request.header?.headerFieldList
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
-        jsExecutor.initJsRequestObj(reqBody, methodType, reqHeaderMap)
+        jsExecutor.initJsRequestObj(pair, methodType, reqHeaderMap)
 
         val beforeJsResList = jsExecutor.evalJsBeforeRequest(jsListBeforeReq)
 
@@ -106,6 +111,8 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             handleWs(url, reqHeaderMap)
             return
         }
+
+        val reqBody = pair.first
 
         if (methodType == HttpRequestEnum.DUBBO.name) {
             handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
@@ -137,6 +144,18 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
+        if (!DubboJars.jarsDownloaded()) {
+            NotifyUtil.notifySuccess(
+                project,
+                "Execute dubbo request first time, downloading required dependencies, When finished, please try again."
+            )
+
+            DubboJars.downloadAsync(project)
+
+            destroyProcess()
+            return
+        }
+
         val dubboRequest = ActionUtil.underModalProgress(project, "Tip:处理中...") {
             val module = ModuleUtil.findModuleForPsiElement(httpMethod)!!
             return@underModalProgress DubboRequest(
@@ -163,7 +182,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 val byteArray = pair.first
                 val consumeTimes = pair.second
 
-                val httpResDescList = mutableListOf("// time consuming: ${consumeTimes}ms,size: ${byteArray.size / 1024.0}kb\r\n")
+                val httpResDescList = mutableListOf("// time: ${consumeTimes}ms,size: ${byteArray.size / 1024.0}kb\r\n")
 
                 val evalJsRes = jsExecutor.evalJsAfterRequest(
                     jsAfterReq,
@@ -230,7 +249,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     val resPair = convertToResPair(response)
 
                     val httpResDescList =
-                        mutableListOf("// status: ${response.statusCode()}, time consuming: ${consumeTimes}ms, size: $size KB\r\n")
+                        mutableListOf("// status: ${response.statusCode()}, time: ${consumeTimes}ms, size: $size KB\r\n")
 
                     val evalJsRes = jsExecutor.evalJsAfterRequest(
                         jsAfterReq,
