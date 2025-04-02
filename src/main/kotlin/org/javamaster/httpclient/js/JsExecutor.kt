@@ -11,7 +11,7 @@ import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
 import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.mozilla.javascript.*
-import org.springframework.util.LinkedMultiValueMap
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.w3c.dom.Document
 import org.xml.sax.InputSource
 import java.io.FileNotFoundException

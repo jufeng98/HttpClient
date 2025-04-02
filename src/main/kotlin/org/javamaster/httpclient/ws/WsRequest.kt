@@ -8,7 +8,7 @@ import com.intellij.openapi.util.Disposer.newDisposable
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.dashboard.HttpProcessHandler
 import org.javamaster.httpclient.utils.HttpUtils
-import org.springframework.util.LinkedMultiValueMap
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket

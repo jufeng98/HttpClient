@@ -31,7 +31,7 @@ import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.ui.HttpEditorTopForm
-import org.springframework.util.LinkedMultiValueMap
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import java.io.File
 import java.net.URI
 import java.net.http.HttpResponse

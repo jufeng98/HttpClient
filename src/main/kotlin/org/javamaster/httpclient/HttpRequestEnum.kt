@@ -5,7 +5,7 @@ import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT_NAME
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT_NAME
-import org.springframework.util.LinkedMultiValueMap
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpClient.Version

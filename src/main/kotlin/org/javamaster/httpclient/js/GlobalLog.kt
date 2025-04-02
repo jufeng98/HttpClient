@@ -1,6 +1,6 @@
 package org.javamaster.httpclient.js
 
-import org.springframework.util.LinkedMultiValueMap
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 
 /**
  * Collect js executed log

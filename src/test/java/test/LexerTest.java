@@ -12,8 +12,8 @@ import org.javamaster.httpclient.parser.HttpAdapter;
 import org.javamaster.httpclient.parser.HttpParserDefinition;
 import org.javamaster.httpclient.psi.HttpMyJsonValue;
 import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement;
+import org.javamaster.httpclient.utils.StreamUtils;
 import org.junit.Test;
-import org.springframework.util.StreamUtils;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +23,9 @@ public class LexerTest {
     @Test
     public void testLexer() throws Exception {
         InputStream stream = getClass().getClassLoader().getResourceAsStream("test.http");
-        String str = StreamUtils.copyToString(stream, StandardCharsets.UTF_8);
+        assert stream != null;
+        byte[] bytes = StreamUtils.copyToByteArray(stream);
+        String str = new String(bytes, StandardCharsets.UTF_8);
 
         HttpAdapter httpAdapter = new HttpAdapter();
         httpAdapter.start(str);
