@@ -95,6 +95,6 @@ object DubboJars {
         val pluginDescriptor = getPlugin(PluginId.findId("org.javamaster.HttpRequest"))
         val pluginPath = pluginDescriptor!!.pluginPath.toFile()
 
-        return File("E:/360Downloads", "dubboLib")
+        return File(pluginPath, "dubboLib")
     }
 }
