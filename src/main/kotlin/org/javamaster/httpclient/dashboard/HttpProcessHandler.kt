@@ -147,7 +147,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         if (!DubboJars.jarsDownloaded()) {
             NotifyUtil.notifyCornerSuccess(
                 project,
-                "Execute dubbo request first time, downloading required dependencies, When finished, please try again."
+                "Execute dubbo request first time, downloading required dependencies. When finished, please try again."
             )
 
             DubboJars.downloadAsync(project)

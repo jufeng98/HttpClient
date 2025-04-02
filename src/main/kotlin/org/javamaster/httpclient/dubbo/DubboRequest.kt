@@ -3,8 +3,7 @@ package org.javamaster.httpclient.dubbo
 import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
-import org.javamaster.httpclient.dubbo.loader.DubboClassLoader
-import org.javamaster.httpclient.dubbo.support.DubboJars
+import org.javamaster.httpclient.dubbo.support.DubboJars.dubboClassLoader
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
@@ -256,8 +255,4 @@ class DubboRequest(
         }
     }
 
-    companion object {
-        private val dubboClassLoader =
-            DubboClassLoader(DubboJars.jarUrls.toTypedArray(), DubboRequest::class.java.classLoader)
-    }
 }

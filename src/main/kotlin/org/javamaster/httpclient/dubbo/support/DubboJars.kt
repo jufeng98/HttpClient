@@ -6,6 +6,8 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.util.application
+import org.javamaster.httpclient.dubbo.DubboRequest
+import org.javamaster.httpclient.dubbo.loader.DubboClassLoader
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
@@ -18,7 +20,9 @@ import java.util.concurrent.TimeUnit
  * @author yudong
  */
 object DubboJars {
-    val jarUrls = mutableListOf<URL>()
+    var dubboClassLoader: DubboClassLoader
+
+    private val jarUrls = mutableListOf<URL>()
     private val jarMap = mutableMapOf<String, URL>()
     private val random = Random()
 
@@ -31,19 +35,26 @@ object DubboJars {
             jarUrls.add(it.toURI().toURL())
         }
 
+        dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboRequest::class.java.classLoader)
+
+        val repositoryUrl = "https://maven.aliyun.com/nexus/content/groups/public"
 
         jarMap["dubbo-2.6.12.jar"] =
-            URL("https://maven.aliyun.com/nexus/content/groups/public/com/alibaba/dubbo/2.6.12/dubbo-2.6.12.jar")
+            URL("$repositoryUrl/com/alibaba/dubbo/2.6.12/dubbo-2.6.12.jar")
         jarMap["javassist-3.30.2-GA.jar"] =
-            URL("https://maven.aliyun.com/nexus/content/groups/public/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar")
+            URL("$repositoryUrl/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar")
         jarMap["curator-client-4.0.1.jar"] =
-            URL("https://maven.aliyun.com/nexus/content/groups/public/org/apache/curator/curator-client/4.0.1/curator-client-4.0.1.jar")
+            URL("$repositoryUrl/org/apache/curator/curator-client/4.0.1/curator-client-4.0.1.jar")
         jarMap["curator-framework-4.0.1.jar"] =
-            URL("https://maven.aliyun.com/nexus/content/groups/public/org/apache/curator/curator-framework/4.0.1/curator-framework-4.0.1.jar")
+            URL("$repositoryUrl/org/apache/curator/curator-framework/4.0.1/curator-framework-4.0.1.jar")
         jarMap["netty-3.10.5.Final.jar"] =
-            URL("https://maven.aliyun.com/nexus/content/groups/public/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar")
+            URL("$repositoryUrl/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar")
         jarMap["zookeeper-3.5.3-beta.jar"] =
-            URL("https://maven.aliyun.com/nexus/content/groups/public/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar")
+            URL("$repositoryUrl/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar")
+    }
+
+    fun jarsDownloaded(): Boolean {
+        return jarUrls.size == jarMap.size
     }
 
     fun downloadAsync(project: Project) {
@@ -90,14 +101,15 @@ object DubboJars {
 
                                 indicator.fraction = (index + 1) * faction
                                 println("Downloaded dubbo jar $name : $file")
+
                             } catch (e: Exception) {
                                 errorMsg =
                                     "Downloaded dubbo dependencies error, please try again. error msg: ${e.message}"
                                 e.printStackTrace()
                             }
-                        }
 
-                    TimeUnit.MILLISECONDS.sleep(1000 + random.nextLong(2000))
+                            TimeUnit.MILLISECONDS.sleep(1000 + random.nextLong(2000))
+                        }
                 }
 
                 indicator.fraction = 1.0
@@ -107,16 +119,16 @@ object DubboJars {
                         NotifyUtil.notifyCornerWarn(project, errorMsg!!)
                     }
                 } else {
+                    dubboClassLoader.close()
+
+                    dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboRequest::class.java.classLoader)
+
                     application.invokeLater {
                         NotifyUtil.notifyCornerSuccess(project, "Dubbo dependencies have been successfully downloaded!")
                     }
                 }
             }
         }.queue()
-    }
-
-    fun jarsDownloaded(): Boolean {
-        return jarUrls.size == jarMap.size
     }
 
     private fun getDubboLibPath(): File {
