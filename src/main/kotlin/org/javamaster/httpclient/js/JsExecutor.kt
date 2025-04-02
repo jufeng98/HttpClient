@@ -5,13 +5,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
-import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
 import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.mozilla.javascript.*
-import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.w3c.dom.Document
 import org.xml.sax.InputSource
 import java.io.FileNotFoundException
@@ -55,8 +54,9 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     var xmlDoc: Document? = null
     var xPath: XPath? = null
 
-    fun initJsRequestObj(reqBody: Any?, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
-        val environment = gson.toJson(getEnvMap(project, false))
+    fun initJsRequestObj(pair: Pair<Any?, String>, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
+        val reqBody = pair.first
+        val environment = pair.second
 
         val headers = gson.toJson(reqHeaderMap)
 
