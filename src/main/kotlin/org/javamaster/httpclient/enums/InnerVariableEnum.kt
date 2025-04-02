@@ -129,6 +129,9 @@ enum class InnerVariableEnum(val methodName: String) {
             val file = File(filePath)
 
             val bytes = VirtualFileUtils.readNewestBytes(file)
+            if (bytes.isEmpty()) {
+                return ""
+            }
 
             return Base64.getEncoder().encodeToString(bytes)
         }

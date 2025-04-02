@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.utils;
 
-import com.alibaba.dubbo.common.utils.Assert;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
@@ -42,9 +41,6 @@ public class StreamUtils {
      * @throws IOException in case of I/O errors
      */
     public static void copy(InputStream in, OutputStream out) throws IOException {
-        Assert.notNull(in, "No InputStream specified");
-        Assert.notNull(out, "No OutputStream specified");
-
         byte[] buffer = new byte[BUFFER_SIZE];
         int bytesRead;
         while ((bytesRead = in.read(buffer)) != -1) {

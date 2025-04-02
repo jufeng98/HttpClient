@@ -30,7 +30,9 @@ object VirtualFileUtils {
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
 
-        val opened = FileEditorManager.getInstance(ProjectUtil.getActiveProject()!!).allEditors.stream()
+        val activeProject = ProjectUtil.getActiveProject() ?: return ByteArray(0)
+
+        val opened = FileEditorManager.getInstance(activeProject).allEditors.stream()
             .anyMatch {
                 it.file == virtualFile
             }
@@ -53,7 +55,9 @@ object VirtualFileUtils {
 
         val virtualFile = VfsUtil.findFileByIoFile(file, true)!!
 
-        val opened = FileEditorManager.getInstance(ProjectUtil.getActiveProject()!!).allEditors.stream()
+        val activeProject = ProjectUtil.getActiveProject() ?: return ""
+
+        val opened = FileEditorManager.getInstance(activeProject).allEditors.stream()
             .anyMatch {
                 it.file == virtualFile
             }
