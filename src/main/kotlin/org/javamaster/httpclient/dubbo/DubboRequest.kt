@@ -66,7 +66,7 @@ class DubboRequest(
         if (interfaceCls != null) {
             targetInterfaceName = interfaceCls!!
             val psiClass = DubboUtils.findInterface(module, interfaceCls!!)
-                ?: throw IllegalArgumentException("Can't resolve interface: ${interfaceCls}!")
+                ?: throw IllegalArgumentException("Can't resolve interface: $interfaceCls in module ${module.name} !")
 
             val targetMethod = findTargetMethod(psiClass, reqBodyMap)
 

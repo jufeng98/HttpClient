@@ -40,8 +40,12 @@ object NotifyUtil {
         )
     }
 
-    fun notifySuccess(project: Project, message: String) {
+    fun notifyCornerSuccess(project: Project, message: String) {
         STICKY_STICKY_BALLOON.createNotification("Tip", message, NotificationType.INFORMATION).notify(project)
+    }
+
+    fun notifyCornerWarn(project: Project, message: String) {
+        STICKY_STICKY_BALLOON.createNotification("Tip", message, NotificationType.WARNING).notify(project)
     }
 
 }

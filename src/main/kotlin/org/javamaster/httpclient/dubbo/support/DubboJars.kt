@@ -56,20 +56,25 @@ object DubboJars {
 
                 jarUrls.clear()
 
-                var hasError = false
+                var errorMsg: String? = null
                 val faction = 1.0 / jarMap.size
 
                 for ((index, entry) in jarMap.entries.withIndex()) {
                     val name = entry.key
                     val url = entry.value
 
-                    if (hasError) {
+                    if (errorMsg != null) {
                         break
                     }
 
                     url.openStream()
                         .use {
                             try {
+                                if (indicator.isCanceled) {
+                                    errorMsg = "Download aborted!"
+                                    return@use
+                                }
+
                                 val byteArray = StreamUtils.copyToByteArray(it)
 
                                 val file = File(dubboLibPath, name)
@@ -86,7 +91,8 @@ object DubboJars {
                                 indicator.fraction = (index + 1) * faction
                                 println("Downloaded dubbo jar $name : $file")
                             } catch (e: Exception) {
-                                hasError = true
+                                errorMsg =
+                                    "Downloaded dubbo dependencies error, please try again. error msg: ${e.message}"
                                 e.printStackTrace()
                             }
                         }
@@ -96,9 +102,13 @@ object DubboJars {
 
                 indicator.fraction = 1.0
 
-                if (hasError) {
-                    application.invokeAndWait {
-                        NotifyUtil.notifySuccess(project, "Downloaded dubbo dependencies error, please try again.")
+                if (errorMsg != null) {
+                    application.invokeLater {
+                        NotifyUtil.notifyCornerWarn(project, errorMsg!!)
+                    }
+                } else {
+                    application.invokeLater {
+                        NotifyUtil.notifyCornerSuccess(project, "Dubbo dependencies have been successfully downloaded!")
                     }
                 }
             }
