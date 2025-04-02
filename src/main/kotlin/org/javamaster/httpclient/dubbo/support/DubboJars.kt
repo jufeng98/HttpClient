@@ -5,6 +5,8 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.util.application
+import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
 import java.net.URL
@@ -54,35 +56,51 @@ object DubboJars {
 
                 jarUrls.clear()
 
+                var hasError = false
                 val faction = 1.0 / jarMap.size
 
-                jarMap.entries.forEachIndexed { index, entry ->
+                for ((index, entry) in jarMap.entries.withIndex()) {
                     val name = entry.key
                     val url = entry.value
 
+                    if (hasError) {
+                        break
+                    }
+
                     url.openStream()
                         .use {
-                            val byteArray = StreamUtils.copyToByteArray(it)
+                            try {
+                                val byteArray = StreamUtils.copyToByteArray(it)
 
-                            val file = File(dubboLibPath, name)
+                                val file = File(dubboLibPath, name)
 
-                            if (file.exists()) {
-                                file.delete()
-                                println("deleted exists jar file: $file")
+                                if (file.exists()) {
+                                    file.delete()
+                                    println("deleted exists jar file: $file")
+                                }
+
+                                Files.write(file.toPath(), byteArray)
+
+                                jarUrls.add(file.toURI().toURL())
+
+                                indicator.fraction = (index + 1) * faction
+                                println("Downloaded dubbo jar $name : $file")
+                            } catch (e: Exception) {
+                                hasError = true
+                                e.printStackTrace()
                             }
-
-                            Files.write(file.toPath(), byteArray)
-
-                            jarUrls.add(file.toURI().toURL())
-
-                            indicator.fraction = (index + 1) * faction
-                            println("Downloaded dubbo jar $name : $file")
                         }
 
                     TimeUnit.MILLISECONDS.sleep(1000 + random.nextLong(2000))
                 }
 
                 indicator.fraction = 1.0
+
+                if (hasError) {
+                    application.invokeAndWait {
+                        NotifyUtil.notifySuccess(project, "Downloaded dubbo dependencies error, please try again.")
+                    }
+                }
             }
         }.queue()
     }
@@ -95,6 +113,6 @@ object DubboJars {
         val pluginDescriptor = getPlugin(PluginId.findId("org.javamaster.HttpRequest"))
         val pluginPath = pluginDescriptor!!.pluginPath.toFile()
 
-        return File(pluginPath, "dubboLib")
+        return File(pluginPath, "lib/dubboLib")
     }
 }

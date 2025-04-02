@@ -169,7 +169,7 @@ class SpringControllerScanService {
                 }
 
                 else -> {
-                    throw RuntimeException(String.format("Scan api: %s,Class: %s", value, value?.javaClass))
+                    System.err.println(String.format("Scan api: %s,Class: %s", value, value?.javaClass))
                 }
             }
 
