@@ -11,6 +11,7 @@ import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpFileType
@@ -19,12 +20,22 @@ import org.javamaster.httpclient.env.EnvFileService.Companion.getService
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.NotifyUtil
 
+
 /**
  * Add a top toolbar to the http file
  *
  * @author yudong
  */
-class HttpEditorListener : FileEditorManagerListener {
+class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
+
+    override suspend fun execute(project: Project) {
+        val fileEditorManager = FileEditorManager.getInstance(project)
+        fileEditorManager.openFiles.forEach {
+            fileOpened(fileEditorManager, it)
+        }
+
+        project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this)
+    }
 
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         if (file.fileType !is HttpFileType) {

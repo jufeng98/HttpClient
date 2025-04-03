@@ -24,6 +24,7 @@ import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
@@ -31,7 +32,6 @@ import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.ui.HttpEditorTopForm
-import org.javamaster.httpclient.map.LinkedMultiValueMap
 import java.io.File
 import java.net.URI
 import java.net.http.HttpResponse
@@ -459,16 +459,20 @@ object HttpUtils {
         } else {
             val envFileService = EnvFileService.getService(project)
             val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
+
             val contextPath = envFileService.getEnvValue("contextPath", selectedEnv, httpFileParentPath)
+            val contextPathTrim = envFileService.getEnvValue("contextPathTrim", selectedEnv, httpFileParentPath)
 
             val tmpIdx: Int
             val uri: URI
             try {
                 uri = URI(url)
-                tmpIdx = if (contextPath == null) {
-                    url.indexOf(uri.path)
-                } else {
+                tmpIdx = if (contextPath != null) {
                     url.indexOf(contextPath)
+                } else if (contextPathTrim != null) {
+                    url.indexOf(contextPathTrim) + contextPathTrim.length
+                } else {
+                    url.indexOf(uri.path)
                 }
             } catch (e: Exception) {
                 return null

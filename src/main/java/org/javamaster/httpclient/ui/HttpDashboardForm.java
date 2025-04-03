@@ -183,7 +183,13 @@ public class HttpDashboardForm implements Disposable {
 
     private void disposeEditors() {
         EditorFactory editorFactory = EditorFactory.getInstance();
-        editorList.forEach(editorFactory::releaseEditor);
+        editorList.forEach(it -> {
+            if (it.isDisposed()) {
+                return;
+            }
+
+            editorFactory.releaseEditor(it);
+        });
     }
 
     @Override

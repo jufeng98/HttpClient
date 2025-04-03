@@ -139,12 +139,9 @@
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="httpclient-web-calm.xml">ris58h.webcalm</depends>
 
-    <projectListeners>
-        <listener topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"
-                  class="org.javamaster.httpclient.listener.HttpEditorListener"/>
-    </projectListeners>
-
     <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="org.javamaster.httpclient.listener.HttpPostStartupActivity"/>
+
         <notificationGroup id="HttpClient.STICKY_BALLOON"
                            isLogByDefault="true"
                            displayType="STICKY_BALLOON"/>

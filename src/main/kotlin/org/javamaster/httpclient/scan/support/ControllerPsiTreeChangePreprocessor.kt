@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.scan.support
 
+import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
@@ -20,6 +21,13 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
         val psiFile = event.file ?: return
 
         if (psiFile !is PsiJavaFile) {
+            return
+        }
+
+        val project = psiFile.project
+
+        val dumbService = project.getService(DumbService::class.java)
+        if (dumbService.isDumb) {
             return
         }
 
