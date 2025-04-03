@@ -22,11 +22,15 @@ import java.util.concurrent.TimeUnit
 object DubboJars {
     var dubboClassLoader: DubboClassLoader
 
+    private const val REPOSITORY_URL = "https://maven.aliyun.com/nexus/content/groups/public"
+
     private val jarUrls = mutableListOf<URL>()
     private val jarMap = mutableMapOf<String, URL>()
     private val random = Random()
 
     init {
+        jarUrls.addAll(findPluginJarUrls())
+
         val dubboLibPath = getDubboLibPath()
 
         val listFiles = dubboLibPath.listFiles()
@@ -35,26 +39,22 @@ object DubboJars {
             jarUrls.add(it.toURI().toURL())
         }
 
-        dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboRequest::class.java.classLoader)
+        dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboJars::class.java.classLoader)
 
-        val repositoryUrl = "https://maven.aliyun.com/nexus/content/groups/public"
-
-        jarMap["dubbo-2.6.12.jar"] =
-            URL("$repositoryUrl/com/alibaba/dubbo/2.6.12/dubbo-2.6.12.jar")
         jarMap["javassist-3.30.2-GA.jar"] =
-            URL("$repositoryUrl/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar")
+            URL("$REPOSITORY_URL/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar")
         jarMap["curator-client-4.0.1.jar"] =
-            URL("$repositoryUrl/org/apache/curator/curator-client/4.0.1/curator-client-4.0.1.jar")
+            URL("$REPOSITORY_URL/org/apache/curator/curator-client/4.0.1/curator-client-4.0.1.jar")
         jarMap["curator-framework-4.0.1.jar"] =
-            URL("$repositoryUrl/org/apache/curator/curator-framework/4.0.1/curator-framework-4.0.1.jar")
+            URL("$REPOSITORY_URL/org/apache/curator/curator-framework/4.0.1/curator-framework-4.0.1.jar")
         jarMap["netty-3.10.5.Final.jar"] =
-            URL("$repositoryUrl/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar")
+            URL("$REPOSITORY_URL/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar")
         jarMap["zookeeper-3.5.3-beta.jar"] =
-            URL("$repositoryUrl/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar")
+            URL("$REPOSITORY_URL/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar")
     }
 
     fun jarsDownloaded(): Boolean {
-        return jarUrls.size == jarMap.size
+        return jarUrls.size == jarMap.size + 2
     }
 
     fun downloadAsync(project: Project) {
@@ -100,11 +100,11 @@ object DubboJars {
                                 jarUrls.add(file.toURI().toURL())
 
                                 indicator.fraction = (index + 1) * faction
-                                println("Downloaded dubbo jar $name : $file")
 
+                                println("Downloaded dubbo jar $name : $file")
                             } catch (e: Exception) {
                                 errorMsg =
-                                    "Downloaded dubbo dependencies error, please try again. error msg: ${e.message}"
+                                    "Downloaded dubbo dependencies error, please try again. url: $url, error msg: ${e.message}"
                                 e.printStackTrace()
                             }
 
@@ -121,6 +121,8 @@ object DubboJars {
                 } else {
                     dubboClassLoader.close()
 
+                    jarUrls.addAll(findPluginJarUrls())
+
                     dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboRequest::class.java.classLoader)
 
                     application.invokeLater {
@@ -131,10 +133,17 @@ object DubboJars {
         }.queue()
     }
 
+    private fun findPluginJarUrls(): List<URL> {
+        val dubboLibPath = getDubboLibPath()
+        val libPath = dubboLibPath.parentFile
+        return libPath.listFiles()!!
+            .filter { it.name.startsWith("instrumented-HttpRequest") || it.name == "dubbo-2.6.12.jar" }
+            .map { it.toURI().toURL() }
+    }
+
     private fun getDubboLibPath(): File {
         val pluginDescriptor = getPlugin(PluginId.findId("org.javamaster.HttpRequest"))
         val pluginPath = pluginDescriptor!!.pluginPath.toFile()
-
         return File(pluginPath, "lib/dubboLib")
     }
 }

@@ -1,15 +1,18 @@
 package org.javamaster.httpclient.dubbo
 
+import com.alibaba.dubbo.config.ApplicationConfig
+import com.alibaba.dubbo.config.ReferenceConfig
+import com.alibaba.dubbo.config.RegistryConfig
+import com.alibaba.dubbo.rpc.service.GenericService
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
-import org.javamaster.httpclient.dubbo.support.DubboJars.dubboClassLoader
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.TIMEOUT_NAME
 import org.javamaster.httpclient.utils.PsiUtils
-import java.lang.reflect.Method
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 
@@ -22,7 +25,8 @@ class DubboRequest(
     private val reqHeaderMap: LinkedMultiValueMap<String, String>,
     private val reqBodyStr: Any?,
     private val httpReqDescList: MutableList<String>,
-    module: Module,
+    module: Module?,
+    project: Project,
     private val paramMap: Map<String, String>,
 ) {
     private val methodName: String by lazy {
@@ -51,12 +55,6 @@ class DubboRequest(
         null
     }
 
-    private val application by lazy {
-        val application = newInstance("com.alibaba.dubbo.config.ApplicationConfig")
-        invokeMethod(application, "httpClient", "setName", String::class.java)
-        application
-    }
-
     private val targetInterfaceName: String
     private val paramTypeNameArray: Array<String?>
     private val paramValueArray: Array<Any?>
@@ -64,8 +62,13 @@ class DubboRequest(
     init {
         if (interfaceCls != null) {
             targetInterfaceName = interfaceCls!!
-            val psiClass = DubboUtils.findInterface(module, interfaceCls!!)
-                ?: throw IllegalArgumentException("Can't resolve interface: $interfaceCls in module ${module.name} !")
+            val psiClass = if (module != null) {
+                DubboUtils.findInterface(module, targetInterfaceName)
+                    ?: throw IllegalArgumentException("Can't resolve interface: $targetInterfaceName in module ${module.name} !")
+            } else {
+                DubboUtils.findInterface(project, targetInterfaceName)
+                    ?: throw IllegalArgumentException("Can't resolve interface: $targetInterfaceName in project ${project.name} !")
+            }
 
             val targetMethod = findTargetMethod(psiClass, reqBodyMap)
 
@@ -111,6 +114,7 @@ class DubboRequest(
         }
     }
 
+    @Suppress("unused")
     fun sendAsync(): CompletableFuture<Pair<ByteArray, Long>> {
         val commentTabName = "### $tabName\r\n"
         httpReqDescList.add(commentTabName)
@@ -131,23 +135,18 @@ class DubboRequest(
         return CompletableFuture.supplyAsync {
             val classLoader = Thread.currentThread().contextClassLoader
             try {
-                Thread.currentThread().contextClassLoader = dubboClassLoader
+                Thread.currentThread().contextClassLoader = javaClass.classLoader
 
-                val reference = createReference()
+                val referenceConfig = createReferenceConfig()
 
-                val genericService = invokeMethod(reference, null, "get")
+                val genericService = referenceConfig.get()
 
                 val start = System.currentTimeMillis()
-                val result: Any?
+                val result: Any
                 try {
-                    val genericCls = genericService!!::class.java
-
-                    val method = genericCls.declaredMethods.first { it.name == "\$invoke" }
-                    method.isAccessible = true
-
-                    result = method.invoke(genericService, methodName, paramTypeNameArray, paramValueArray)
+                    result = genericService.`$invoke`(methodName, paramTypeNameArray, paramValueArray)
                 } finally {
-                    invokeMethod(reference, null, "destroy")
+                    referenceConfig.destroy()
                 }
                 val consumeTimes = System.currentTimeMillis() - start
 
@@ -162,29 +161,28 @@ class DubboRequest(
         }
     }
 
-    private fun createReference(): Any {
-        val reference = newInstance("com.alibaba.dubbo.config.ReferenceConfig")
-
-        invokeMethod(reference, true, "setGeneric", Boolean::class.javaObjectType)
-        invokeMethod(reference, application, "setApplication", application::class.java)
-        invokeMethod(reference, targetInterfaceName, "setInterface", String::class.java)
-
+    private fun createReferenceConfig(): ReferenceConfig<GenericService> {
+        val reference = ReferenceConfig<GenericService>()
+        reference.isGeneric = true
+        reference.application = application
+        reference.setInterface(targetInterfaceName)
         val timeout = paramMap[TIMEOUT_NAME]?.toInt() ?: 10_000
-        invokeMethod(reference, timeout, "setTimeout", timeout::class.javaObjectType)
-        invokeMethod(reference, 0, "setRetries", Int::class.javaObjectType)
+        reference.timeout = timeout
+        reference.retries = 1
 
         if (!version.isNullOrBlank()) {
-            invokeMethod(reference, version!!, "setVersion", version!!::class.java)
+            reference.version = version
         }
 
         if (registry.isNullOrBlank()) {
-            invokeMethod(reference, url, "setUrl", url::class.java)
+            reference.url = url
         } else {
-            val registryConfig = newInstance("com.alibaba.dubbo.config.RegistryConfig")
-            invokeMethod(registryConfig, registry!!, "setAddress", registry!!::class.java)
-            invokeMethod(registryConfig, false, "setRegister", Boolean::class.javaObjectType)
-            invokeMethod(registryConfig, timeout, "setTimeout", timeout::class.javaObjectType)
-            invokeMethod(reference, registryConfig, "setRegistry", registryConfig::class.java)
+            val registryConfig = RegistryConfig()
+            registryConfig.address = registry
+            registryConfig.timeout = timeout
+            registryConfig.isRegister = false
+
+            reference.registry = registryConfig
         }
 
         return reference
@@ -215,44 +213,20 @@ class DubboRequest(
             }.firstOrNull()
 
             if (method == null) {
-                throw IllegalArgumentException("According to the method param $paramNames can't match method: ${methodName}!")
+                throw IllegalArgumentException("According to the method param $paramNames, can't match any method: ${methodName}!")
             }
         }
 
         return method!!
     }
 
-    private fun newInstance(name: String): Any {
-        val referenceConfigCls = dubboClassLoader.loadClass(name)
-        val declaredConstructor = referenceConfigCls.getDeclaredConstructor()
-        declaredConstructor.setAccessible(true)
-        return declaredConstructor.newInstance()
-    }
+    companion object {
+        private val application = ApplicationConfig()
 
-    private fun invokeMethod(obj: Any, value: Any?, name: String, vararg paramCls: Class<*>): Any? {
-        val clazz = obj.javaClass
-
-        val method = getMethod(clazz, name, *paramCls)
-
-        method.isAccessible = true
-
-        return if (value != null) {
-            method.invoke(obj, value)
-        } else {
-            method.invoke(obj)
+        init {
+            application.name = "HttpClient"
+            application.qosEnable = false
         }
-    }
 
-    private fun getMethod(clazz: Class<*>, name: String, vararg paramCls: Class<*>): Method {
-        return try {
-            clazz.getDeclaredMethod(name, *paramCls)
-        } catch (e: Exception) {
-            try {
-                clazz.getMethod(name, *paramCls)
-            } catch (e: Exception) {
-                getMethod(clazz.superclass, name, *paramCls)
-            }
-        }
     }
-
 }

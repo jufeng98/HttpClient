@@ -13,7 +13,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
-import org.javamaster.httpclient.dubbo.DubboRequest
 import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
@@ -156,20 +155,28 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             return
         }
 
-        val dubboRequest = ActionUtil.underModalProgress(project, "Tip:处理中...") {
-            val module = ModuleUtil.findModuleForPsiElement(httpMethod)!!
-            return@underModalProgress DubboRequest(
-                tabName,
-                url,
-                reqHeaderMap,
-                reqBody,
-                httpReqDescList,
-                module,
-                paramMap
+        val dubboRequestClazz =
+            DubboJars.dubboClassLoader.loadClass("org.javamaster.httpclient.dubbo.DubboRequest")
+
+        val dubboRequest = ActionUtil.underModalProgress(project, "Processing dubbo...") {
+            val module = ModuleUtil.findModuleForPsiElement(httpFile)
+
+            val constructor = dubboRequestClazz.declaredConstructors.first { it.parameterCount == 8 }
+            constructor.isAccessible = true
+
+            val dubboRequest = constructor.newInstance(
+                tabName, url, reqHeaderMap, reqBody,
+                httpReqDescList, module, project, paramMap
             )
+
+            return@underModalProgress dubboRequest
         }
 
-        val future = dubboRequest.sendAsync()
+        val method = dubboRequestClazz.getDeclaredMethod("sendAsync")
+        method.isAccessible = true
+
+        @Suppress("UNCHECKED_CAST")
+        val future = method.invoke(dubboRequest) as CompletableFuture<Pair<ByteArray, Long>>
 
         future.whenCompleteAsync { pair, throwable ->
             runWriteActionAndWait {
@@ -182,7 +189,8 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 val byteArray = pair.first
                 val consumeTimes = pair.second
 
-                val httpResDescList = mutableListOf("// time: ${consumeTimes}ms,size: ${byteArray.size / 1024.0}kb\r\n")
+                val httpResDescList =
+                    mutableListOf("// Time: ${consumeTimes}ms, size: ${byteArray.size / 1024.0}kb\r\n")
 
                 val evalJsRes = jsExecutor.evalJsAfterRequest(
                     jsAfterReq,

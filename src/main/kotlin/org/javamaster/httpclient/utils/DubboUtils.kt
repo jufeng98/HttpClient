@@ -4,6 +4,7 @@ import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
@@ -27,6 +28,13 @@ object DubboUtils {
     fun findInterface(module: Module, name: String): PsiClass? {
         val javaPsiFacade = JavaPsiFacade.getInstance(module.project)
         val scope = GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)
+
+        return javaPsiFacade.findClass(name, scope)
+    }
+
+    fun findInterface(project: Project, name: String): PsiClass? {
+        val javaPsiFacade = JavaPsiFacade.getInstance(project)
+        val scope = GlobalSearchScope.projectScope(project)
 
         return javaPsiFacade.findClass(name, scope)
     }

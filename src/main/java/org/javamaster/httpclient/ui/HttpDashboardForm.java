@@ -196,5 +196,7 @@ public class HttpDashboardForm implements Disposable {
     public void dispose() {
         historyMap.values().forEach(HttpDashboardForm::disposeEditors);
         historyMap.clear();
+
+        editorList.clear();
     }
 }

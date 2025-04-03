@@ -1,3 +1,5 @@
+@file:Suppress("VulnerableLibrariesLocal")
+
 import java.net.URI
 
 plugins {
@@ -19,6 +21,12 @@ dependencies {
     implementation("org.mozilla:rhino:1.7.15")
     implementation("com.github.javafaker:javafaker:1.0.2")
     implementation("com.jayway.jsonpath:json-path:2.9.0")
+
+    implementation("com.alibaba:dubbo:2.6.12") {
+        exclude(group = "org.springframework", module = "spring-context")
+        exclude(group = "org.javassist", module = "javassist")
+        exclude(group = "org.jboss.netty", module = "netty")
+    }
 
     testImplementation("junit:junit:4.13.1")
 }
