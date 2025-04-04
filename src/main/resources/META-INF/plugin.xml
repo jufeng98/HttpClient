@@ -169,8 +169,10 @@
                                   implementation="org.javamaster.httpclient.reference.TextPsiReferenceContributor"/>
         <psi.referenceContributor language="XML"
                                   implementation="org.javamaster.httpclient.reference.XmlPsiReferenceContributor"/>
-        <lang.elementManipulator forClass="com.intellij.httpClient.http.request.psi.HttpFilePath"
+        <lang.elementManipulator forClass="org.javamaster.httpclient.psi.HttpFilePath"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpFilePathManipulator"/>
+        <lang.elementManipulator forClass="org.javamaster.httpclient.psi.HttpVariableName"
+                                 implementationClass="org.javamaster.httpclient.manipulator.HttpVariableNameManipulator"/>
         <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
         <runDashboardDefaultTypesProvider
                 implementation="org.javamaster.httpclient.dashboard.HttpDashboardDefaultTypesProvider"/>
