@@ -3,6 +3,7 @@ package org.javamaster.httpclient.usage
 import com.intellij.lang.findUsages.FindUsagesProvider
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNamedElement
 import org.javamaster.httpclient.psi.HttpGlobalVariable
 import org.javamaster.httpclient.psi.HttpGlobalVariableName
 import org.javamaster.httpclient.psi.HttpVariableName
@@ -13,7 +14,7 @@ import org.javamaster.httpclient.psi.HttpVariableName
 class HttpFindUsagesProvider : FindUsagesProvider {
 
     override fun canFindUsagesFor(psiElement: PsiElement): Boolean {
-        return psiElement is HttpVariableName || psiElement is HttpGlobalVariableName
+         return psiElement is PsiNamedElement
     }
 
     override fun getHelpId(psiElement: PsiElement): String? {
