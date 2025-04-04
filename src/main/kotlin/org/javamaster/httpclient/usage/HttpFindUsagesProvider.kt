@@ -4,7 +4,8 @@ import com.intellij.lang.findUsages.FindUsagesProvider
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.psi.HttpGlobalVariable
-import org.javamaster.httpclient.psi.HttpVariable
+import org.javamaster.httpclient.psi.HttpGlobalVariableName
+import org.javamaster.httpclient.psi.HttpVariableName
 
 /**
  * @author yudong
@@ -12,7 +13,7 @@ import org.javamaster.httpclient.psi.HttpVariable
 class HttpFindUsagesProvider : FindUsagesProvider {
 
     override fun canFindUsagesFor(psiElement: PsiElement): Boolean {
-        return psiElement is HttpVariable || psiElement is HttpGlobalVariable
+        return psiElement is HttpVariableName || psiElement is HttpGlobalVariableName
     }
 
     override fun getHelpId(psiElement: PsiElement): String? {
@@ -20,13 +21,13 @@ class HttpFindUsagesProvider : FindUsagesProvider {
     }
 
     override fun getType(element: PsiElement): String {
-        return if (element is HttpVariable) {
-            if (element.variableName?.isBuiltin == true) {
+        return if (element is HttpVariableName) {
+            if (element.isBuiltin) {
                 "Builtin variable"
             } else {
                 "Variable"
             }
-        } else if (element is HttpGlobalVariable) {
+        } else if (element is HttpGlobalVariableName) {
             "Global variable"
         } else {
             ""
@@ -35,8 +36,8 @@ class HttpFindUsagesProvider : FindUsagesProvider {
 
     override fun getDescriptiveName(element: PsiElement): String {
         return when (element) {
-            is HttpVariable -> {
-                StringUtil.notNullize(element.variableName?.text)
+            is HttpVariableName -> {
+                StringUtil.notNullize(element.text)
             }
 
             is HttpGlobalVariable -> {
@@ -51,12 +52,12 @@ class HttpFindUsagesProvider : FindUsagesProvider {
 
     override fun getNodeText(element: PsiElement, useFullName: Boolean): String {
         return when (element) {
-            is HttpVariable -> {
-                StringUtil.notNullize(element.variableName?.text)
+            is HttpVariableName -> {
+                StringUtil.notNullize(element.text)
             }
 
-            is HttpGlobalVariable -> {
-                element.globalVariableName.name
+            is HttpGlobalVariableName -> {
+                element.name
             }
 
             else -> {
