@@ -230,6 +230,8 @@
         <psi.treeChangePreprocessor
                 implementation="org.javamaster.httpclient.scan.support.ControllerPsiTreeChangePreprocessor"/>
         <searchEverywhereContributor implementation="org.javamaster.httpclient.symbol.ApisGotoSEContributor$Factory"/>
+        <lang.findUsagesProvider language="http"
+                                 implementationClass="org.javamaster.httpclient.usage.HttpFindUsagesProvider"/>
     </extensions>
     
     <actions>
