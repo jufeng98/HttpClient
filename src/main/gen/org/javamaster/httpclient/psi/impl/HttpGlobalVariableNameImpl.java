@@ -8,11 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
-import org.javamaster.httpclient.psi.HttpGlobalVariableNameBase;
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
 import com.intellij.psi.PsiReference;
 
-public class HttpGlobalVariableNameImpl extends HttpGlobalVariableNameBase implements HttpGlobalVariableName {
+public class HttpGlobalVariableNameImpl extends ASTWrapperPsiElement implements HttpGlobalVariableName {
 
   public HttpGlobalVariableNameImpl(@NotNull ASTNode node) {
     super(node);
@@ -36,8 +36,20 @@ public class HttpGlobalVariableNameImpl extends HttpGlobalVariableNameBase imple
 
   @Override
   @NotNull
+  public PsiElement setName(@NotNull String name) {
+    return HttpPsiImplUtil.setName(this, name);
+  }
+
+  @Override
+  @NotNull
   public PsiReference[] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getNameIdentifier() {
+    return HttpPsiImplUtil.getNameIdentifier(this);
   }
 
 }

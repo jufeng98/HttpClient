@@ -4,6 +4,7 @@ package org.javamaster.httpclient.psi;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
 
 public class HttpVisitor extends PsiElementVisitor {
 
@@ -48,7 +49,7 @@ public class HttpVisitor extends PsiElementVisitor {
   }
 
   public void visitGlobalVariableName(@NotNull HttpGlobalVariableName o) {
-    visitPsiElement(o);
+    visitPsiNameIdentifierOwner(o);
   }
 
   public void visitGlobalVariableValue(@NotNull HttpGlobalVariableValue o) {
@@ -193,6 +194,10 @@ public class HttpVisitor extends PsiElementVisitor {
 
   public void visitVersion(@NotNull HttpVersion o) {
     visitPsiElement(o);
+  }
+
+  public void visitPsiNameIdentifierOwner(@NotNull PsiNameIdentifierOwner o) {
+    visitElement(o);
   }
 
   public void visitPsiElement(@NotNull PsiElement o) {

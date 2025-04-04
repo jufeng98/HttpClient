@@ -54,9 +54,11 @@ globalVariableName ::= AT GLOBAL_NAME {
     pin = 1
     methods = [
         getName
+        setName
         getReferences
+        getNameIdentifier
     ]
-    extends = "org.javamaster.httpclient.psi.HttpGlobalVariableNameBase"
+    implements = "com.intellij.psi.PsiNameIdentifierOwner"
 }
 globalVariableValue ::= GLOBAL_VALUE | variable {
     pin = 1

@@ -7,6 +7,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.tree.IElementType
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.HttpPsiFactory
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.utils.DubboUtils
@@ -42,6 +43,17 @@ object HttpPsiImplUtil {
     @JvmStatic
     fun getName(variableName: HttpGlobalVariableName): String {
         return getNextSiblingByType(variableName.firstChild, HttpTypes.GLOBAL_NAME, false)!!.text
+    }
+
+    @JvmStatic
+    fun setName(variableName: HttpGlobalVariableName, name: String): PsiElement {
+        val globalVariableName = HttpPsiFactory.createGlobalVariableName(variableName.project, "@$name =")
+        return variableName.replace(globalVariableName)
+    }
+
+    @JvmStatic
+    fun getNameIdentifier(variableName: HttpGlobalVariableName): PsiElement {
+        return getNextSiblingByType(variableName.firstChild, HttpTypes.GLOBAL_NAME, false)!!
     }
 
     @JvmStatic
