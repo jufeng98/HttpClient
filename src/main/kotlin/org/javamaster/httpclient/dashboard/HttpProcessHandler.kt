@@ -123,7 +123,6 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private fun handleException(e: Exception) {
         destroyProcess()
-        e.printStackTrace()
         NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e.message}</div>")
     }
 

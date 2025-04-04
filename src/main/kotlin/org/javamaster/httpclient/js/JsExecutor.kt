@@ -247,8 +247,13 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
     private fun evalJsInAnonymousFun(jsStr: String, rowNum: Int, fileName: String) {
         try {
-            val js = "(function () { 'use strict'; ${jsStr.trim()} })();"
-            context.evaluateString(reqScriptableObject, js, fileName, 1 + rowNum, null)
+            val js = """
+                (function () { 
+                    'use strict'; 
+                    ${jsStr.trim()}; 
+                })();
+            """.trimIndent()
+            context.evaluateString(reqScriptableObject, js, fileName, rowNum - 1, null)
         } catch (e: WrappedException) {
             val cause = e.cause
             if (cause is FileNotFoundException) {
