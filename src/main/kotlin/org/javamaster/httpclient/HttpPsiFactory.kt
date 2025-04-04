@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpGlobalVariable
+import org.javamaster.httpclient.psi.HttpGlobalVariableName
 import org.javamaster.httpclient.psi.HttpVariable
 
 /**
@@ -12,9 +12,9 @@ import org.javamaster.httpclient.psi.HttpVariable
  */
 object HttpPsiFactory {
 
-    fun createGlobalVariable(project: Project, content: String): HttpGlobalVariable {
+    fun createGlobalVariableName(project: Project, content: String): HttpGlobalVariableName {
         val psiFile = createDummyFile(project, content)
-        return PsiTreeUtil.findChildOfType(psiFile, HttpGlobalVariable::class.java)!!
+        return PsiTreeUtil.findChildOfType(psiFile, HttpGlobalVariableName::class.java)!!
     }
 
     fun createVariable(project: Project, content: String): HttpVariable {

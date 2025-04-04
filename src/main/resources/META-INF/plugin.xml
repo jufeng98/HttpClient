@@ -173,6 +173,7 @@
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpFilePathManipulator"/>
         <lang.elementManipulator forClass="org.javamaster.httpclient.psi.HttpVariableName"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpVariableNameManipulator"/>
+        <renameHandler implementation="org.javamaster.httpclient.manipulator.HttpRenameHandler"/>
         <renamePsiElementProcessor
                 implementation="org.javamaster.httpclient.manipulator.HttpRenamePsiElementProcessor"/>
         <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
@@ -237,11 +238,11 @@
         <lang.findUsagesProvider language="http"
                                  implementationClass="org.javamaster.httpclient.usage.HttpFindUsagesProvider"/>
     </extensions>
-    
+
     <actions>
         <action class="org.javamaster.httpclient.action.ApiSearchEverywhereAction" text="Search Api">
             <keyboard-shortcut first-keystroke="control alt SLASH" keymap="$default"/>
         </action>
     </actions>
-    
+
 </idea-plugin>
