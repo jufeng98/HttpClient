@@ -173,6 +173,8 @@
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpFilePathManipulator"/>
         <lang.elementManipulator forClass="org.javamaster.httpclient.psi.HttpVariableName"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpVariableNameManipulator"/>
+        <renamePsiElementProcessor
+                implementation="org.javamaster.httpclient.manipulator.HttpRenamePsiElementProcessor"/>
         <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
         <runDashboardDefaultTypesProvider
                 implementation="org.javamaster.httpclient.dashboard.HttpDashboardDefaultTypesProvider"/>

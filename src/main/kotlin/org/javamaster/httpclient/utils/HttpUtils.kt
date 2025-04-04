@@ -351,7 +351,7 @@ object HttpUtils {
                 val firstChild = it.globalVariableName.firstChild
                 val psiElement = getNextSiblingByType(firstChild, HttpTypes.GLOBAL_NAME, false) ?: return@map null
                 if (psiElement.text == variableName) {
-                    return@map psiElement.parent.parent
+                    return@map psiElement.parent
                 } else {
                     return@map null
                 }
