@@ -55,6 +55,7 @@ globalVariableName ::= AT GLOBAL_NAME {
     methods = [
         getName
     ]
+    extends = "org.javamaster.httpclient.psi.HttpGlobalVariableNameBase"
 }
 globalVariableValue ::= GLOBAL_VALUE | variable {
     pin = 1

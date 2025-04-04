@@ -8,10 +8,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import org.javamaster.httpclient.psi.HttpGlobalVariableNameBase;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpGlobalVariableNameImpl extends ASTWrapperPsiElement implements HttpGlobalVariableName {
+public class HttpGlobalVariableNameImpl extends HttpGlobalVariableNameBase implements HttpGlobalVariableName {
 
   public HttpGlobalVariableNameImpl(@NotNull ASTNode node) {
     super(node);
