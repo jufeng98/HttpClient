@@ -28,7 +28,7 @@ class DubboRequest(
     module: Module?,
     project: Project,
     private val paramMap: Map<String, String>,
-) {
+) : DubboHandler {
     private val methodName: String by lazy {
         val values = reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException("Missing Method header!")
         values[0]
@@ -114,8 +114,7 @@ class DubboRequest(
         }
     }
 
-    @Suppress("unused")
-    fun sendAsync(): CompletableFuture<Pair<ByteArray, Long>> {
+    override fun sendAsync(): CompletableFuture<Pair<ByteArray, Long>> {
         val commentTabName = "### $tabName\r\n"
         httpReqDescList.add(commentTabName)
         httpReqDescList.add("DUBBO $url\r\n")

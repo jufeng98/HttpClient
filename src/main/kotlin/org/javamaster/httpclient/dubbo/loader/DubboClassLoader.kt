@@ -7,7 +7,10 @@ import java.net.URLClassLoader
  * @author yudong
  */
 class DubboClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(urls, parent) {
-    private val needParentLoad = setOf("org.javamaster.httpclient.map.LinkedMultiValueMap")
+    private val needParentLoad = setOf(
+        "org.javamaster.httpclient.map.LinkedMultiValueMap",
+        "org.javamaster.httpclient.dubbo.DubboHandler",
+        )
 
     override fun loadClass(name: String): Class<*> {
         synchronized(getClassLoadingLock(name)) {
