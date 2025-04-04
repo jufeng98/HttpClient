@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import org.javamaster.httpclient.psi.HttpGlobalVariableNameBase;
 import org.javamaster.httpclient.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class HttpGlobalVariableNameImpl extends HttpGlobalVariableNameBase implements HttpGlobalVariableName {
 
@@ -31,6 +32,12 @@ public class HttpGlobalVariableNameImpl extends HttpGlobalVariableNameBase imple
   @NotNull
   public String getName() {
     return HttpPsiImplUtil.getName(this);
+  }
+
+  @Override
+  @NotNull
+  public PsiReference[] getReferences() {
+    return HttpPsiImplUtil.getReferences(this);
   }
 
 }

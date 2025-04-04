@@ -3,17 +3,21 @@ package org.javamaster.httpclient.psi
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNamedElement
+import com.intellij.psi.PsiNameIdentifierOwner
 import org.javamaster.httpclient.HttpPsiFactory
 
 /**
  * @author yudong
  */
-open class HttpGlobalVariableNameBase(node: ASTNode) : ASTWrapperPsiElement(node), PsiNamedElement {
+open class HttpGlobalVariableNameBase(node: ASTNode) : ASTWrapperPsiElement(node), PsiNameIdentifierOwner {
 
     override fun setName(name: String): PsiElement {
-        val globalVariable = HttpPsiFactory.createGlobalVariable(project, "@$name =")
-        return replace(globalVariable.globalVariableName)
+        val globalVariableName = HttpPsiFactory.createGlobalVariableName(project, "@$name =")
+        return replace(globalVariableName)
+    }
+
+    override fun getNameIdentifier(): PsiElement? {
+        return HttpPsiUtils.getNextSiblingByType(this.firstChild, HttpTypes.GLOBAL_NAME, false)!!
     }
 
 }
