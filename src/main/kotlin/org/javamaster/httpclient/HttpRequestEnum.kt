@@ -1,11 +1,11 @@
 package org.javamaster.httpclient
 
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT_NAME
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT_NAME
-import org.javamaster.httpclient.map.LinkedMultiValueMap
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpClient.Version
@@ -37,12 +37,7 @@ enum class HttpRequestEnum {
                 .GET()
                 .uri(URI.create(url))
 
-            reqHeaderMap.forEach {
-                val name = it.key
-                it.value.forEach { value ->
-                    builder.header(name, value)
-                }
-            }
+            setHeaders(reqHeaderMap, builder)
 
             return builder.build()
         }
@@ -62,12 +57,7 @@ enum class HttpRequestEnum {
                 .timeout(Duration.ofSeconds(readTimeout))
                 .uri(URI.create(url))
 
-            reqHeaderMap.forEach {
-                val name = it.key
-                it.value.forEach { value ->
-                    builder.header(name, value)
-                }
-            }
+            setHeaders(reqHeaderMap, builder)
 
             if (bodyPublisher != null) {
                 builder.POST(bodyPublisher)
@@ -94,12 +84,7 @@ enum class HttpRequestEnum {
                 .DELETE()
                 .uri(URI.create(url))
 
-            reqHeaderMap.forEach {
-                val name = it.key
-                it.value.forEach { value ->
-                    builder.header(name, value)
-                }
-            }
+            setHeaders(reqHeaderMap, builder)
 
             return builder.build()
         }
@@ -119,12 +104,7 @@ enum class HttpRequestEnum {
                 .timeout(Duration.ofSeconds(readTimeout))
                 .uri(URI.create(url))
 
-            reqHeaderMap.forEach {
-                val name = it.key
-                it.value.forEach { value ->
-                    builder.header(name, value)
-                }
-            }
+            setHeaders(reqHeaderMap, builder)
 
             if (bodyPublisher != null) {
                 builder.PUT(bodyPublisher)
@@ -133,6 +113,50 @@ enum class HttpRequestEnum {
             }
 
             return builder.build()
+        }
+    },
+    OPTIONS {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
+        ): HttpRequest {
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
+        }
+    },
+    PATCH {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
+        ): HttpRequest {
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
+        }
+    },
+    HEAD {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
+        ): HttpRequest {
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
+        }
+    },
+    TRACE {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            bodyPublisher: HttpRequest.BodyPublisher?,
+            paramMap: Map<String, String>,
+        ): HttpRequest {
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
         }
     },
     WEBSOCKET {
@@ -158,6 +182,35 @@ enum class HttpRequestEnum {
         }
     }
     ;
+
+    fun setHeaders(reqHeaderMap: LinkedMultiValueMap<String, String>, builder: HttpRequest.Builder) {
+        reqHeaderMap.forEach {
+            val name = it.key
+            it.value.forEach { value ->
+                builder.header(name, value)
+            }
+        }
+    }
+
+    fun buildOtherRequest(
+        methodName: String,
+        url: String,
+        version: Version,
+        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        paramMap: Map<String, String>,
+    ): HttpRequest {
+        val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+
+        val builder = HttpRequest.newBuilder()
+            .version(version)
+            .timeout(Duration.ofSeconds(readTimeout))
+            .method(methodName, BodyPublishers.noBody())
+            .uri(URI.create(url))
+
+        setHeaders(reqHeaderMap, builder)
+
+        return builder.build()
+    }
 
     fun execute(
         url: String,
@@ -229,7 +282,12 @@ enum class HttpRequestEnum {
             if (reqBody is String) {
                 val max = 50000
                 if (reqBody.length > max) {
-                    httpReqDescList.add(reqBody.substring(0, max) + "\r\n......(The content is too long and has been truncated)")
+                    httpReqDescList.add(
+                        reqBody.substring(
+                            0,
+                            max
+                        ) + "\r\n......(The content is too long and has been truncated)"
+                    )
                 } else {
                     httpReqDescList.add(reqBody)
                 }
@@ -262,6 +320,7 @@ enum class HttpRequestEnum {
     ): HttpRequest
 
     companion object {
+
         fun getInstance(httpMethod: HttpMethod): HttpRequestEnum {
             val name = httpMethod.text
             try {
@@ -270,5 +329,6 @@ enum class HttpRequestEnum {
                 throw UnsupportedOperationException("Method not supported:$name", e)
             }
         }
+
     }
 }
