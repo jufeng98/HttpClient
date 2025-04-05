@@ -253,7 +253,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     val resPair = convertToResPair(response)
 
                     val httpResDescList =
-                        mutableListOf("// status: ${response.statusCode()}, time: ${consumeTimes}ms, size: $size KB\r\n")
+                        mutableListOf("// Status: ${response.statusCode()}, time: ${consumeTimes}ms, size: $size KB\r\n")
 
                     val evalJsRes = jsExecutor.evalJsAfterRequest(
                         jsAfterReq,
@@ -263,7 +263,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     )
 
                     if (!evalJsRes.isNullOrEmpty()) {
-                        httpResDescList.add("/*\r\npost js executed result:\r\n")
+                        httpResDescList.add("/*\r\nPost js executed result:\r\n")
                         httpResDescList.add("$evalJsRes\r\n")
                         httpResDescList.add("*/\r\n")
                     }

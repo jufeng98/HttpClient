@@ -295,7 +295,7 @@ enum class HttpRequestEnum {
                 @Suppress("UNCHECKED_CAST")
                 val byteArrays = reqBody as MutableIterable<ByteArray>
                 byteArrays.forEach {
-                    val max = 10000
+                    val max = 20000
                     if (it.size > max) {
                         val bytes = it.copyOfRange(0, max)
                         httpReqDescList.add(String(bytes) + " \r\n......(The content is too long and has been truncated)\r\n")
@@ -326,7 +326,7 @@ enum class HttpRequestEnum {
             try {
                 return HttpRequestEnum.valueOf(name)
             } catch (e: Exception) {
-                throw UnsupportedOperationException("Method not supported:$name", e)
+                throw UnsupportedOperationException("Method not supported: $name", e)
             }
         }
 

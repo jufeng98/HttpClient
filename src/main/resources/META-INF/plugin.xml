@@ -55,6 +55,13 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>3.5.0</b></li>
+                <ul>
+                    <li>支持变量的重命名功能</li>
+                    <li>新增 find usages 功能</li>
+                    <li>支持所有类型的 http 请求</li>
+                    <li>功能优化及Bug修复</li>
+                </ul>
                 <li><b>3.3.0</b></li>
                 <ul>
                     <li>新增 commenter</li>
