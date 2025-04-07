@@ -83,9 +83,15 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
         HttpBackground
             .runInBackgroundReadActionAsync {
                 val envFileService = getService(source.project)
-                envFileService.getPresetEnvSet(file.parent.path)
+                val path = file.parent?.path ?: return@runInBackgroundReadActionAsync null
+
+                envFileService.getPresetEnvSet(path)
             }
             .finishOnUiThread {
+                if (it == null) {
+                    return@finishOnUiThread
+                }
+
                 val httpEditorTopForm = HttpEditorTopForm(file, module, project)
 
                 httpEditorTopForm.initEnvCombo(it)
