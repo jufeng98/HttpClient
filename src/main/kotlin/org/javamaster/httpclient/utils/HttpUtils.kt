@@ -644,4 +644,28 @@ object HttpUtils {
 
         return html
     }
+
+    fun getMethodDesc(psiMethod: PsiMethod): String {
+        var str = ""
+
+        val docComment = psiMethod.docComment
+        if (docComment != null) {
+            val comment =
+                getNextSiblingByType(docComment.firstChild, JavaDocTokenType.DOC_COMMENT_DATA, false)
+                    ?.text?.trim()
+            str += comment
+        }
+
+        val annotation = psiMethod.getAnnotation("io.swagger.annotations.ApiOperation")
+        if (annotation != null) {
+            val desc = annotation.findAttributeValue("value")?.text?.trim()
+            str += " $desc "
+        }
+
+        return if (str.isNotEmpty()) {
+            "($str)"
+        } else {
+            ""
+        }
+    }
 }

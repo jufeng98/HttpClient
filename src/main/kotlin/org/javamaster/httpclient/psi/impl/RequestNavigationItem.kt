@@ -1,11 +1,10 @@
 package org.javamaster.httpclient.psi.impl
 
 import com.intellij.navigation.ItemPresentation
-import com.intellij.psi.JavaDocTokenType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.FakePsiElement
-import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.scan.support.Request
+import org.javamaster.httpclient.utils.HttpUtils
 import javax.swing.Icon
 
 /**
@@ -55,21 +54,7 @@ class RequestNavigationItem(val request: Request) :
         override fun getPresentableText(): String {
             val psiMethod = request.psiElement!!
 
-            var str = ""
-
-            val docComment = psiMethod.docComment
-            if (docComment != null) {
-                val comment =
-                    HttpPsiUtils.getNextSiblingByType(docComment.firstChild, JavaDocTokenType.DOC_COMMENT_DATA, false)
-                        ?.text?.trim()
-                str += comment
-            }
-
-            val annotation = psiMethod.getAnnotation("io.swagger.annotations.ApiOperation")
-            if (annotation != null) {
-                val desc = annotation.findAttributeValue("value")?.text?.trim()
-                str += " $desc "
-            }
+            var str = HttpUtils.getMethodDesc(psiMethod)
 
             str = if (str.isNotEmpty()) {
                 "($str)"
