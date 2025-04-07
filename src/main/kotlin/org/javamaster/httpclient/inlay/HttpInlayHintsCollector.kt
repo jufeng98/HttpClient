@@ -42,14 +42,11 @@ object HttpInlayHintsCollector : SharedBypassCollector {
         sink.addPresentation(
             InlineInlayPosition(element.startOffset, false),
             tooltip = "Create http request",
-            hintFormat = HintFormat.default
+            hintFormat = HintFormat.default.withColorKind(HintColorKind.TextWithoutBackground)
         ) {
             text(
                 "url",
-                InlayActionData(
-                    PsiPointerInlayActionPayload(pointer),
-                    "HttpInlayHintsCollector"
-                )
+                InlayActionData(PsiPointerInlayActionPayload(pointer), "HttpInlayHintsCollector")
             )
         }
     }
