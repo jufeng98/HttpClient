@@ -60,6 +60,7 @@
                     <li>支持变量的重命名功能</li>
                     <li>新增 find usages 功能</li>
                     <li>支持所有类型的 http 请求</li>
+                    <li>新增在 Controller url 上快速创建请求功能</li>
                     <li>功能优化及Bug修复</li>
                 </ul>
                 <li><b>3.3.0</b></li>
@@ -244,6 +245,16 @@
         <searchEverywhereContributor implementation="org.javamaster.httpclient.symbol.ApisGotoSEContributor$Factory"/>
         <lang.findUsagesProvider language="http"
                                  implementationClass="org.javamaster.httpclient.usage.HttpFindUsagesProvider"/>
+        <codeInsight.declarativeInlayProvider language="JAVA"
+                                              implementationClass="org.javamaster.httpclient.inlay.UrlInlineHintsProvider"
+                                              isEnabledByDefault="true"
+                                              group="URL_PATH_GROUP"
+                                              providerId="http.client.url"
+                                              bundle="messages.HttpClient"
+                                              nameKey="url.name"
+                                              descriptionKey="url.description"/>
+        <codeInsight.inlayActionHandler handlerId="HttpInlayHintsCollector"
+                                        implementationClass="org.javamaster.httpclient.inlay.HttpInlayActionHandler"/>
     </extensions>
 
     <actions>

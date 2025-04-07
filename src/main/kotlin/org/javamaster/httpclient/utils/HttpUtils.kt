@@ -646,26 +646,25 @@ object HttpUtils {
     }
 
     fun getMethodDesc(psiMethod: PsiMethod): String {
-        var str = ""
+        val list = ArrayList<String>(2)
 
         val docComment = psiMethod.docComment
         if (docComment != null) {
-            val comment =
-                getNextSiblingByType(docComment.firstChild, JavaDocTokenType.DOC_COMMENT_DATA, false)
-                    ?.text?.trim()
-            str += comment
+            val comment = getNextSiblingByType(docComment.firstChild, JavaDocTokenType.DOC_COMMENT_DATA, false)
+                ?.text?.trim()
+
+            comment?.let { list.add(it) }
         }
 
         val annotation = psiMethod.getAnnotation("io.swagger.annotations.ApiOperation")
         if (annotation != null) {
-            val desc = annotation.findAttributeValue("value")?.text?.trim()
-            str += " $desc "
+            val attributeValue = annotation.findAttributeValue("value") as PsiLiteralExpression?
+
+            val desc = attributeValue?.value?.toString()?.trim()
+
+            desc?.let { list.add(it) }
         }
 
-        return if (str.isNotEmpty()) {
-            "($str)"
-        } else {
-            ""
-        }
+        return list.joinToString(" ")
     }
 }

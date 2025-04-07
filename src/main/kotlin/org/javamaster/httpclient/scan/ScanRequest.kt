@@ -38,7 +38,7 @@ object ScanRequest {
         controllerScanService.fetchRequests(project, searchScope, consumer)
     }
 
-    private fun getCacheRequestMap(module: Module, project: Project): Map<String, List<Request>> {
+    fun getCacheRequestMap(module: Module, project: Project): Map<String, List<Request>> {
         val controllerScanService = SpringControllerScanService.getService(project)
 
         val key = keyMap.computeIfAbsent(module.name) {
