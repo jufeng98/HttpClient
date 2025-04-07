@@ -14,7 +14,7 @@ import org.javamaster.httpclient.utils.HttpUtils
 /**
  * @author yudong
  */
-class JsonKeyControllerMethodFieldPsiReferenceProviderCoolRequest : PsiReferenceProvider() {
+class JsonKeyControllerMethodFieldPsiReferenceProvider : PsiReferenceProvider() {
 
     override fun getReferencesByElement(element: PsiElement, context: ProcessingContext): Array<PsiReference> {
         val jsonString = element as JsonStringLiteral

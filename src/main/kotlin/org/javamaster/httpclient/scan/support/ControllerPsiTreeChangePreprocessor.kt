@@ -31,18 +31,23 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
             return
         }
 
-        val psiClass = PsiTreeUtil.getChildOfType(psiFile, PsiClass::class.java) ?: return
+        try {
+            val psiClass = PsiTreeUtil.getChildOfType(psiFile, PsiClass::class.java) ?: return
 
-        val notControllerCls = psiClass.annotations
-            .none {
-                controllerAnnoSet.contains(it.qualifiedName)
+            val notControllerCls = psiClass.annotations
+                .none {
+                    controllerAnnoSet.contains(it.qualifiedName)
+                }
+
+            if (notControllerCls) {
+                return
             }
 
-        if (notControllerCls) {
-            return
+            ControllerPsiModificationTracker.myModificationCount.incModificationCount()
+        } catch (e: Exception) {
+            System.err.println(e.message)
         }
 
-        ControllerPsiModificationTracker.myModificationCount.incModificationCount()
     }
 
 }

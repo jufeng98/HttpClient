@@ -30,6 +30,10 @@ class JsonValuePsiReferenceProvider : PsiReferenceProvider() {
         val injectionHost = InjectedLanguageManager.getInstance(project).getInjectionHost(stringLiteral)
         if (injectionHost is HttpMessageBody) {
             var text = stringLiteral.text
+            if (text.length < 4) {
+                return PsiReference.EMPTY_ARRAY
+            }
+
             text = text.substring(1, text.length - 1)
             val delta = stringLiteral.textRange.startOffset + 1
 

@@ -7,9 +7,9 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.util.PsiTreeUtil
-import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequestTarget
+import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
@@ -23,7 +23,7 @@ class HttpUrlControllerMethodPsiReference(
     PsiReferenceBase<HttpRequestTarget>(requestTarget, textRange) {
 
     override fun resolve(): PsiElement? {
-        val virtualFile = element.containingFile.virtualFile
+        val virtualFile = element.containingFile?.virtualFile ?: return null
 
         val module = findModule(requestTarget, virtualFile) ?: return null
 

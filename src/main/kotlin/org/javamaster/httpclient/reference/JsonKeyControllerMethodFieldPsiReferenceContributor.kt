@@ -4,7 +4,7 @@ import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiReferenceContributor
 import com.intellij.psi.PsiReferenceRegistrar
-import org.javamaster.httpclient.reference.provider.JsonKeyControllerMethodFieldPsiReferenceProviderCoolRequest
+import org.javamaster.httpclient.reference.provider.JsonKeyControllerMethodFieldPsiReferenceProvider
 
 /**
  * Jump to the SpringMVC Controller method param Bean field when pressing Ctrl + click json key
@@ -16,7 +16,7 @@ class JsonKeyControllerMethodFieldPsiReferenceContributor : PsiReferenceContribu
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
         registrar.registerReferenceProvider(
             PlatformPatterns.psiElement(JsonStringLiteral::class.java),
-            JsonKeyControllerMethodFieldPsiReferenceProviderCoolRequest()
+            JsonKeyControllerMethodFieldPsiReferenceProvider()
         )
     }
 
