@@ -22,6 +22,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.adapter.DateTypeAdapter
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.map.LinkedMultiValueMap
@@ -47,7 +48,10 @@ object HttpUtils {
         .setPrettyPrinting()
         .serializeNulls()
         .disableHtmlEscaping()
+        .registerTypeAdapter(Date::class.java, DateTypeAdapter)
         .create()
+
+    const val REQUEST_BODY_ANNO_NAME = "org.springframework.web.bind.annotation.RequestBody"
 
     const val READ_TIMEOUT_NAME = "readTimeout"
     const val TIMEOUT_NAME = "timeout"
@@ -552,10 +556,9 @@ object HttpUtils {
         val superPsiMethods = psiMethod.findSuperMethods(false)
         val psiParameters = psiMethod.parameterList.parameters
         var psiParameter: PsiParameter? = null
-        val requestBodyAnnoName = "org.springframework.web.bind.annotation.RequestBody"
 
         for ((index, psiParam) in psiParameters.withIndex()) {
-            var hasAnno = psiParam.hasAnnotation(requestBodyAnnoName)
+            var hasAnno = psiParam.hasAnnotation(REQUEST_BODY_ANNO_NAME)
             if (hasAnno) {
                 psiParameter = psiParam
                 break
@@ -563,7 +566,7 @@ object HttpUtils {
 
             for (superPsiMethod in superPsiMethods) {
                 val superPsiParam = superPsiMethod.parameterList.parameters[index]
-                hasAnno = superPsiParam.hasAnnotation(requestBodyAnnoName)
+                hasAnno = superPsiParam.hasAnnotation(REQUEST_BODY_ANNO_NAME)
                 if (hasAnno) {
                     psiParameter = psiParam
                     break
