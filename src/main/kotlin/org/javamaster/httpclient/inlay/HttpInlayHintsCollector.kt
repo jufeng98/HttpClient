@@ -2,7 +2,6 @@ package org.javamaster.httpclient.inlay
 
 import com.intellij.codeInsight.hints.declarative.*
 import com.intellij.psi.*
-import com.intellij.psi.util.startOffset
 import org.javamaster.httpclient.enums.SpringHttpMethod
 
 /**
@@ -39,10 +38,12 @@ object HttpInlayHintsCollector : SharedBypassCollector {
 
         val pointer = SmartPointerManager.getInstance(element.project).createSmartPsiElementPointer(element)
 
+        @Suppress("DEPRECATION")
         sink.addPresentation(
-            InlineInlayPosition(element.startOffset, false),
-            tooltip = "Create http request",
-            hintFormat = HintFormat.default.withColorKind(HintColorKind.TextWithoutBackground)
+            InlineInlayPosition(element.textRange.startOffset, false),
+            null,
+            "Create http request",
+            false
         ) {
             text(
                 "url",

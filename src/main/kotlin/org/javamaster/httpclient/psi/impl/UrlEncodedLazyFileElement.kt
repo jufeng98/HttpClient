@@ -15,7 +15,7 @@ class UrlEncodedLazyFileElement(val buffer: CharSequence) : FileElement(MyHttpTy
             val fileElement = UrlEncodedLazyFileElement(value)
             try {
                 return HttpTypes.Factory.createElement(fileElement.firstChildNode.firstChildNode) as HttpQuery
-            } catch (e: Exception) {
+            } catch (e: Error) {
                 System.err.println(e.message)
                 return null
             }

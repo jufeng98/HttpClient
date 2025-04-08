@@ -24,15 +24,20 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
             return
         }
 
-        val project = psiFile.project
-
-        val dumbService = project.getService(DumbService::class.java)
-        if (dumbService.isDumb) {
-            return
-        }
-
         try {
-            val psiClass = PsiTreeUtil.getChildOfType(psiFile, PsiClass::class.java) ?: return
+            val code = event.code
+            if (code == PsiTreeChangeEventImpl.PsiEventType.BEFORE_PROPERTY_CHANGE
+                || code == PsiTreeChangeEventImpl.PsiEventType.PROPERTY_CHANGED
+            ) {
+                return
+            }
+
+            val dumbService = psiFile.project.getService(DumbService::class.java)
+            if (dumbService.isDumb) {
+                return
+            }
+
+            val psiClass = PsiTreeUtil.getStubChildOfType(psiFile, PsiClass::class.java) ?: return
 
             val notControllerCls = psiClass.annotations
                 .none {
