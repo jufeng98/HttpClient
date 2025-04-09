@@ -3,6 +3,9 @@ package org.javamaster.httpclient.doc.support
 import com.google.gson.JsonObject
 import com.intellij.openapi.util.text.StringUtil
 
+/**
+ * @author yudong
+ */
 class HttpHeaderDocumentation private constructor(
     val name: String,
     private val myRfc: String,
@@ -11,31 +14,27 @@ class HttpHeaderDocumentation private constructor(
     val isDeprecated: Boolean,
 ) {
     constructor(name: String) : this(name, "", "", "", false)
-    constructor(name: String, isDeprecated: Boolean) : this(name, "", "", "", isDeprecated)
+
+    val url = URL_PREFIX + name
 
     fun generateDoc(): String? {
         if (StringUtil.isEmpty(description)) {
             return null
         }
 
-        val sb = (StringBuilder()).append(description)
+        val sb = StringBuilder().append(description)
+
         if (StringUtil.isNotEmpty(myRfc) && StringUtil.isNotEmpty(myRfcTitle)) {
-            sb.append("<br/><br/>")
-            sb.append("<a href=\"").append(RFC_PREFIX).append(myRfc).append("\">").append(myRfcTitle).append("</a>")
+            sb.append("<br/><br/>").append("<a href=\"").append(RFC_PREFIX).append(myRfc)
+                .append("\">").append(myRfcTitle).append("</a>")
         }
 
-        val var2 = url
-        sb.append("<br/><br/>")
-        sb.append("<a href=\"").append(var2).append("\">").append(name).append("</a> by ")
-        sb.append("<a href=\"").append(var2).append("\$history").append("\">").append("Mozilla Contributors")
-            .append("</a>")
-        sb.append(CC_LICENSE)
+        sb.append("<br/><br/>").append("<a href=\"").append(url).append("\">").append(name)
+            .append("</a> by ").append("<a href=\"").append(url).append("\$history").append("\">")
+            .append("Mozilla Contributors").append("</a>").append(CC_LICENSE)
 
         return sb.toString()
     }
-
-    val url: String
-        get() = URL_PREFIX + name
 
     companion object {
         private const val CC_LICENSE =
@@ -53,15 +52,18 @@ class HttpHeaderDocumentation private constructor(
             val ref = getValue(obj, "rfc-ref")
             val descr = getValue(obj, "descr")
 
-            val element = obj["obsolete"]
-            val isDeprecated = element != null && element.isJsonPrimitive && element.asBoolean
+            val obsolete = obj["obsolete"]
+            val isDeprecated = obsolete != null && obsolete.isJsonPrimitive && obsolete.asBoolean
 
             return HttpHeaderDocumentation(value, ref, title, descr, isDeprecated)
         }
 
         private fun getValue(obj: JsonObject, key: String): String {
-            val element = obj[key]
-            return if (element != null && element.isJsonPrimitive) element.asString else ""
+            val element = obj[key] ?: return ""
+
+            if (!element.isJsonPrimitive) return ""
+
+            return element.asString
         }
     }
 }

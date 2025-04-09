@@ -13,7 +13,7 @@ import org.javamaster.httpclient.utils.DubboUtils
  * @author yudong
  */
 object HttpHeadersDictionary {
-    val encodings = listOf(
+    val encodingValues = listOf(
         "compress",
         "deflate",
         "exi",
@@ -71,11 +71,12 @@ object HttpHeadersDictionary {
         "X-Request-ID",
         "X-Requested-With",
         "X-Total-Count",
-        "X-User-Agent"
+        "X-User-Agent",
+        "Admin-Token",
     )
 
     val headers by lazy {
-        val map = initMap()
+        val map = createMapFromFile()
 
         for (header in knownExtraHeaders) {
             map[header] = HttpHeaderDocumentation(header)
@@ -99,23 +100,6 @@ object HttpHeadersDictionary {
         listOf("graphql-ws", "subscriptions-transport-ws", "aws-app-sync")
     }
 
-    val headerNameMap by lazy {
-        val map: MutableMap<String, HttpHeaderDocumentation> = mutableMapOf()
-        val fields = HttpHeaders::class.java.declaredFields
-        for (field in fields) {
-            field.isAccessible = true
-            val value = field[null] as String
-
-            val isDeprecated = field.getAnnotation(java.lang.Deprecated::class.java) != null
-            map[value] = HttpHeaderDocumentation(value, isDeprecated)
-        }
-
-        val header = "Admin-Token"
-        map[header] = HttpHeaderDocumentation(header, false)
-
-        map
-    }
-
     val referrerPolicyValues by lazy {
         val fields = ReferrerPolicyValues::class.java.declaredFields
         fields.map {
@@ -128,7 +112,7 @@ object HttpHeadersDictionary {
         return headers[fieldName]
     }
 
-    private fun initMap(): MutableMap<String, HttpHeaderDocumentation> {
+    private fun createMapFromFile(): MutableMap<String, HttpHeaderDocumentation> {
         val name = "examples/header-documentation.json"
         val stream = HttpHeadersDictionary::class.java.classLoader.getResourceAsStream(name)!!
 

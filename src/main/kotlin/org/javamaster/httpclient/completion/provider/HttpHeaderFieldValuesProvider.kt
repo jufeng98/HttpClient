@@ -8,7 +8,7 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.completion.support.HttpHeadersDictionary
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.encodings
+import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.encodingValues
 import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.predefinedMimeVariants
 import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpHeaderField
@@ -43,7 +43,7 @@ class HttpHeaderFieldValuesProvider : CompletionProvider<CompletionParameters>()
         }
 
         if (headerName.equals(HttpHeaders.ACCEPT_ENCODING, ignoreCase = true)) {
-            for (value in encodings) {
+            for (value in encodingValues) {
                 result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
             }
             return

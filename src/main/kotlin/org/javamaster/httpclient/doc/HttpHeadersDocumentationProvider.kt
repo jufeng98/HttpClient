@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.TokenSet
+import com.intellij.util.SmartList
 import org.javamaster.httpclient.HttpPsiFactory.createDummyFile
 import org.javamaster.httpclient.completion.support.HttpHeadersDictionary
 import org.javamaster.httpclient.doc.support.HttpHeaderDocumentation
@@ -22,15 +23,15 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
     private val headerSet = TokenSet.create(HttpTypes.FIELD_NAME, HttpTypes.FIELD_VALUE)
 
     override fun getUrlFor(element: PsiElement, originalElement: PsiElement): List<String>? {
-        val doc = getDocumentation(element)
+        val doc = getDocumentation(element) ?: return null
 
-        return if (doc != null) listOf(doc.url) else null
+        return SmartList(doc.url)
     }
 
     override fun generateDoc(element: PsiElement, originalElement: PsiElement?): @Nls String? {
-        val doc = getDocumentation(element)
+        val doc = getDocumentation(element) ?: return null
 
-        return doc?.generateDoc()
+        return doc.generateDoc()
     }
 
     override fun getDocumentationElementForLookupItem(
@@ -65,11 +66,7 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
 
         if (file !is HttpFile) return null
 
-        while (psiElement is PsiWhiteSpace || HttpPsiUtils.isOfType(
-                psiElement,
-                HttpTypes.COLON
-            )
-        ) {
+        while (psiElement is PsiWhiteSpace || HttpPsiUtils.isOfType(psiElement, HttpTypes.COLON)) {
             psiElement = psiElement.prevSibling
         }
 
@@ -85,14 +82,10 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
     }
 
     private fun getDocumentation(element: PsiElement): HttpHeaderDocumentation? {
-        if (element is HttpHeaderField) {
-            val name = element.name
+        if (element !is HttpHeaderField) return null
 
-            if (StringUtil.isNotEmpty(name)) {
-                return HttpHeadersDictionary.getDocumentation(name)
-            }
-        }
+        val name = element.name
 
-        return null
+        return HttpHeadersDictionary.getDocumentation(name)
     }
 }

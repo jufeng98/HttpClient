@@ -33,7 +33,7 @@ class HttpHeaderFieldNamesProvider : CompletionProvider<CompletionParameters>() 
             return
         }
 
-        for (header in HttpHeadersDictionary.headerNameMap.values) {
+        for (header in HttpHeadersDictionary.headers.values) {
             val priority = PrioritizedLookupElement.withPriority(
                 LookupElementBuilder.create(header, header.name)
                     .withCaseSensitivity(false)
