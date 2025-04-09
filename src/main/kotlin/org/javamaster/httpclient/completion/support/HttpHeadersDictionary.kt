@@ -13,7 +13,7 @@ import org.javamaster.httpclient.utils.DubboUtils
  * @author yudong
  */
 object HttpHeadersDictionary {
-    val encodingValues = listOf(
+    private val encodingValues = listOf(
         "compress",
         "deflate",
         "exi",
@@ -29,7 +29,7 @@ object HttpHeadersDictionary {
         "xz"
     )
 
-    val predefinedMimeVariants = arrayOf(
+    private val predefinedMimeVariants = listOf(
         "application/json",
         "application/xml",
         "application/x-yaml",
@@ -61,6 +61,18 @@ object HttpHeadersDictionary {
         ContentType.MULTIPART_FORM_DATA.mimeType + "; boundary=----WebBoundary"
     )
 
+    private val secWebsocketProtocolValues by lazy {
+        listOf("graphql-ws", "subscriptions-transport-ws", "aws-app-sync")
+    }
+
+    private val referrerPolicyValues by lazy {
+        val fields = ReferrerPolicyValues::class.java.declaredFields
+        fields.map {
+            it.isAccessible = true
+            it[null] as String
+        }
+    }
+
     private val knownExtraHeaders = listOf(
         "X-Correlation-ID",
         "X-Csrf-Token",
@@ -73,9 +85,10 @@ object HttpHeadersDictionary {
         "X-Total-Count",
         "X-User-Agent",
         "Admin-Token",
+        HttpHeaders.REFERRER_POLICY,
     )
 
-    val headers by lazy {
+    val headerMap by lazy {
         val map = createMapFromFile()
 
         for (header in knownExtraHeaders) {
@@ -96,20 +109,18 @@ object HttpHeadersDictionary {
         )
     }
 
-    val secWebsocketProtocolValues by lazy {
-        listOf("graphql-ws", "subscriptions-transport-ws", "aws-app-sync")
-    }
-
-    val referrerPolicyValues by lazy {
-        val fields = ReferrerPolicyValues::class.java.declaredFields
-        fields.map {
-            it.isAccessible = true
-            it[null] as String
-        }
+    val headerValuesMap by lazy {
+        val map = mutableMapOf<String, List<String>>()
+        map[HttpHeaders.ACCEPT_ENCODING] = encodingValues
+        map[HttpHeaders.CONTENT_TYPE] = predefinedMimeVariants
+        map[HttpHeaders.ACCEPT] = predefinedMimeVariants
+        map[HttpHeaders.REFERRER_POLICY] = referrerPolicyValues
+        map[HttpHeaders.SEC_WEBSOCKET_PROTOCOL] = secWebsocketProtocolValues
+        map
     }
 
     fun getDocumentation(fieldName: String): HttpHeaderDocumentation? {
-        return headers[fieldName]
+        return headerMap[fieldName]
     }
 
     private fun createMapFromFile(): MutableMap<String, HttpHeaderDocumentation> {

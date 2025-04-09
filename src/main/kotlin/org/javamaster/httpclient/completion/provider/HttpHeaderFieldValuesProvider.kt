@@ -1,18 +1,16 @@
 package org.javamaster.httpclient.completion.provider
 
-import com.google.common.net.HttpHeaders
 import com.intellij.codeInsight.completion.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.encodingValues
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.predefinedMimeVariants
+import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.headerValuesMap
 import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.utils.DubboUtils
+import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * @author yudong
@@ -33,25 +31,10 @@ class HttpHeaderFieldValuesProvider : CompletionProvider<CompletionParameters>()
             return
         }
 
-        if (headerName.equals(HttpHeaders.CONTENT_TYPE, ignoreCase = true)
-            || headerName.equals(HttpHeaders.ACCEPT, ignoreCase = true)
-        ) {
-            for (value in predefinedMimeVariants) {
-                result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
-            }
-            return
-        }
-
-        if (headerName.equals(HttpHeaders.ACCEPT_ENCODING, ignoreCase = true)) {
-            for (value in encodingValues) {
-                result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
-            }
-            return
-        }
-
-        if (headerName.equals(HttpHeaders.REFERRER_POLICY, ignoreCase = true)) {
-            for (value in HttpHeadersDictionary.referrerPolicyValues) {
-                result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
+        val headerValues = headerValuesMap[headerName]
+        if (headerValues != null) {
+            headerValues.forEach {
+                result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(it), 200.0))
             }
             return
         }
@@ -70,27 +53,22 @@ class HttpHeaderFieldValuesProvider : CompletionProvider<CompletionParameters>()
         if (headerName.equals(DubboUtils.METHOD_KEY, ignoreCase = true)) {
             val header = headerField!!.parent as HttpHeader
             val interfaceField = header.interfaceField ?: return
+
             val fieldValue = interfaceField.headerFieldValue ?: return
+
             val module = ModuleUtil.findModuleForPsiElement(header) ?: return
+
             val interfacePsiClass = DubboUtils.findInterface(module, fieldValue.text) ?: return
-            interfacePsiClass.methods.forEach {
-                val builder = LookupElementBuilder.create(it.name).withBoldness(true)
-                    .withPsiElement(it).withTailText(it.parameterList.text)
-                    .withTypeText(it.returnTypeElement?.text)
-                result.addElement(builder)
-            }
-            return
+
+            interfacePsiClass.methods
+                .forEach {
+                    val desc = HttpUtils.getMethodDesc(it)
+                    val builder = LookupElementBuilder.create(it.name).withBoldness(true)
+                        .withPsiElement(it).withTailText(it.parameterList.text)
+                        .withTypeText(it.returnTypeElement?.text + " " + desc)
+                    result.addElement(builder)
+                }
         }
 
-        if (headerName.equals(HttpHeaders.SEC_WEBSOCKET_PROTOCOL, ignoreCase = true)) {
-            for (protocol in HttpHeadersDictionary.secWebsocketProtocolValues) {
-                result.addElement(
-                    PrioritizedLookupElement.withPriority(
-                        LookupElementBuilder.create(protocol),
-                        200.0
-                    )
-                )
-            }
-        }
     }
 }
