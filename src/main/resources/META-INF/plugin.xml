@@ -247,6 +247,12 @@
                                     implementationClass="org.javamaster.httpclient.doc.HttpUrlControllerMethodDocumentationProvider"/>
         <lang.documentationProvider language="http"
                                     implementationClass="org.javamaster.httpclient.doc.HttpHeadersDocumentationProvider"/>
+        <lang.documentationProvider language="http"
+                                    implementationClass="org.javamaster.httpclient.doc.HttpDocumentationProvider"/>
+        <lang.documentationProvider language="JSON"
+                                    implementationClass="org.javamaster.httpclient.doc.HttpDocumentationProvider"/>
+        <lang.documentationProvider language="TEXT"
+                                    implementationClass="org.javamaster.httpclient.doc.HttpDocumentationProvider"/>
         <psi.treeChangePreprocessor
                 implementation="org.javamaster.httpclient.scan.support.ControllerPsiTreeChangePreprocessor"/>
         <searchEverywhereContributor implementation="org.javamaster.httpclient.symbol.ApisGotoSEContributor$Factory"/>
