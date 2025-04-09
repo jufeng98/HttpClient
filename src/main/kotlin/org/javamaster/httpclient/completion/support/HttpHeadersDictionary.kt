@@ -1,9 +1,13 @@
 package org.javamaster.httpclient.completion.support
 
-import org.apache.http.HttpHeaders
+import com.google.common.net.HttpHeaders
+import com.google.common.net.HttpHeaders.ReferrerPolicyValues
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.utils.DubboUtils
 
+/**
+ * @author yudong
+ */
 object HttpHeadersDictionary {
 
     val contentTypeValues by lazy {
@@ -15,7 +19,7 @@ object HttpHeadersDictionary {
         val list = mutableListOf(ContentType.MULTIPART_FORM_DATA.mimeType + "; boundary=----WebBoundary")
         list.addAll(map.keys)
 
-        list.toTypedArray()
+        list
     }
 
     val dubboHeaderNames by lazy {
@@ -29,26 +33,32 @@ object HttpHeadersDictionary {
         )
     }
 
-    val myWebSocketProtocols by lazy {
+    val secWebsocketProtocolValues by lazy {
         listOf("graphql-ws", "subscriptions-transport-ws", "aws-app-sync")
     }
 
-    val headerNameMap: MutableMap<String, HttpHeaderDocumentation> by lazy {
+    val headerNameMap by lazy {
         val map: MutableMap<String, HttpHeaderDocumentation> = mutableMapOf()
         val fields = HttpHeaders::class.java.declaredFields
         for (field in fields) {
             field.isAccessible = true
             val value = field[null] as String
-            map[value] = HttpHeaderDocumentation(value, false)
+
+            val isDeprecated = field.getAnnotation(java.lang.Deprecated::class.java) != null
+            map[value] = HttpHeaderDocumentation(value, isDeprecated)
         }
 
-        var header = com.google.common.net.HttpHeaders.CONTENT_DISPOSITION
+        val header = "Admin-Token"
         map[header] = HttpHeaderDocumentation(header, false)
-        header = "Admin-Token"
-        map[header] = HttpHeaderDocumentation(header, false)
-        header = com.google.common.net.HttpHeaders.SEC_WEBSOCKET_PROTOCOL
-        map[header] = HttpHeaderDocumentation(header, false)
+
         map
     }
 
+    val referrerPolicyValues by lazy {
+        val fields = ReferrerPolicyValues::class.java.declaredFields
+        fields.map {
+            it.isAccessible = true
+            it[null] as String
+        }
+    }
 }
