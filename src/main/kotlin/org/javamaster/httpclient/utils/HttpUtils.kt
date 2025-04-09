@@ -55,12 +55,9 @@ object HttpUtils {
     const val API_OPERATION_ANNO_NAME = "io.swagger.annotations.ApiOperation"
     const val API_MODEL_PROPERTY_ANNO_NAME = "io.swagger.annotations.ApiModelProperty"
 
-    const val READ_TIMEOUT_NAME = "readTimeout"
-    const val TIMEOUT_NAME = "timeout"
-    const val CONNECT_TIMEOUT_NAME = "connectTimeout"
-
     const val READ_TIMEOUT = 3600L
     const val CONNECT_TIMEOUT = 30L
+    const val TIMEOUT = 10_000
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
     private const val VARIABLE_SIGN_END = "}}"

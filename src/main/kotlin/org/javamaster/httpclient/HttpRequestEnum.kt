@@ -1,10 +1,9 @@
 package org.javamaster.httpclient
 
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
-import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT_NAME
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
-import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT_NAME
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpClient.Version
@@ -28,7 +27,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+            val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
 
             val builder = HttpRequest.newBuilder()
                 .version(version)
@@ -49,7 +48,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+            val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
 
             val builder = HttpRequest.newBuilder()
                 .version(version)
@@ -75,7 +74,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+            val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
 
             val builder = HttpRequest.newBuilder()
                 .version(version)
@@ -96,7 +95,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher?,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+            val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
 
             val builder = HttpRequest.newBuilder()
                 .version(version)
@@ -198,7 +197,7 @@ enum class HttpRequestEnum {
         reqHeaderMap: LinkedMultiValueMap<String, String>,
         paramMap: Map<String, String>,
     ): HttpRequest {
-        val readTimeout = paramMap[READ_TIMEOUT_NAME]?.toLong() ?: READ_TIMEOUT
+        val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
 
         val builder = HttpRequest.newBuilder()
             .version(version)
@@ -247,7 +246,7 @@ enum class HttpRequestEnum {
 
             val request = createRequest(url, version, reqHttpHeaders, bodyPublisher, paramMap)
 
-            val connectTimeout = paramMap[CONNECT_TIMEOUT_NAME]?.toLong() ?: CONNECT_TIMEOUT
+            val connectTimeout = paramMap[ParamEnum.CONNECT_TIMEOUT_NAME.param]?.toLong() ?: CONNECT_TIMEOUT
             val client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeout))
                 .build()

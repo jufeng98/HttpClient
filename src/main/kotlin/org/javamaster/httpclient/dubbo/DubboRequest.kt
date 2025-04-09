@@ -8,10 +8,10 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
-import org.javamaster.httpclient.utils.HttpUtils.TIMEOUT_NAME
 import org.javamaster.httpclient.utils.PsiUtils
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
@@ -165,7 +165,7 @@ class DubboRequest(
         reference.isGeneric = true
         reference.application = application
         reference.setInterface(targetInterfaceName)
-        val timeout = paramMap[TIMEOUT_NAME]?.toInt() ?: 10_000
+        val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toInt() ?: HttpUtils.TIMEOUT
         reference.timeout = timeout
         reference.retries = 1
 

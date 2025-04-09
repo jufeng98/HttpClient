@@ -7,7 +7,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Disposer.newDisposable
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.dashboard.HttpProcessHandler
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import java.net.URI
 import java.net.http.HttpClient
@@ -41,7 +41,7 @@ class WsRequest(
 
         val uri = URI(url)
 
-        val connectTimeout = paramMap[HttpUtils.CONNECT_TIMEOUT_NAME]?.toLong() ?: 6
+        val connectTimeout = paramMap[ParamEnum.CONNECT_TIMEOUT_NAME.param]?.toLong() ?: 6
 
         val client = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(connectTimeout))

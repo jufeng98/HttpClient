@@ -9,7 +9,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.enums.InnerVariableEnum
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.parser.HttpFile
+import org.javamaster.httpclient.psi.HttpDirectionName
 import org.javamaster.httpclient.psi.HttpVariable
 import org.javamaster.httpclient.psi.HttpVariableName
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
@@ -37,6 +39,12 @@ class HttpDocumentationProvider : DocumentationProvider {
             return getHttpDoc(name)
         }
 
+        if (element is HttpDirectionName) {
+            val name = element.text
+            val paramEnum = ParamEnum.getEnum(name) ?: return null
+            return getDocumentation(name, paramEnum.desc)
+        }
+
         val psiElement = originalElement?.parent?.parent
         if (psiElement is HttpVariableName) {
             val name = psiElement.name
@@ -60,12 +68,17 @@ class HttpDocumentationProvider : DocumentationProvider {
             return null
         }
 
-        val element = contextElement?.parent?.parent
+        val parent = contextElement?.parent
+        if (parent is HttpDirectionName) {
+            return parent
+        }
+
+        val element = parent?.parent
         if (element is HttpVariableName) {
             return element
         }
 
-        val psiReferences = contextElement?.parent?.references ?: return null
+        val psiReferences = parent?.references ?: return null
         for (psiReference in psiReferences) {
             if (psiReference is TextVariableNamePsiReference) {
                 val textRange = psiReference.textRange
