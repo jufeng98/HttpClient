@@ -52,6 +52,8 @@ object HttpUtils {
         .create()
 
     const val REQUEST_BODY_ANNO_NAME = "org.springframework.web.bind.annotation.RequestBody"
+    const val API_OPERATION_ANNO_NAME = "io.swagger.annotations.ApiOperation"
+    const val API_MODEL_PROPERTY_ANNO_NAME = "io.swagger.annotations.ApiModelProperty"
 
     const val READ_TIMEOUT_NAME = "readTimeout"
     const val TIMEOUT_NAME = "timeout"
@@ -659,7 +661,7 @@ object HttpUtils {
             comment?.let { list.add(it) }
         }
 
-        val annotation = psiMethod.getAnnotation("io.swagger.annotations.ApiOperation")
+        val annotation = psiMethod.getAnnotation(API_OPERATION_ANNO_NAME)
         if (annotation != null) {
             val attributeValue = annotation.findAttributeValue("value") as PsiLiteralExpression?
 

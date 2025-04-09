@@ -30,7 +30,7 @@
           </grid>
         </constraints>
         <properties>
-          <toolTipText value="读取如 http-client.env.json, http-client.private.env.json 构建环境"/>
+          <toolTipText value="Read http-client.env.json, http-client.private.env.json to build environment"/>
         </properties>
       </component>
       <hspacer id="27ae8">

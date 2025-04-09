@@ -1,7 +1,6 @@
 package org.javamaster.httpclient
 
 import org.javamaster.httpclient.map.LinkedMultiValueMap
-import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT_NAME
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
@@ -321,12 +320,11 @@ enum class HttpRequestEnum {
 
     companion object {
 
-        fun getInstance(httpMethod: HttpMethod): HttpRequestEnum {
-            val name = httpMethod.text
+        fun getInstance(methodName: String): HttpRequestEnum {
             try {
-                return HttpRequestEnum.valueOf(name)
+                return HttpRequestEnum.valueOf(methodName)
             } catch (e: Exception) {
-                throw UnsupportedOperationException("Method not supported: $name", e)
+                throw UnsupportedOperationException("Method not supported: $methodName", e)
             }
         }
 

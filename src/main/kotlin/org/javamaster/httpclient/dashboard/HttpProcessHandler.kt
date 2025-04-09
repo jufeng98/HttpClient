@@ -233,7 +233,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
     ) {
         val start = System.currentTimeMillis()
 
-        val requestEnum = HttpRequestEnum.getInstance(httpMethod)
+        val requestEnum = HttpRequestEnum.getInstance(methodType)
         val future = requestEnum.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         future.whenCompleteAsync { response, throwable ->

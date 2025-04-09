@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.listener
+package org.javamaster.httpclient.startup
 
 import com.intellij.json.JsonFileType
 import com.intellij.openapi.application.ModalityState
@@ -62,7 +62,8 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
                 return@executeOnPooledThread
             }
 
-            runInEdt(getState()) {
+            @Suppress("DEPRECATION")
+            runInEdt(ModalityState.NON_MODAL) {
                 runWriteAction {
                     fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
                     println("The json suffix file has been associated with the $jsonFileType")
@@ -103,20 +104,6 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
             .exceptionallyOnUiThread {
                 NotifyUtil.notifyError(source.project, it.message)
             }
-    }
-
-    private fun getState(): ModalityState {
-        // Compatible with older versions
-        val cls = ModalityState::class.java
-        try {
-            val method = cls.getDeclaredMethod("nonModal")
-            method.isAccessible = true
-            return method.invoke(null) as ModalityState
-        } catch (e: Exception) {
-            val field = cls.getDeclaredField("NON_MODAL")
-            field.isAccessible = true
-            return field.get(null) as ModalityState
-        }
     }
 
 }

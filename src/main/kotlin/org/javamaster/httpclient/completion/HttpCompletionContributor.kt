@@ -1,29 +1,29 @@
 package org.javamaster.httpclient.completion
 
-import com.google.common.net.HttpHeaders
-import com.intellij.codeInsight.completion.*
-import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.openapi.module.ModuleUtil
+import com.intellij.codeInsight.completion.CompletionContributor
+import com.intellij.codeInsight.completion.CompletionInitializationContext
+import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.util.ProcessingContext
-import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.completion.support.HttpDirectionNameCompletionProvider
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.contentTypeValues
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.headerNameMap
-import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.myWebSocketProtocols
-import org.javamaster.httpclient.completion.support.HttpSuffixInsertHandler
+import org.javamaster.httpclient.completion.provider.HttpDirectionNameCompletionProvider
+import org.javamaster.httpclient.completion.provider.HttpHeaderFieldNamesProvider
+import org.javamaster.httpclient.completion.provider.HttpHeaderFieldValuesProvider
+import org.javamaster.httpclient.completion.provider.HttpMethodsProvider
 import org.javamaster.httpclient.psi.*
-import org.javamaster.httpclient.utils.DubboUtils
 
-
+/**
+ * @author yudong
+ */
 class HttpCompletionContributor : CompletionContributor() {
+    private val identifierPredecessor = TokenSet.create(
+        HttpTypes.IDENTIFIER,
+        HttpTypes.START_VARIABLE_BRACE,
+    )
+
     init {
         this.extend(
             CompletionType.BASIC, PlatformPatterns.psiElement().withParent(
@@ -90,131 +90,6 @@ class HttpCompletionContributor : CompletionContributor() {
             context.dummyIdentifier = ""
         }
     }
-
-    private class HttpMethodsProvider : CompletionProvider<CompletionParameters>() {
-        override fun addCompletions(
-            parameters: CompletionParameters,
-            context: ProcessingContext,
-            result: CompletionResultSet,
-        ) {
-            if (!isRequestStart(parameters)) {
-                return
-            }
-
-            HttpRequestEnum.entries.forEach {
-                result.addElement(
-                    PrioritizedLookupElement.withPriority(
-                        LookupElementBuilder.create(it.name)
-                            .withBoldness(true)
-                            .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 300.0
-                    )
-                )
-            }
-        }
-
-        private fun isRequestStart(parameters: CompletionParameters): Boolean {
-            val parent = parameters.position.parent
-            return parent is PsiErrorElement || parent is HttpMethod
-        }
-    }
-
-    private class HttpHeaderFieldNamesProvider : CompletionProvider<CompletionParameters>() {
-        override fun addCompletions(
-            parameters: CompletionParameters, context: ProcessingContext,
-            result: CompletionResultSet,
-        ) {
-            val request = PsiTreeUtil.getParentOfType(parameters.position, HttpRequest::class.java)
-            val method = request?.method?.text
-            if (method == HttpRequestEnum.DUBBO.name) {
-                HttpHeadersDictionary.dubboHeaderNames.forEach {
-                    val builder = LookupElementBuilder.create(it)
-                        .withCaseSensitivity(false)
-                        .withInsertHandler(HttpSuffixInsertHandler.FIELD_SEPARATOR)
-                    result.addElement(builder)
-                }
-                return
-            }
-
-
-            for (header in headerNameMap.values) {
-                val priority = PrioritizedLookupElement.withPriority(
-                    LookupElementBuilder.create(header, header.name)
-                        .withCaseSensitivity(false)
-                        .withStrikeoutness(header.isDeprecated)
-                        .withInsertHandler(HttpSuffixInsertHandler.FIELD_SEPARATOR),
-                    if (header.isDeprecated) 100.0 else 200.0
-                )
-                result.addElement(priority)
-            }
-        }
-    }
-
-    private class HttpHeaderFieldValuesProvider : CompletionProvider<CompletionParameters>() {
-        override fun addCompletions(
-            parameters: CompletionParameters, context: ProcessingContext,
-            result: CompletionResultSet,
-        ) {
-            val headerField = PsiTreeUtil.getParentOfType(
-                CompletionUtil.getOriginalOrSelf(parameters.position),
-                HttpHeaderField::class.java
-            )
-            val headerName = headerField?.headerFieldName?.text
-            if (StringUtil.isEmpty(headerName)) {
-                return
-            }
-
-            if (headerName.equals(org.apache.http.HttpHeaders.CONTENT_TYPE, ignoreCase = true)
-                || headerName.equals(org.apache.http.HttpHeaders.ACCEPT, ignoreCase = true)
-            ) {
-                for (value in contentTypeValues) {
-                    result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
-                }
-                return
-            }
-
-            if (headerName.equals(DubboUtils.INTERFACE_KEY, ignoreCase = true)) {
-                val newResult = result.withPrefixMatcher(CompletionUtil.findReferenceOrAlphanumericPrefix(parameters))
-                JavaClassNameCompletionContributor.addAllClasses(
-                    parameters,
-                    parameters.invocationCount <= 1,
-                    newResult.prefixMatcher,
-                    newResult
-                )
-                return
-            }
-
-            if (headerName.equals(DubboUtils.METHOD_KEY, ignoreCase = true)) {
-                val header = headerField!!.parent as HttpHeader
-                val interfaceField = header.interfaceField ?: return
-                val fieldValue = interfaceField.headerFieldValue ?: return
-                val module = ModuleUtil.findModuleForPsiElement(header) ?: return
-                val interfacePsiClass = DubboUtils.findInterface(module, fieldValue.text) ?: return
-                interfacePsiClass.methods.forEach {
-                    val builder = LookupElementBuilder.create(it.name).withBoldness(true)
-                        .withPsiElement(it).withTailText(it.parameterList.text)
-                        .withTypeText(it.returnTypeElement?.text)
-                    result.addElement(builder)
-                }
-                return
-            }
-
-            if (headerName.equals(HttpHeaders.SEC_WEBSOCKET_PROTOCOL, ignoreCase = true)) {
-                for (protocol in myWebSocketProtocols) {
-                    result.addElement(
-                        PrioritizedLookupElement.withPriority(
-                            LookupElementBuilder.create(protocol),
-                            200.0
-                        )
-                    )
-                }
-            }
-        }
-    }
-
-    private val identifierPredecessor = TokenSet.create(
-        HttpTypes.IDENTIFIER,
-        HttpTypes.START_VARIABLE_BRACE,
-    )
 
     private fun isDummyIdentifierCanExtendMessageBody(
         element: PsiElement?,
@@ -287,11 +162,12 @@ class HttpCompletionContributor : CompletionContributor() {
             val toReplace = parent.getFirstChild()
             return toReplace ?: parent.getFirstChild()
         } else {
-            if (context.startOffset > 0) {
-                val prevElement = context.file.findElementAt(context.startOffset - 1)
-                if (prevElement != null && HttpPsiUtils.isOfTypes(prevElement, identifierPredecessor)) {
-                    return prevElement
-                }
+            if (context.startOffset <= 0) return null
+
+            val prevElement = context.file.findElementAt(context.startOffset - 1)
+
+            if (prevElement != null && HttpPsiUtils.isOfTypes(prevElement, identifierPredecessor)) {
+                return prevElement
             }
 
             return null

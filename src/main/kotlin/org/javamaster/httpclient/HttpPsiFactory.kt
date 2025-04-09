@@ -22,7 +22,7 @@ object HttpPsiFactory {
         return PsiTreeUtil.findChildOfType(psiFile, HttpVariable::class.java)!!
     }
 
-    private fun createDummyFile(project: Project, content: String): HttpFile {
+    fun createDummyFile(project: Project, content: String): HttpFile {
         val fileType = HttpFileType.INSTANCE
         val fileName = "dummy." + fileType.defaultExtension
         return PsiFileFactory.getInstance(project)

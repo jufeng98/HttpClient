@@ -8,6 +8,9 @@ import com.intellij.openapi.editor.EditorModificationUtilEx
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiDocumentManager
 
+/**
+ * @author yudong
+ */
 class HttpSuffixInsertHandler(private val mySuffix: String) : InsertHandler<LookupElement> {
     private val myShortSuffix = mySuffix.trim { it <= ' ' }
 

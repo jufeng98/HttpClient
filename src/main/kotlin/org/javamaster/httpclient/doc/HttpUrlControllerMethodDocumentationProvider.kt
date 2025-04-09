@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
+import org.javamaster.httpclient.utils.HttpUtils.API_OPERATION_ANNO_NAME
 import org.javamaster.httpclient.utils.HttpUtils.generateAnno
 
 /**
@@ -42,7 +43,7 @@ class HttpUrlControllerMethodDocumentationProvider : DocumentationProvider {
 
         val str = JavaDocumentationProvider.generateExternalJavadoc(psiMethod, null)
 
-        val annotation = psiMethod.getAnnotation("io.swagger.annotations.ApiOperation")
+        val annotation = psiMethod.getAnnotation(API_OPERATION_ANNO_NAME)
         return if (annotation != null) {
             val generateAnno = generateAnno(annotation)
             str + generateAnno

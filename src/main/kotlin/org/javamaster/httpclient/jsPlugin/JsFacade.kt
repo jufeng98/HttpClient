@@ -17,17 +17,12 @@ object JsFacade {
         project: Project,
         scriptBodyList: List<HttpScriptBody>,
     ): PsiElement? {
-        var jsVariable = JavaScript.resolveJsVariable(variableName, project, scriptBodyList)
+        val jsVariable = JavaScript.resolveJsVariable(variableName, project, scriptBodyList)
         if (jsVariable != null) {
             return jsVariable
         }
 
-        jsVariable = WebCalm.resolveJsVariable(variableName, project, scriptBodyList)
-        if (jsVariable != null) {
-            return jsVariable
-        }
-
-        return null
+        return WebCalm.resolveJsVariable(variableName, project, scriptBodyList)
     }
 
     fun createJsVariable(project: Project, injectedPsiFile: PsiFile, variableName: String): PsiElement? {
