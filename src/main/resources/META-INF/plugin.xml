@@ -55,6 +55,11 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>3.6.0</b></li>
+                <ul>
+                    <li>新增 header name 文档提示</li>
+                    <li>已知Bug修复</li>
+                </ul>
                 <li><b>3.5.0</b></li>
                 <ul>
                     <li>支持变量的重命名功能</li>
@@ -148,7 +153,7 @@
     <depends optional="true" config-file="httpclient-web-calm.xml">ris58h.webcalm</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="org.javamaster.httpclient.listener.HttpPostStartupActivity"/>
+        <postStartupActivity implementation="org.javamaster.httpclient.startup.HttpPostStartupActivity"/>
 
         <notificationGroup id="HttpClient.STICKY_BALLOON"
                            isLogByDefault="true"
@@ -240,6 +245,8 @@
                                   implementation="org.javamaster.httpclient.reference.JsonKeyControllerMethodFieldPsiReferenceContributor"/>
         <lang.documentationProvider language="http"
                                     implementationClass="org.javamaster.httpclient.doc.HttpUrlControllerMethodDocumentationProvider"/>
+        <lang.documentationProvider language="http"
+                                    implementationClass="org.javamaster.httpclient.doc.HttpHeadersDocumentationProvider"/>
         <psi.treeChangePreprocessor
                 implementation="org.javamaster.httpclient.scan.support.ControllerPsiTreeChangePreprocessor"/>
         <searchEverywhereContributor implementation="org.javamaster.httpclient.symbol.ApisGotoSEContributor$Factory"/>

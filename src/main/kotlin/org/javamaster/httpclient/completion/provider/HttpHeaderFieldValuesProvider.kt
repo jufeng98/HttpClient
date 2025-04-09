@@ -8,6 +8,8 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.completion.support.HttpHeadersDictionary
+import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.encodings
+import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.predefinedMimeVariants
 import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.utils.DubboUtils
@@ -34,7 +36,14 @@ class HttpHeaderFieldValuesProvider : CompletionProvider<CompletionParameters>()
         if (headerName.equals(HttpHeaders.CONTENT_TYPE, ignoreCase = true)
             || headerName.equals(HttpHeaders.ACCEPT, ignoreCase = true)
         ) {
-            for (value in HttpHeadersDictionary.contentTypeValues) {
+            for (value in predefinedMimeVariants) {
+                result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
+            }
+            return
+        }
+
+        if (headerName.equals(HttpHeaders.ACCEPT_ENCODING, ignoreCase = true)) {
+            for (value in encodings) {
                 result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(value), 200.0))
             }
             return

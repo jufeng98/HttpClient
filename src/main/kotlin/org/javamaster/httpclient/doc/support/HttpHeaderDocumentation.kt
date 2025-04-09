@@ -8,9 +8,10 @@ class HttpHeaderDocumentation private constructor(
     private val myRfc: String,
     private val myRfcTitle: String,
     private val description: String,
-    @Suppress("unused") val isDeprecated: Boolean,
+    val isDeprecated: Boolean,
 ) {
     constructor(name: String) : this(name, "", "", "", false)
+    constructor(name: String, isDeprecated: Boolean) : this(name, "", "", "", isDeprecated)
 
     fun generateDoc(): String? {
         if (StringUtil.isEmpty(description)) {
