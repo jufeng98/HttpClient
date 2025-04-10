@@ -35,8 +35,8 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         }
     }
 
-    fun executeFromGutter(httpMethod: HttpMethod, gutterComponent: EditorGutterComponentEx) {
-        val loadingRemover = gutterComponent.setLoadingIconForCurrentGutterMark()
+    fun executeFromGutter(httpMethod: HttpMethod, gutterComponent: EditorGutterComponentEx?) {
+        val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
 
         val project = httpMethod.project
 

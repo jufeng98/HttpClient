@@ -16,7 +16,7 @@ import org.javamaster.httpclient.psi.HttpMethod
 class HttpAction(private val httpMethod: HttpMethod) : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
-        val gutterComponent = e.inputEvent?.component as EditorGutterComponentEx
+        val gutterComponent = e.inputEvent?.component as EditorGutterComponentEx?
 
         val httpProgramRunner = ProgramRunner.findRunnerById(HTTP_RUNNER_ID)!! as HttpProgramRunner
 

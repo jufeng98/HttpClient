@@ -27,7 +27,7 @@ class JsonKeyMethodFieldDocumentationProvider : DocumentationProvider {
         val util = TargetElementUtil.getInstance()
         val element = util.findTargetElement(editor, util.allAccepted, targetOffset)
 
-        if (element is PsiField) {
+        if (element is PsiField && element.node != null) {
             return MyPsiField(element)
         }
 

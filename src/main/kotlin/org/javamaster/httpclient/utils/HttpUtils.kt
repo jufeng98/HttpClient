@@ -62,6 +62,10 @@ object HttpUtils {
     const val HTTP_TYPE_ID = "intellijHttpClient"
     private const val VARIABLE_SIGN_END = "}}"
     val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
+    val requestFinishedKey: Key<Int> = Key.create("REQUEST_FINISHED_KEY")
+
+    const val SUCCESS = 0
+    const val FAILED = 1
 
     fun saveConfiguration(
         tabName: String,

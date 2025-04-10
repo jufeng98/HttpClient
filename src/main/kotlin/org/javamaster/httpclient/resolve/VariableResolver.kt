@@ -36,7 +36,13 @@ class VariableResolver(
 
             val variable = globalVariableValue.variable
             val value = if (variable != null) {
-                resolveVariable(variable.variableName?.name, emptyMap(), false, null) ?: variable.text
+                val variableName = variable.variableName!!
+                resolveVariable(
+                    variableName.name,
+                    emptyMap(),
+                    variableName.isBuiltin,
+                    variable.variableArgs?.toArgsList()
+                ) ?: variable.text
             } else {
                 globalVariableValue.value ?: ""
             }

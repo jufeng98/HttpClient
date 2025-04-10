@@ -23,6 +23,8 @@ import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.HttpUtils.FAILED
+import org.javamaster.httpclient.utils.HttpUtils.SUCCESS
 import org.javamaster.httpclient.utils.HttpUtils.convertToResHeaderDescList
 import org.javamaster.httpclient.utils.HttpUtils.convertToResPair
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
@@ -399,10 +401,13 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         wsRequest?.abortConnect()
 
         val code = if (hasError) {
-            1
+            FAILED
         } else {
-            0
+            SUCCESS
         }
+
+        httpMethod.putUserData(HttpUtils.requestFinishedKey, code)
+
         notifyProcessTerminated(code)
     }
 

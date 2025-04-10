@@ -137,24 +137,7 @@ class EnvFileService(val project: Project) {
     ): String? {
         val literal = getEnvEleLiteral(key, selectedEnv, httpFileParentPath, envFileName, project) ?: return null
 
-        val value = when (literal) {
-            is JsonStringLiteral -> {
-                val txt = literal.text
-                txt.substring(1, txt.length - 1)
-            }
-
-            is JsonNumberLiteral -> {
-                literal.value.toString()
-            }
-
-            is JsonBooleanLiteral -> {
-                literal.value.toString()
-            }
-
-            else -> {
-                throw IllegalArgumentException("error:$literal")
-            }
-        }
+        val value = getJsonLiteralValue(literal)
 
         return resolveValue(value, httpFileParentPath)
     }
@@ -422,6 +405,31 @@ class EnvFileService(val project: Project) {
 
                 else -> {
                     throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} innermost format does not conform to the specification!!")
+                }
+            }
+        }
+
+        fun getJsonLiteralValue(literal: JsonLiteral): String {
+            return when (literal) {
+                is JsonStringLiteral -> {
+                    val txt = literal.text
+                    txt.substring(1, txt.length - 1)
+                }
+
+                is JsonNumberLiteral -> {
+                    literal.value.toString()
+                }
+
+                is JsonBooleanLiteral -> {
+                    literal.value.toString()
+                }
+
+                is JsonNullLiteral -> {
+                    literal.text
+                }
+
+                else -> {
+                    throw IllegalArgumentException("error:$literal")
                 }
             }
         }

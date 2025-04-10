@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.readText
 import com.jayway.jsonpath.JsonPath
 import org.javamaster.httpclient.annos.JsBridge
+import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
 import org.mozilla.javascript.Context
@@ -127,5 +128,36 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             GlobalLog.log("base64ToFile handling failed:$e")
             return false
         }
+    }
+
+    @JsBridge(jsFun = "callJava(methodName, arg0, arg1)")
+    fun callJava(methodName: String, arg0: Any, arg1: Any): String {
+        val args = mutableListOf<Any>()
+
+        var convertArg = convertArg(arg0)
+        if (convertArg != null) {
+            args.add(convertArg)
+        }
+
+        convertArg = convertArg(arg1)
+        if (convertArg != null) {
+            args.add(convertArg)
+        }
+
+
+        val variableEnum = InnerVariableEnum.getEnum(methodName)
+            ?: throw IllegalArgumentException("$methodName not exists!")
+        return variableEnum.exec("", *args.toTypedArray())
+    }
+
+    private fun convertArg(arg: Any): Any? {
+        if (arg == "undefined") {
+            return null
+        }
+        if (arg is Double) {
+            return arg.toInt()
+        }
+
+        return arg
     }
 }
