@@ -57,8 +57,10 @@
             <ul>
                 <li><b>3.6.0</b></li>
                 <ul>
+                    <li>新增执行文件内所有请求功能</li>
                     <li>新增 header name 文档提示</li>
-                    <li>已知Bug修复</li>
+                    <li>新增切换环境的 intention</li>
+                    <li>功能优化及Bug修复</li>
                 </ul>
                 <li><b>3.5.0</b></li>
                 <ul>
@@ -268,6 +270,13 @@
                                               descriptionKey="url.description"/>
         <codeInsight.inlayActionHandler handlerId="HttpInlayHintsCollector"
                                         implementationClass="org.javamaster.httpclient.inlay.HttpInlayActionHandler"/>
+        <scratch.creationHelper language="http"
+                                implementationClass="org.javamaster.httpclient.scratch.HttpRequestScratchFileCreationHelper"/>
+        <intentionAction>
+            <language>http</language>
+            <className>org.javamaster.httpclient.intent.HttpSwitchEnvironmentIntention</className>
+            <category>HttpRequest/Env</category>
+        </intentionAction>
     </extensions>
 
     <actions>

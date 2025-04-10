@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.ui;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
@@ -8,8 +9,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.popup.PopupFactoryImpl;
 import kotlin.Triple;
 import org.javamaster.httpclient.env.EnvFileService;
+import org.javamaster.httpclient.handler.RunFileHandler;
 import org.javamaster.httpclient.utils.NotifyUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,6 +36,7 @@ public class HttpEditorTopForm extends JComponent {
     private JComboBox<String> envComboBox;
     private JComboBox<String> exampleComboBox;
     private JButton showVariableBtn;
+    private JButton runAllBtn;
 
     private final @Nullable Module module;
     private final Project project;
@@ -41,6 +45,13 @@ public class HttpEditorTopForm extends JComponent {
         this.file = file;
         this.module = module;
         this.project = project;
+
+        runAllBtn.setIcon(AllIcons.Actions.RunAll);
+        runAllBtn.setBorder(null);
+        runAllBtn.addActionListener(event -> PopupFactoryImpl.getInstance()
+                .createConfirmation("Tip", "Will run all requests of the file(think time is 3 seconds)", "Cancel",
+                        () -> RunFileHandler.INSTANCE.runRequests(project, this), 0)
+                .showInCenterOf(runAllBtn));
 
         exampleComboBox.addActionListener(e -> {
             ClassLoader classLoader = getClass().getClassLoader();

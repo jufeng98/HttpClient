@@ -48,4 +48,8 @@ object NotifyUtil {
         STICKY_STICKY_BALLOON.createNotification("Tip", message, NotificationType.WARNING).notify(project)
     }
 
+    fun notifyCornerError(project: Project, message: String) {
+        STICKY_STICKY_BALLOON.createNotification("Tip", message, NotificationType.ERROR).notify(project)
+    }
+
 }
