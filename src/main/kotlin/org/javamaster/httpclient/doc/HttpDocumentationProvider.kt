@@ -1,5 +1,7 @@
 package org.javamaster.httpclient.doc
 
+import com.intellij.json.psi.JsonLiteral
+import com.intellij.json.psi.JsonProperty
 import com.intellij.lang.documentation.DocumentationProvider
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.navigation.ItemPresentation
@@ -10,17 +12,18 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.enums.ParamEnum
+import org.javamaster.httpclient.env.EnvFileService.Companion.getJsonLiteralValue
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpDirectionName
-import org.javamaster.httpclient.psi.HttpVariable
-import org.javamaster.httpclient.psi.HttpVariableName
+import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
 import org.jetbrains.annotations.Nls
 import javax.swing.Icon
 
-
+/**
+ * @author yudong
+ */
 class HttpDocumentationProvider : DocumentationProvider {
 
     override fun generateDoc(element: PsiElement, originalElement: PsiElement?): @Nls String? {
@@ -39,10 +42,29 @@ class HttpDocumentationProvider : DocumentationProvider {
             return getHttpDoc(name)
         }
 
+        if (element is HttpGlobalVariableName) {
+            val name = element.name
+            val parent = element.parent as HttpGlobalVariable
+            val globalVariableValue = parent.globalVariableValue
+
+            return getDocumentation(
+                name,
+                "The value is: " + (globalVariableValue?.value ?: globalVariableValue?.variable?.text)
+            )
+        }
+
         if (element is HttpDirectionName) {
             val name = element.text
             val paramEnum = ParamEnum.getEnum(name) ?: return null
+
             return getDocumentation(name, paramEnum.desc)
+        }
+
+        if (element is JsonProperty && element.value is JsonLiteral) {
+            val name = element.name
+            val value = getJsonLiteralValue(element.value as JsonLiteral)
+
+            return getDocumentation(name, "The value is: $value")
         }
 
         val psiElement = originalElement?.parent?.parent
