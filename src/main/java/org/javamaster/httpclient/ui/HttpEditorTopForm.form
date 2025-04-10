@@ -82,7 +82,7 @@
         </constraints>
         <properties>
           <text value=""/>
-          <toolTipText value="Run all requests of the file"/>
+          <toolTipText value=""/>
         </properties>
       </component>
     </children>

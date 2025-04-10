@@ -10,6 +10,7 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.application
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.action.HttpAction
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMethod
@@ -23,8 +24,25 @@ import java.util.concurrent.TimeUnit
  * @author yudong
  */
 object RunFileHandler {
+    private lateinit var finishCallback: Runnable
+    private var interruptFlag = false
 
-    fun runRequests(project: Project, topForm: HttpEditorTopForm) {
+    fun isInterrupted(): Boolean {
+        return interruptFlag
+    }
+
+    fun resetInterrupt() {
+        interruptFlag = false
+    }
+
+    fun stopRunning() {
+        interruptFlag = true
+    }
+
+    fun runRequests(project: Project, topForm: HttpEditorTopForm, finishCallback: Runnable) {
+        this.finishCallback = finishCallback
+        interruptFlag = false
+
         val httpFile = PsiUtil.getPsiFile(project, topForm.file) as HttpFile
         val httpMethods = PsiTreeUtil.findChildrenOfType(httpFile, HttpMethod::class.java)
 
@@ -33,9 +51,16 @@ object RunFileHandler {
 
         application.executeOnPooledThread {
             for (it in httpMethods) {
+                it.putUserData(HttpUtils.requestFinishedKey, null)
+
                 runInEdt {
                     if (!it.isValid) {
                         NotifyUtil.notifyCornerError(project, "Request psi element is invalid, skipped")
+                        return@runInEdt
+                    }
+
+                    if (it.text == HttpRequestEnum.WEBSOCKET.name) {
+                        NotifyUtil.notifyCornerError(project, "Skipped ws request")
                         return@runInEdt
                     }
 
@@ -54,21 +79,24 @@ object RunFileHandler {
                 }
 
                 var code = it.getUserData(HttpUtils.requestFinishedKey)
-                while (code == null) {
+                while (code == null && !interruptFlag) {
                     Thread.sleep(600)
                     code = it.getUserData(HttpUtils.requestFinishedKey)
                 }
 
-                if (code == FAILED) {
-                    runInEdt {
-                        val tabName = HttpUtils.getTabName(it)
-                        NotifyUtil.notifyCornerError(project, "Run $tabName failed, skipped the rest of the requests")
-                    }
+                if (interruptFlag) {
                     break
                 }
 
-                TimeUnit.SECONDS.sleep(3)
+
+                if (code == FAILED) {
+                    break
+                }
+
+                TimeUnit.SECONDS.sleep(2)
             }
+
+            runInEdt { finishCallback.run() }
         }
     }
 

@@ -17,6 +17,7 @@ import org.javamaster.httpclient.dubbo.DubboHandler
 import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
+import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.psi.*
@@ -377,7 +378,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private fun cancelFutureIfTerminated(future: CompletableFuture<*>) {
         CompletableFuture.runAsync {
-            while (!isProcessTerminated) {
+            while (!isProcessTerminated && !RunFileHandler.isInterrupted()) {
                 Thread.sleep(600)
             }
 
@@ -407,6 +408,8 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         }
 
         httpMethod.putUserData(HttpUtils.requestFinishedKey, code)
+
+        RunFileHandler.resetInterrupt()
 
         notifyProcessTerminated(code)
     }

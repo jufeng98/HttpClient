@@ -9,7 +9,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.popup.PopupFactoryImpl;
 import kotlin.Triple;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.handler.RunFileHandler;
@@ -46,12 +45,21 @@ public class HttpEditorTopForm extends JComponent {
         this.module = module;
         this.project = project;
 
-        runAllBtn.setIcon(AllIcons.Actions.RunAll);
         runAllBtn.setBorder(null);
-        runAllBtn.addActionListener(event -> PopupFactoryImpl.getInstance()
-                .createConfirmation("Tip", "Will run all requests of the file(think time is 3 seconds)", "Cancel",
-                        () -> RunFileHandler.INSTANCE.runRequests(project, this), 0)
-                .showInCenterOf(runAllBtn));
+
+        switchRunBtnToInitialing();
+
+        runAllBtn.addActionListener(event -> {
+            if (runAllBtn.getIcon() == AllIcons.Run.Stop) {
+                switchRunBtnToInitialing();
+
+                RunFileHandler.INSTANCE.stopRunning();
+            } else {
+                switchRunBtnToStopping();
+
+                RunFileHandler.INSTANCE.runRequests(project, this, this::switchRunBtnToInitialing);
+            }
+        });
 
         exampleComboBox.addActionListener(e -> {
             ClassLoader classLoader = getClass().getClassLoader();
@@ -93,6 +101,16 @@ public class HttpEditorTopForm extends JComponent {
             ViewVariableForm viewVariableForm = new ViewVariableForm(project);
             viewVariableForm.show();
         });
+    }
+
+    public void switchRunBtnToInitialing() {
+        runAllBtn.setToolTipText("Run all requests of the file(think time is 2 seconds)");
+        runAllBtn.setIcon(AllIcons.Actions.RunAll);
+    }
+
+    public void switchRunBtnToStopping() {
+        runAllBtn.setToolTipText("Stop running");
+        runAllBtn.setIcon(AllIcons.Run.Stop);
     }
 
     public void createAndReInitEnvCompo(boolean isPrivate) {
