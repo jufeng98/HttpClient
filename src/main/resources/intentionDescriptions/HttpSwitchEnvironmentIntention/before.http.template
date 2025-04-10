@@ -1,0 +1,3 @@
+###
+# 'test' environment is selected. Run Icon near request uses 'test' environment for execution
+GET localhost:8080
