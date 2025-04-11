@@ -1,5 +1,5 @@
 // Global import js file
-# @import "./js/public.js"
+# @import ./js/public.js
 
 <! {%
     // Global js previous handler
