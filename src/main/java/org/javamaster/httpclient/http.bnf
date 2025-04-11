@@ -80,11 +80,12 @@ directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1
 }
 directionName ::= DIRECTION_NAME_PART
-directionValue ::= variable? DIRECTION_VALUE_PART {
+directionValue ::= variable? directionValueContent {
     methods = [
         getReferences
     ]
 }
+directionValueContent ::= DIRECTION_VALUE_PART
 preRequestHandler ::= preRequestScript
 preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
@@ -183,11 +184,12 @@ inputFile ::= INPUT_FILE_SIGN filePath {
 outputFile ::= OUTPUT_FILE_SIGN filePath {
     pin = 1
 }
-filePath ::= variable? FILE_PATH_PART {
+filePath ::= variable? filePathContent {
     methods = [
         getReferences
     ]
 }
+filePathContent ::= FILE_PATH_PART
 
 messageBody ::= MESSAGE_TEXT {
     mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"

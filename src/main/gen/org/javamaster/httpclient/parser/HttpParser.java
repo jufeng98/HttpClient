@@ -94,14 +94,14 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // variable? DIRECTION_VALUE_PART
+  // variable? directionValueContent
   public static boolean directionValue(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "directionValue")) return false;
     if (!nextTokenIs(b, "<direction value>", DIRECTION_VALUE_PART, START_VARIABLE_BRACE)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, DIRECTION_VALUE, "<direction value>");
     r = directionValue_0(b, l + 1);
-    r = r && consumeToken(b, DIRECTION_VALUE_PART);
+    r = r && directionValueContent(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -114,14 +114,26 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // variable? FILE_PATH_PART
+  // DIRECTION_VALUE_PART
+  public static boolean directionValueContent(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "directionValueContent")) return false;
+    if (!nextTokenIs(b, DIRECTION_VALUE_PART)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, DIRECTION_VALUE_PART);
+    exit_section_(b, m, DIRECTION_VALUE_CONTENT, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // variable? filePathContent
   public static boolean filePath(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "filePath")) return false;
     if (!nextTokenIs(b, "<file path>", FILE_PATH_PART, START_VARIABLE_BRACE)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, FILE_PATH, "<file path>");
     r = filePath_0(b, l + 1);
-    r = r && consumeToken(b, FILE_PATH_PART);
+    r = r && filePathContent(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -131,6 +143,18 @@ public class HttpParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "filePath_0")) return false;
     variable(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // FILE_PATH_PART
+  public static boolean filePathContent(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "filePathContent")) return false;
+    if (!nextTokenIs(b, FILE_PATH_PART)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, FILE_PATH_PART);
+    exit_section_(b, m, FILE_PATH_CONTENT, r);
+    return r;
   }
 
   /* ********************************************************** */

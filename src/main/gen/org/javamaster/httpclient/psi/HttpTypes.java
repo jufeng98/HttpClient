@@ -13,7 +13,9 @@ public interface HttpTypes {
   IElementType DIRECTION_COMMENT = new HttpElementType("DIRECTION_COMMENT");
   IElementType DIRECTION_NAME = new HttpElementType("DIRECTION_NAME");
   IElementType DIRECTION_VALUE = new HttpElementType("DIRECTION_VALUE");
+  IElementType DIRECTION_VALUE_CONTENT = new HttpElementType("DIRECTION_VALUE_CONTENT");
   IElementType FILE_PATH = new HttpElementType("FILE_PATH");
+  IElementType FILE_PATH_CONTENT = new HttpElementType("FILE_PATH_CONTENT");
   IElementType FRAGMENT = new HttpElementType("FRAGMENT");
   IElementType GLOBAL_HANDLER = new HttpElementType("GLOBAL_HANDLER");
   IElementType GLOBAL_SCRIPT = new HttpElementType("GLOBAL_SCRIPT");
@@ -122,8 +124,14 @@ public interface HttpTypes {
       else if (type == DIRECTION_VALUE) {
         return new HttpDirectionValueImpl(node);
       }
+      else if (type == DIRECTION_VALUE_CONTENT) {
+        return new HttpDirectionValueContentImpl(node);
+      }
       else if (type == FILE_PATH) {
         return new HttpFilePathImpl(node);
+      }
+      else if (type == FILE_PATH_CONTENT) {
+        return new HttpFilePathContentImpl(node);
       }
       else if (type == FRAGMENT) {
         return new HttpFragmentImpl(node);

@@ -8,6 +8,9 @@ import com.intellij.psi.PsiReference;
 
 public interface HttpDirectionValue extends PsiElement {
 
+  @NotNull
+  HttpDirectionValueContent getDirectionValueContent();
+
   @Nullable
   HttpVariable getVariable();
 
