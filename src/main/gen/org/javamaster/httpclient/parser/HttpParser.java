@@ -329,7 +329,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // globalHandler? globalVariable* requestBlock*
+  // directionComment* globalHandler? globalVariable* requestBlock*
   static boolean httpFile(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "httpFile")) return false;
     boolean r;
@@ -337,35 +337,47 @@ public class HttpParser implements PsiParser, LightPsiParser {
     r = httpFile_0(b, l + 1);
     r = r && httpFile_1(b, l + 1);
     r = r && httpFile_2(b, l + 1);
+    r = r && httpFile_3(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // globalHandler?
+  // directionComment*
   private static boolean httpFile_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "httpFile_0")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!directionComment(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "httpFile_0", c)) break;
+    }
+    return true;
+  }
+
+  // globalHandler?
+  private static boolean httpFile_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "httpFile_1")) return false;
     globalHandler(b, l + 1);
     return true;
   }
 
   // globalVariable*
-  private static boolean httpFile_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "httpFile_1")) return false;
+  private static boolean httpFile_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "httpFile_2")) return false;
     while (true) {
       int c = current_position_(b);
       if (!globalVariable(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "httpFile_1", c)) break;
+      if (!empty_element_parsed_guard_(b, "httpFile_2", c)) break;
     }
     return true;
   }
 
   // requestBlock*
-  private static boolean httpFile_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "httpFile_2")) return false;
+  private static boolean httpFile_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "httpFile_3")) return false;
     while (true) {
       int c = current_position_(b);
       if (!requestBlock(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "httpFile_2", c)) break;
+      if (!empty_element_parsed_guard_(b, "httpFile_3", c)) break;
     }
     return true;
   }

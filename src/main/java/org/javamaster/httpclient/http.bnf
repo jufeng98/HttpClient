@@ -45,7 +45,7 @@
   ]
 }
 
-httpFile ::= globalHandler? globalVariable* requestBlock*
+httpFile ::= directionComment* globalHandler? globalVariable* requestBlock*
 
 globalVariable::= globalVariableName EQUALS globalVariableValue? {
     pin = 2
