@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.doc
 
+import com.intellij.json.JsonElementTypes
 import com.intellij.json.psi.JsonLiteral
 import com.intellij.json.psi.JsonProperty
 import com.intellij.lang.documentation.DocumentationProvider
@@ -9,6 +10,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.enums.ParamEnum
@@ -27,6 +29,13 @@ import javax.swing.Icon
 class HttpDocumentationProvider : DocumentationProvider {
 
     override fun generateDoc(element: PsiElement, originalElement: PsiElement?): @Nls String? {
+        originalElement ?: return null
+
+        val psiFile = InjectedLanguageManager.getInstance(originalElement.project).getTopLevelFile(originalElement)
+        if (psiFile !is HttpFile) {
+            return null
+        }
+
         if (element is MyFakePsiElement) {
             val variable = element.variable
             val variableName = variable.variableName ?: return null
@@ -60,14 +69,18 @@ class HttpDocumentationProvider : DocumentationProvider {
             return getDocumentation(name, paramEnum.desc)
         }
 
-        if (element is JsonProperty && element.value is JsonLiteral) {
-            val name = element.name
-            val value = getJsonLiteralValue(element.value as JsonLiteral)
+        if (element is JsonProperty) {
+            val match = originalElement.parent is HttpVariableReference || (element.value is JsonLiteral
+                    && HttpPsiUtils.getPrevSiblingByType(originalElement.parent, JsonElementTypes.COLON, false) != null)
+            if (match) {
+                val name = element.name
+                val value = getJsonLiteralValue(element.value as JsonLiteral)
 
-            return getDocumentation(name, "The value is: $value")
+                return getDocumentation(name, "The value is: $value")
+            }
         }
 
-        val psiElement = originalElement?.parent?.parent
+        val psiElement = originalElement.parent?.parent
         if (psiElement is HttpVariableName) {
             val name = psiElement.name
             val variableEnum = InnerVariableEnum.getEnum(name)
@@ -85,12 +98,14 @@ class HttpDocumentationProvider : DocumentationProvider {
         contextElement: PsiElement?,
         targetOffset: Int,
     ): PsiElement? {
+        contextElement ?: return null
+
         val psiFile = InjectedLanguageManager.getInstance(file.project).getTopLevelFile(file)
         if (psiFile !is HttpFile) {
             return null
         }
 
-        val parent = contextElement?.parent
+        val parent = contextElement.parent
         if (parent is HttpDirectionName) {
             return parent
         }
@@ -100,14 +115,17 @@ class HttpDocumentationProvider : DocumentationProvider {
             return element
         }
 
-        val psiReferences = parent?.references ?: return null
+        val psiReferences = mutableListOf<PsiReference>()
+        psiReferences.addAll(contextElement.references)
+        psiReferences.addAll(parent?.references ?: emptyArray())
+
         for (psiReference in psiReferences) {
-            if (psiReference is TextVariableNamePsiReference) {
-                val textRange = psiReference.textRange
-                if (targetOffset >= textRange.startOffset && targetOffset <= textRange.endOffset) {
-                    return MyFakePsiElement(contextElement, psiReference.variable)
-                }
-            }
+            if (psiReference !is TextVariableNamePsiReference) continue
+
+            val textRange = psiReference.textRange
+            if (targetOffset < textRange.startOffset || targetOffset > textRange.endOffset) continue
+
+            return MyFakePsiElement(contextElement, psiReference.variable)
         }
 
         return contextElement
