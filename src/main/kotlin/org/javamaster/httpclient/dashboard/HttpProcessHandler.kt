@@ -71,7 +71,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private val jsAfterReq = getJsScript(responseHandler)
 
-    private val paramMap = HttpUtils.getDirectionCommentParamMap(requestBlock)
+    private val paramMap = HttpUtils.getReqDirectionCommentParamMap(requestBlock)
 
     private val httpDashboardForm = HttpDashboardForm(tabName, project)
 

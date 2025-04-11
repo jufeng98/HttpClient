@@ -449,7 +449,7 @@ object HttpUtils {
             }
     }
 
-    fun getDirectionCommentParamMap(httpRequestBlock: HttpRequestBlock): Map<String, String> {
+    fun getReqDirectionCommentParamMap(httpRequestBlock: HttpRequestBlock): Map<String, String> {
         val list = PsiTreeUtil.getChildrenOfTypeAsList(httpRequestBlock, HttpDirectionComment::class.java)
         val map = mutableMapOf<String, String>()
         list.forEach {
