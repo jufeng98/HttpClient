@@ -13,8 +13,9 @@ import com.intellij.openapi.wm.ToolWindowManager
  * @author yudong
  */
 object NotifyUtil {
-    private val STICKY_STICKY_BALLOON = NotificationGroupManager.getInstance()
-        .getNotificationGroup("HttpClient.STICKY_BALLOON")
+    private val STICKY_STICKY_BALLOON by lazy {
+        NotificationGroupManager.getInstance().getNotificationGroup("HttpClient.STICKY_BALLOON")
+    }
 
     fun notifyInfo(project: Project, message: String?) {
         val toolWindowManager = ToolWindowManager.getInstance(project)

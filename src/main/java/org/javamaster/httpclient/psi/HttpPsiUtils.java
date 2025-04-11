@@ -17,6 +17,15 @@ public class HttpPsiUtils {
         return sibling;
     }
 
+    public static @Nullable PsiElement getPrevSiblingByType(@Nullable PsiElement element,
+                                                            @NotNull IElementType type, boolean strict) {
+        PsiElement sibling = element != null && strict ? element.getPrevSibling() : element;
+        while (sibling != null && !isOfType(sibling, type)) {
+            sibling = sibling.getPrevSibling();
+        }
+        return sibling;
+    }
+
     public static boolean isOfType(@NotNull PsiElement element, @NotNull IElementType type) {
         ASTNode node = element.getNode();
         return node != null && node.getElementType() == type;

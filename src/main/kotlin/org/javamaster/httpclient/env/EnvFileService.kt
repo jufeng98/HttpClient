@@ -64,7 +64,8 @@ class EnvFileService(val project: Project) {
         val jsonValue = jsonFile.topLevelValue
 
         if (jsonValue !is JsonObject) {
-            throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} format does not conform to the specification!")
+            System.err.println("The environment file: ${jsonFile.virtualFile.path} format does not conform to the specification!")
+            return emptyList()
         }
 
         return jsonValue.propertyList.map { it.name }.toList()
@@ -317,13 +318,15 @@ class EnvFileService(val project: Project) {
 
             val topLevelValue = psiFile.topLevelValue
             if (topLevelValue !is JsonObject) {
-                throw IllegalArgumentException("The environment file: ${psiFile.virtualFile.path} outer format does not conform to the specification!")
+                System.err.println("The environment file: ${psiFile.virtualFile.path} outer format does not conform to the specification!")
+                return emptyMap()
             }
 
             val envProperty = topLevelValue.findProperty(env) ?: return mapOf()
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
-                throw IllegalArgumentException("The environment file: ${psiFile.virtualFile.path} inner format does not conform to the specification!")
+                System.err.println("The environment file: ${psiFile.virtualFile.path} inner format does not conform to the specification!")
+                return emptyMap()
             }
 
             val envFileService = getService(project)
@@ -376,14 +379,16 @@ class EnvFileService(val project: Project) {
 
             val topLevelValue = jsonFile.topLevelValue
             if (topLevelValue !is JsonObject) {
-                throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} outer format does not conform to the specification!")
+                System.err.println("The environment file: ${jsonFile.virtualFile.path} outer format does not conform to the specification!")
+                return null
             }
 
             val envProperty = topLevelValue.findProperty(env) ?: return null
 
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
-                throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} inner format does not conform to the specification!")
+                System.err.println("The environment file: ${jsonFile.virtualFile.path} inner format does not conform to the specification!")
+                return null
             }
 
             val jsonProperty = jsonValue.findProperty(key) ?: return null
@@ -404,7 +409,8 @@ class EnvFileService(val project: Project) {
                 }
 
                 else -> {
-                    throw IllegalArgumentException("The environment file: ${jsonFile.virtualFile.path} innermost format does not conform to the specification!!")
+                    System.err.println("The environment file: ${jsonFile.virtualFile.path} innermost format does not conform to the specification!!")
+                    return null
                 }
             }
         }
@@ -429,7 +435,8 @@ class EnvFileService(val project: Project) {
                 }
 
                 else -> {
-                    throw IllegalArgumentException("error:$literal")
+                    System.err.println("error:$literal")
+                    return ""
                 }
             }
         }

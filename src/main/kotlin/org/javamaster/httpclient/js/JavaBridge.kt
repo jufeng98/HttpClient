@@ -1,19 +1,18 @@
 package org.javamaster.httpclient.js
 
-import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.readText
 import com.jayway.jsonpath.JsonPath
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.InnerVariableEnum
+import org.javamaster.httpclient.exception.HttpFileException
+import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.VirtualFileUtils
 import org.mozilla.javascript.Context
 import org.mozilla.javascript.NativeJavaObject
 import org.mozilla.javascript.ScriptableObject
 import java.io.File
-import java.io.FileNotFoundException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -31,13 +30,13 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         val filePath = HttpUtils.constructFilePath(path, parentPath)
         val file = File(filePath)
 
-        val virtualFile = VfsUtil.findFileByIoFile(file, true)
-            ?: throw FileNotFoundException("Js file not exist: ${file.normalize()}")
+        val jsStr = VirtualFileUtils.readNewestContent(file)
 
-        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
-        val jsStr = document?.text ?: virtualFile.readText()
-
-        JsExecutor.context.evaluateString(scriptableObject, jsStr, file.name, 1, null)
+        try {
+            JsExecutor.context.evaluateString(scriptableObject, jsStr, file.name, 1, null)
+        } catch (e: Exception) {
+            throw JsFileException(e.toString(), e)
+        }
 
         return scriptableObject
     }
@@ -47,11 +46,7 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         val filePath = HttpUtils.constructFilePath(path, parentPath)
         val file = File(filePath)
 
-        val virtualFile = VfsUtil.findFileByIoFile(file, true)
-            ?: throw FileNotFoundException("File not exist: ${file.normalize()}")
-
-        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
-        return document?.text ?: virtualFile.readText()
+        return VirtualFileUtils.readNewestContent(file)
     }
 
     @JsBridge(jsFun = "getBodyArray()")
@@ -68,37 +63,61 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
 
     @JsBridge(jsFun = "evaluateXPath(expression)")
     fun evaluateXPath(expression: String): Any? {
-        return jsExecutor.xPath!!.evaluate(expression, jsExecutor.xmlDoc!!)
+        try {
+            return jsExecutor.xPath!!.evaluate(expression, jsExecutor.xmlDoc!!)
+        } catch (e: Exception) {
+            throw HttpFileException(e.toString(), e)
+        }
     }
 
     @JsBridge(jsFun = "evaluateJsonPath(expression)")
     fun evaluateJsonPath(expression: String): Any? {
-        return JsonPath.read(jsExecutor.jsonStr, expression)
+        try {
+            return JsonPath.read(jsExecutor.jsonStr, expression)
+        } catch (e: Exception) {
+            throw HttpFileException(e.toString(), e)
+        }
     }
 
 
     @JsBridge(jsFun = "xpath(obj, expression)")
     fun xpath(obj: Any, expression: String): Any? {
-        return JsExecutor.xPathFactory.newXPath().evaluate(expression, obj)
+        try {
+            return JsExecutor.xPathFactory.newXPath().evaluate(expression, obj)
+        } catch (e: Exception) {
+            throw HttpFileException(e.toString(), e)
+        }
     }
 
     @JsBridge(jsFun = "jsonPath(obj, expression)")
     fun jsonPath(obj: Any, expression: String): Any? {
-        return JsonPath.read(obj, expression)
+        try {
+            return JsonPath.read(obj, expression)
+        } catch (e: Exception) {
+            throw HttpFileException(e.toString(), e)
+        }
     }
 
     @JsBridge(jsFun = "btoa(bytes)")
     fun btoa(bytes: String): String {
-        return Base64.getEncoder().encodeToString(bytes.toByteArray())
+        try {
+            return Base64.getEncoder().encodeToString(bytes.toByteArray())
+        } catch (e: Exception) {
+            throw HttpFileException(e.toString(), e)
+        }
     }
 
     @JsBridge(jsFun = "atob(str)")
     fun atob(str: String): String {
-        return String(Base64.getDecoder().decode(str), StandardCharsets.UTF_8)
+        try {
+            return String(Base64.getDecoder().decode(str), StandardCharsets.UTF_8)
+        } catch (e: Exception) {
+            throw HttpFileException(e.toString(), e)
+        }
     }
 
     @JsBridge(jsFun = "base64ToFile(base64, path)")
-    fun base64ToFile(base64: String, path: String): Boolean {
+    fun base64ToFile(base64: String, path: String) {
         try {
             val tmpPath = VariableResolver.resolveInnerVariable(path, parentPath, jsExecutor.project)
 
@@ -122,32 +141,33 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             GlobalLog.log("Finish converted base64 and save to file: ${file.normalize()}")
 
             VirtualFileManager.getInstance().asyncRefresh(null)
-
-            return true
         } catch (e: Exception) {
-            GlobalLog.log("base64ToFile handling failed:$e")
-            return false
+            throw HttpFileException(e.toString(), e)
         }
     }
 
     @JsBridge(jsFun = "callJava(methodName, arg0, arg1)")
     fun callJava(methodName: String, arg0: Any, arg1: Any): String {
-        val args = mutableListOf<Any>()
+        try {
+            val args = mutableListOf<Any>()
 
-        var convertArg = convertArg(arg0)
-        if (convertArg != null) {
-            args.add(convertArg)
+            var convertArg = convertArg(arg0)
+            if (convertArg != null) {
+                args.add(convertArg)
+            }
+
+            convertArg = convertArg(arg1)
+            if (convertArg != null) {
+                args.add(convertArg)
+            }
+
+            val variableEnum = InnerVariableEnum.getEnum(methodName)
+                ?: throw IllegalArgumentException("Method name $methodName is not exists!")
+
+            return variableEnum.exec("", *args.toTypedArray())
+        } catch (e: Exception) {
+            throw HttpFileException(e.toString(), e)
         }
-
-        convertArg = convertArg(arg1)
-        if (convertArg != null) {
-            args.add(convertArg)
-        }
-
-
-        val variableEnum = InnerVariableEnum.getEnum(methodName)
-            ?: throw IllegalArgumentException("$methodName not exists!")
-        return variableEnum.exec("", *args.toTypedArray())
     }
 
     private fun convertArg(arg: Any): Any? {

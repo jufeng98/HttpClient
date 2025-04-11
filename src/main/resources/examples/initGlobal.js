@@ -43,12 +43,8 @@ var client = {
         },
     },
     test: function (successMsg, assertCallback) {
-        try {
-            assertCallback();
-            globalLog.log(successMsg);
-        } catch (e) {
-            globalLog.log(e);
-        }
+        assertCallback();
+        globalLog.log(successMsg);
     },
     assert: function (success, failMsg) {
         if (!success) {
