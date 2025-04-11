@@ -34,7 +34,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %type IElementType
 %unicode
 //%debug
-%state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_COMMENT
+%state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_NAME, IN_DIRECTION_VALUE
 %state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE, IN_TRIM_PREFIX_ONLY_SPACE
 %xstate IN_PATH, IN_JSON_VALUE
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
@@ -59,18 +59,19 @@ FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
 FIELD_NAME=[a-zA-Z0-9\-]+
 FIELD_VALUE=[^\r\n{ ]+
-FILE_PATH_PART=[^\r\n<>{} ]+
+FILE_PATH_PART=[^\r\n<>{}]+
 MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
 VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
 GLOBAL_VARIABLE_NAME=[^\r\n={} ]+
-DIRECTION_PART=[^\r\n ]+
+DIRECTION_NAME_PART=[^\r\n ]+
+DIRECTION_VALUE_PART=[^\r\n]+
 INTEGER=[0-9]+
 STRING=('([^'])*'|\"([^\"])*\")
 %%
 
 <YYINITIAL> {
   {REQUEST_COMMENT}{EOL}      { return REQUEST_COMMENT; }
-  "# @"                       { nameFlag = true; yybegin(IN_DIRECTION_COMMENT); return DIRECTION_COMMENT_START; }
+  "# @"                       { yybegin(IN_DIRECTION_NAME); return DIRECTION_COMMENT_START; }
   "<! {%"{EOL_MULTI}          { yybegin(IN_GLOBAL_SCRIPT); return GLOBAL_START_SCRIPT_BRACE; }
   "< {%"{EOL_MULTI}           { yybegin(IN_PRE_SCRIPT); return IN_START_SCRIPT_BRACE; }
   "@"                         { yybegin(IN_GLOBAL_VARIABLE); return AT; }
@@ -136,9 +137,14 @@ STRING=('([^'])*'|\"([^\"])*\")
   "%}"{EOL_MULTI}              { yybegin(YYINITIAL); return END_SCRIPT_BRACE; }
 }
 
-<IN_DIRECTION_COMMENT> {
-  {DIRECTION_PART}              { if(nameFlag) return DIRECTION_NAME_PART; else return DIRECTION_VALUE_PART; }
-  {ONLY_SPACE}                  { nameFlag = false; return WHITE_SPACE; }
+<IN_DIRECTION_NAME> {
+  {DIRECTION_NAME_PART}         { return DIRECTION_NAME_PART; }
+  {ONLY_SPACE}                  { yybegin(IN_DIRECTION_VALUE); return WHITE_SPACE; }
+  {EOL}                         { yybegin(YYINITIAL); return WHITE_SPACE; }
+}
+
+<IN_DIRECTION_VALUE> {
+  {DIRECTION_VALUE_PART}        { return DIRECTION_VALUE_PART; }
   {EOL}                         { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 
@@ -234,7 +240,7 @@ STRING=('([^'])*'|\"([^\"])*\")
   "-"                                { lastMatch = yytext(); matchTimes++; }
   "#"                                { lastMatch = yytext(); matchTimes++; }
   {WHITE_SPACE}                      { lastMatch = yytext(); matchTimes++; }
-  "< "                               { yybegin(IN_INPUT_FILE_PATH); return INPUT_FILE_SIGN; }
+  "< "                               { nextState = IN_INPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return INPUT_FILE_SIGN; }
   {EOL_MULTI}">> "                   { nextState = IN_OUTPUT_FILE_PATH; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
   ">> "                              { nextState = IN_OUTPUT_FILE_PATH; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
   {EOL_MULTI}"> {%"{EOL_MULTI}       { nextState = IN_POST_SCRIPT; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
@@ -282,13 +288,13 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_OUTPUT_FILE> {
-  ">> "                      { yybegin(IN_OUTPUT_FILE_PATH); return OUTPUT_FILE_SIGN; }
+  ">> "                      { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return OUTPUT_FILE_SIGN; }
   {WHITE_SPACE}              { yybegin(YYINITIAL); return WHITE_SPACE; }
   [^]                        { yypushback(yylength()); yybegin(YYINITIAL); }
 }
 
 <IN_OUTPUT_FILE_PATH> {
-  ">> "                      { return OUTPUT_FILE_SIGN; }
+  ">> "                      { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return OUTPUT_FILE_SIGN; }
   "{{"                       { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {FILE_PATH_PART}           { return FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
