@@ -64,7 +64,7 @@ MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
 VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
 GLOBAL_VARIABLE_NAME=[^\r\n={} ]+
 DIRECTION_NAME_PART=[^\r\n ]+
-DIRECTION_VALUE_PART=[^\r\n]+
+DIRECTION_VALUE_PART=[^\r\n{]+
 INTEGER=[0-9]+
 STRING=('([^'])*'|\"([^\"])*\")
 %%
@@ -144,6 +144,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_DIRECTION_VALUE> {
+  "{{"                          { nextState = IN_DIRECTION_VALUE; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {DIRECTION_VALUE_PART}        { return DIRECTION_VALUE_PART; }
   {EOL}                         { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
