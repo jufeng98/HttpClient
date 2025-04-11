@@ -15,13 +15,26 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTreeUtil.findChildrenOfType
 import com.intellij.psi.util.PsiTreeUtil.getChildOfType
 import org.javamaster.httpclient.psi.HttpScriptBody
-import java.util.*
 
 object JavaScript {
     private val pluginClassLoader by lazy {
         val plugin = findPlugin() ?: return@lazy null
         plugin.pluginClassLoader
     }
+
+    private val clzJSCallExpression by lazy {
+        loadClass("com.intellij.lang.javascript.psi.JSCallExpression", pluginClassLoader!!)
+    }
+    private val clzJSReferenceExpression by lazy {
+        loadClass("com.intellij.lang.javascript.psi.JSReferenceExpression", pluginClassLoader!!)
+    }
+    private val clzJSArgumentList by lazy {
+        loadClass("com.intellij.lang.javascript.psi.JSArgumentList", pluginClassLoader!!)
+    }
+    private val clzJSLiteralExpression by lazy {
+        loadClass("com.intellij.lang.javascript.psi.JSLiteralExpression", pluginClassLoader!!)
+    }
+
 
     val jsLanguage by lazy {
         val plugin = findPlugin() ?: return@lazy null
@@ -46,43 +59,50 @@ object JavaScript {
             return null
         }
 
-        val loader = pluginClassLoader!!
-
-        val clzJSCallExpression = loadClass("com.intellij.lang.javascript.psi.JSCallExpression", loader)
-        val clzJSReferenceExpression =
-            loadClass("com.intellij.lang.javascript.psi.JSReferenceExpression", loader)
-        val clzJSArgumentList = loadClass("com.intellij.lang.javascript.psi.JSArgumentList", loader)
-        val clzJSLiteralExpression = loadClass("com.intellij.lang.javascript.psi.JSLiteralExpression", loader)
-
         val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
         return scriptBodyList
-            .map {
+            .mapNotNull {
                 val injectedPsiFiles = injectedLanguageManager.getInjectedPsiFiles(it)
                 if (injectedPsiFiles.isNullOrEmpty()) {
-                    return@map null
+                    return@mapNotNull null
                 }
 
                 // com.intellij.lang.javascript.psi.JSFile
                 val jsFile = injectedPsiFiles[0].first
 
-                val expressions = findChildrenOfType(jsFile, clzJSCallExpression)
-
-                for (expression in expressions) {
-                    val dotExpression = getChildOfType(expression, clzJSReferenceExpression) ?: continue
-
-                    val arguments = getChildOfType(expression, clzJSArgumentList) ?: continue
-
-                    val text = dotExpression.text
-                    if (text == "request.variables.set") {
-                        return@map findArgumentName(variableName, arguments, clzJSLiteralExpression) ?: continue
-                    } else if (text == "client.global.set") {
-                        return@map findArgumentName(variableName, arguments, clzJSLiteralExpression) ?: continue
-                    }
-                }
-
-                return@map null
+                resolveJsVariable(variableName, jsFile)
             }
-            .firstOrNull { Objects.nonNull(it) }
+            .firstOrNull()
+    }
+
+    fun resolveJsVariable(
+        variableName: String,
+        jsFile: PsiFile,
+    ): PsiElement? {
+        if (pluginClassLoader == null) {
+            return null
+        }
+
+        return resolveJsVariable(variableName, jsFile)
+    }
+
+    private fun resolveJsVariable(variableName: String, jsFile: PsiElement): PsiElement? {
+        val expressions = findChildrenOfType(jsFile, clzJSCallExpression)
+
+        for (expression in expressions) {
+            val dotExpression = getChildOfType(expression, clzJSReferenceExpression) ?: continue
+
+            val arguments = getChildOfType(expression, clzJSArgumentList) ?: continue
+
+            val text = dotExpression.text
+            if (text == "request.variables.set") {
+                return findArgumentName(variableName, arguments, clzJSLiteralExpression) ?: continue
+            } else if (text == "client.global.set") {
+                return findArgumentName(variableName, arguments, clzJSLiteralExpression) ?: continue
+            }
+        }
+
+        return null
     }
 
     private fun findArgumentName(variableName: String, arguments: PsiElement, clz: Class<PsiElement>): PsiElement? {

@@ -121,13 +121,15 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 evalJsInAnonymousFun(it.content, 1, it.file.name)
             }
 
-            val virtualFile = jsListBeforeReq[0].containingFile.virtualFile
-            val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
+            if (jsListBeforeReq.isNotEmpty()) {
+                val virtualFile = jsListBeforeReq[0].containingFile.virtualFile
+                val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
 
-            jsListBeforeReq.forEach {
-                val rowNum = document.getLineNumber(it.textOffset) + 1
+                jsListBeforeReq.forEach {
+                    val rowNum = document.getLineNumber(it.textOffset) + 1
 
-                evalJsInAnonymousFun(it.text, rowNum, virtualFile.name)
+                    evalJsInAnonymousFun(it.text, rowNum, virtualFile.name)
+                }
             }
 
             resList.add(GlobalLog.getAndClearLogs() + "\r\n")

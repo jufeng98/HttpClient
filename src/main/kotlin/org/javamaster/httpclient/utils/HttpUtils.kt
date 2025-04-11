@@ -383,26 +383,30 @@ object HttpUtils {
 
         return directionComments
             .mapNotNull {
-                if (it.directionName?.text != ParamEnum.IMPORT.param || it.directionValue == null) {
-                    return@mapNotNull null
-                }
-
-                var path = it.directionValue!!.text
-                if (path.length < 3) {
-                    return@mapNotNull null
-                }
-
-                path = path.substring(1, path.length - 1)
-                if (!path.endsWith("js", ignoreCase = true)) {
-                    return@mapNotNull null
-                }
-
-                path = VariableResolver.resolveInnerVariable(path, parentPath, project)
-
-                path = constructFilePath(path, parentPath)
+                val path = getDirectionPath(it, parentPath, project) ?: return@mapNotNull null
 
                 PreJsFile(it, File(path))
             }
+    }
+
+    fun getDirectionPath(directionComment: HttpDirectionComment, parentPath: String, project: Project): String? {
+        if (directionComment.directionValue == null || directionComment.directionName?.text != ParamEnum.IMPORT.param) {
+            return null
+        }
+
+        var path = directionComment.directionValue!!.text
+        if (path.length < 3) {
+            return null
+        }
+
+        path = path.substring(1, path.length - 1)
+        if (!path.endsWith("js", ignoreCase = true)) {
+            return null
+        }
+
+        path = VariableResolver.resolveInnerVariable(path, parentPath, project)
+
+        return constructFilePath(path, parentPath)
     }
 
     fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<HttpScriptBody> {

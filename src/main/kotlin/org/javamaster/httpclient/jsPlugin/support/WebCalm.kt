@@ -13,7 +13,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.psi.HttpScriptBody
 import ris58h.webcalm.javascript.JavaScriptLanguage
 import ris58h.webcalm.javascript.psi.*
-import java.util.*
 
 object WebCalm {
     private val pluginNotAlive by lazy {
@@ -33,34 +32,44 @@ object WebCalm {
 
         val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
         return scriptBodyList
-            .map {
+            .mapNotNull {
                 val injectedPsiFiles = injectedLanguageManager.getInjectedPsiFiles(it)
                 if (injectedPsiFiles.isNullOrEmpty()) {
-                    return@map null
+                    return@mapNotNull null
                 }
 
                 val jsFile = injectedPsiFiles[0].first as JavaScriptFile
 
-                val expressions = PsiTreeUtil.findChildrenOfType(jsFile, JavaScriptCallExpression::class.java)
-                for (expression in expressions) {
-                    val dotExpression =
-                        PsiTreeUtil.getChildOfType(expression, JavaScriptMemberDotExpression::class.java)
-                            ?: continue
-
-                    val arguments = PsiTreeUtil.getChildOfType(expression, JavaScriptArguments::class.java)
-                        ?: continue
-
-                    val text = dotExpression.text
-                    if (text == "request.variables.set") {
-                        return@map findArgumentName(variableName, arguments) ?: continue
-                    } else if (text == "client.global.set") {
-                        return@map findArgumentName(variableName, arguments) ?: continue
-                    }
-                }
-
-                return@map null
+                resolveJsVariable(variableName, jsFile)
             }
-            .firstOrNull { Objects.nonNull(it) }
+            .firstOrNull()
+    }
+
+    fun resolveJsVariable(variableName: String, jsFile: PsiFile): PsiElement? {
+        if (pluginNotAlive) {
+            return null
+        }
+
+        return resolveJsVariable(variableName, jsFile as JavaScriptFile)
+    }
+
+    private fun resolveJsVariable(variableName: String, jsFile: JavaScriptFile): PsiElement? {
+        val expressions = PsiTreeUtil.findChildrenOfType(jsFile, JavaScriptCallExpression::class.java)
+        for (expression in expressions) {
+            val dotExpression =
+                PsiTreeUtil.getChildOfType(expression, JavaScriptMemberDotExpression::class.java) ?: continue
+
+            val arguments = PsiTreeUtil.getChildOfType(expression, JavaScriptArguments::class.java) ?: continue
+
+            val text = dotExpression.text
+            if (text == "request.variables.set") {
+                return findArgumentName(variableName, arguments) ?: continue
+            } else if (text == "client.global.set") {
+                return findArgumentName(variableName, arguments) ?: continue
+            }
+        }
+
+        return null
     }
 
     fun createJsVariable(project: Project, injectedPsiFile: PsiFile, variableName: String): PsiElement? {

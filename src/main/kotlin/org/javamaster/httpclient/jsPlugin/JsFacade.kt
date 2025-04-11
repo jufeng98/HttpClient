@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.jsPlugin.support.JavaScript
 import org.javamaster.httpclient.jsPlugin.support.WebCalm
+import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.psi.HttpScriptBody
 
 /**
@@ -32,6 +33,33 @@ object JsFacade {
         }
 
         return WebCalm.createJsVariable(project, injectedPsiFile, variableName)
+    }
+
+    fun resolveJsVariable(variableName: String, preJsFiles: List<PreJsFile>): PsiElement? {
+        if (preJsFiles.isEmpty()) {
+            return null
+        }
+
+        preJsFiles.forEach {
+            val psiReferences = it.directionComment.directionValue?.references ?: return@forEach
+            if (psiReferences.isEmpty()) {
+                return@forEach
+            }
+
+            val jsFile = psiReferences[0].resolve()
+            if (jsFile !is PsiFile) {
+                return@forEach
+            }
+
+            val jsVariable = JavaScript.resolveJsVariable(variableName, jsFile)
+            if (jsVariable != null) {
+                return jsVariable
+            }
+
+            return WebCalm.resolveJsVariable(variableName, jsFile)
+        }
+
+        return null
     }
 
 }

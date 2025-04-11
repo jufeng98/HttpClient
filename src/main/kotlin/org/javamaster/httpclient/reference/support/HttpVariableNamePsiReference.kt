@@ -13,6 +13,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.jsPlugin.JsFacade
+import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpFilePath
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.HttpVariableName
@@ -37,16 +38,6 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
     }
 
     companion object {
-        private val builtInFunList by lazy {
-            return@lazy InnerVariableEnum.entries
-                .map {
-                    LookupElementBuilder.create(it.methodName)
-                        .withInsertHandler(it.insertHandler())
-                        .withTypeText(it.typeText(), true)
-                }
-                .toTypedArray()
-        }
-
         fun getVariableVariants(element: PsiElement): Array<Any> {
             val allList = mutableListOf<Any>()
 
@@ -154,7 +145,21 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                 return jsVariable
             }
 
-            return null
+            val parentPath = httpFile.virtualFile?.parent?.path ?: return null
+
+            val preJsFiles = HttpUtils.getPreJsFiles(httpFile as HttpFile)
+
+            return JsFacade.resolveJsVariable(variableName, preJsFiles)
+        }
+
+        private val builtInFunList by lazy {
+            return@lazy InnerVariableEnum.entries
+                .map {
+                    LookupElementBuilder.create(it.methodName)
+                        .withInsertHandler(it.insertHandler())
+                        .withTypeText(it.typeText(), true)
+                }
+                .toTypedArray()
         }
     }
 }
