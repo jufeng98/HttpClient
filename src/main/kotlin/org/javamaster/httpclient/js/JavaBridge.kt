@@ -138,7 +138,7 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             val toPath = file.toPath()
 
             Files.write(toPath, bytes, StandardOpenOption.CREATE)
-            GlobalLog.log("Finish converted base64 and save to file: ${file.normalize()}")
+            GlobalLog.log("Finished convert base64 and save to file: ${file.normalize()}")
 
             VirtualFileManager.getInstance().asyncRefresh(null)
         } catch (e: Exception) {
