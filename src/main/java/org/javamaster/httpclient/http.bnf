@@ -80,7 +80,7 @@ directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1
 }
 directionName ::= DIRECTION_NAME_PART
-directionValue ::= DIRECTION_VALUE_PART {
+directionValue ::= variable? DIRECTION_VALUE_PART {
     methods = [
         getReferences
     ]
