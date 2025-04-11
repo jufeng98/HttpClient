@@ -1,3 +1,6 @@
+// Global import js file
+# @import "./js/public.js"
+
 <! {%
     // Global js previous handler
     client.global.clearAll();
@@ -16,7 +19,7 @@
     console.log("query param:", params.toString());
 
     // Execute pre defined js file
-    const global = require('./myUtils.js');
+    const global = require('./js/myUtils.js');
     const res = global.MyUtils.isBlank('hello');
     client.log(`result: ${res}`);
 %}
