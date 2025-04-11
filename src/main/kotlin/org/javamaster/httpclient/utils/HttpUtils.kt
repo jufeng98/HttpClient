@@ -378,33 +378,48 @@ object HttpUtils {
     fun getPreJsFiles(httpFile: HttpFile): List<PreJsFile> {
         val directionComments = httpFile.getDirectionComments()
 
-        val project = httpFile.project
         val parentPath = httpFile.virtualFile.parent.path
 
         return directionComments
             .mapNotNull {
-                val path = getDirectionPath(it, parentPath, project) ?: return@mapNotNull null
+                val path = getDirectionPath(it, parentPath) ?: return@mapNotNull null
 
                 PreJsFile(it, File(path))
             }
     }
 
-    fun getDirectionPath(directionComment: HttpDirectionComment, parentPath: String, project: Project): String? {
-        if (directionComment.directionValue == null || directionComment.directionName?.text != ParamEnum.IMPORT.param) {
+    fun getVariableResolvedValue(variable: HttpVariable?): String? {
+        val references = variable?.variableName?.references ?: return null
+        if (references.isEmpty()) {
             return null
         }
 
-        var path = directionComment.directionValue!!.text
-        if (path.length < 3) {
+        val psiElement = references[0].resolve()
+        if (psiElement !is PsiDirectory) {
             return null
         }
 
-        path = path.substring(1, path.length - 1)
+        return psiElement.virtualFile.path
+    }
+
+    fun getDirectionPath(directionComment: HttpDirectionComment, parentPath: String): String? {
+        val directionValue = directionComment.directionValue
+        if (directionValue == null || directionComment.directionName?.text != ParamEnum.IMPORT.param) {
+            return null
+        }
+
+        var path = ""
+
+        val resolvedValue = getVariableResolvedValue(directionValue.variable)
+        if (resolvedValue != null) {
+            path += resolvedValue
+        }
+
+        path += directionValue.directionValueContent.text
+
         if (!path.endsWith("js", ignoreCase = true)) {
             return null
         }
-
-        path = VariableResolver.resolveInnerVariable(path, parentPath, project)
 
         return constructFilePath(path, parentPath)
     }

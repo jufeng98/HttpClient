@@ -145,8 +145,6 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                 return jsVariable
             }
 
-            val parentPath = httpFile.virtualFile?.parent?.path ?: return null
-
             val preJsFiles = HttpUtils.getPreJsFiles(httpFile as HttpFile)
 
             return JsFacade.resolveJsVariable(variableName, preJsFiles)

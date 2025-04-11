@@ -19,7 +19,7 @@ class HttpDirectionValuePsiReference(directionValue: HttpDirectionValue, textRan
         val directionComment = element.parent as HttpDirectionComment
         val project = element.project
 
-        val path = HttpUtils.getDirectionPath(directionComment, parentPath, project) ?: return null
+        val path = HttpUtils.getDirectionPath(directionComment, parentPath) ?: return null
 
         return HttpUtils.resolveFilePath(path, parentPath, project)
     }
