@@ -80,7 +80,11 @@ directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1
 }
 directionName ::= DIRECTION_NAME_PART
-directionValue ::= DIRECTION_VALUE_PART
+directionValue ::= DIRECTION_VALUE_PART {
+    methods = [
+        getReferences
+    ]
+}
 preRequestHandler ::= preRequestScript
 preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1

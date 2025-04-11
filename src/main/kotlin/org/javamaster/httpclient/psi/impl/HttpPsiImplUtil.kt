@@ -172,6 +172,11 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
+    fun getReferences(param: HttpDirectionValue): Array<PsiReference> {
+        return ReferenceProvidersRegistry.getReferencesFromProviders(param)
+    }
+
+    @JvmStatic
     fun getReferences(param: HttpRequestTarget): Array<PsiReference> {
         return ReferenceProvidersRegistry.getReferencesFromProviders(param)
     }
