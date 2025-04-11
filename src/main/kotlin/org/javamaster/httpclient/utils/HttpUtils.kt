@@ -563,7 +563,7 @@ object HttpUtils {
         val filePath = constructFilePath(path, httpFileParentPath)
 
         val file = File(filePath)
-        val virtualFile = VfsUtil.findFileByIoFile(file, true) ?: return null
+        val virtualFile = VfsUtil.findFileByIoFile(file, false) ?: return null
 
         if (virtualFile.isDirectory) {
             return PsiManager.getInstance(project).findDirectory(virtualFile)!!
