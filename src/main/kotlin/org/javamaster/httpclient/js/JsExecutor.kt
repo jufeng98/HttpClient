@@ -112,28 +112,34 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             return mutableListOf()
         }
 
-        GlobalLog.setTabName(tabName)
+        try {
+            GlobalLog.setTabName(tabName)
 
-        val resList = mutableListOf("/*\r\nPre js executed result:\r\n")
+            val resList = mutableListOf("/*\r\nPre js executed result:\r\n")
 
-        preJsFiles.forEach {
-            evalJs(it.content, 1, it.file.name)
+            preJsFiles.forEach {
+                evalJsInAnonymousFun(it.content, 1, it.file.name)
+            }
+
+            val virtualFile = jsListBeforeReq[0].containingFile.virtualFile
+            val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
+
+            jsListBeforeReq.forEach {
+                val rowNum = document.getLineNumber(it.textOffset) + 1
+
+                evalJsInAnonymousFun(it.text, rowNum, virtualFile.name)
+            }
+
+            resList.add(GlobalLog.getAndClearLogs() + "\r\n")
+
+            resList.add("*/\r\n")
+
+            return resList
+        } catch (e: Exception) {
+            GlobalLog.getAndClearLogs()
+
+            throw e
         }
-
-        val virtualFile = jsListBeforeReq[0].containingFile.virtualFile
-        val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
-
-        jsListBeforeReq.forEach {
-            val rowNum = document.getLineNumber(it.textOffset) + 1
-
-            evalJs(it.text, rowNum, virtualFile.name)
-        }
-
-        resList.add(GlobalLog.getAndClearLogs() + "\r\n")
-
-        resList.add("*/\r\n")
-
-        return resList
     }
 
     fun evalJsAfterRequest(
@@ -244,7 +250,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         val rowNum = document.getLineNumber(jsScript.textOffset) + 1
 
         try {
-            evalJs(jsScript.text, rowNum, virtualFile.name)
+            evalJsInAnonymousFun(jsScript.text, rowNum, virtualFile.name)
         } catch (e: Exception) {
             GlobalLog.log("$e")
         }
@@ -254,9 +260,13 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         return GlobalLog.getAndClearLogs()
     }
 
-    private fun evalJs(jsStr: String, rowNum: Int, fileName: String) {
+    private fun evalJsInAnonymousFun(jsStr: String, rowNum: Int, fileName: String) {
         try {
-            context.evaluateString(reqScriptableObject, jsStr, fileName, rowNum, null)
+            val js = """
+                (function () { 'use strict'; ${jsStr.trim()}; 
+                })();
+            """.trimIndent()
+            context.evaluateString(reqScriptableObject, js, fileName, rowNum, null)
         } catch (e: WrappedException) {
             System.err.println("WrappedException")
             e.printStackTrace()

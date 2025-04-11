@@ -58,6 +58,7 @@
                 <li><b>3.6.0</b></li>
                 <ul>
                     <li>新增执行文件内所有请求功能</li>
+                    <li>新增全局导入 js 文件功能</li>
                     <li>新增 header name 文档提示</li>
                     <li>新增切换环境的 intention</li>
                     <li>功能优化及Bug修复</li>
