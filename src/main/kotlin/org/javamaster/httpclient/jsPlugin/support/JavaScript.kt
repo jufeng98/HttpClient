@@ -83,7 +83,7 @@ object JavaScript {
             return null
         }
 
-        return resolveJsVariable(variableName, jsFile)
+        return resolveJsVariable(variableName, jsFile as PsiElement)
     }
 
     private fun resolveJsVariable(variableName: String, jsFile: PsiElement): PsiElement? {
