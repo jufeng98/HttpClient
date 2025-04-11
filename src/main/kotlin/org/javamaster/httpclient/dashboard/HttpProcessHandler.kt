@@ -9,6 +9,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
@@ -20,6 +21,8 @@ import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.model.HttpReqInfo
+import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
@@ -31,6 +34,7 @@ import org.javamaster.httpclient.utils.HttpUtils.convertToResPair
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.javamaster.httpclient.utils.NotifyUtil
+import org.javamaster.httpclient.utils.VirtualFileUtils
 import org.javamaster.httpclient.ws.WsRequest
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -50,7 +54,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
     val tabName = HttpUtils.getTabName(httpMethod)
     val project = httpMethod.project
 
-    private val httpFile = httpMethod.containingFile
+    private val httpFile = httpMethod.containingFile as HttpFile
     private val parentPath = httpFile.virtualFile.parent.path
     private val jsExecutor = JsExecutor(project, httpFile, tabName)
     private val variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv)
@@ -60,6 +64,8 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
     private val requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
     private val methodType = httpMethod.text
     private val responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
+
+    private val preJsFiles = HttpUtils.getPreJsFiles(httpFile)
 
     private val jsListBeforeReq = HttpUtils.getAllPreJsScripts(httpFile, requestBlock)
 
@@ -83,9 +89,23 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         HttpBackground
             .runInBackgroundReadActionAsync {
+                preJsFiles.forEach {
+                    try {
+                        val content = VirtualFileUtils.readNewestContent(it.file)
+                        it.content = content
+                    } catch (e: Exception) {
+                        val document = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
+                        val rowNum = document.getLineNumber(it.directionComment.textOffset) + 1
+
+                        throw RuntimeException("$e(${httpFile.name}#${rowNum})", e)
+                    }
+                }
+
                 val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
+
                 val environment = gson.toJson(getEnvMap(project, false))
-                Pair(reqBody, environment)
+
+                HttpReqInfo(reqBody, environment, preJsFiles)
             }
             .finishOnUiThread {
                 startHandleRequest(it!!)
@@ -95,13 +115,13 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             }
     }
 
-    private fun startHandleRequest(pair: Pair<Any?, String>) {
+    private fun startHandleRequest(reqInfo: HttpReqInfo) {
         val httpHeaderFields = request.header?.headerFieldList
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
-        jsExecutor.initJsRequestObj(pair, methodType, reqHeaderMap)
+        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap)
 
-        val beforeJsResList = jsExecutor.evalJsBeforeRequest(jsListBeforeReq)
+        val beforeJsResList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
 
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
@@ -115,7 +135,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             return
         }
 
-        val reqBody = pair.first
+        val reqBody = reqInfo.reqBody
 
         if (methodType == HttpRequestEnum.DUBBO.name) {
             handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
@@ -127,7 +147,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private fun handleException(e: Exception) {
         destroyProcess()
-        NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e.message}</div>")
+        NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e}</div>")
     }
 
     private fun handleWs(url: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {

@@ -5,7 +5,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.exception.HttpFileException
+import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.model.HttpReqInfo
+import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
@@ -54,9 +58,9 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     var xmlDoc: Document? = null
     var xPath: XPath? = null
 
-    fun initJsRequestObj(pair: Pair<Any?, String>, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
-        val reqBody = pair.first
-        val environment = pair.second
+    fun initJsRequestObj(reqInfo: HttpReqInfo, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
+        val reqBody = reqInfo.reqBody
+        val environment = reqInfo.environment
 
         val headers = gson.toJson(reqHeaderMap)
 
@@ -103,21 +107,26 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         context.evaluateString(reqScriptableObject, js, "initRequestBody.js", 1, null)
     }
 
-    fun evalJsBeforeRequest(jsListBeforeReq: List<HttpScriptBody>): List<String> {
-        if (jsListBeforeReq.isEmpty()) {
+    fun evalJsBeforeRequest(preJsFiles: List<PreJsFile>, jsListBeforeReq: List<HttpScriptBody>): List<String> {
+        if (jsListBeforeReq.isEmpty() && preJsFiles.isEmpty()) {
             return mutableListOf()
         }
 
         GlobalLog.setTabName(tabName)
 
-        val resList = mutableListOf("/*\r\nprevious js executed result:\r\n")
+        val resList = mutableListOf("/*\r\nPre js executed result:\r\n")
+
+        preJsFiles.forEach {
+            evalJs(it.content, 1, it.file.name)
+        }
 
         val virtualFile = jsListBeforeReq[0].containingFile.virtualFile
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
 
         jsListBeforeReq.forEach {
-            val rowNum = document.getLineNumber(it.textOffset)
-            evalJsInAnonymousFun(it.text, rowNum, virtualFile.name)
+            val rowNum = document.getLineNumber(it.textOffset) + 1
+
+            evalJs(it.text, rowNum, virtualFile.name)
         }
 
         resList.add(GlobalLog.getAndClearLogs() + "\r\n")
@@ -230,14 +239,14 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
         context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)
 
-        try {
-            val virtualFile = jsScript.containingFile.virtualFile
-            val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
+        val virtualFile = jsScript.containingFile.virtualFile
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
+        val rowNum = document.getLineNumber(jsScript.textOffset) + 1
 
-            val rowNum = document.getLineNumber(jsScript.textOffset)
-            evalJsInAnonymousFun(jsScript.text, rowNum, virtualFile.name)
+        try {
+            evalJs(jsScript.text, rowNum, virtualFile.name)
         } catch (e: Exception) {
-            GlobalLog.log(e.toString())
+            GlobalLog.log("$e")
         }
 
         context.evaluateString(reqScriptableObject, "delete response;", "dummy.js", 1, null)
@@ -245,22 +254,43 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         return GlobalLog.getAndClearLogs()
     }
 
-    private fun evalJsInAnonymousFun(jsStr: String, rowNum: Int, fileName: String) {
+    private fun evalJs(jsStr: String, rowNum: Int, fileName: String) {
         try {
-            val js = """
-                (function () { 
-                    'use strict'; 
-                    ${jsStr.trim()}; 
-                })();
-            """.trimIndent()
-            context.evaluateString(reqScriptableObject, js, fileName, rowNum - 1, null)
+            context.evaluateString(reqScriptableObject, jsStr, fileName, rowNum, null)
         } catch (e: WrappedException) {
+            System.err.println("WrappedException")
+            e.printStackTrace()
+
             val cause = e.cause
-            if (cause is FileNotFoundException) {
-                throw FileNotFoundException("$cause($fileName)")
+            if (cause is FileNotFoundException || cause is IllegalArgumentException || cause is HttpFileException) {
+                rethrowException(e.stackTrace, cause.toString(), fileName)
             }
 
-            throw EvaluatorException(cause.toString(), fileName, e.lineNumber())
+            if (cause is JsFileException) {
+                throw cause.cause!!
+            }
+
+            throw EvaluatorException(e.wrappedException.toString(), fileName, e.lineNumber())
+        } catch (e: JavaScriptException) {
+            System.err.println("JavaScriptException")
+            e.printStackTrace()
+
+            rethrowException(e.stackTrace, e.toString(), fileName)
+        } catch (e: Exception) {
+            System.err.println("Exception")
+            e.printStackTrace()
+
+            throw e
+        }
+    }
+
+    private fun rethrowException(staceTraces: Array<StackTraceElement>, message: String, fileName: String) {
+        for (stackTraceElement in staceTraces) {
+            if (stackTraceElement.fileName != fileName) {
+                continue
+            }
+
+            throw EvaluatorException(message, fileName, stackTraceElement.lineNumber)
         }
     }
 

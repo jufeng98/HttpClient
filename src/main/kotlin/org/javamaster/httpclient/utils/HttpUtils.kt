@@ -23,9 +23,11 @@ import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.adapter.DateTypeAdapter
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
@@ -371,6 +373,36 @@ object HttpUtils {
         }
 
         return element
+    }
+
+    fun getPreJsFiles(httpFile: HttpFile): List<PreJsFile> {
+        val directionComments = httpFile.getDirectionComments()
+
+        val project = httpFile.project
+        val parentPath = httpFile.virtualFile.parent.path
+
+        return directionComments
+            .mapNotNull {
+                if (it.directionName?.text != ParamEnum.IMPORT.param || it.directionValue == null) {
+                    return@mapNotNull null
+                }
+
+                var path = it.directionValue!!.text
+                if (path.length < 3) {
+                    return@mapNotNull null
+                }
+
+                path = path.substring(1, path.length - 1)
+                if (!path.endsWith("js", ignoreCase = true)) {
+                    return@mapNotNull null
+                }
+
+                path = VariableResolver.resolveInnerVariable(path, parentPath, project)
+
+                path = constructFilePath(path, parentPath)
+
+                PreJsFile(it, File(path))
+            }
     }
 
     fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<HttpScriptBody> {
