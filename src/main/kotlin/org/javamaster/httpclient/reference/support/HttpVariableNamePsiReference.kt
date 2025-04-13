@@ -10,6 +10,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.completion.support.SlashEndInsertHandler
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.jsPlugin.JsFacade
@@ -41,15 +42,24 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
         fun getVariableVariants(element: PsiElement): Array<Any> {
             val allList = mutableListOf<Any>()
 
-            if (element.parent is HttpFilePath) {
+            if (element.parent.parent is HttpFilePath) {
                 var tmp = InnerVariableEnum.MVN_TARGET
-                allList.add(LookupElementBuilder.create(tmp.methodName).withTypeText(tmp.typeText(), true))
+                allList.add(
+                    LookupElementBuilder.create(tmp.methodName).withTypeText(tmp.typeText(), true)
+                        .withInsertHandler(SlashEndInsertHandler)
+                )
 
                 tmp = InnerVariableEnum.PROJECT_ROOT
-                allList.add(LookupElementBuilder.create(tmp.methodName).withTypeText(tmp.typeText(), true))
+                allList.add(
+                    LookupElementBuilder.create(tmp.methodName).withTypeText(tmp.typeText(), true)
+                        .withInsertHandler(SlashEndInsertHandler)
+                )
 
                 tmp = InnerVariableEnum.HISTORY_FOLDER
-                allList.add(LookupElementBuilder.create(tmp.methodName).withTypeText(tmp.typeText(), true))
+                allList.add(
+                    LookupElementBuilder.create(tmp.methodName).withTypeText(tmp.typeText(), true)
+                        .withInsertHandler(SlashEndInsertHandler)
+                )
 
                 return allList.toTypedArray()
             }

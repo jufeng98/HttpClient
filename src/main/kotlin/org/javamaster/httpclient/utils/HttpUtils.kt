@@ -388,7 +388,7 @@ object HttpUtils {
             }
     }
 
-    fun getVariableResolvedValue(variable: HttpVariable?): String? {
+    private fun resolveDirOfVariable(variable: HttpVariable?): PsiDirectory? {
         val references = variable?.variableName?.references ?: return null
         if (references.isEmpty()) {
             return null
@@ -398,6 +398,12 @@ object HttpUtils {
         if (psiElement !is PsiDirectory) {
             return null
         }
+
+        return psiElement
+    }
+
+    fun resolvePathOfVariable(variable: HttpVariable?): String? {
+        val psiElement = resolveDirOfVariable(variable) ?: return null
 
         return psiElement.virtualFile.path
     }
@@ -410,12 +416,12 @@ object HttpUtils {
 
         var path = ""
 
-        val resolvedValue = getVariableResolvedValue(directionValue.variable)
-        if (resolvedValue != null) {
-            path += resolvedValue
+        val resolvedPath = resolvePathOfVariable(directionValue.variable)
+        if (resolvedPath != null) {
+            path += resolvedPath
         }
 
-        path += directionValue.directionValueContent.text
+        path += directionValue.directionValueContent?.text ?: ""
 
         if (!path.endsWith("js", ignoreCase = true)) {
             return null

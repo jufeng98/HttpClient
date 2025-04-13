@@ -16,12 +16,12 @@ class HttpFilePathPsiReference(httpFilePath: HttpFilePath, textRange: TextRange)
         val parentPath = element.containingFile?.virtualFile?.parent?.path ?: return null
 
         var path = ""
-        val resolvedValue = HttpUtils.getVariableResolvedValue(element.variable)
-        if (resolvedValue != null) {
-            path += resolvedValue
+        val resolvedPath = HttpUtils.resolvePathOfVariable(element.variable)
+        if (resolvedPath != null) {
+            path += resolvedPath
         }
 
-        path += element.filePathContent.text
+        path += element.filePathContent?.text ?: ""
 
         return HttpUtils.resolveFilePath(path, parentPath, element.project)
     }

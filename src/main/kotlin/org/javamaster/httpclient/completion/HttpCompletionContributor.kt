@@ -9,10 +9,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiTreeUtil
-import org.javamaster.httpclient.completion.provider.HttpDirectionNameCompletionProvider
-import org.javamaster.httpclient.completion.provider.HttpHeaderFieldNamesProvider
-import org.javamaster.httpclient.completion.provider.HttpHeaderFieldValuesProvider
-import org.javamaster.httpclient.completion.provider.HttpMethodsProvider
+import org.javamaster.httpclient.completion.provider.*
 import org.javamaster.httpclient.psi.*
 
 /**
@@ -47,6 +44,15 @@ class HttpCompletionContributor : CompletionContributor() {
         this.extend(
             CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.DIRECTION_NAME_PART),
             HttpDirectionNameCompletionProvider()
+        )
+
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.or(
+                PlatformPatterns.psiElement(HttpTypes.FILE_PATH_PART),
+                PlatformPatterns.psiElement(HttpTypes.DIRECTION_VALUE_PART)
+            ),
+            HttpFilePathCompletionProvider()
         )
     }
 
