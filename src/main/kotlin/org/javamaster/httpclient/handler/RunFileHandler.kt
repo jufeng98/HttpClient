@@ -1,6 +1,6 @@
 package org.javamaster.httpclient.handler
 
-import com.intellij.openapi.actionSystem.ActionUiKind
+import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.application.runInEdt
@@ -66,16 +66,22 @@ object RunFileHandler {
 
                     val action = HttpAction(it)
 
-                    val event = AnActionEvent.createEvent(
-                        action,
+                    @Suppress("removal", "DEPRECATION")
+                    val event = AnActionEvent(
+                        null,
                         DataContext.EMPTY_CONTEXT,
-                        action.templatePresentation.clone(),
                         "",
-                        ActionUiKind.NONE,
-                        null
+                        action.templatePresentation.clone(),
+                        ActionManager.getInstance(),
+                        0
                     )
 
-                    action.actionPerformed(event)
+                    // Avoid the error:
+                    // This method is marked with @ApiStatus.OverrideOnly annotation, which indicates that the method
+                    // must be only overridden but not invoked by client code.
+                    val method = action.javaClass.getDeclaredMethod("actionPerformed", AnActionEvent::class.java)
+                    method.isAccessible = true
+                    method.invoke(action, event)
                 }
 
                 var code = it.getUserData(HttpUtils.requestFinishedKey)

@@ -1,6 +1,6 @@
 package org.javamaster.httpclient.ui;
 
-import com.intellij.icons.AllIcons;
+import com.google.common.collect.Maps;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
@@ -10,6 +10,7 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import kotlin.Triple;
+import org.javamaster.httpclient.HttpIcons;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.handler.RunFileHandler;
 import org.javamaster.httpclient.utils.NotifyUtil;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.net.URL;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -30,6 +32,23 @@ import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME
  */
 public class HttpEditorTopForm extends JComponent {
     public static final Key<HttpEditorTopForm> KEY = Key.create("httpRequest.httpEditorTopForm");
+
+    private static final LinkedHashMap<String, String> optionMap = Maps.newLinkedHashMap();
+
+    static {
+        optionMap.put("Examples And Environments", null);
+        optionMap.put("Create env.json file", ENV_FILE_NAME);
+        optionMap.put("Create env.private.json file", PRIVATE_ENV_FILE_NAME);
+        optionMap.put("GET requests", "examples/get-requests.http");
+        optionMap.put("POST requests", "examples/post-requests.http");
+        optionMap.put("Request with Authorization", "examples/requests-with-authorization.http");
+        optionMap.put("Request with tests and Scripts", "examples/requests-with-scripts.http");
+        optionMap.put("Response presentations", "examples/responses-presentation.http");
+        optionMap.put("Websocket requests", "examples/ws-requests.http");
+        optionMap.put("Dubbo requests", "examples/dubbo-requests.http");
+        optionMap.put("show CryptoJS file", "examples/crypto-js.js");
+    }
+
     public final VirtualFile file;
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
@@ -45,12 +64,17 @@ public class HttpEditorTopForm extends JComponent {
         this.module = module;
         this.project = project;
 
+        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+        model.addAll(optionMap.keySet());
+        exampleComboBox.setModel(model);
+        exampleComboBox.setSelectedIndex(0);
+
         runAllBtn.setBorder(null);
 
         switchRunBtnToInitialing();
 
         runAllBtn.addActionListener(event -> {
-            if (runAllBtn.getIcon() == AllIcons.Run.Stop) {
+            if (runAllBtn.getIcon() == HttpIcons.STOP) {
                 switchRunBtnToInitialing();
 
                 RunFileHandler.INSTANCE.stopRunning();
@@ -63,38 +87,25 @@ public class HttpEditorTopForm extends JComponent {
 
         exampleComboBox.addActionListener(e -> {
             ClassLoader classLoader = getClass().getClassLoader();
-            Object selectedItem = exampleComboBox.getSelectedItem();
+            String selectedItem = (String) exampleComboBox.getSelectedItem();
 
-            URL url = null;
-            if (Objects.equals(selectedItem, "GET requests")) {
-                url = classLoader.getResource("examples/get-requests.http");
-            } else if (Objects.equals(selectedItem, "POST requests")) {
-                url = classLoader.getResource("examples/post-requests.http");
-            } else if (Objects.equals(selectedItem, "Request with Authorization")) {
-                url = classLoader.getResource("examples/requests-with-authorization.http");
-            } else if (Objects.equals(selectedItem, "Request with tests and Scripts")) {
-                url = classLoader.getResource("examples/requests-with-scripts.http");
-            } else if (Objects.equals(selectedItem, "Response presentations")) {
-                url = classLoader.getResource("examples/responses-presentation.http");
-            } else if (Objects.equals(selectedItem, "Websocket requests")) {
-                url = classLoader.getResource("examples/ws-requests.http");
-            } else if (Objects.equals(selectedItem, "Dubbo requests")) {
-                url = classLoader.getResource("examples/dubbo-requests.http");
-            } else if (Objects.equals(selectedItem, "show CryptoJS file")) {
-                url = classLoader.getResource("examples/crypto-js.js");
-            } else if (Objects.equals(selectedItem, "Create env.json file")) {
-                createAndReInitEnvCompo(false);
-            } else if (Objects.equals(selectedItem, "Create env.private.json file")) {
-                createAndReInitEnvCompo(true);
+            exampleComboBox.setSelectedIndex(0);
+
+            String option = optionMap.get(selectedItem);
+            if (option == null) {
+                return;
             }
 
-            if (url != null) {
+            if (ENV_FILE_NAME.equals(option)) {
+                createAndReInitEnvCompo(false);
+            } else if (PRIVATE_ENV_FILE_NAME.equals(option)) {
+                createAndReInitEnvCompo(true);
+            } else {
+                URL url = classLoader.getResource(option);
                 VirtualFile virtualFile = VfsUtil.findFileByURL(url);
                 //noinspection DataFlowIssue
                 FileEditorManager.getInstance(project).openFile(virtualFile, true);
             }
-
-            exampleComboBox.setSelectedIndex(0);
         });
 
         showVariableBtn.addActionListener(e -> {
@@ -105,12 +116,12 @@ public class HttpEditorTopForm extends JComponent {
 
     public void switchRunBtnToInitialing() {
         runAllBtn.setToolTipText("Run all requests of the file(think time is 2 seconds)");
-        runAllBtn.setIcon(AllIcons.Actions.RunAll);
+        runAllBtn.setIcon(HttpIcons.RUN_ALL);
     }
 
     public void switchRunBtnToStopping() {
         runAllBtn.setToolTipText("Stop running");
-        runAllBtn.setIcon(AllIcons.Run.Stop);
+        runAllBtn.setIcon(HttpIcons.STOP);
     }
 
     public void createAndReInitEnvCompo(boolean isPrivate) {

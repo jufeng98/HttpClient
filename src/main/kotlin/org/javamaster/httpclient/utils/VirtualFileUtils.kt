@@ -1,8 +1,6 @@
 package org.javamaster.httpclient.utils
 
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.*
 import org.apache.commons.lang3.StringUtils
@@ -26,14 +24,9 @@ object VirtualFileUtils {
             throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} is not file!")
         }
 
-        val activeProject = ProjectUtil.getActiveProject() ?: return virtualFile.readBytes()
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
 
-        if (FileEditorManager.getInstance(activeProject).isFileOpen(virtualFile)) {
-            val document = FileDocumentManager.getInstance().getDocument(virtualFile)
-            return document?.text?.toByteArray() ?: virtualFile.readBytes()
-        }
-
-        return virtualFile.readBytes()
+        return document?.text?.toByteArray() ?: virtualFile.readBytes()
     }
 
     fun readNewestContent(file: File): String {
@@ -44,17 +37,11 @@ object VirtualFileUtils {
             throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} is not file!")
         }
 
-        val activeProject = ProjectUtil.getActiveProject() ?: return virtualFile.readText()
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
 
-        if (FileEditorManager.getInstance(activeProject).isFileOpen(virtualFile)) {
-            val document = FileDocumentManager.getInstance().getDocument(virtualFile)
-            return document?.text ?: virtualFile.readText()
-        }
-
-        return virtualFile.readText()
+        return document?.text ?: virtualFile.readText()
     }
 
-    @JvmStatic
     fun createHttpVirtualFileFromText(
         txtBytes: ByteArray,
         suffix: String,

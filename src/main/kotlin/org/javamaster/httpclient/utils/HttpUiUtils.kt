@@ -11,10 +11,10 @@ import javax.swing.JComponent
 object HttpUiUtils {
 
     fun createEditorCompo(
-        bytes: ByteArray?,
-        suffix: String?,
-        project: Project?,
-        tabName: String?,
+        bytes: ByteArray,
+        suffix: String,
+        project: Project,
+        tabName: String,
         editorList: MutableList<Editor>,
     ): JComponent {
         val editor = createEditor(bytes, suffix, project, tabName, editorList)
@@ -23,18 +23,17 @@ object HttpUiUtils {
     }
 
     fun createEditor(
-        bytes: ByteArray?,
-        suffix: String?,
-        project: Project?,
-        tabName: String?,
+        bytes: ByteArray,
+        suffix: String,
+        project: Project,
+        tabName: String,
         editorList: MutableList<Editor>,
     ): Editor {
-        val virtualFile = createHttpVirtualFileFromText(
-            bytes!!,
-            suffix!!, project!!, tabName
-        )
+        val virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, tabName)
+
         val psiDocumentManager = PsiDocumentManager.getInstance(project)
         val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+
         val document = psiDocumentManager.getDocument(psiFile)
 
         val editorFactory = EditorFactory.getInstance()
