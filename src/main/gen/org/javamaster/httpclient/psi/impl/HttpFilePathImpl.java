@@ -29,9 +29,9 @@ public class HttpFilePathImpl extends ASTWrapperPsiElement implements HttpFilePa
   }
 
   @Override
-  @NotNull
+  @Nullable
   public HttpFilePathContent getFilePathContent() {
-    return findNotNullChildByClass(HttpFilePathContent.class);
+    return findChildByClass(HttpFilePathContent.class);
   }
 
   @Override

@@ -80,7 +80,7 @@ directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1
 }
 directionName ::= DIRECTION_NAME_PART
-directionValue ::= variable? directionValueContent {
+directionValue ::= variable | directionValueContent | variable directionValueContent {
     methods = [
         getReferences
     ]
@@ -184,7 +184,7 @@ inputFile ::= INPUT_FILE_SIGN filePath {
 outputFile ::= OUTPUT_FILE_SIGN filePath {
     pin = 1
 }
-filePath ::= variable? filePathContent {
+filePath ::= variable | filePathContent | variable filePathContent {
     methods = [
         getReferences
     ]

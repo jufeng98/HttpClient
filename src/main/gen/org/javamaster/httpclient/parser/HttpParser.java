@@ -94,23 +94,28 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // variable? directionValueContent
+  // variable | directionValueContent | variable directionValueContent
   public static boolean directionValue(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "directionValue")) return false;
     if (!nextTokenIs(b, "<direction value>", DIRECTION_VALUE_PART, START_VARIABLE_BRACE)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, DIRECTION_VALUE, "<direction value>");
-    r = directionValue_0(b, l + 1);
-    r = r && directionValueContent(b, l + 1);
+    r = variable(b, l + 1);
+    if (!r) r = directionValueContent(b, l + 1);
+    if (!r) r = directionValue_2(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
-  // variable?
-  private static boolean directionValue_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "directionValue_0")) return false;
-    variable(b, l + 1);
-    return true;
+  // variable directionValueContent
+  private static boolean directionValue_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "directionValue_2")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = variable(b, l + 1);
+    r = r && directionValueContent(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   /* ********************************************************** */
@@ -126,23 +131,28 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // variable? filePathContent
+  // variable | filePathContent | variable filePathContent
   public static boolean filePath(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "filePath")) return false;
     if (!nextTokenIs(b, "<file path>", FILE_PATH_PART, START_VARIABLE_BRACE)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, FILE_PATH, "<file path>");
-    r = filePath_0(b, l + 1);
-    r = r && filePathContent(b, l + 1);
+    r = variable(b, l + 1);
+    if (!r) r = filePathContent(b, l + 1);
+    if (!r) r = filePath_2(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
-  // variable?
-  private static boolean filePath_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "filePath_0")) return false;
-    variable(b, l + 1);
-    return true;
+  // variable filePathContent
+  private static boolean filePath_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "filePath_2")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = variable(b, l + 1);
+    r = r && filePathContent(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   /* ********************************************************** */

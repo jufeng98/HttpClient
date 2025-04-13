@@ -29,9 +29,9 @@ public class HttpDirectionValueImpl extends ASTWrapperPsiElement implements Http
   }
 
   @Override
-  @NotNull
+  @Nullable
   public HttpDirectionValueContent getDirectionValueContent() {
-    return findNotNullChildByClass(HttpDirectionValueContent.class);
+    return findChildByClass(HttpDirectionValueContent.class);
   }
 
   @Override
