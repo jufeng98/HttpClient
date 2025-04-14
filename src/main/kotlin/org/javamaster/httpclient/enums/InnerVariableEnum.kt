@@ -5,18 +5,26 @@ import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
+import com.intellij.util.system.OS
+import io.ktor.http.*
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.RandomStringUtils
+import org.javamaster.httpclient.utils.StreamUtils
 import org.javamaster.httpclient.utils.VirtualFileUtils
+import org.mozilla.javascript.Context
 import java.io.File
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
+import java.util.concurrent.TimeUnit
 
 enum class InnerVariableEnum(val methodName: String) {
     RANDOM_ALPHABETIC("\$random.alphabetic") {
@@ -334,6 +342,81 @@ enum class InnerVariableEnum(val methodName: String) {
             }
 
             return args[RandomStringUtils.RANDOM.nextInt(args.size)].toString()
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
+    REPEAT("\$repeat") {
+        override fun typeText(): String {
+            return "Repeat the given option, Usage: $methodName('hello', 3)"
+        }
+
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 2 || args[0] !is String || args[1] !is Int) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val str = args[0] as String
+            val times = args[1] as Int
+
+            return StringUtils.repeat(str, times)
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
+    EVAL("\$eval") {
+        override fun typeText(): String {
+            return "Evaluates custom JavaScript expressions, Usage: $methodName('1 + 1')"
+        }
+
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is String) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val context = Context.enter()
+
+            context.use {
+                val scriptableObject = it.initStandardObjects()
+                val res = it.evaluateString(scriptableObject, args[0] as String, "dummy.js", 1, null)
+                return res.toString()
+            }
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
+    EXEC("\$exec") {
+        override fun typeText(): String {
+            return "Executes shell commands, Usage: $methodName('time')"
+        }
+
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is String) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val command = if (OS.CURRENT == OS.Windows) {
+                "cmd /c " + args[0]
+            } else {
+                args[0] as String
+            }
+
+            val process = Runtime.getRuntime().exec(command)
+            process.waitFor(3, TimeUnit.SECONDS)
+
+            var msg = StreamUtils.copyToStringClose(process.inputStream, Charset.forName("GBK")).escapeIfNeeded()
+
+            msg = if (msg != "") msg else StreamUtils.copyToStringClose(process.errorStream, StandardCharsets.UTF_8)
+
+            msg = msg.escapeIfNeeded().substring(1, msg.length - 1).replace("\\", "\\\\")
+
+            return msg
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
