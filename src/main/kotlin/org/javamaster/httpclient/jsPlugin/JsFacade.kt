@@ -51,12 +51,15 @@ object JsFacade {
                 return@forEach
             }
 
-            val jsVariable = JavaScript.resolveJsVariable(variableName, jsFile)
+            var jsVariable = JavaScript.resolveJsVariable(variableName, jsFile)
             if (jsVariable != null) {
                 return jsVariable
             }
 
-            return WebCalm.resolveJsVariable(variableName, jsFile)
+            jsVariable = WebCalm.resolveJsVariable(variableName, jsFile)
+            if (jsVariable != null) {
+                return jsVariable
+            }
         }
 
         return null

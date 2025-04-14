@@ -1,7 +1,14 @@
-// Global import js file
+// Introduce javascript library with use npm url, will be download and cache
+# @require https://registry.npmmirror.com/moment/-/moment-2.30.1.tgz
+# @require https://registry.npmmirror.com/lodash/-/lodash-4.17.21.tgz
+
+// Global import local js file
 # @import ./js/public.js
 
 <! {%
+    console.log("Call moment format:", moment().format())
+    console.log("Call lodash capitalize:", _.capitalize('FRED'))
+
     // Global js previous handler
     client.global.clearAll();
     client.global.set('globalName', 'jufeng98');

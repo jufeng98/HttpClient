@@ -37,6 +37,7 @@ import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
 import java.net.URI
+import java.net.URL
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -375,16 +376,29 @@ object HttpUtils {
         return element
     }
 
-    fun getPreJsFiles(httpFile: HttpFile): List<PreJsFile> {
+    fun getPreJsFiles(httpFile: HttpFile, excludeRequire: Boolean): List<PreJsFile> {
         val directionComments = httpFile.getDirectionComments()
 
         val parentPath = httpFile.virtualFile.parent.path
 
         return directionComments
             .mapNotNull {
+                val isRequire = it.directionName?.text == ParamEnum.REQUIRE.param
+
+                if (isRequire) {
+                    if (excludeRequire) {
+                        return@mapNotNull null
+                    } else {
+                        val url = it.directionValue?.text ?: return@mapNotNull null
+                        return@mapNotNull PreJsFile(it, URL(url))
+                    }
+                }
+
                 val path = getDirectionPath(it, parentPath) ?: return@mapNotNull null
 
-                PreJsFile(it, File(path))
+                val preJsFile = PreJsFile(it, null)
+                preJsFile.file = File(path)
+                preJsFile
             }
     }
 
@@ -410,7 +424,7 @@ object HttpUtils {
 
     fun getDirectionPath(directionComment: HttpDirectionComment, parentPath: String): String? {
         val directionValue = directionComment.directionValue
-        if (directionValue == null || directionComment.directionName?.text != ParamEnum.IMPORT.param) {
+        if (directionValue == null || !ParamEnum.isFilePathParam(directionComment.directionName?.text)) {
             return null
         }
 

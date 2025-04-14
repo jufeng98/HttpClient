@@ -118,7 +118,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val resList = mutableListOf("/*\r\nPre js executed result:\r\n")
 
             preJsFiles.forEach {
-                evalJsInAnonymousFun(it.content, 1, it.file.name)
+                evalJs(it.content, 1, it.file.name)
             }
 
             if (jsListBeforeReq.isNotEmpty()) {
@@ -128,7 +128,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 jsListBeforeReq.forEach {
                     val rowNum = document.getLineNumber(it.textOffset) + 1
 
-                    evalJsInAnonymousFun(it.text, rowNum, virtualFile.name)
+                    evalJs(it.text, rowNum, virtualFile.name)
                 }
             }
 
@@ -252,7 +252,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         val rowNum = document.getLineNumber(jsScript.textOffset) + 1
 
         try {
-            evalJsInAnonymousFun(jsScript.text, rowNum, virtualFile.name)
+            evalJs(jsScript.text, rowNum, virtualFile.name)
         } catch (e: Exception) {
             GlobalLog.log("$e")
         }
@@ -262,13 +262,9 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         return GlobalLog.getAndClearLogs()
     }
 
-    private fun evalJsInAnonymousFun(jsStr: String, rowNum: Int, fileName: String) {
+    private fun evalJs(jsStr: String, rowNum: Int, fileName: String) {
         try {
-            val js = """
-                (function () { 'use strict'; ${jsStr.trim()}; 
-                })();
-            """.trimIndent()
-            context.evaluateString(reqScriptableObject, js, fileName, rowNum, null)
+            context.evaluateString(reqScriptableObject, jsStr, fileName, rowNum, null)
         } catch (e: WrappedException) {
             System.err.println("WrappedException")
             e.printStackTrace()

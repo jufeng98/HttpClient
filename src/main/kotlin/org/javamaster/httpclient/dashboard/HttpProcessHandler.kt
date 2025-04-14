@@ -14,6 +14,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
+import org.javamaster.httpclient.dashboard.support.JsTgz
 import org.javamaster.httpclient.dubbo.DubboHandler
 import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.enums.SimpleTypeEnum
@@ -65,7 +66,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
     private val methodType = httpMethod.text
     private val responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
 
-    private val preJsFiles = HttpUtils.getPreJsFiles(httpFile)
+    private val preJsFiles = HttpUtils.getPreJsFiles(httpFile, false)
 
     private val jsListBeforeReq = HttpUtils.getAllPreJsScripts(httpFile, requestBlock)
 
@@ -86,6 +87,25 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     override fun startNotify() {
         super.startNotify()
+
+        val npmFiles = preJsFiles.filter { it.url != null }
+
+        if (npmFiles.isNotEmpty()) {
+            val jsTgz = project.getService(JsTgz::class.java)
+
+            val success = jsTgz.tryInitPreJsFilesFromLocal(npmFiles)
+            if (!success) {
+                NotifyUtil.notifyCornerSuccess(
+                    project,
+                    "js libraries not loaded yet, Start downloading libraries. When finished, please try again."
+                )
+
+                jsTgz.downloadAsync(project, npmFiles)
+
+                destroyProcess()
+                return
+            }
+        }
 
         HttpBackground
             .runInBackgroundReadActionAsync {
@@ -169,7 +189,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         if (!DubboJars.jarsDownloaded()) {
             NotifyUtil.notifyCornerSuccess(
                 project,
-                "Execute dubbo request first time, downloading required dependencies. When finished, please try again."
+                "Dubbo dependencies not loaded yet, Start downloading required dependencies. When finished, please try again."
             )
 
             DubboJars.downloadAsync(project)
