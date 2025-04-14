@@ -118,7 +118,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val resList = mutableListOf("/*\r\nPre js executed result:\r\n")
 
             preJsFiles.forEach {
-                evalJs(it.content, 1, it.file.name)
+                evalJs(it.content, 1, it.file.name, it.url != null)
             }
 
             if (jsListBeforeReq.isNotEmpty()) {
@@ -128,7 +128,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 jsListBeforeReq.forEach {
                     val rowNum = document.getLineNumber(it.textOffset) + 1
 
-                    evalJs(it.text, rowNum, virtualFile.name)
+                    evalJs(it.text, rowNum, virtualFile.name, false)
                 }
             }
 
@@ -252,7 +252,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         val rowNum = document.getLineNumber(jsScript.textOffset) + 1
 
         try {
-            evalJs(jsScript.text, rowNum, virtualFile.name)
+            evalJs(jsScript.text, rowNum, virtualFile.name, false)
         } catch (e: Exception) {
             GlobalLog.log("$e")
         }
@@ -262,9 +262,15 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         return GlobalLog.getAndClearLogs()
     }
 
-    private fun evalJs(jsStr: String, rowNum: Int, fileName: String) {
+    private fun evalJs(jsStr: String, rowNum: Int, fileName: String, isLibrary: Boolean) {
+        val scriptableObject = if (isLibrary) {
+            libraryLoadedMap.computeIfAbsent(fileName) { context.initStandardObjects() }
+        } else {
+            reqScriptableObject
+        }
+
         try {
-            context.evaluateString(reqScriptableObject, jsStr, fileName, rowNum, null)
+            context.evaluateString(scriptableObject, jsStr, fileName, rowNum, null)
         } catch (e: WrappedException) {
             System.err.println("WrappedException")
             e.printStackTrace()
@@ -345,6 +351,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     }
 
     companion object {
+        private val libraryLoadedMap = mutableMapOf<String, ScriptableObject>()
         private val pair by lazy {
             val context: Context = Context.enter()
             val global: ScriptableObject = context.initStandardObjects()
