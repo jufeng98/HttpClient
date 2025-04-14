@@ -12,7 +12,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpGlobalHandler
 import org.javamaster.httpclient.psi.HttpGlobalVariable
 
 /**
@@ -43,9 +42,12 @@ class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickF
         val tmpFile = psiFileFactory.createFileFromText("dummy.http", HttpLanguage.INSTANCE, txt) as HttpFile
         val newGlobalVariable = PsiTreeUtil.findChildOfType(tmpFile, HttpGlobalVariable::class.java)!!
 
-        val globalHandler = PsiTreeUtil.findChildOfType(httpFile, HttpGlobalHandler::class.java)
+        val directionComments = httpFile.getDirectionComments()
+        val globalHandler = httpFile.getGlobalHandler()
 
-        val elementCopy = if (globalHandler != null) {
+        val elementCopy = if (directionComments.isNotEmpty()) {
+            httpFile.addAfter(newGlobalVariable, directionComments.last().nextSibling)
+        } else if (globalHandler != null) {
             httpFile.addAfter(newGlobalVariable, globalHandler)
         } else {
             httpFile.addBefore(newGlobalVariable, httpFile.firstChild)

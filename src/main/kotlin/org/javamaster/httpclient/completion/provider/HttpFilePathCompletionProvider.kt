@@ -34,7 +34,7 @@ class HttpFilePathCompletionProvider : CompletionProvider<CompletionParameters>(
         val parent = psiElement.parent.parent
         val parentParent = parent.parent
 
-        if (parentParent is HttpDirectionComment && parentParent.directionName?.text != ParamEnum.IMPORT.param) {
+        if (parentParent is HttpDirectionComment && !ParamEnum.isFilePathParam(parentParent.directionName?.text)) {
             return
         }
 

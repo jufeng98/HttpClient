@@ -95,7 +95,14 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
 
         val scriptBody = if (global) {
             val newGlobalHandler = PsiTreeUtil.findChildOfType(tmpFile, HttpGlobalHandler::class.java)!!
-            val globalHandler = httpFile.addBefore(newGlobalHandler, httpFile.firstChild) as HttpGlobalHandler
+
+            val directionComments = httpFile.getDirectionComments()
+            val globalHandler = if (directionComments.isNotEmpty()) {
+                httpFile.addAfter(newGlobalHandler, directionComments.last().nextSibling) as HttpGlobalHandler
+            } else {
+                httpFile.addBefore(newGlobalHandler, httpFile.firstChild) as HttpGlobalHandler
+            }
+
             globalHandler.globalScript.scriptBody!!
         } else {
             val request = PsiTreeUtil.findChildOfType(requestBlock, HttpRequest::class.java)!!

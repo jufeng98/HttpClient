@@ -11,7 +11,8 @@ enum class ParamEnum(val param: String, val desc: String) {
     CONNECT_TIMEOUT_NAME("connectTimeout", "Http and websocket connect timeout(positive number, unit: seconds)"),
     READ_TIMEOUT_NAME("readTimeout", "Http and websocket read timeout(positive number, unit: seconds)"),
     TIMEOUT_NAME("timeout", "Dubbo connect timeout(positive number, unit: milliseconds)"),
-    IMPORT("import", "Import file, like javascript file"),
+    REQUIRE("require", "Introduce javascript library, will be download and cache"),
+    IMPORT("import", "Import local file, like javascript file"),
     ;
 
     open fun insertHandler(): InsertHandler<LookupElement>? {
@@ -27,6 +28,8 @@ enum class ParamEnum(val param: String, val desc: String) {
                 }
             return@lazy map
         }
+
+        private val filePathParamSet = setOf(IMPORT.param)
 
 
         fun getEnum(param: String): ParamEnum? {
@@ -45,6 +48,10 @@ enum class ParamEnum(val param: String, val desc: String) {
             return listOf(
                 IMPORT
             )
+        }
+
+        fun isFilePathParam(paramName: String?): Boolean {
+            return filePathParamSet.contains(paramName)
         }
     }
 }

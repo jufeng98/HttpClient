@@ -146,18 +146,15 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                 if (jsVariable != null) {
                     return jsVariable
                 }
+
+                val preJsFiles = HttpUtils.getPreJsFiles(httpFile as HttpFile,true)
+
+                return JsFacade.resolveJsVariable(variableName, preJsFiles)
             }
 
             val scriptBodyList = HttpUtils.getAllPostJsScripts(httpFile)
 
-            val jsVariable = JsFacade.resolveJsVariable(variableName, project, scriptBodyList)
-            if (jsVariable != null) {
-                return jsVariable
-            }
-
-            val preJsFiles = HttpUtils.getPreJsFiles(httpFile as HttpFile)
-
-            return JsFacade.resolveJsVariable(variableName, preJsFiles)
+            return JsFacade.resolveJsVariable(variableName, project, scriptBodyList)
         }
 
         private val builtInFunList by lazy {

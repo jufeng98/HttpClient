@@ -3,6 +3,7 @@ package org.javamaster.httpclient.reference.support
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
+import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.psi.HttpDirectionComment
 import org.javamaster.httpclient.psi.HttpDirectionValue
 import org.javamaster.httpclient.utils.HttpUtils
@@ -14,7 +15,7 @@ class HttpDirectionValuePsiReference(directionValue: HttpDirectionValue, textRan
     PsiReferenceBase<HttpDirectionValue>(directionValue, textRange) {
 
     override fun resolve(): PsiElement? {
-        val parentPath = element.containingFile?.virtualFile?.parent?.path ?: return null
+        val parentPath = PsiUtil.getVirtualFile(element)?.parent?.path ?: return null
 
         val directionComment = element.parent as HttpDirectionComment
         val project = element.project

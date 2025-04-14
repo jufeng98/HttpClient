@@ -5,7 +5,9 @@ import org.jetbrains.annotations.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 
 public class StreamUtils {
 
@@ -47,6 +49,31 @@ public class StreamUtils {
             out.write(buffer, 0, bytesRead);
         }
         out.flush();
+    }
+
+    public static String copyToStringClose(@Nullable InputStream in, Charset charset) throws IOException {
+        String str = copyToString(in, charset);
+
+        if (in != null) {
+            in.close();
+        }
+
+        return str;
+    }
+
+    public static String copyToString(@Nullable InputStream in, Charset charset) throws IOException {
+        if (in == null) {
+            return "";
+        }
+
+        StringBuilder out = new StringBuilder();
+        InputStreamReader reader = new InputStreamReader(in, charset);
+        char[] buffer = new char[BUFFER_SIZE];
+        int bytesRead;
+        while ((bytesRead = reader.read(buffer)) != -1) {
+            out.append(buffer, 0, bytesRead);
+        }
+        return out.toString();
     }
 
 }

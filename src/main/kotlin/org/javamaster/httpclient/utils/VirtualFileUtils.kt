@@ -2,7 +2,9 @@ package org.javamaster.httpclient.utils
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.*
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFile
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import java.io.File
@@ -17,29 +19,29 @@ import java.util.*
 object VirtualFileUtils {
 
     fun readNewestBytes(file: File): ByteArray {
-        val virtualFile = VfsUtil.findFileByIoFile(file, true)
+        val virtualFile = VfsUtil.findFileByIoFile(file, false)
             ?: throw FileNotFoundException(file.absoluteFile.normalize().absolutePath)
 
         if (virtualFile.isDirectory) {
             throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} is not file!")
         }
 
-        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
+        val document = FileDocumentManager.getInstance().getCachedDocument(virtualFile)
 
-        return document?.text?.toByteArray() ?: virtualFile.readBytes()
+        return document?.text?.toByteArray() ?: Files.readAllBytes(file.toPath())
     }
 
     fun readNewestContent(file: File): String {
-        val virtualFile = VfsUtil.findFileByIoFile(file, true)
+        val virtualFile = VfsUtil.findFileByIoFile(file, false)
             ?: throw FileNotFoundException(file.absoluteFile.normalize().absolutePath)
 
         if (virtualFile.isDirectory) {
             throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} is not file!")
         }
 
-        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
+        val document = FileDocumentManager.getInstance().getCachedDocument(virtualFile)
 
-        return document?.text ?: virtualFile.readText()
+        return document?.text ?: Files.readString(file.toPath())
     }
 
     fun createHttpVirtualFileFromText(
