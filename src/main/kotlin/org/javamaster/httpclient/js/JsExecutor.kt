@@ -10,6 +10,7 @@ import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.PreJsFile
+import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
@@ -115,7 +116,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         try {
             GlobalLog.setTabName(tabName)
 
-            val resList = mutableListOf("/*\r\nPre js executed result:\r\n")
+            val resList = mutableListOf("/*\r\n${nls("pre.desc")}:\r\n")
 
             val preFilePair = preJsFiles.partition { it.urlFile != null }
 

@@ -26,6 +26,7 @@ import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
+import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
@@ -266,7 +267,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     mutableMapOf()
                 )
                 if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("/*\r\npost js executed result:\r\n")
+                    httpResDescList.add("/*\r\n${nls("post.js.executed.result")}:\r\n")
                     httpResDescList.add("$evalJsRes\r\n")
                     httpResDescList.add("*/\r\n")
                 }
@@ -334,7 +335,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     )
 
                     if (!evalJsRes.isNullOrEmpty()) {
-                        httpResDescList.add("/*\r\nPost js executed result:\r\n")
+                        httpResDescList.add("/*\r\n${nls("post.js.executed.result")}:\r\n")
                         httpResDescList.add("$evalJsRes\r\n")
                         httpResDescList.add("*/\r\n")
                     }
@@ -399,9 +400,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             myThrowable.printStackTrace()
 
             val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
-                "The request $tabName has been interrupted!"
+                nls("req.interrupted", tabName)
             } else {
-                "$tabName request failed, exception: $myThrowable"
+                nls("req.failed", tabName, myThrowable)
             }
             val msg = "<div style='font-size:13pt'>$error</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)
@@ -436,12 +437,12 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            return "// Save to file failed: $e\r\n"
+            return "// ${nls("save.failed")}: $e\r\n"
         }
 
         VirtualFileManager.getInstance().asyncRefresh(null)
 
-        return "// Response has been saved to file: ${file.normalize().absolutePath}\r\n"
+        return "// ${nls("save.to.file")}: ${file.normalize().absolutePath}\r\n"
     }
 
     private fun cancelFutureIfTerminated(future: CompletableFuture<*>) {

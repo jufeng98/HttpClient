@@ -19,6 +19,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.javamaster.httpclient.HttpInfo;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
+import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.utils.HttpUiUtils;
 import org.javamaster.httpclient.ws.WsRequest;
 import org.jetbrains.annotations.NotNull;
@@ -155,10 +156,10 @@ public class HttpDashboardForm implements Disposable {
         jPanelReq.setLayout(new BorderLayout());
 
         JTextArea jTextAreaReq = new JTextArea();
-        jTextAreaReq.setToolTipText("Please input ws message");
+        jTextAreaReq.setToolTipText(NlsBundle.INSTANCE.nls("ws.tooltip"));
         jPanelReq.add(new JBScrollPane(jTextAreaReq), BorderLayout.CENTER);
 
-        JButton jButtonSend = new JButton("Send ws message");
+        JButton jButtonSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));
         jButtonSend.addActionListener(e -> {
             String text = jTextAreaReq.getText();
             wsRequest.sendWsMsg(text);

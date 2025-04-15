@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiUtil
 import com.intellij.psi.util.elementType
 import org.javamaster.httpclient.action.HttpAction
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.utils.HttpUtils
@@ -33,7 +34,7 @@ class HttpRunLineMarkerContributor : RunLineMarkerContributor() {
 
         val action = HttpAction(parent)
 
-        return Info(AllIcons.Actions.Execute, arrayOf(action)) { _ -> "Send request" }
+        return Info(AllIcons.Actions.Execute, arrayOf(action)) { _ -> NlsBundle.nls("send.request") }
     }
 
 }
