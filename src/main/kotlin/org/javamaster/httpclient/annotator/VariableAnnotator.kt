@@ -4,6 +4,7 @@ import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.util.TextRange
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpVariableArg
 
 /**
@@ -17,9 +18,9 @@ object VariableAnnotator {
         }
 
         val tip = if (builtin) {
-            "Builtin variable"
+            NlsBundle.nls("builtin.variable")
         } else {
-            "User defined variable"
+            NlsBundle.nls("user.defined.variable")
         }
 
         holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES)

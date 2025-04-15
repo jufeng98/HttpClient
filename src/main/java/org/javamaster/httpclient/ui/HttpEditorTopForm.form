@@ -15,7 +15,7 @@
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="env"/>
+          <text resource-bundle="messages/HttpClientBundle" key="env"/>
         </properties>
       </component>
       <vspacer id="a9e38">
@@ -49,19 +49,7 @@
           </grid>
         </constraints>
         <properties>
-          <model>
-            <item value="Examples And Environments"/>
-            <item value="Create env.json file"/>
-            <item value="Create env.private.json file"/>
-            <item value="GET requests"/>
-            <item value="POST requests"/>
-            <item value="Request with Authorization"/>
-            <item value="Request with tests and Scripts"/>
-            <item value="Response presentations"/>
-            <item value="Websocket requests"/>
-            <item value="Dubbo requests"/>
-            <item value="show CryptoJS file"/>
-          </model>
+          <model/>
         </properties>
       </component>
       <component id="7af52" class="javax.swing.JButton" binding="showVariableBtn">
@@ -69,7 +57,7 @@
           <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="show variables"/>
+          <text resource-bundle="messages/HttpClientBundle" key="show.variables"/>
         </properties>
       </component>
       <component id="ae674" class="javax.swing.JButton" binding="runAllBtn">

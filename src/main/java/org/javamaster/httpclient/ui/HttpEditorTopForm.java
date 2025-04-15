@@ -10,6 +10,7 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import kotlin.Triple;
+import org.apache.commons.compress.utils.Lists;
 import org.javamaster.httpclient.HttpIcons;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.handler.RunFileHandler;
@@ -21,11 +22,13 @@ import javax.swing.*;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import static org.javamaster.httpclient.env.EnvFileService.ENV_FILE_NAME;
 import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME;
+import static org.javamaster.httpclient.nls.NlsBundle.INSTANCE;
 
 /**
  * @author yudong
@@ -33,20 +36,32 @@ import static org.javamaster.httpclient.env.EnvFileService.PRIVATE_ENV_FILE_NAME
 public class HttpEditorTopForm extends JComponent {
     public static final Key<HttpEditorTopForm> KEY = Key.create("httpRequest.httpEditorTopForm");
 
-    private static final LinkedHashMap<String, String> optionMap = Maps.newLinkedHashMap();
+    private final List<String> options = Lists.newArrayList();
+    private final LinkedHashMap<Integer, String> optionIndexMap = Maps.newLinkedHashMap();
 
-    static {
-        optionMap.put("Examples And Environments", null);
-        optionMap.put("Create env.json file", ENV_FILE_NAME);
-        optionMap.put("Create env.private.json file", PRIVATE_ENV_FILE_NAME);
-        optionMap.put("GET requests", "examples/get-requests.http");
-        optionMap.put("POST requests", "examples/post-requests.http");
-        optionMap.put("Request with Authorization", "examples/requests-with-authorization.http");
-        optionMap.put("Request with tests and Scripts", "examples/requests-with-scripts.http");
-        optionMap.put("Response presentations", "examples/responses-presentation.http");
-        optionMap.put("Websocket requests", "examples/ws-requests.http");
-        optionMap.put("Dubbo requests", "examples/dubbo-requests.http");
-        optionMap.put("show CryptoJS file", "examples/crypto-js.js");
+    {
+        options.add(INSTANCE.nls("examples.and.environments"));
+        optionIndexMap.put(0, null);
+        options.add(INSTANCE.nls("create.env.json.file"));
+        optionIndexMap.put(1, ENV_FILE_NAME);
+        options.add(INSTANCE.nls("create.env.private.json.file"));
+        optionIndexMap.put(2, PRIVATE_ENV_FILE_NAME);
+        options.add(INSTANCE.nls("get.requests"));
+        optionIndexMap.put(3, "examples/get-requests.http");
+        options.add(INSTANCE.nls("post.requests"));
+        optionIndexMap.put(4, "examples/post-requests.http");
+        options.add(INSTANCE.nls("request.with.authorization"));
+        optionIndexMap.put(5, "examples/requests-with-authorization.http");
+        options.add(INSTANCE.nls("request.with.tests.and.scripts"));
+        optionIndexMap.put(6, "examples/requests-with-scripts.http");
+        options.add(INSTANCE.nls("response.presentations"));
+        optionIndexMap.put(7, "examples/responses-presentation.http");
+        options.add(INSTANCE.nls("websocket.requests"));
+        optionIndexMap.put(8, "examples/ws-requests.http");
+        options.add(INSTANCE.nls("dubbo.requests"));
+        optionIndexMap.put(9, "examples/dubbo-requests.http");
+        options.add(INSTANCE.nls("show.cryptojs.file"));
+        optionIndexMap.put(10, "examples/crypto-js.js");
     }
 
     public final VirtualFile file;
@@ -65,7 +80,7 @@ public class HttpEditorTopForm extends JComponent {
         this.project = project;
 
         DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-        model.addAll(optionMap.keySet());
+        model.addAll(options);
         exampleComboBox.setModel(model);
         exampleComboBox.setSelectedIndex(0);
 
@@ -87,11 +102,10 @@ public class HttpEditorTopForm extends JComponent {
 
         exampleComboBox.addActionListener(e -> {
             ClassLoader classLoader = getClass().getClassLoader();
-            String selectedItem = (String) exampleComboBox.getSelectedItem();
 
             exampleComboBox.setSelectedIndex(0);
 
-            String option = optionMap.get(selectedItem);
+            String option = optionIndexMap.get(exampleComboBox.getSelectedIndex());
             if (option == null) {
                 return;
             }
@@ -102,6 +116,7 @@ public class HttpEditorTopForm extends JComponent {
                 createAndReInitEnvCompo(true);
             } else {
                 URL url = classLoader.getResource(option);
+                //noinspection DataFlowIssue
                 VirtualFile virtualFile = VfsUtil.findFileByURL(url);
                 //noinspection DataFlowIssue
                 FileEditorManager.getInstance(project).openFile(virtualFile, true);
