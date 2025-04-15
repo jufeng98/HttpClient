@@ -1,0 +1,27 @@
+package org.javamaster.httpclient.nls
+
+import com.intellij.BundleBase.messageOrDefault
+import org.jetbrains.annotations.Nls
+import org.jetbrains.annotations.NonNls
+import org.jetbrains.annotations.PropertyKey
+import java.util.*
+
+internal object NlsBundle {
+    @NonNls
+    private const val BUNDLE = "messages.HttpClientBundle"
+
+    private var locale: Locale = Locale.getDefault()
+
+    fun nls(key: @PropertyKey(resourceBundle = BUNDLE) String, vararg params: Any): @Nls String {
+        return nls(key, locale, *params)
+    }
+
+    private fun nls(
+        key: @PropertyKey(resourceBundle = BUNDLE) String,
+        locale: Locale,
+        vararg params: Any,
+    ): @Nls String {
+        return messageOrDefault(ResourceBundle.getBundle(BUNDLE, locale), key, "", *params)
+    }
+
+}
