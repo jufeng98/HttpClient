@@ -32,7 +32,7 @@
           </grid>
         </constraints>
         <properties>
-          <toolTipText value="Read http-client.env.json, http-client.private.env.json to build environment"/>
+          <toolTipText resource-bundle="messages/HttpClientBundle" key="env.tooltip"/>
         </properties>
       </component>
       <hspacer id="27ae8">

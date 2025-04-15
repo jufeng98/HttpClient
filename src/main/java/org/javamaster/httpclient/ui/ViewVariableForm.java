@@ -14,6 +14,7 @@ import com.intellij.ui.table.JBTable;
 import kotlin.Pair;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.js.JsExecutor;
+import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.resolve.VariableResolver;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,8 +39,8 @@ public class ViewVariableForm extends DialogWrapper {
         this.project = project;
         setModal(false);
         setResizable(false);
-        setOKButtonText("Close");
-        setTitle("Available Variables");
+        setOKButtonText(NlsBundle.INSTANCE.nls("close"));
+        setTitle(NlsBundle.INSTANCE.nls("available.variables"));
 
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setCellSelectionEnabled(true);
@@ -100,21 +101,21 @@ public class ViewVariableForm extends DialogWrapper {
         VariableResolver variableResolver = new VariableResolver(jsExecutor, httpFile, selectedEnv);
 
         LinkedHashMap<String, String> fileGlobalVariables = variableResolver.getFileGlobalVariables();
-        resList.add(new Pair<>("http file global variables(Highest priority)", fileGlobalVariables));
+        resList.add(new Pair<>(NlsBundle.INSTANCE.nls("file.global.desc"), fileGlobalVariables));
 
         Map<String, String> variableMap = variableResolver.getJsGlobalVariables();
-        resList.add(new Pair<>("js global variables(middle priority)", variableMap));
+        resList.add(new Pair<>(NlsBundle.INSTANCE.nls("js.variable.desc"), variableMap));
 
         Map<String, String> envMap = EnvFileService.Companion.getEnvMap(project, false);
-        resList.add(new Pair<>("environment file variables(lower priority)", envMap));
+        resList.add(new Pair<>(NlsBundle.INSTANCE.nls("environment.variable.desc"), envMap));
 
         Map<String, String> propMap = Maps.newLinkedHashMap();
         System.getProperties().forEach((key, value) -> propMap.put(PROPERTY_PREFIX + "." + key, value + ""));
-        resList.add(new Pair<>("System property variables(lowest priority)", propMap));
+        resList.add(new Pair<>(NlsBundle.INSTANCE.nls("system.desc"), propMap));
 
         Map<String, String> eMap = Maps.newLinkedHashMap();
         System.getenv().forEach((key, value) -> eMap.put(ENV_PREFIX + "." + key, value));
-        resList.add(new Pair<>("System environment variables(lowest priority)", eMap));
+        resList.add(new Pair<>(NlsBundle.INSTANCE.nls("env.desc"), eMap));
 
         return resList;
     }
@@ -149,7 +150,7 @@ public class ViewVariableForm extends DialogWrapper {
 
             Map<String, String> map = pair.getSecond();
             if (map.isEmpty()) {
-                rowData[i][0] = "No data available";
+                rowData[i][0] = NlsBundle.INSTANCE.nls("no.data.available");
                 rowData[i][1] = "";
                 i++;
             } else {
