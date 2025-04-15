@@ -2,6 +2,7 @@ package org.javamaster.httpclient
 
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
 import java.net.URI
@@ -284,7 +285,7 @@ enum class HttpRequestEnum {
                         reqBody.substring(
                             0,
                             max
-                        ) + "\r\n......(The content is too long and has been truncated)"
+                        ) + "\r\n......(${NlsBundle.nls("content.truncated")})"
                     )
                 } else {
                     httpReqDescList.add(reqBody)
@@ -296,7 +297,7 @@ enum class HttpRequestEnum {
                     val max = 20000
                     if (it.size > max) {
                         val bytes = it.copyOfRange(0, max)
-                        httpReqDescList.add(String(bytes) + " \r\n......(The content is too long and has been truncated)\r\n")
+                        httpReqDescList.add(String(bytes) + " \r\n......(${NlsBundle.nls("content.truncated")})\r\n")
                     } else {
                         httpReqDescList.add(String(it))
                     }

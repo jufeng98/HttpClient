@@ -3,16 +3,17 @@ package org.javamaster.httpclient.enums
 import com.intellij.codeInsight.completion.AddSpaceInsertHandler
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.lookup.LookupElement
+import org.javamaster.httpclient.nls.NlsBundle
 
 /**
  * @author yudong
  */
 enum class ParamEnum(val param: String, val desc: String) {
-    CONNECT_TIMEOUT_NAME("connectTimeout", "Http and websocket connect timeout(positive number, unit: seconds)"),
-    READ_TIMEOUT_NAME("readTimeout", "Http and websocket read timeout(positive number, unit: seconds)"),
-    TIMEOUT_NAME("timeout", "Dubbo connect timeout(positive number, unit: milliseconds)"),
-    REQUIRE("require", "Introduce javascript library, will be download and cache"),
-    IMPORT("import", "Import local file, like javascript file"),
+    CONNECT_TIMEOUT_NAME("connectTimeout", NlsBundle.nls("connect.timeout.desc")),
+    READ_TIMEOUT_NAME("readTimeout", NlsBundle.nls("read.timeout.desc")),
+    TIMEOUT_NAME("timeout", NlsBundle.nls("timeout.desc")),
+    REQUIRE("require", NlsBundle.nls("require.desc")),
+    IMPORT("import", NlsBundle.nls("import.desc")),
     ;
 
     open fun insertHandler(): InsertHandler<LookupElement>? {

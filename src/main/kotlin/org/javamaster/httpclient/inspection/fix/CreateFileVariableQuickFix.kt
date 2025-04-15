@@ -11,6 +11,7 @@ import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.HttpLanguage
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpGlobalVariable
 
@@ -20,7 +21,7 @@ import org.javamaster.httpclient.psi.HttpGlobalVariable
 class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickFix {
 
     override fun getFamilyName(): String {
-        return "Create variable unsolved in global variable"
+        return NlsBundle.nls("unsolved.global.variable")
     }
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {

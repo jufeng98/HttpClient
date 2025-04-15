@@ -15,6 +15,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.jsPlugin.JsFacade
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 
@@ -24,8 +25,8 @@ import org.javamaster.httpclient.psi.*
 class CreateJsVariableQuickFix(private val global: Boolean, private val variableName: String) : LocalQuickFix {
 
     override fun getFamilyName(): String {
-        val tip = if (global) "global" else "pre request"
-        return "Create variable unsolved in $tip handler"
+        val tip = if (global) NlsBundle.nls("global") else NlsBundle.nls("pre.request")
+        return NlsBundle.nls("unsolved.handler.variable", tip)
     }
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {

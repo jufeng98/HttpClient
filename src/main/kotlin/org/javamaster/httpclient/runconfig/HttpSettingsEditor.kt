@@ -2,6 +2,7 @@ package org.javamaster.httpclient.runconfig
 
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.ui.components.JBTextField
+import org.javamaster.httpclient.nls.NlsBundle
 import java.awt.BorderLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -22,7 +23,7 @@ class HttpSettingsEditor(private val env: String, private val httpFilePath: Stri
     override fun createEditor(): JComponent {
         val jPanel = JPanel()
         jPanel.layout = BorderLayout()
-        jPanel.add(JBTextField("env: $env"), BorderLayout.NORTH)
+        jPanel.add(JBTextField(NlsBundle.nls("env") + ": $env"), BorderLayout.NORTH)
         jPanel.add(JBTextField("http file:$httpFilePath"), BorderLayout.CENTER)
         return jPanel
     }

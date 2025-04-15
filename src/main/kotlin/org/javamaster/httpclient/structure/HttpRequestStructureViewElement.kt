@@ -15,6 +15,7 @@ import com.intellij.psi.PsiFile
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.HttpRequestEnum
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequestBlock
@@ -38,7 +39,7 @@ class HttpRequestStructureViewElement private constructor(
             val children: MutableList<StructureViewTreeElement> = mutableListOf()
             val globalHandler = element.getGlobalHandler()
             if (globalHandler != null) {
-                children.add(create(globalHandler, "Global handler", AllIcons.Actions.Play_first))
+                children.add(create(globalHandler, NlsBundle.nls("global.handler"), AllIcons.Actions.Play_first))
             }
 
             val globalVariables = element.getGlobalVariables()
@@ -46,7 +47,7 @@ class HttpRequestStructureViewElement private constructor(
                 children.add(
                     create(
                         it,
-                        "Global Variable",
+                        NlsBundle.nls("global.variable"),
                         it.text,
                         AllIcons.General.InlineVariables,
                         true
@@ -97,7 +98,7 @@ class HttpRequestStructureViewElement private constructor(
             location: String?, icon: Icon?,
         ): StructureViewTreeElement {
             return HttpRequestStructureViewElement(
-                element, StringUtil.notNullize(text, "<not defined>"),
+                element, StringUtil.notNullize(text, NlsBundle.nls("not.defined")),
                 location, icon, StringUtil.isNotEmpty(text)
             )
         }
@@ -119,11 +120,11 @@ class HttpRequestStructureViewElement private constructor(
 
             val preRequestHandler = block.preRequestHandler
             if (preRequestHandler != null) {
-                children.add(create(preRequestHandler, "Pre request handler", AllIcons.Actions.Play_first))
+                children.add(create(preRequestHandler, NlsBundle.nls("pre.handler"), AllIcons.Actions.Play_first))
             }
 
             val location = StringBuilder()
-            location.append(StringUtil.notNullize(path, "<not defined>"))
+            location.append(StringUtil.notNullize(path, NlsBundle.nls("not.defined")))
 
             val tabName: String
             val method = request.method
@@ -155,7 +156,7 @@ class HttpRequestStructureViewElement private constructor(
             val body = request.body
             val messagesGroup = body?.requestMessagesGroup
             if (messagesGroup != null) {
-                var mimeType = "<not defined>"
+                var mimeType = NlsBundle.nls("not.defined")
                 val contentType = request.contentType
                 if (contentType != null) {
                     mimeType = contentType.mimeType
@@ -167,7 +168,7 @@ class HttpRequestStructureViewElement private constructor(
                     getInjectedLanguageIcon(project, messagesGroup.messageBody)
                 }
 
-                children.add(create(messagesGroup, "Request body $mimeType", bodyIcon))
+                children.add(create(messagesGroup, NlsBundle.nls("request.body") + " $mimeType", bodyIcon))
             }
 
             val multipartMessage = body?.multipartMessage
@@ -178,7 +179,7 @@ class HttpRequestStructureViewElement private constructor(
                     name = getHeaderFieldOption(headerFieldValue, "name") ?: ""
                 }
 
-                var mimeType = "<not defined>"
+                var mimeType = NlsBundle.nls("not.defined")
                 val contentType = it.contentType
                 if (contentType != null) {
                     mimeType = contentType.mimeType
@@ -190,12 +191,12 @@ class HttpRequestStructureViewElement private constructor(
                     getInjectedLanguageIcon(project, it.requestMessagesGroup.messageBody)
                 }
 
-                children.add(create(it, "Multipart field: $name $mimeType", multiIcon))
+                children.add(create(it, NlsBundle.nls("multipart.field") + ": $name $mimeType", multiIcon))
             }
 
             val responseHandler = request.responseHandler
             if (responseHandler != null) {
-                children.add(create(responseHandler, "Response handler", AllIcons.Actions.Play_last))
+                children.add(create(responseHandler, NlsBundle.nls("response.handler"), AllIcons.Actions.Play_last))
             }
 
             return children

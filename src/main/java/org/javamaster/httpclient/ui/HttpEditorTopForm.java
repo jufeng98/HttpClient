@@ -103,9 +103,10 @@ public class HttpEditorTopForm extends JComponent {
         exampleComboBox.addActionListener(e -> {
             ClassLoader classLoader = getClass().getClassLoader();
 
+            String option = optionIndexMap.get(exampleComboBox.getSelectedIndex());
+
             exampleComboBox.setSelectedIndex(0);
 
-            String option = optionIndexMap.get(exampleComboBox.getSelectedIndex());
             if (option == null) {
                 return;
             }
@@ -116,8 +117,7 @@ public class HttpEditorTopForm extends JComponent {
                 createAndReInitEnvCompo(true);
             } else {
                 URL url = classLoader.getResource(option);
-                //noinspection DataFlowIssue
-                VirtualFile virtualFile = VfsUtil.findFileByURL(url);
+                VirtualFile virtualFile = VfsUtil.findFileByURL(Objects.requireNonNull(url));
                 //noinspection DataFlowIssue
                 FileEditorManager.getInstance(project).openFile(virtualFile, true);
             }
@@ -130,12 +130,12 @@ public class HttpEditorTopForm extends JComponent {
     }
 
     public void switchRunBtnToInitialing() {
-        runAllBtn.setToolTipText("Run all requests of the file(think time is 2 seconds)");
+        runAllBtn.setToolTipText(INSTANCE.nls("run.all.tooltip"));
         runAllBtn.setIcon(HttpIcons.RUN_ALL);
     }
 
     public void switchRunBtnToStopping() {
-        runAllBtn.setToolTipText("Stop running");
+        runAllBtn.setToolTipText(INSTANCE.nls("stop.running"));
         runAllBtn.setIcon(HttpIcons.STOP);
     }
 
@@ -145,14 +145,14 @@ public class HttpEditorTopForm extends JComponent {
         VirtualFile envFile = EnvFileService.Companion.createEnvFile(envFileName, isPrivate, project);
         exampleComboBox.setSelectedIndex(0);
         if (envFile == null) {
-            NotifyUtil.INSTANCE.notifyWarn(project, envFileName + " Environment file already exist!");
+            NotifyUtil.INSTANCE.notifyWarn(project, envFileName + " " + INSTANCE.nls("file.exists"));
             return;
         }
 
         FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
         fileEditorManager.openFile(envFile, true);
 
-        NotifyUtil.INSTANCE.notifyInfo(project, "The environment file was successfully created: " + envFileName);
+        NotifyUtil.INSTANCE.notifyInfo(project, INSTANCE.nls("file.created") + " " + envFileName);
 
         try {
             Module module = ModuleUtil.findModuleForFile(envFile, project);

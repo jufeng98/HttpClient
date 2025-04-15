@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.application
 import org.javamaster.httpclient.dubbo.DubboRequest
 import org.javamaster.httpclient.dubbo.loader.DubboClassLoader
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.RandomStringUtils
 import org.javamaster.httpclient.utils.StreamUtils
@@ -61,18 +62,15 @@ object DubboJars {
 
     fun downloadAsync(project: Project) {
         if (downloading) {
-            NotifyUtil.notifyCornerWarn(project, "Download not finished yet!")
+            NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("download.not.finish"))
             return
         }
 
         downloading = true
 
-        NotifyUtil.notifyCornerSuccess(
-            project,
-            "Dubbo dependencies not loaded yet, Start downloading required dependencies. When finished, please try again."
-        )
+        NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("start.download"))
 
-        object : Task.Backgroundable(project, "Downloading dubbo dependencies...", true) {
+        object : Task.Backgroundable(project, NlsBundle.nls("dubbo.downloading"), true) {
             override fun run(indicator: ProgressIndicator) {
                 try {
                     val dubboLibPath = getDubboLibPath()
@@ -92,7 +90,7 @@ object DubboJars {
                         url.openStream()
                             .use {
                                 if (indicator.isCanceled) {
-                                    throw RuntimeException("Download aborted!")
+                                    throw RuntimeException(NlsBundle.nls("download.abort"))
                                 }
 
                                 val file = saveToFile(it, name, dubboLibPath)
@@ -112,10 +110,7 @@ object DubboJars {
                     dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboRequest::class.java.classLoader)
 
                     application.invokeLater {
-                        NotifyUtil.notifyCornerSuccess(
-                            project,
-                            "Dubbo dependencies have been successfully downloaded!"
-                        )
+                        NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("dubbo.downloaded"))
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -123,7 +118,7 @@ object DubboJars {
                     application.invokeLater {
                         NotifyUtil.notifyCornerWarn(
                             project,
-                            "Downloaded dubbo dependencies error, please try again, error msg: ${e.message}"
+                            NlsBundle.nls("dubbo.downloaded.error") + " ${e.message}"
                         )
                     }
                 } finally {

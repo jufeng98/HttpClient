@@ -9,6 +9,7 @@ import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.env.EnvFileService.Companion.ENV_FILE_NAME
 import org.javamaster.httpclient.env.EnvFileService.Companion.PRIVATE_ENV_FILE_NAME
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvJsonFile
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 
 /**
@@ -18,7 +19,7 @@ class CreateEnvVariableQuickFix(private val isPrivate: Boolean, private val vari
 
     override fun getFamilyName(): String {
         val tip = if (isPrivate) "private" else ""
-        return "Create variable unsolved in environment $tip file"
+        return NlsBundle.nls("unsolved.variable", tip)
     }
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {

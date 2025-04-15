@@ -34,7 +34,7 @@ dependencies {
 sourceSets["main"].java.srcDirs("src/main/gen")
 
 intellij {
-    version.set("2024.3.5")
+    version.set("2024.3")
     type.set("IC")
     plugins.set(
         listOf(

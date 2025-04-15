@@ -15,6 +15,7 @@ import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getJsonLiteralValue
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
@@ -58,7 +59,7 @@ class HttpDocumentationProvider : DocumentationProvider {
 
             return getDocumentation(
                 name,
-                "The value is: " + (globalVariableValue?.value ?: globalVariableValue?.variable?.text)
+                NlsBundle.nls("value") + " " + (globalVariableValue?.value ?: globalVariableValue?.variable?.text)
             )
         }
 
@@ -76,7 +77,7 @@ class HttpDocumentationProvider : DocumentationProvider {
                 val name = element.name
                 val value = getJsonLiteralValue(element.value as JsonLiteral)
 
-                return getDocumentation(name, "The value is: $value")
+                return getDocumentation(name, NlsBundle.nls("value") + " $value")
             }
         }
 
@@ -86,7 +87,10 @@ class HttpDocumentationProvider : DocumentationProvider {
             val variableEnum = InnerVariableEnum.getEnum(name)
 
             if (variableEnum != null && element is PsiDirectory) {
-                return getDocumentation(name, variableEnum.typeText() + ", the value is: ${element.virtualFile.path}")
+                return getDocumentation(
+                    name,
+                    variableEnum.typeText() + ", ${NlsBundle.nls("value")}: ${element.virtualFile.path}"
+                )
             }
         }
 
@@ -139,14 +143,17 @@ class HttpDocumentationProvider : DocumentationProvider {
 
         if (name.startsWith(ENV_PREFIX)) {
             val key = name.substring(ENV_PREFIX.length + 1)
-            return getDocumentation(name, "Means System.getenv(\"${key}\"), the value is: ${System.getenv(key)}")
+            return getDocumentation(
+                name,
+                "Means System.getenv(\"${key}\"), ${NlsBundle.nls("value")} ${System.getenv(key)}"
+            )
         }
 
         if (name.startsWith(PROPERTY_PREFIX)) {
             val key = name.substring(PROPERTY_PREFIX.length + 1)
             return getDocumentation(
                 name,
-                "Means System.getProperty(\"${key}\"), the value is: ${System.getProperty(key)}"
+                "Means System.getProperty(\"${key}\"), ${NlsBundle.nls("value")} ${System.getProperty(key)}"
             )
         }
 

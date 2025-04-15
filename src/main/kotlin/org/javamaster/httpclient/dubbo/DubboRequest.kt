@@ -10,6 +10,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.PsiUtils
@@ -30,7 +31,8 @@ class DubboRequest(
     private val paramMap: Map<String, String>,
 ) : DubboHandler {
     private val methodName: String by lazy {
-        val values = reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException("Missing Method header!")
+        val values =
+            reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException(NlsBundle.nls("missing.header"))
         values[0]
     }
     private val interfaceCls: String? by lazy {
@@ -64,10 +66,10 @@ class DubboRequest(
             targetInterfaceName = interfaceCls!!
             val psiClass = if (module != null) {
                 DubboUtils.findInterface(module, targetInterfaceName)
-                    ?: throw IllegalArgumentException("Can't resolve interface: $targetInterfaceName in module ${module.name} !")
+                    ?: throw IllegalArgumentException(NlsBundle.nls("interface.not.resolved",targetInterfaceName, module.name))
             } else {
                 DubboUtils.findInterface(project, targetInterfaceName)
-                    ?: throw IllegalArgumentException("Can't resolve interface: $targetInterfaceName in project ${project.name} !")
+                    ?: throw IllegalArgumentException(NlsBundle.nls("interface.not.resolved1",targetInterfaceName, project.name))
             }
 
             val targetMethod = findTargetMethod(psiClass, reqBodyMap)

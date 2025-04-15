@@ -19,6 +19,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.LightVirtualFile
 import org.javamaster.httpclient.enums.HttpMethod
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.scan.support.Request
 import org.javamaster.httpclient.utils.HttpUtils
@@ -41,7 +42,7 @@ class HttpInlayActionHandler : InlayActionHandler {
         val element = actionPayload.pointer.element as PsiLiteralExpression
         val project = element.project
 
-        object : Task.Backgroundable(project, "Creating temporary http file...", true) {
+        object : Task.Backgroundable(project, NlsBundle.nls("creating.file"), true) {
             override fun run(indicator: ProgressIndicator) {
                 runReadAction {
                     val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)

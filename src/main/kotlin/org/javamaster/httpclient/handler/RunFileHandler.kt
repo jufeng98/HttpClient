@@ -12,6 +12,7 @@ import com.intellij.psi.util.PsiUtil
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.action.HttpAction
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.ui.HttpEditorTopForm
@@ -55,12 +56,12 @@ object RunFileHandler {
 
                 runInEdt {
                     if (!it.isValid) {
-                        NotifyUtil.notifyCornerError(project, "Request psi element is invalid, skipped")
+                        NotifyUtil.notifyCornerError(project, NlsBundle.nls("psi.invalid"))
                         return@runInEdt
                     }
 
                     if (it.text == HttpRequestEnum.WEBSOCKET.name) {
-                        NotifyUtil.notifyCornerError(project, "Skipped ws request")
+                        NotifyUtil.notifyCornerError(project, NlsBundle.nls("skip.req"))
                         return@runInEdt
                     }
 

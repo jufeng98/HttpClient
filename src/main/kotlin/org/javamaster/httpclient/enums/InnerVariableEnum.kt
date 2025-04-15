@@ -9,6 +9,7 @@ import com.intellij.util.system.OS
 import io.ktor.http.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.RandomStringUtils
@@ -29,7 +30,7 @@ import java.util.concurrent.TimeUnit
 enum class InnerVariableEnum(val methodName: String) {
     RANDOM_ALPHABETIC("\$random.alphabetic") {
         override fun typeText(): String {
-            return "Usage: $methodName(8), sample value: gwqaRJXx"
+            return NlsBundle.nls("alphabetic.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -47,7 +48,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_ALPHA_NUMERIC("\$random.alphanumeric") {
         override fun typeText(): String {
-            return "Usage: $methodName(8), sample value: D4Qt8SZ9"
+            return NlsBundle.nls("alphanumeric.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -65,7 +66,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_HEXADECIMAL("\$random.hexadecimal") {
         override fun typeText(): String {
-            return "Usage: $methodName(100000), sample value: 8F7525"
+            return NlsBundle.nls("hexadecimal.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -83,7 +84,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NUMBER("\$random.numeric") {
         override fun typeText(): String {
-            return "Usage: $methodName(8)"
+            return NlsBundle.nls("numeric.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -101,7 +102,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_UUID("\$random.uuid") {
         override fun typeText(): String {
-            return "Called UUID.randomUUID() and remove the - symbol, sample value: 6b4838e0857248ae8ca0b9be58ff5aeb"
+            return NlsBundle.nls("uuid.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -110,7 +111,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_INT("\$randomInt") {
         override fun typeText(): String {
-            return "Generate the number of range [0, 1000), sample value: 123"
+            return NlsBundle.nls("randomInt.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -119,7 +120,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_INTEGER("\$random.integer") {
         override fun typeText(): String {
-            return "Usage: $methodName(0, 80), means generate the number of range [0, 80), sample value: 68"
+            return NlsBundle.nls("integer.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -138,7 +139,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_FLOAT("\$random.float") {
         override fun typeText(): String {
-            return "Usage: $methodName(0, 80), means generate the number of range [0, 80), sample value: 31.021547"
+            return NlsBundle.nls("float.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -157,7 +158,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     TIMESTAMP("\$timestamp") {
         override fun typeText(): String {
-            return "Generates the current Unix timestamp, sample value: 1663362218"
+            return NlsBundle.nls("timestamp.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -166,7 +167,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     ISO_TIMESTAMP("\$isoTimestamp") {
         override fun typeText(): String {
-            return "generates the current timestamp in ISO 8601 format for default timezone, sample value: 2023-08-23T14:35:32.495Z"
+            return NlsBundle.nls("isoTimestamp.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -175,7 +176,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     DATETIME("\$datetime") {
         override fun typeText(): String {
-            return "generates the current datetime for default timezone, sample value: 2023-08-23 14:35:32"
+            return NlsBundle.nls("datetime.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -184,7 +185,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     TIMESTAMP_DATE("\$timestampDate") {
         override fun typeText(): String {
-            return "Generates the date Unix timestamp, usage: $methodName(0), 0 means today, 1 means tomorrow and so on, sample value: 1644214400000"
+            return NlsBundle.nls("timestampDate.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -205,7 +206,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     IMAGE_TO_BASE64("\$imageToBase64") {
         override fun typeText(): String {
-            return "Usage: $methodName('The absolute or relate path of image file'), convert file to base64 string"
+            return NlsBundle.nls("imageToBase64.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -231,7 +232,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     READ_STRING("\$readString") {
         override fun typeText(): String {
-            return "Usage: $methodName('The absolute or relate path of image file'), read file content as string"
+            return NlsBundle.nls("readString.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -252,7 +253,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_ADDRESS("\$random.address.full") {
         override fun typeText(): String {
-            return "Generate complete address"
+            return NlsBundle.nls("address.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -261,7 +262,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_BOOL("\$random.bool") {
         override fun typeText(): String {
-            return "Generate boolean value"
+            return NlsBundle.nls("bool.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -270,7 +271,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NAME("\$random.name") {
         override fun typeText(): String {
-            return "Generate user name"
+            return NlsBundle.nls("name.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -279,7 +280,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_BOOK_TITLE("\$random.book.title") {
         override fun typeText(): String {
-            return "Generate title"
+            return NlsBundle.nls("book.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -288,7 +289,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_APP_NAME("\$random.app.name") {
         override fun typeText(): String {
-            return "Generate app name"
+            return NlsBundle.nls("app.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -297,7 +298,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_COMPANY_NAME("\$random.company.name") {
         override fun typeText(): String {
-            return "Generate company name"
+            return NlsBundle.nls("company.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -306,7 +307,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_HERO_NAME("\$random.hero.name") {
         override fun typeText(): String {
-            return "Generate hero name"
+            return NlsBundle.nls("hero.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -315,7 +316,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NATION_NAME("\$random.nation.name") {
         override fun typeText(): String {
-            return "Generate national capital"
+            return NlsBundle.nls("nation.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -324,7 +325,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_UNIVERSITY_NAME("\$random.university.name") {
         override fun typeText(): String {
-            return "Generate university name"
+            return NlsBundle.nls("university.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -333,7 +334,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     PICK("\$random.pick") {
         override fun typeText(): String {
-            return "Pick one at random from the given options, Usage: $methodName(23, 46) or $methodName('Jack', 'Rose')"
+            return NlsBundle.nls("pick.desc", methodName, methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -350,7 +351,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     REPEAT("\$repeat") {
         override fun typeText(): String {
-            return "Repeat the given option, Usage: $methodName('hello', 3)"
+            return NlsBundle.nls("repeat.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -370,7 +371,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     EVAL("\$eval") {
         override fun typeText(): String {
-            return "Evaluates custom JavaScript expressions, Usage: $methodName('1 + 1')"
+            return NlsBundle.nls("eval.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -393,7 +394,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     EXEC("\$exec") {
         override fun typeText(): String {
-            return "Executes shell commands, Usage: $methodName('time')"
+            return NlsBundle.nls("exec.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -425,7 +426,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     MVN_TARGET("\$mvnTarget") {
         override fun typeText(): String {
-            return "Module target folder"
+            return NlsBundle.nls("mvnTarget.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -444,7 +445,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     PROJECT_ROOT("\$projectRoot") {
         override fun typeText(): String {
-            return "Project root folder"
+            return NlsBundle.nls("projectRoot.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -457,7 +458,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     HISTORY_FOLDER("\$historyFolder") {
         override fun typeText(): String {
-            return "Mean .idea/httpClient"
+            return NlsBundle.nls("historyFolder.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {

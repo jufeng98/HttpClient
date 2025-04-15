@@ -4,6 +4,7 @@ import com.intellij.lang.findUsages.FindUsagesProvider
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpGlobalVariable
 import org.javamaster.httpclient.psi.HttpGlobalVariableName
 import org.javamaster.httpclient.psi.HttpVariableName
@@ -14,7 +15,7 @@ import org.javamaster.httpclient.psi.HttpVariableName
 class HttpFindUsagesProvider : FindUsagesProvider {
 
     override fun canFindUsagesFor(psiElement: PsiElement): Boolean {
-         return psiElement is PsiNamedElement
+        return psiElement is PsiNamedElement
     }
 
     override fun getHelpId(psiElement: PsiElement): String? {
@@ -24,12 +25,12 @@ class HttpFindUsagesProvider : FindUsagesProvider {
     override fun getType(element: PsiElement): String {
         return if (element is HttpVariableName) {
             if (element.isBuiltin) {
-                "Builtin variable"
+                NlsBundle.nls("builtin.variable")
             } else {
-                "Variable"
+                NlsBundle.nls("variable")
             }
         } else if (element is HttpGlobalVariableName) {
-            "Global variable"
+            NlsBundle.nls("global.variable")
         } else {
             ""
         }

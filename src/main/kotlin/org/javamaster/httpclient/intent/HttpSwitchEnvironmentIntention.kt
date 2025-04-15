@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.ui.popup.PopupFactoryImpl
 import org.javamaster.httpclient.env.EnvFileService.Companion.getService
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 
@@ -19,7 +20,7 @@ class HttpSwitchEnvironmentIntention : BaseIntentionAction() {
     }
 
     override fun getText(): String {
-        return "Switch environment"
+        return NlsBundle.nls("switch.environment")
     }
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?): Boolean {

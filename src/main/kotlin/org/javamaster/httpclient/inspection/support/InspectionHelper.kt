@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.inspection.fix.CreateEnvVariableQuickFix
 import org.javamaster.httpclient.inspection.fix.CreateFileVariableQuickFix
 import org.javamaster.httpclient.inspection.fix.CreateJsVariableQuickFix
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.reference.support.HttpVariableNamePsiReference
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
 
@@ -75,7 +76,7 @@ object InspectionHelper {
                 val problem = manager.createProblemDescriptor(
                     element,
                     textRange,
-                    "Variable $variableName unresolved",
+                    NlsBundle.nls("variable.unresolved", variableName),
                     ProblemHighlightType.WARNING,
                     true,
                     *fixes.toTypedArray()

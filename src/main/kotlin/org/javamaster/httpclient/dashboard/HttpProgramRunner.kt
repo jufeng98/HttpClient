@@ -12,6 +12,7 @@ import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
 import com.intellij.openapi.vfs.JarFileSystem
 import org.javamaster.httpclient.dashboard.HttpExecutor.Companion.HTTP_EXECUTOR_ID
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.runconfig.HttpRunProfileState
@@ -41,7 +42,7 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         val project = httpMethod.project
 
         if (httpMethod.containingFile.virtualFile.fileSystem is JarFileSystem) {
-            NotifyUtil.notifyWarn(project, "Http template file only as an example, not support execute!")
+            NotifyUtil.notifyWarn(project, NlsBundle.nls("template.not.execute"))
             loadingRemover?.run()
             return
         }
@@ -52,7 +53,7 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
             // tabName会用作文件名,因此需要检测下
             Path.of(tabName)
         } catch (e: InvalidPathException) {
-            NotifyUtil.notifyError(project, "Request name contains illegal param, please fix:" + e.message)
+            NotifyUtil.notifyError(project, NlsBundle.nls("tab.name.error") + e.message)
             loadingRemover?.run()
             return
         }

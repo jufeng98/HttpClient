@@ -14,6 +14,7 @@ import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.application
 import com.intellij.util.io.DigestUtil.random
 import org.javamaster.httpclient.model.PreJsFile
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
@@ -84,18 +85,15 @@ object JsTgz {
 
     fun downloadAsync(project: Project, npmFiles: List<PreJsFile>) {
         if (downloading) {
-            NotifyUtil.notifyCornerWarn(project, "Download not finished yet!")
+            NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("download.not.finish"))
             return
         }
 
         downloading = true
 
-        NotifyUtil.notifyCornerSuccess(
-            project,
-            "Js libraries not loaded yet, Start downloading libraries. When finished, please try again."
-        )
+        NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloading"))
 
-        object : Task.Backgroundable(project, "Downloading js libraries...", true) {
+        object : Task.Backgroundable(project, NlsBundle.nls("js.download"), true) {
             override fun run(indicator: ProgressIndicator) {
                 try {
                     val jsLibPath = getJsLibPath()
@@ -114,7 +112,7 @@ object JsTgz {
                         url.openStream()
                             .use {
                                 if (indicator.isCanceled) {
-                                    throw RuntimeException("Download aborted!")
+                                    throw RuntimeException(NlsBundle.nls("download.abort"))
                                 }
 
                                 saveAndExtract(it, npmFile, jsLibPath)
@@ -126,10 +124,7 @@ object JsTgz {
                     }
 
                     application.invokeLater {
-                        NotifyUtil.notifyCornerSuccess(
-                            project,
-                            "Js libraries have been successfully downloaded!"
-                        )
+                        NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloaded"))
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -137,7 +132,7 @@ object JsTgz {
                     application.invokeLater {
                         NotifyUtil.notifyCornerError(
                             project,
-                            "Downloaded js libraries error, please try again, error msg: $e"
+                            NlsBundle.nls("js.download.error") + " $e"
                         )
                     }
                 } finally {

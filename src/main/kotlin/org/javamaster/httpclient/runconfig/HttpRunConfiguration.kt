@@ -8,6 +8,7 @@ import com.intellij.execution.configurations.RuntimeConfigurationError
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.HttpUtils.getTargetHttpMethod
 import org.jdom.Element
 
@@ -32,7 +33,7 @@ class HttpRunConfiguration(
 
 
     override fun checkConfiguration() {
-        getTargetHttpMethod(httpFilePath, name, project) ?: throw RuntimeConfigurationError("Tip:无法找到对应请求!")
+        getTargetHttpMethod(httpFilePath, name, project) ?: throw RuntimeConfigurationError(NlsBundle.nls("no.request"))
     }
 
     override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {
