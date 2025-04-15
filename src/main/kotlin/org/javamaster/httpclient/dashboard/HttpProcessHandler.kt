@@ -2,6 +2,8 @@ package org.javamaster.httpclient.dashboard
 
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.actionSystem.ex.ActionUtil
+import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteActionAndWait
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.ui.MessageType
@@ -11,6 +13,7 @@ import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.util.application
 import org.javamaster.httpclient.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
@@ -88,30 +91,60 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
     override fun startNotify() {
         super.startNotify()
 
-        val npmFiles = preJsFiles.filter { it.url != null }
+        if (preJsFiles.isEmpty()) {
+            startRequest()
 
-        if (npmFiles.isNotEmpty()) {
-            val jsTgz = project.getService(JsTgz::class.java)
-
-            val success = jsTgz.tryInitPreJsFilesFromLocal(npmFiles)
-            if (!success) {
-                NotifyUtil.notifyCornerSuccess(
-                    project,
-                    "js libraries not loaded yet, Start downloading libraries. When finished, please try again."
-                )
-
-                jsTgz.downloadAsync(project, npmFiles)
-
-                destroyProcess()
-                return
-            }
+            return
         }
 
+        initNpmFilesThenStartRequest()
+    }
+
+    private fun initNpmFilesThenStartRequest() {
+        val preFilePair = preJsFiles.partition { it.urlFile != null }
+
+        val npmFiles = preFilePair.first
+
+        if (npmFiles.isEmpty()) {
+            initPreFilesThenStartRequest()
+            return
+        }
+
+        val npmFilesNotDownloaded = JsTgz.jsLibrariesNotDownloaded(npmFiles)
+
+        if (npmFilesNotDownloaded.isNotEmpty()) {
+            JsTgz.downloadAsync(project, npmFilesNotDownloaded)
+
+            destroyProcess()
+
+            return
+        }
+
+        application.executeOnPooledThread {
+            runReadAction {
+                JsTgz.initJsLibrariesFile(npmFiles, project)
+
+                initPreFilesThenStartRequest()
+            }
+        }
+    }
+
+    private fun initPreFilesThenStartRequest() {
+        application.executeOnPooledThread {
+            JsTgz.initJsLibrariesVirtualFile(preJsFiles)
+
+            runInEdt {
+                startRequest()
+            }
+        }
+    }
+
+    private fun startRequest() {
         HttpBackground
             .runInBackgroundReadActionAsync {
                 preJsFiles.forEach {
                     try {
-                        val content = VirtualFileUtils.readNewestContent(it.file)
+                        val content = VirtualFileUtils.readNewestContent(it.virtualFile)
                         it.content = content
                     } catch (e: Exception) {
                         val document = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
@@ -186,12 +219,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
-        if (!DubboJars.jarsDownloaded()) {
-            NotifyUtil.notifyCornerSuccess(
-                project,
-                "Dubbo dependencies not loaded yet, Start downloading required dependencies. When finished, please try again."
-            )
-
+        if (DubboJars.jarsNotDownloaded()) {
             DubboJars.downloadAsync(project)
 
             destroyProcess()

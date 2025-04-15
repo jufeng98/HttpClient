@@ -398,6 +398,7 @@ object HttpUtils {
 
                 val preJsFile = PreJsFile(it, null)
                 preJsFile.file = File(path)
+
                 preJsFile
             }
     }
@@ -470,12 +471,14 @@ object HttpUtils {
     }
 
     fun getReqDirectionCommentParamMap(httpRequestBlock: HttpRequestBlock): Map<String, String> {
-        val list = PsiTreeUtil.getChildrenOfTypeAsList(httpRequestBlock, HttpDirectionComment::class.java)
         val map = mutableMapOf<String, String>()
-        list.forEach {
-            val name = it.directionName?.text ?: return@forEach
-            map[name] = it.directionValue?.text ?: ""
-        }
+
+        httpRequestBlock.directionCommentList
+            .forEach {
+                val name = it.directionName?.text ?: return@forEach
+                map[name] = it.directionValue?.text ?: ""
+            }
+
         return map
     }
 

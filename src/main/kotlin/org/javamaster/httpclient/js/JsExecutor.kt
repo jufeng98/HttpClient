@@ -117,8 +117,18 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
             val resList = mutableListOf("/*\r\nPre js executed result:\r\n")
 
-            preJsFiles.forEach {
-                evalJs(it.content, 1, it.file.name, it.url != null)
+            val preFilePair = preJsFiles.partition { it.urlFile != null }
+
+            val npmFiles = preFilePair.first
+
+            executeNpmFiles(npmFiles)
+
+            val preFiles = preFilePair.second
+
+            preFiles.forEach {
+                val fileName = it.file.name
+
+                evalJs(it.content, 1, fileName, reqScriptableObject)
             }
 
             if (jsListBeforeReq.isNotEmpty()) {
@@ -128,7 +138,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 jsListBeforeReq.forEach {
                     val rowNum = document.getLineNumber(it.textOffset) + 1
 
-                    evalJs(it.text, rowNum, virtualFile.name, false)
+                    evalJs(it.text, rowNum, virtualFile.name, reqScriptableObject)
                 }
             }
 
@@ -142,6 +152,53 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
             throw e
         }
+    }
+
+    /**
+     * Execute library js file first, so the pre and post js handler can access library obj
+     */
+    private fun executeNpmFiles(npmFiles: List<PreJsFile>) {
+        if (npmFiles.isEmpty()) {
+            return
+        }
+
+        val libraryScriptableObjects = npmFiles
+            .map {
+                val fileName = it.file.name
+                var scriptableObject = libraryLoadedMap[fileName]
+
+                if (scriptableObject == null) {
+                    scriptableObject = context.initStandardObjects()
+
+                    evalJs(it.content, 1, fileName, scriptableObject)
+
+                    libraryLoadedMap[fileName] = scriptableObject
+
+                    println("Loaded and cached js library: $fileName")
+                }
+
+                scriptableObject!!
+            }
+
+        val global = reqScriptableObject.prototype
+
+        var previous: ScriptableObject? = null
+
+        libraryScriptableObjects.forEach {
+            if (previous == null) {
+                previous = it
+                return@forEach
+            }
+
+            previous!!.prototype = it
+
+            previous = it
+        }
+
+
+        reqScriptableObject.prototype = libraryScriptableObjects[0]
+
+        libraryScriptableObjects.last().prototype = global
     }
 
     fun evalJsAfterRequest(
@@ -252,7 +309,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         val rowNum = document.getLineNumber(jsScript.textOffset) + 1
 
         try {
-            evalJs(jsScript.text, rowNum, virtualFile.name, false)
+            evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject)
         } catch (e: Exception) {
             GlobalLog.log("$e")
         }
@@ -262,13 +319,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         return GlobalLog.getAndClearLogs()
     }
 
-    private fun evalJs(jsStr: String, rowNum: Int, fileName: String, isLibrary: Boolean) {
-        val scriptableObject = if (isLibrary) {
-            libraryLoadedMap.computeIfAbsent(fileName) { context.initStandardObjects() }
-        } else {
-            reqScriptableObject
-        }
-
+    private fun evalJs(jsStr: String, rowNum: Int, fileName: String, scriptableObject: ScriptableObject) {
         try {
             context.evaluateString(scriptableObject, jsStr, fileName, rowNum, null)
         } catch (e: WrappedException) {
