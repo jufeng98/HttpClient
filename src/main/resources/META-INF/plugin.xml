@@ -271,7 +271,7 @@
                                               isEnabledByDefault="true"
                                               group="URL_PATH_GROUP"
                                               providerId="http.client.url"
-                                              bundle="messages.HttpClient"
+                                              bundle="messages.HttpClientBundle"
                                               nameKey="url.name"
                                               descriptionKey="url.description"/>
         <codeInsight.inlayActionHandler handlerId="HttpInlayHintsCollector"
