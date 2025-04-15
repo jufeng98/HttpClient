@@ -112,7 +112,7 @@ class HttpRequestStructureViewElement private constructor(
         private fun getChildren(block: HttpRequestBlock): List<StructureViewTreeElement> {
             val children = mutableListOf<StructureViewTreeElement>()
             val request = block.request
-            val originalHost = request?.httpHost ?: return children
+            val originalHost = request.httpHost
             val target = request.requestTarget
             val path = target?.url
             val project = block.project

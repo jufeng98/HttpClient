@@ -35,13 +35,17 @@ object VirtualFileUtils {
         val virtualFile = VfsUtil.findFileByIoFile(file, false)
             ?: throw FileNotFoundException(file.absoluteFile.normalize().absolutePath)
 
+        return readNewestContent(virtualFile)
+    }
+
+    fun readNewestContent(virtualFile: VirtualFile): String {
         if (virtualFile.isDirectory) {
-            throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} is not file!")
+            throw IllegalArgumentException("${virtualFile.path} is not file!")
         }
 
         val document = FileDocumentManager.getInstance().getCachedDocument(virtualFile)
 
-        return document?.text ?: Files.readString(file.toPath())
+        return document?.text ?: Files.readString(virtualFile.toNioPath())
     }
 
     fun createHttpVirtualFileFromText(

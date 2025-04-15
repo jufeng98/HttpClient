@@ -51,7 +51,7 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
         }
 
         val file = createDummyFile(project, "GET http://127.0.0.1\n$name : ")
-        val newRequest = file.getRequestBlocks()[0].request!!
+        val newRequest = file.getRequestBlocks()[0].request
 
         return newRequest.header!!.headerFieldList[0]
     }
@@ -67,7 +67,7 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
         if (file !is HttpFile) return null
 
         while (psiElement is PsiWhiteSpace || HttpPsiUtils.isOfType(psiElement, HttpTypes.COLON)) {
-            psiElement = psiElement.prevSibling
+            psiElement = psiElement.prevSibling ?: return null
         }
 
         if (HttpPsiUtils.isOfTypes(psiElement, headerSet)) {
