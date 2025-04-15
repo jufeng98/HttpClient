@@ -16,7 +16,7 @@ public interface HttpRequestBlock extends PsiElement {
   @Nullable
   HttpPreRequestHandler getPreRequestHandler();
 
-  @Nullable
+  @NotNull
   HttpRequest getRequest();
 
 }

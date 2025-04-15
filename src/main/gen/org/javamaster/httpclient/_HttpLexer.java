@@ -546,7 +546,6 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
   private boolean zzAtBOL = true;
 
   /** Whether the user-EOF-code has already been executed. */
-  @SuppressWarnings("unused")
   private boolean zzEOFDone;
 
   /* user code: */
@@ -716,6 +715,19 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
 
 
   /**
+   * Contains user EOF-code, which will be executed exactly once,
+   * when the end of file is reached
+   */
+  private void zzDoEOF() {
+    if (!zzEOFDone) {
+      zzEOFDone = true;
+    
+  return;
+    }
+  }
+
+
+  /**
    * Resumes scanning until the next regular expression is matched,
    * the end of input is encountered or an I/O-Error occurs.
    *
@@ -802,9 +814,10 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
 
       if (zzInput == YYEOF && zzStartRead == zzCurrentPos) {
         zzAtEOF = true;
+            zzDoEOF();
             switch (zzLexicalState) {
             case IN_BODY: {
-              nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this);
+              yybegin(YYINITIAL); return detectBodyType(this);
             }  // fall though
             case 285: break;
             case IN_HEADER_FIELD_VALUE: {

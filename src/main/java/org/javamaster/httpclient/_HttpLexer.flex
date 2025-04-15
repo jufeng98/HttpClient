@@ -41,6 +41,9 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
 %state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION
 %state IN_MULTIPART, IN_VARIABLE, IN_DYNAMIC_VARIABLE, IN_DYNAMIC_VARIABLE_ARGS, IN_GLOBAL_VARIABLE, IN_GLOBAL_VARIABLE_VALUE
+%eof{
+  return;
+%eof}
 
 EOL=\R
 EOL_MULTI=[ ]*\R+
@@ -252,7 +255,7 @@ STRING=('([^'])*'|\"([^\"])*\")
   {REQUEST_COMMENT}{EOL}             { if(LexerUtils.endsWithLineBreak(this)) { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); } }
   {EOL_MULTI}{LINE_COMMENT}{EOL}     { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
   {LINE_COMMENT}{EOL}                { if(LexerUtils.endsWithLineBreak(this)) { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); } }
-  <<EOF>>                            { nextState = YYINITIAL; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  <<EOF>>                            { yybegin(YYINITIAL); return detectBodyType(this); }
 }
 
 <IN_TRIM_PREFIX_SPACE> {
