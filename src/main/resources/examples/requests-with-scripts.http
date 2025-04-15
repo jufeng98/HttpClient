@@ -1,4 +1,5 @@
-// Introduce javascript library with use npm url, will be download and cache
+// Introduce javascript library with use npm url, it will be download and cache.
+// You can find the npm download url in package-lock.json
 # @require https://registry.npmmirror.com/moment/-/moment-2.30.1.tgz
 # @require https://registry.npmmirror.com/lodash/-/lodash-4.17.21.tgz
 
@@ -7,7 +8,6 @@
 
 <! {%
     console.log("Call moment format:", moment().format())
-    console.log("Call lodash capitalize:", _.capitalize('FRED'))
 
     // Global js previous handler
     client.global.clearAll();
@@ -39,6 +39,7 @@
 < {%
     // 请求前置处理器
     request.variables.set('cnName', 'jufeng987878');
+    console.log("Call lodash capitalize:", _.capitalize('FRED'))
 %}
 POST https://miao.baidu.com/abdr?a={{globalName}}&b={{requestName}}&sign={{sign}}
 Content-Type: application/json
@@ -51,8 +52,8 @@ Cn-Name: {{cnName}}
 }
 
 > {%
-    client.global.set("my-temp-variable", "I will not deleted!");
-    request.variables.set("my-temp-variable", "I will be deleted soon!");
+    client.global.set("name", response.body.data.name);
+    console.log("Call lodash capitalize:", _.capitalize('JACK'))
 %}
 
 >> result.html
