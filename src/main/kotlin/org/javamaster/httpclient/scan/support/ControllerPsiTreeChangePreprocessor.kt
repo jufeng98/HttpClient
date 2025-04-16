@@ -32,8 +32,19 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
                 return
             }
 
+            // 难以安全的判断改动的文件是否是 Controller 类, 先屏蔽后面的逻辑
+            @Suppress("ConstantConditionIf")
+            if (true) {
+                ControllerPsiModificationTracker.myModificationCount.incModificationCount()
+                return
+            }
+
             val dumbService = psiFile.project.getService(DumbService::class.java)
             if (dumbService.isDumb) {
+                return
+            }
+
+            if (!psiFile.isValid) {
                 return
             }
 
