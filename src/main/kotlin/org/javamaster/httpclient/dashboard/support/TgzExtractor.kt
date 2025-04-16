@@ -16,7 +16,8 @@ object TgzExtractor {
         FileInputStream(tgzFilePath).use { fis ->
             GzipCompressorInputStream(fis).use { gzip ->
                 TarArchiveInputStream(gzip).use { tarIn ->
-                    var entry = tarIn.nextEntry
+                    @Suppress("DEPRECATION", "DEPRECATION")
+                    var entry = tarIn.nextTarEntry
                     while (entry != null) {
                         val outputFile = File(outputDir, entry.name)
 
