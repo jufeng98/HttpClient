@@ -2,11 +2,13 @@ package org.javamaster.httpclient.utils
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VfsUtil.findFileByIoFile
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.readBytes
+import com.intellij.openapi.vfs.readText
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
+import org.javamaster.httpclient.nls.NlsBundle
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.Files
@@ -19,33 +21,59 @@ import java.util.*
 object VirtualFileUtils {
 
     fun readNewestBytes(file: File): ByteArray {
-        val virtualFile = VfsUtil.findFileByIoFile(file, false)
-            ?: throw FileNotFoundException(file.absoluteFile.normalize().absolutePath)
+        val virtualFile = findFileByIoFile(file, false)
+        if (virtualFile != null) {
+            return readNewestBytes(virtualFile)
+        }
 
+        val absolutePath = file.absoluteFile.normalize().absolutePath
+        if (!file.exists()) {
+            throw FileNotFoundException(absolutePath)
+        }
+
+        if (file.isDirectory) {
+            throw IllegalArgumentException(NlsBundle.nls("not.file", absolutePath))
+        }
+
+        return Files.readAllBytes(file.toPath())
+    }
+
+    private fun readNewestBytes(virtualFile: VirtualFile): ByteArray {
         if (virtualFile.isDirectory) {
-            throw IllegalArgumentException("${file.absoluteFile.normalize().absolutePath} is not file!")
+            throw IllegalArgumentException(NlsBundle.nls("not.file", virtualFile.path))
         }
 
         val document = FileDocumentManager.getInstance().getCachedDocument(virtualFile)
 
-        return document?.text?.toByteArray() ?: Files.readAllBytes(file.toPath())
+        return document?.text?.toByteArray() ?: virtualFile.readBytes()
     }
 
     fun readNewestContent(file: File): String {
-        val virtualFile = VfsUtil.findFileByIoFile(file, false)
-            ?: throw FileNotFoundException(file.absoluteFile.normalize().absolutePath)
+        val virtualFile = findFileByIoFile(file, false)
+        if (virtualFile != null) {
+            return readNewestContent(virtualFile)
+        }
 
-        return readNewestContent(virtualFile)
+        val absolutePath = file.absoluteFile.normalize().absolutePath
+        if (!file.exists()) {
+            throw FileNotFoundException(absolutePath)
+        }
+
+        if (file.isDirectory) {
+            throw IllegalArgumentException(NlsBundle.nls("not.file", absolutePath))
+        }
+
+        return Files.readString(file.toPath())
     }
 
     fun readNewestContent(virtualFile: VirtualFile): String {
         if (virtualFile.isDirectory) {
-            throw IllegalArgumentException("${virtualFile.path} is not file!")
+            throw IllegalArgumentException(NlsBundle.nls("not.file", virtualFile.path))
         }
 
         val document = FileDocumentManager.getInstance().getCachedDocument(virtualFile)
 
-        return document?.text ?: Files.readString(virtualFile.toNioPath())
+        return document?.text ?: virtualFile.readText()
     }
 
     fun createHttpVirtualFileFromText(
@@ -64,10 +92,15 @@ object VirtualFileUtils {
 
         val str = StringUtils.defaultString(tabName) + "-" + DateFormatUtils.format(date, "hhmmss")
         val path = Path.of(parentDir.toString(), "tmp-$str.$suffix")
-        val tempFile = Files.createFile(path)
-        val file = tempFile.toFile()
 
-        val virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByPath(file.absolutePath)
+        val file = if (Files.exists(path)) {
+            path.toFile()
+        } else {
+            val tempFile = Files.createFile(path)
+            tempFile.toFile()
+        }
+
+        val virtualFile = findFileByIoFile(file, true)
         virtualFile!!.setBinaryContent(txtBytes)
 
         return virtualFile
