@@ -30,7 +30,8 @@ object TgzExtractor {
                             }
                         }
 
-                        entry = tarIn.nextEntry
+                        @Suppress("DEPRECATION", "DEPRECATION")
+                        entry = tarIn.nextTarEntry
                     }
                 }
             }
