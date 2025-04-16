@@ -76,29 +76,6 @@ public class HttpDashboardForm implements Disposable {
             return;
         }
 
-        boolean imageType = Objects.equals(httpInfo.getType(), SimpleTypeEnum.IMAGE);
-        if (imageType) {
-            //noinspection DataFlowIssue
-            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(httpInfo.getByteArray())) {
-                BufferedImage bufferedImage = ImageIO.read(inputStream);
-
-                int inputWidth = bufferedImage.getWidth();
-                int inputHeight = bufferedImage.getHeight();
-
-                int outputWidth = 500;
-                int outputHeight = (int) ((double) inputHeight / inputWidth * outputWidth);
-
-                Image newImage = bufferedImage.getScaledInstance(outputWidth, outputHeight, Image.SCALE_FAST);
-                ImageIcon image = new ImageIcon(newImage);
-
-                JLabel jlabel = new JLabel(image);
-                responsePanel.add(new JBScrollPane(jlabel), constraints);
-                return;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
         byte[] resBytes = String.join("", httpInfo.getHttpResDescList()).getBytes(StandardCharsets.UTF_8);
 
         GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
@@ -106,6 +83,46 @@ public class HttpDashboardForm implements Disposable {
 
         JComponent resComponent = HttpUiUtils.INSTANCE.createEditorCompo(resBytes, "res.http", project, tabName, editorList);
         responsePanel.add(resComponent, constraintsRes);
+
+        byte[] bodyBytes = httpInfo.getByteArray();
+        if (bodyBytes == null) {
+            return;
+        }
+
+        if (Objects.equals(httpInfo.getType(), SimpleTypeEnum.IMAGE)) {
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(bodyBytes)) {
+                BufferedImage bufferedImage = ImageIO.read(inputStream);
+
+                int inputWidth = bufferedImage.getWidth();
+                int inputHeight = bufferedImage.getHeight();
+
+                int outputWidth = 520;
+                int outputHeight = (int) ((double) inputHeight / inputWidth * outputWidth);
+
+                Image newImage = bufferedImage.getScaledInstance(outputWidth, outputHeight, Image.SCALE_FAST);
+                ImageIcon image = new ImageIcon(newImage);
+
+                JLabel jlabel = new JLabel(image);
+
+                renderResponsePresentation(resComponent, jlabel, constraintsRes);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void renderResponsePresentation(JComponent resComponent, JComponent presentation, GridConstraints constraintsRes) {
+        Dimension size = resComponent.getSize();
+        resComponent.setPreferredSize(new Dimension(size.width, 160));
+
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new BorderLayout());
+
+        jPanel.add(resComponent, BorderLayout.NORTH);
+        jPanel.add(new JLabel(NlsBundle.INSTANCE.nls("res.render.result")), BorderLayout.CENTER);
+        jPanel.add(presentation, BorderLayout.SOUTH);
+
+        responsePanel.add(new JBScrollPane(jPanel), constraintsRes);
     }
 
     public void initWsResData(WsRequest wsRequest) {
