@@ -42,7 +42,7 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
         fun getVariableVariants(element: PsiElement): Array<Any> {
             val allList = mutableListOf<Any>()
 
-            if (element.parent.parent is HttpFilePath) {
+            if (element.parent?.parent is HttpFilePath) {
                 var tmp = InnerVariableEnum.MVN_TARGET
                 allList.add(
                     LookupElementBuilder.create(tmp.methodName).withTypeText(tmp.typeText(), true)

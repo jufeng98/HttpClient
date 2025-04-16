@@ -24,11 +24,12 @@ class MessageBodyInjectionContributor : MultiHostInjector {
     override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
         var language: Language = PlainTextLanguage.INSTANCE
         var contentType: ContentType? = null
-        val parent = context.parent.parent?.parent
+        val tmpParent = context.parent.parent
+        val parent = tmpParent?.parent
         if (parent is HttpRequest) {
             contentType = parent.contentType
-        } else if (parent is HttpMultipartField) {
-            contentType = parent.contentType
+        } else if (tmpParent is HttpMultipartField) {
+            contentType = tmpParent.contentType
         }
 
         when (contentType) {
