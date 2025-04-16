@@ -2,6 +2,7 @@ package org.javamaster.httpclient.action
 
 import com.intellij.ide.actions.SearchEverywhereBaseAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.symbol.ApisGotoSEContributor
 
 /**
@@ -9,7 +10,7 @@ import org.javamaster.httpclient.symbol.ApisGotoSEContributor
  */
 class ApiSearchEverywhereAction : SearchEverywhereBaseAction() {
     override fun update(event: AnActionEvent) {
-        event.presentation.text = "Search Api"
+        event.presentation.text = NlsBundle.nls("search.api")
     }
 
     override fun actionPerformed(e: AnActionEvent) {

@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.inspection.support
 
+import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInspection.InspectionManager
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
@@ -62,8 +63,8 @@ object InspectionHelper {
                 if (resolve != null) continue
 
                 val fixes = mutableListOf<LocalQuickFix>(
-                    CreateEnvVariableQuickFix(false, variableName),
-                    CreateEnvVariableQuickFix(true, variableName),
+                    CreateEnvVariableQuickFix(false, variableName, PriorityAction.Priority.TOP),
+                    CreateEnvVariableQuickFix(true, variableName, PriorityAction.Priority.HIGH),
                 )
 
                 if (reference is HttpVariableNamePsiReference) {

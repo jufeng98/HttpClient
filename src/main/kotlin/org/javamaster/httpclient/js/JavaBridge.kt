@@ -6,6 +6,7 @@ import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.VirtualFileUtils
@@ -138,7 +139,8 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             val toPath = file.toPath()
 
             Files.write(toPath, bytes, StandardOpenOption.CREATE)
-            GlobalLog.log("Finished convert base64 and save to file: ${file.normalize()}")
+
+            GlobalLog.log(NlsBundle.nls("base64.convert.to.file") + " ${file.normalize()}")
 
             VirtualFileManager.getInstance().asyncRefresh(null)
         } catch (e: Exception) {
@@ -162,7 +164,7 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             }
 
             val variableEnum = InnerVariableEnum.getEnum(methodName)
-                ?: throw IllegalArgumentException("Method name $methodName is not exists!")
+                ?: throw IllegalArgumentException(NlsBundle.nls("method.not.exists", methodName))
 
             return variableEnum.exec("", *args.toTypedArray())
         } catch (e: Exception) {

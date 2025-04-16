@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.inspection.fix
 
+import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.openapi.application.ApplicationManager
@@ -18,7 +19,7 @@ import org.javamaster.httpclient.psi.HttpGlobalVariable
 /**
  * @author yudong
  */
-class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickFix {
+class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickFix,PriorityAction {
 
     override fun getFamilyName(): String {
         return NlsBundle.nls("unsolved.global.variable")
@@ -74,6 +75,10 @@ class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickF
         // Move the cursor to the value
         document.insertString(offset, " ")
         caretModel.moveToOffset(offset + 1)
+    }
+
+    override fun getPriority(): PriorityAction.Priority {
+        return PriorityAction.Priority.NORMAL
     }
 
 }

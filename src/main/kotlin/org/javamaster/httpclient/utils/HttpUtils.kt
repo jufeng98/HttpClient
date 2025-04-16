@@ -28,6 +28,7 @@ import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
@@ -180,7 +181,7 @@ object HttpUtils {
 
     fun convertToReqBody(request: HttpRequest, variableResolver: VariableResolver): Any? {
         if (request.contentLength != null) {
-            throw IllegalArgumentException("Can't have Content-Length header!")
+            throw IllegalArgumentException(NlsBundle.nls("content.length.error"))
         }
 
         val body = request.body
@@ -195,7 +196,7 @@ object HttpUtils {
         val httpMultipartMessage = body?.multipartMessage
         if (httpMultipartMessage != null) {
             val boundary =
-                request.contentTypeBoundary ?: throw IllegalArgumentException("$CONTENT_TYPE header missing boundary!")
+                request.contentTypeBoundary ?: throw IllegalArgumentException(NlsBundle.nls("lack.boundary",CONTENT_TYPE))
             return constructMultipartBody(boundary, httpMultipartMessage, variableResolver)
         }
 

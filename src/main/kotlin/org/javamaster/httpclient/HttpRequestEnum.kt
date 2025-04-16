@@ -1,5 +1,6 @@
 package org.javamaster.httpclient
 
+import com.intellij.openapi.util.text.Formats
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
@@ -273,8 +274,8 @@ enum class HttpRequestEnum {
                 }
                 httpReqDescList.add("Content-Length: $contentLength\r\n")
 
-                val contentLengthKb = contentLength / 1024.0
-                httpReqDescList.add(0, "// Size: $contentLengthKb KB\r\n")
+                val size = Formats.formatFileSize(contentLength)
+                httpReqDescList.add(0, "// Size: $size\r\n")
             }
             httpReqDescList.add("\r\n")
 

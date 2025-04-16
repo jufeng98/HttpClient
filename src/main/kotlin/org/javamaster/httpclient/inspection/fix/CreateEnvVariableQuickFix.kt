@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.inspection.fix
 
+import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.openapi.application.ApplicationManager
@@ -15,7 +16,12 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 /**
  * @author yudong
  */
-class CreateEnvVariableQuickFix(private val isPrivate: Boolean, private val variableName: String) : LocalQuickFix {
+class CreateEnvVariableQuickFix(
+    private val isPrivate: Boolean,
+    private val variableName: String,
+    private val priority: PriorityAction.Priority,
+) : LocalQuickFix,
+    PriorityAction {
 
     override fun getFamilyName(): String {
         val tip = if (isPrivate) "private" else ""
@@ -51,5 +57,9 @@ class CreateEnvVariableQuickFix(private val isPrivate: Boolean, private val vari
         val envFileService = EnvFileService.getService(project)
 
         envFileService.createEnvValue(variableName, selectEnv, httpFileParentPath, envFileName)
+    }
+
+    override fun getPriority(): PriorityAction.Priority {
+        return priority
     }
 }

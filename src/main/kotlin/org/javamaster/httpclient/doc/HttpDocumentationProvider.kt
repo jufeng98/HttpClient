@@ -3,6 +3,7 @@ package org.javamaster.httpclient.doc
 import com.intellij.json.JsonElementTypes
 import com.intellij.json.psi.JsonLiteral
 import com.intellij.json.psi.JsonProperty
+import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.documentation.DocumentationProvider
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.navigation.ItemPresentation
@@ -73,25 +74,36 @@ class HttpDocumentationProvider : DocumentationProvider {
         if (element is JsonProperty) {
             val match = originalElement.parent is HttpVariableReference || (element.value is JsonLiteral
                     && HttpPsiUtils.getPrevSiblingByType(originalElement.parent, JsonElementTypes.COLON, false) != null)
-            if (match) {
-                val name = element.name
-                val value = getJsonLiteralValue(element.value as JsonLiteral)
-
-                return getDocumentation(name, NlsBundle.nls("value") + " $value")
+            if (!match) {
+                return null
             }
+
+            val name = element.name
+            val value = getJsonLiteralValue(element.value as JsonLiteral)
+
+            return getDocumentation(name, NlsBundle.nls("value") + " $value")
         }
 
-        val psiElement = originalElement.parent?.parent
-        if (psiElement is HttpVariableName) {
-            val name = psiElement.name
-            val variableEnum = InnerVariableEnum.getEnum(name)
+        if (element is PsiDirectory) {
+            val path = element.virtualFile.path
+            val parent = originalElement.parent
+            val psiElement = parent?.parent
 
-            if (variableEnum != null && element is PsiDirectory) {
+            if (psiElement is HttpVariableName) {
+                val name = psiElement.name
+                val variableEnum = InnerVariableEnum.getEnum(name) ?: return null
+
                 return getDocumentation(
                     name,
-                    variableEnum.typeText() + ", ${NlsBundle.nls("value")}: ${element.virtualFile.path}"
+                    variableEnum.typeText() + ", ${NlsBundle.nls("value")} $path"
                 )
             }
+
+            if (parent is JsonStringLiteral) {
+                return NlsBundle.nls("value") + " $path"
+            }
+
+            return null
         }
 
         return null

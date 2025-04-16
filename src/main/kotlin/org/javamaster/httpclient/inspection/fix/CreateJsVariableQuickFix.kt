@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.inspection.fix
 
+import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.json.psi.JsonStringLiteral
@@ -22,7 +23,8 @@ import org.javamaster.httpclient.psi.*
 /**
  * @author yudong
  */
-class CreateJsVariableQuickFix(private val global: Boolean, private val variableName: String) : LocalQuickFix {
+class CreateJsVariableQuickFix(private val global: Boolean, private val variableName: String) : LocalQuickFix,
+    PriorityAction {
 
     override fun getFamilyName(): String {
         val tip = if (global) NlsBundle.nls("global") else NlsBundle.nls("pre.request")
@@ -118,4 +120,9 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
         val caretModel = FileEditorManager.getInstance(project).selectedTextEditor?.caretModel ?: return
         caretModel.moveToOffset(caretModel.offset + 1)
     }
+
+    override fun getPriority(): PriorityAction.Priority {
+        return PriorityAction.Priority.LOW
+    }
+
 }

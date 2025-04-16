@@ -8,6 +8,7 @@ import com.intellij.openapi.application.runWriteActionAndWait
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
@@ -258,7 +259,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 val consumeTimes = pair.second
 
                 val httpResDescList =
-                    mutableListOf("// Time: ${consumeTimes}ms, size: ${byteArray.size / 1024.0}kb\r\n")
+                    mutableListOf("// Time: ${consumeTimes}ms, size: ${Formats.formatFileSize(byteArray.size.toLong())}\r\n")
 
                 val evalJsRes = jsExecutor.evalJsAfterRequest(
                     jsAfterReq,
@@ -317,7 +318,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                         return@runWriteActionAndWait
                     }
 
-                    val size = response.body().size / 1024.0
+                    val size = Formats.formatFileSize(response.body().size.toLong())
                     val consumeTimes = System.currentTimeMillis() - start
 
                     val resHeaderList = convertToResHeaderDescList(response)
@@ -325,7 +326,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     val resPair = convertToResPair(response)
 
                     val httpResDescList =
-                        mutableListOf("// Status: ${response.statusCode()}, time: ${consumeTimes}ms, size: $size KB\r\n")
+                        mutableListOf(
+                            "// Status: ${response.statusCode()}, time: ${consumeTimes}ms, size: $size\r\n"
+                        )
 
                     val evalJsRes = jsExecutor.evalJsAfterRequest(
                         jsAfterReq,
@@ -378,7 +381,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         }
 
         val saveResult = saveResToFile(outPutFilePath, parentPath, httpInfo.byteArray)
-        if (!saveResult.isNullOrEmpty()) {
+        if (saveResult != null) {
             httpInfo.httpResDescList.add(0, saveResult)
         }
 
@@ -407,7 +410,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             val msg = "<div style='font-size:13pt'>$error</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)
         } else {
-            val msg = "<div style='font-size:13pt'>$tabName request success!</div>"
+            val msg = "<div style='font-size:13pt'>$tabName ${nls("request.success")}!</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
         }
     }

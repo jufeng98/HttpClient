@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--suppress LiveTemplateI18n -->
 <templateSet group="HTTP Request">
   <template name="gtr" value="### request&#10;GET http://$HOST$/$PATH$&#10;$HEADER$: $HEADER_VALUE$&#10;"
             description="GET http://example.com/get" toReformat="true" toShortenFQNames="false">

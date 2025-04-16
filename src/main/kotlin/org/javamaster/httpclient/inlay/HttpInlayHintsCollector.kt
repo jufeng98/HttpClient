@@ -3,6 +3,7 @@ package org.javamaster.httpclient.inlay
 import com.intellij.codeInsight.hints.declarative.*
 import com.intellij.psi.*
 import org.javamaster.httpclient.enums.SpringHttpMethod
+import org.javamaster.httpclient.nls.NlsBundle
 
 /**
  * @author yudong
@@ -42,7 +43,7 @@ object HttpInlayHintsCollector : SharedBypassCollector {
         sink.addPresentation(
             InlineInlayPosition(element.textRange.startOffset, false),
             null,
-            "Create http request",
+            NlsBundle.nls("create.http.req"),
             false
         ) {
             text(

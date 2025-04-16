@@ -66,10 +66,22 @@ class DubboRequest(
             targetInterfaceName = interfaceCls!!
             val psiClass = if (module != null) {
                 DubboUtils.findInterface(module, targetInterfaceName)
-                    ?: throw IllegalArgumentException(NlsBundle.nls("interface.not.resolved",targetInterfaceName, module.name))
+                    ?: throw IllegalArgumentException(
+                        NlsBundle.nls(
+                            "interface.not.resolved",
+                            targetInterfaceName,
+                            module.name
+                        )
+                    )
             } else {
                 DubboUtils.findInterface(project, targetInterfaceName)
-                    ?: throw IllegalArgumentException(NlsBundle.nls("interface.not.resolved1",targetInterfaceName, project.name))
+                    ?: throw IllegalArgumentException(
+                        NlsBundle.nls(
+                            "interface.not.resolved1",
+                            targetInterfaceName,
+                            project.name
+                        )
+                    )
             }
 
             val targetMethod = findTargetMethod(psiClass, reqBodyMap)
@@ -89,7 +101,13 @@ class DubboRequest(
                 .toTypedArray()
         } else {
             if (interfaceName == null) {
-                throw IllegalArgumentException("Header ${DubboUtils.INTERFACE_KEY} and ${DubboUtils.INTERFACE_NAME} can't be blank at the same time!")
+                throw IllegalArgumentException(
+                    NlsBundle.nls(
+                        "dubbo.all.blank",
+                        DubboUtils.INTERFACE_KEY,
+                        DubboUtils.INTERFACE_NAME
+                    )
+                )
             }
 
             targetInterfaceName = interfaceName!!
@@ -105,7 +123,7 @@ class DubboRequest(
                 for (entry in paramNames) {
                     val paramName = "${entry.key}"
                     val argTypes = reqHeaderMap[paramName]
-                        ?: throw IllegalArgumentException("Missing $paramName header!")
+                        ?: throw IllegalArgumentException(NlsBundle.nls("dubbo.miss.header", paramName))
                     tmpTypeList.add(argTypes[0])
                     tmpValueList.add(entry.value)
                 }
@@ -192,7 +210,7 @@ class DubboRequest(
     private fun findTargetMethod(psiClass: PsiClass, reqMap: LinkedHashMap<*, *>?): PsiMethod {
         val methods = psiClass.findMethodsByName(methodName, false)
         if (methods.isEmpty()) {
-            throw IllegalArgumentException("Method $methodName not exist!")
+            throw IllegalArgumentException(NlsBundle.nls("method.not.exists", methodName))
         }
 
         val method: PsiMethod?
@@ -214,7 +232,7 @@ class DubboRequest(
             }.firstOrNull()
 
             if (method == null) {
-                throw IllegalArgumentException("According to the method param $paramNames, can't match any method: ${methodName}!")
+                throw IllegalArgumentException(NlsBundle.nls("method.not.found", paramNames, methodName))
             }
         }
 
