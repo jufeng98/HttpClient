@@ -11,6 +11,7 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.editor.ScrollingModel;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -21,6 +22,8 @@ import org.javamaster.httpclient.HttpInfo;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.utils.HttpUiUtils;
+import org.javamaster.httpclient.utils.HttpUtils;
+import org.javamaster.httpclient.utils.VirtualFileUtils;
 import org.javamaster.httpclient.ws.WsRequest;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,8 +32,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +81,8 @@ public class HttpDashboardForm implements Disposable {
             return;
         }
 
+        saveBinaryToFile(httpInfo);
+
         byte[] resBytes = String.join("", httpInfo.getHttpResDescList()).getBytes(StandardCharsets.UTF_8);
 
         GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
@@ -84,13 +91,9 @@ public class HttpDashboardForm implements Disposable {
         JComponent resComponent = HttpUiUtils.INSTANCE.createEditorCompo(resBytes, "res.http", project, tabName, editorList);
         responsePanel.add(resComponent, constraintsRes);
 
-        byte[] bodyBytes = httpInfo.getByteArray();
-        if (bodyBytes == null) {
-            return;
-        }
-
         if (Objects.equals(httpInfo.getType(), SimpleTypeEnum.IMAGE)) {
-            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(bodyBytes)) {
+            //noinspection DataFlowIssue
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(httpInfo.getByteArray())) {
                 BufferedImage bufferedImage = ImageIO.read(inputStream);
 
                 int inputWidth = bufferedImage.getWidth();
@@ -108,6 +111,44 @@ public class HttpDashboardForm implements Disposable {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    private void saveBinaryToFile(HttpInfo httpInfo) {
+        try {
+            SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
+
+            //noinspection DataFlowIssue
+            if (!simpleTypeEnum.getBinary()) {
+                return;
+            }
+
+            String contentType = httpInfo.getContentType();
+
+            //noinspection DataFlowIssue
+            String suffix = SimpleTypeEnum.Companion.getSuffix(simpleTypeEnum, contentType);
+
+            File dateHistoryDir = VirtualFileUtils.INSTANCE.getDateHistoryDir(Objects.requireNonNull(project.getBasePath()));
+
+            File file = new File(dateHistoryDir, "tmp-" + tabName + "-999999.res." + suffix);
+
+            String absolutePath = file.getAbsolutePath();
+
+            boolean deleted = file.delete();
+            if (deleted) {
+                System.out.println("已删除文件:" + absolutePath);
+            }
+
+            //noinspection DataFlowIssue
+            Files.write(file.toPath(), httpInfo.getByteArray());
+            System.out.println("已保存到文件:" + absolutePath);
+
+            VfsUtil.findFileByIoFile(file, true);
+
+            httpInfo.getHttpResDescList().add(HttpUtils.CR_LF + ">> " + absolutePath + HttpUtils.CR_LF);
+        } catch (Exception e) {
+            //noinspection CallToPrintStackTrace
+            e.printStackTrace();
         }
     }
 
@@ -142,7 +183,7 @@ public class HttpDashboardForm implements Disposable {
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
         Editor editor = WriteAction.computeAndWait(() ->
-                HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
+                HttpUiUtils.INSTANCE.createEditor("" .getBytes(StandardCharsets.UTF_8), "ws.log",
                         project, tabName, editorList)
         );
 
