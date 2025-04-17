@@ -22,7 +22,7 @@ object VirtualFileUtils {
 
     fun readNewestBytes(file: File): ByteArray {
         val virtualFile = findFileByIoFile(file, false)
-        if (virtualFile != null) {
+        if (virtualFile != null && isVirtualFileNewest(virtualFile, file)) {
             return readNewestBytes(virtualFile)
         }
 
@@ -50,7 +50,7 @@ object VirtualFileUtils {
 
     fun readNewestContent(file: File): String {
         val virtualFile = findFileByIoFile(file, false)
-        if (virtualFile != null) {
+        if (virtualFile != null && isVirtualFileNewest(virtualFile, file)) {
             return readNewestContent(virtualFile)
         }
 
@@ -112,5 +112,10 @@ object VirtualFileUtils {
         return virtualFile
     }
 
+    private fun isVirtualFileNewest(virtualFile: VirtualFile, file: File): Boolean {
+        val timeStamp = virtualFile.timeStamp
+        val millis = Files.getLastModifiedTime(file.toPath()).toMillis()
+        return timeStamp >= millis
+    }
 }
 
