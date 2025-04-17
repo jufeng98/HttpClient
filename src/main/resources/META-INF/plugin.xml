@@ -55,6 +55,11 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>3.8.0</b></li>
+                <ul>
+                    <li>默认保存二进制响应到文件</li>
+                    <li>功能优化及Bug修复</li>
+                </ul>
                 <li><b>3.7.0</b></li>
                 <ul>
                     <li>新增全局引入 npm 库依赖功能</li>
