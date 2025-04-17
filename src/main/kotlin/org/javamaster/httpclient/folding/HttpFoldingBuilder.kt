@@ -11,9 +11,12 @@ import com.intellij.psi.tree.TokenSet
 import com.intellij.util.containers.toArray
 import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpMultipartField
+import org.javamaster.httpclient.psi.HttpOutputFile
 import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getMultipartFieldDescription
+import java.nio.file.Paths
+import kotlin.io.path.name
 
 
 class HttpFoldingBuilder : FoldingBuilder, DumbAware {
@@ -60,6 +63,17 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
                 return "(Headers)...${contentTypeField.text}..."
             }
             return "(Headers)..."
+        } else if (type == HttpTypes.OUTPUT_FILE) {
+            val filePath = (node.psi as HttpOutputFile).filePath
+            if (filePath != null) {
+                val text = filePath.filePathContent?.text
+                if (filePath.variable == null) {
+                    if (text != null && text.length > 32) {
+                        return Paths.get(text).name
+                    }
+                }
+                return text ?: "..."
+            }
         }
 
         return "..."
@@ -67,7 +81,7 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
 
     override fun isCollapsedByDefault(node: ASTNode): Boolean {
         val type = node.elementType
-        return type == HttpTypes.HEADER
+        return type == HttpTypes.HEADER || type == HttpTypes.OUTPUT_FILE
     }
 
     private fun collectDescriptors(node: ASTNode): MutableList<FoldingDescriptor> {
@@ -96,6 +110,11 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
             val header = requestNode.findChildByType(HttpTypes.HEADER)
             if (header != null) {
                 descriptors.add(FoldingDescriptor(header, header.textRange))
+            }
+
+            val filePath = requestNode.findChildByType(HttpTypes.OUTPUT_FILE)
+            if (filePath != null) {
+                descriptors.add(FoldingDescriptor(filePath, filePath.textRange))
             }
         }
 
