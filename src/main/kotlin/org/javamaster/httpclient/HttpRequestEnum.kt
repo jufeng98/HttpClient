@@ -1,11 +1,14 @@
 package org.javamaster.httpclient
 
+import com.google.common.net.HttpHeaders
 import com.intellij.openapi.util.text.Formats
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
-import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
+import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
+import org.javamaster.httpclient.utils.HttpUtils.getVersionDesc
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpClient.Version
@@ -26,7 +29,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
@@ -47,7 +50,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
@@ -59,11 +62,7 @@ enum class HttpRequestEnum {
 
             setHeaders(reqHeaderMap, builder)
 
-            if (bodyPublisher != null) {
-                builder.POST(bodyPublisher)
-            } else {
-                builder.POST(BodyPublishers.noBody())
-            }
+            builder.POST(bodyPublisher)
 
             return builder.build()
         }
@@ -73,7 +72,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
@@ -94,7 +93,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
@@ -106,11 +105,7 @@ enum class HttpRequestEnum {
 
             setHeaders(reqHeaderMap, builder)
 
-            if (bodyPublisher != null) {
-                builder.PUT(bodyPublisher)
-            } else {
-                builder.PUT(BodyPublishers.noBody())
-            }
+            builder.PUT(bodyPublisher)
 
             return builder.build()
         }
@@ -120,7 +115,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
@@ -131,7 +126,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
@@ -142,7 +137,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
@@ -153,7 +148,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
@@ -164,7 +159,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
@@ -175,7 +170,7 @@ enum class HttpRequestEnum {
             url: String,
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String>,
-            bodyPublisher: HttpRequest.BodyPublisher?,
+            bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
@@ -222,88 +217,47 @@ enum class HttpRequestEnum {
         paramMap: Map<String, String>,
     ): CompletableFuture<HttpResponse<ByteArray>> {
         try {
-            var multipartLength = 0L
-            var bodyPublisher: HttpRequest.BodyPublisher? = null
-            when (reqBody) {
-                is String -> {
-                    bodyPublisher = BodyPublishers.ofString(reqBody)
-                }
+            val pair = HttpUtils.convertToReqBodyPublisher(reqBody)
 
-                is ByteArray -> {
-                    bodyPublisher = BodyPublishers.ofByteArray(reqBody)
-                }
-
-                is List<*> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    bodyPublisher = BodyPublishers.ofByteArrays(reqBody as MutableIterable<ByteArray>)
-                    reqBody.forEach { multipartLength += it.size }
-                }
-
-                else -> {
-                    if (reqBody != null) {
-                        println("Unknown type: ${reqBody.javaClass}")
-                    }
-                }
-            }
+            val bodyPublisher = pair.first
+            val multipartLength = pair.second
 
             val request = createRequest(url, version, reqHttpHeaders, bodyPublisher, paramMap)
 
             val connectTimeout = paramMap[ParamEnum.CONNECT_TIMEOUT_NAME.param]?.toLong() ?: CONNECT_TIMEOUT
+
             val client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeout))
                 .build()
 
-            val commentTabName = "### $tabName\r\n"
+            val commentTabName = "### $tabName$CR_LF"
             httpReqDescList.add(commentTabName)
 
-            httpReqDescList.add(request.method() + " " + request.uri().toString() + " " + "\r\n")
+            httpReqDescList.add(request.method() + " " + request.uri() + " " + getVersionDesc(version) + CR_LF)
+
             request.headers()
                 .map()
                 .forEach { entry ->
                     entry.value.forEach {
-                        httpReqDescList.add(entry.key + ": " + it + "\r\n")
+                        httpReqDescList.add(entry.key + ": " + it + CR_LF)
                     }
                 }
 
-            if (bodyPublisher != null) {
-                val tmpLength = bodyPublisher.contentLength()
-                val contentLength = if (tmpLength != -1L) {
-                    tmpLength
-                } else {
-                    multipartLength
-                }
-                httpReqDescList.add("Content-Length: $contentLength\r\n")
+            val tmpLength = bodyPublisher.contentLength()
 
-                val size = Formats.formatFileSize(contentLength)
-                httpReqDescList.add(0, "// Size: $size\r\n")
-            }
-            httpReqDescList.add("\r\n")
+            val contentLength = if (tmpLength == -1L) multipartLength else tmpLength
 
-            if (reqBody is String) {
-                val max = 50000
-                if (reqBody.length > max) {
-                    httpReqDescList.add(
-                        reqBody.substring(
-                            0,
-                            max
-                        ) + "\r\n......(${NlsBundle.nls("content.truncated")})"
-                    )
-                } else {
-                    httpReqDescList.add(reqBody)
-                }
-            } else if (reqBody is List<*>) {
-                @Suppress("UNCHECKED_CAST")
-                val byteArrays = reqBody as MutableIterable<ByteArray>
-                byteArrays.forEach {
-                    val max = 20000
-                    if (it.size > max) {
-                        val bytes = it.copyOfRange(0, max)
-                        httpReqDescList.add(String(bytes) + " \r\n......(${NlsBundle.nls("content.truncated")})\r\n")
-                    } else {
-                        httpReqDescList.add(String(it))
-                    }
-                }
-            }
+            httpReqDescList.add("${HttpHeaders.CONTENT_LENGTH}: $contentLength$CR_LF")
+
+            val size = Formats.formatFileSize(contentLength)
+
+            httpReqDescList.add(0, "// Size: $size$CR_LF")
+
+            httpReqDescList.add(CR_LF)
+
+            val descList = HttpUtils.getReqBodyDesc(reqBody)
+
+            httpReqDescList.addAll(descList)
 
             return client.sendAsync(request, HttpResponse.BodyHandlers.ofByteArray())
         } catch (e: Throwable) {
@@ -315,7 +269,7 @@ enum class HttpRequestEnum {
         url: String,
         version: Version,
         reqHeaderMap: LinkedMultiValueMap<String, String>,
-        bodyPublisher: HttpRequest.BodyPublisher?,
+        bodyPublisher: HttpRequest.BodyPublisher,
         paramMap: Map<String, String>,
     ): HttpRequest
 
