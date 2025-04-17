@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.js
 
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * Collect js executed log
@@ -20,9 +21,13 @@ object GlobalLog {
     fun getAndClearLogs(): String {
         val logs = logsMap[tabName] ?: emptyList()
 
+        clearLogs()
+
+        return logs.joinToString(HttpUtils.CR_LF)
+    }
+
+    fun clearLogs() {
         logsMap.remove(tabName)
         tabName = null
-
-        return logs.joinToString("\r\n")
     }
 }

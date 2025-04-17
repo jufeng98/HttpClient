@@ -76,21 +76,27 @@ object VirtualFileUtils {
         return document?.text ?: virtualFile.readText()
     }
 
+    fun getDateHistoryDir(basePath: String): File {
+        val date = Date()
+
+        val dayStr = DateFormatUtils.format(date, "MM-dd")
+        val parentDir = File("$basePath/.idea/httpClient", dayStr)
+        if (!parentDir.exists()) {
+            parentDir.mkdirs()
+        }
+
+        return parentDir
+    }
+
     fun createHttpVirtualFileFromText(
         txtBytes: ByteArray,
         suffix: String,
         project: Project,
         tabName: String?,
     ): VirtualFile {
-        val date = Date()
+        val parentDir = getDateHistoryDir(project.basePath!!)
 
-        val dayStr = DateFormatUtils.format(date, "MM-dd")
-        val parentDir = File(project.basePath + "/.idea/httpClient", dayStr)
-        if (!parentDir.exists()) {
-            parentDir.mkdirs()
-        }
-
-        val str = StringUtils.defaultString(tabName) + "-" + DateFormatUtils.format(date, "hhmmss")
+        val str = StringUtils.defaultString(tabName) + "-" + DateFormatUtils.format(Date(), "hhmmss")
         val path = Path.of(parentDir.toString(), "tmp-$str.$suffix")
 
         val file = if (Files.exists(path)) {

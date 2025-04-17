@@ -13,6 +13,7 @@ import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.PsiUtils
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
@@ -135,18 +136,19 @@ class DubboRequest(
     }
 
     override fun sendAsync(): CompletableFuture<Pair<ByteArray, Long>> {
-        val commentTabName = "### $tabName\r\n"
+        val commentTabName = "### $tabName$CR_LF"
         httpReqDescList.add(commentTabName)
-        httpReqDescList.add("DUBBO $url\r\n")
+        httpReqDescList.add("DUBBO $url$CR_LF")
 
         reqHeaderMap.forEach {
             val name = it.key
             it.value.forEach { value ->
-                httpReqDescList.add("$name: $value\r\n")
+                httpReqDescList.add("$name: $value$CR_LF")
             }
         }
 
-        httpReqDescList.add("\r\n")
+        httpReqDescList.add(CR_LF)
+
         if (reqBodyMap != null) {
             httpReqDescList.add(reqBodyStr as String)
         }
