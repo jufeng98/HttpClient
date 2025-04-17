@@ -210,8 +210,9 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_HEADER> {
-  [^\r\n]           { yypushback(yylength()); yybegin(IN_HEADER_FIELD_NAME); }
-  [ ]*{EOL}         { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
+  [^\r\n]              { yypushback(yylength()); yybegin(IN_HEADER_FIELD_NAME); }
+  [ ]*{EOL}            { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
+  {REQUEST_COMMENT}    { yypushback(yylength()); yybegin(YYINITIAL); }
 }
 
 <IN_HEADER_FIELD_NAME> {
@@ -259,12 +260,12 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_TRIM_PREFIX_SPACE> {
-  \s*                         { return WHITE_SPACE; }
+  \s+                         { return WHITE_SPACE; }
   [^]                         { yypushback(yylength()); yybegin(nextState); }
 }
 
 <IN_TRIM_PREFIX_ONLY_SPACE> {
-  [ ]*                        { return WHITE_SPACE; }
+  [ ]+                        { return WHITE_SPACE; }
   [^]                         { yypushback(yylength()); yybegin(nextState); }
 }
 

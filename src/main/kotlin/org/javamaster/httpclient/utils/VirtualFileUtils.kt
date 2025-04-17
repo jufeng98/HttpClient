@@ -113,6 +113,10 @@ object VirtualFileUtils {
     }
 
     private fun isVirtualFileNewest(virtualFile: VirtualFile, file: File): Boolean {
+        if (!file.exists()) {
+            return true
+        }
+
         val timeStamp = virtualFile.timeStamp
         val millis = Files.getLastModifiedTime(file.toPath()).toMillis()
         return timeStamp >= millis
