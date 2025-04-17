@@ -48,6 +48,18 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // COLON
+  static boolean colonFlag(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "colonFlag")) return false;
+    if (!nextTokenIs(b, "<:>", COLON)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<:>");
+    r = consumeToken(b, COLON);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
   // REQUEST_COMMENT
   public static boolean comment(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "comment")) return false;
@@ -85,11 +97,11 @@ public class HttpParser implements PsiParser, LightPsiParser {
   // DIRECTION_NAME_PART
   public static boolean directionName(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "directionName")) return false;
-    if (!nextTokenIs(b, DIRECTION_NAME_PART)) return false;
+    if (!nextTokenIs(b, "<direction name>", DIRECTION_NAME_PART)) return false;
     boolean r;
-    Marker m = enter_section_(b);
+    Marker m = enter_section_(b, l, _NONE_, DIRECTION_NAME, "<direction name>");
     r = consumeToken(b, DIRECTION_NAME_PART);
-    exit_section_(b, m, DIRECTION_NAME, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -131,12 +143,24 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // EQUALS
+  static boolean equalsFlag(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "equalsFlag")) return false;
+    if (!nextTokenIs(b, "<=>", EQUALS)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<=>");
+    r = consumeToken(b, EQUALS);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
   // variable filePathContent | variable | filePathContent
   public static boolean filePath(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "filePath")) return false;
-    if (!nextTokenIs(b, "<file path>", FILE_PATH_PART, START_VARIABLE_BRACE)) return false;
+    if (!nextTokenIs(b, "<absolute or relate file path>", FILE_PATH_PART, START_VARIABLE_BRACE)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, FILE_PATH, "<file path>");
+    Marker m = enter_section_(b, l, _NONE_, FILE_PATH, "<absolute or relate file path>");
     r = filePath_0(b, l + 1);
     if (!r) r = variable(b, l + 1);
     if (!r) r = filePathContent(b, l + 1);
@@ -192,6 +216,18 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // GLOBAL_NAME
+  static boolean globalNameFlag(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalNameFlag")) return false;
+    if (!nextTokenIs(b, "<variable name>", GLOBAL_NAME)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<variable name>");
+    r = consumeToken(b, GLOBAL_NAME);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
   // GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE
   public static boolean globalScript(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalScript")) return false;
@@ -207,16 +243,16 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // globalVariableName EQUALS globalVariableValue?
+  // globalVariableName equalsFlag globalVariableValue?
   public static boolean globalVariable(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariable")) return false;
     if (!nextTokenIs(b, AT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE, null);
     r = globalVariableName(b, l + 1);
-    r = r && consumeToken(b, EQUALS);
-    p = r; // pin = 2
-    r = r && globalVariable_2(b, l + 1);
+    p = r; // pin = 1
+    r = r && report_error_(b, equalsFlag(b, l + 1));
+    r = p && globalVariable_2(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -229,14 +265,15 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // AT GLOBAL_NAME
+  // AT globalNameFlag
   public static boolean globalVariableName(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariableName")) return false;
     if (!nextTokenIs(b, AT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_NAME, null);
-    r = consumeTokens(b, 1, AT, GLOBAL_NAME);
+    r = consumeToken(b, AT);
     p = r; // pin = 1
+    r = r && globalNameFlag(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -272,7 +309,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // headerFieldName COLON headerFieldValue?
+  // headerFieldName colonFlag headerFieldValue?
   public static boolean headerField(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "headerField")) return false;
     if (!nextTokenIs(b, FIELD_NAME)) return false;
@@ -280,7 +317,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, HEADER_FIELD, null);
     r = headerFieldName(b, l + 1);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, COLON));
+    r = r && report_error_(b, colonFlag(b, l + 1));
     r = p && headerField_2(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
@@ -844,9 +881,9 @@ public class HttpParser implements PsiParser, LightPsiParser {
   // (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? (QUESTION query)? (HASH fragment)?
   public static boolean requestTarget(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "requestTarget")) return false;
-    if (!nextTokenIs(b, "<request target>", SCHEMA_PART, START_VARIABLE_BRACE)) return false;
+    if (!nextTokenIs(b, "<url>", SCHEMA_PART, START_VARIABLE_BRACE)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, REQUEST_TARGET, "<request target>");
+    Marker m = enter_section_(b, l, _NONE_, REQUEST_TARGET, "<url>");
     r = requestTarget_0(b, l + 1);
     r = r && requestTarget_1(b, l + 1);
     r = r && requestTarget_2(b, l + 1);
@@ -979,11 +1016,11 @@ public class HttpParser implements PsiParser, LightPsiParser {
   // SCRIPT_BODY_PAET
   public static boolean scriptBody(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "scriptBody")) return false;
-    if (!nextTokenIs(b, SCRIPT_BODY_PAET)) return false;
+    if (!nextTokenIs(b, "<script body>", SCRIPT_BODY_PAET)) return false;
     boolean r;
-    Marker m = enter_section_(b);
+    Marker m = enter_section_(b, l, _NONE_, SCRIPT_BODY, "<script body>");
     r = consumeToken(b, SCRIPT_BODY_PAET);
-    exit_section_(b, m, SCRIPT_BODY, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -1084,13 +1121,13 @@ public class HttpParser implements PsiParser, LightPsiParser {
   // variable_builtin? variable_reference
   public static boolean variable_name(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "variable_name")) return false;
-    boolean r, p;
+    if (!nextTokenIs(b, "<variable name>", DOLLAR, IDENTIFIER)) return false;
+    boolean r;
     Marker m = enter_section_(b, l, _NONE_, VARIABLE_NAME, "<variable name>");
     r = variable_name_0(b, l + 1);
-    p = r; // pin = 1
     r = r && variable_reference(b, l + 1);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   // variable_builtin?

@@ -11,7 +11,7 @@ public interface HttpVariableName extends PsiElement {
   @Nullable
   HttpVariableBuiltin getVariableBuiltin();
 
-  @Nullable
+  @NotNull
   HttpVariableReference getVariableReference();
 
   @NotNull

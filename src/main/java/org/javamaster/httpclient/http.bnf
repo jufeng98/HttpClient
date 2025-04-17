@@ -47,10 +47,13 @@
 
 httpFile ::= directionComment* globalHandler? globalVariable* requestBlock*
 
-globalVariable::= globalVariableName EQUALS globalVariableValue? {
-    pin = 2
+globalVariable::= globalVariableName equalsFlag globalVariableValue? {
+    pin = 1
 }
-globalVariableName ::= AT GLOBAL_NAME {
+private equalsFlag ::= EQUALS {
+    name="="
+}
+globalVariableName ::= AT globalNameFlag {
     pin = 1
     methods = [
         getName
@@ -59,6 +62,9 @@ globalVariableName ::= AT GLOBAL_NAME {
         getNameIdentifier
     ]
     implements = "com.intellij.psi.PsiNameIdentifierOwner"
+}
+private globalNameFlag ::= GLOBAL_NAME {
+    name = "variable name"
 }
 globalVariableValue ::= GLOBAL_VALUE | variable {
     methods = [
@@ -77,7 +83,9 @@ comment ::= REQUEST_COMMENT
 directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
     pin = 1
 }
-directionName ::= DIRECTION_NAME_PART
+directionName ::= DIRECTION_NAME_PART {
+    name = "direction name"
+}
 directionValue ::= variable directionValueContent | variable | directionValueContent {
     methods = [
         getReferences
@@ -109,6 +117,7 @@ requestTarget ::= (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? 
         getUrl
         getReferences
     ]
+    name = "url"
 }
 schema ::= SCHEMA_PART
 host ::= HOST_VALUE | variable
@@ -122,7 +131,7 @@ variable_name ::= variable_builtin? variable_reference {
         isBuiltin
         getReferences
     ]
-    pin = 1
+    name = "variable name"
 }
 variable_builtin ::= DOLLAR
 variable_reference ::= IDENTIFIER
@@ -160,12 +169,15 @@ header ::= headerField+ {
         getInterfaceField
     ]
 }
-headerField ::= headerFieldName COLON headerFieldValue? {
+headerField ::= headerFieldName colonFlag headerFieldValue? {
     methods = [
         getName
         getValue
     ]
     pin = 1
+}
+private colonFlag ::= COLON {
+    name = ":"
 }
 headerFieldName ::= FIELD_NAME
 headerFieldValue ::= (FIELD_VALUE | variable | FIELD_VALUE variable | variable FIELD_VALUE)+ {
@@ -186,6 +198,7 @@ filePath ::= variable filePathContent | variable | filePathContent {
     methods = [
         getReferences
     ]
+    name = "absolute or relate file path"
 }
 filePathContent ::= FILE_PATH_PART
 
@@ -206,6 +219,7 @@ responseScript ::= OUT_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
 }
 scriptBody ::= SCRIPT_BODY_PAET {
   mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
+  name = "script body"
 }
 
 //noinspection BnfUnusedRule

@@ -35,9 +35,9 @@ public class HttpVariableNameImpl extends ASTWrapperPsiElement implements HttpVa
   }
 
   @Override
-  @Nullable
+  @NotNull
   public HttpVariableReference getVariableReference() {
-    return findChildByClass(HttpVariableReference.class);
+    return findNotNullChildByClass(HttpVariableReference.class);
   }
 
   @Override
