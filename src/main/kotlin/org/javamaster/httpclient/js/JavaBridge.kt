@@ -55,6 +55,20 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         return Context.javaToJS(jsExecutor.bodyArray!!, jsExecutor.reqScriptableObject)
     }
 
+    @JsBridge(jsFun = "getBodyString()")
+    fun getBodyString(): String {
+        return String(jsExecutor.bodyArray!!, StandardCharsets.UTF_8)
+    }
+
+    @JsBridge(jsFun = "convertBodyToByteArray(str)")
+    fun convertBodyToByteArray(str: String): Any? {
+        if (str == "null") {
+            return null
+        }
+
+        return Context.javaToJS(str.toByteArray(StandardCharsets.UTF_8), jsExecutor.reqScriptableObject)
+    }
+
     @JsBridge(jsFun = "getXmlDoc()")
     fun getXmlDoc(): Any {
         val resObj = Context.javaToJS(jsExecutor.xmlDoc!!, jsExecutor.reqScriptableObject) as NativeJavaObject

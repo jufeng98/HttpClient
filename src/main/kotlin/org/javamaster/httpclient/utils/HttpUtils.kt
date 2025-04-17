@@ -14,6 +14,7 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
@@ -39,6 +40,8 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 import java.io.File
 import java.net.URI
 import java.net.URL
+import java.net.http.HttpClient
+import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -58,6 +61,7 @@ object HttpUtils {
     const val REQUEST_BODY_ANNO_NAME = "org.springframework.web.bind.annotation.RequestBody"
     const val API_OPERATION_ANNO_NAME = "io.swagger.annotations.ApiOperation"
     const val API_MODEL_PROPERTY_ANNO_NAME = "io.swagger.annotations.ApiModelProperty"
+    const val CR_LF = "\r\n"
 
     const val READ_TIMEOUT = 3600L
     const val CONNECT_TIMEOUT = 30L
@@ -185,31 +189,40 @@ object HttpUtils {
         }
 
         val body = request.body
+
         val requestMessagesGroup = body?.requestMessagesGroup
         if (requestMessagesGroup != null) {
-            return handleOrdinaryContent(
-                requestMessagesGroup,
-                variableResolver
-            )
+            return handleOrdinaryContent(requestMessagesGroup, variableResolver, request.header)
         }
 
         val httpMultipartMessage = body?.multipartMessage
         if (httpMultipartMessage != null) {
-            val boundary =
-                request.contentTypeBoundary ?: throw IllegalArgumentException(NlsBundle.nls("lack.boundary",CONTENT_TYPE))
+            val boundary = request.contentTypeBoundary
+                ?: throw IllegalArgumentException(NlsBundle.nls("lack.boundary", CONTENT_TYPE))
+
             return constructMultipartBody(boundary, httpMultipartMessage, variableResolver)
         }
 
         return null
     }
 
+    private fun isTxtContentType(header: HttpHeader?): Boolean {
+        if (header == null) {
+            return true
+        }
+
+        val headerField = header.contentTypeField ?: return true
+        val headerFieldValue = headerField.headerFieldValue ?: return true
+
+        return SimpleTypeEnum.isTextContentType(headerFieldValue.text)
+    }
+
     private fun handleOrdinaryContent(
         requestMessagesGroup: HttpRequestMessagesGroup?,
         variableResolver: VariableResolver,
+        header: HttpHeader?,
     ): Any? {
-        if (requestMessagesGroup == null) {
-            return null
-        }
+        requestMessagesGroup ?: return null
 
         var reqStr: String? = null
 
@@ -218,23 +231,17 @@ object HttpUtils {
             reqStr = variableResolver.resolve(messageBody.text)
         }
 
-        val inputFile = requestMessagesGroup.inputFile
-        if (inputFile == null || inputFile.filePath == null) {
-            return reqStr
-        }
+        val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr
 
-        val filePath = inputFile.filePath!!.text
         val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
         val file = File(path)
 
-        if (filePath.endsWith(SimpleTypeEnum.JSON.type) || filePath.endsWith(SimpleTypeEnum.XML.type)
-            || filePath.endsWith(SimpleTypeEnum.TXT.type) || filePath.endsWith(SimpleTypeEnum.TEXT.type)
-        ) {
+        if (isTxtContentType(header)) {
             if (reqStr == null) {
                 reqStr = ""
             } else {
-                reqStr += "\r\n"
+                reqStr += CR_LF
             }
 
             val str = VirtualFileUtils.readNewestContent(file)
@@ -243,7 +250,13 @@ object HttpUtils {
 
             return reqStr
         } else {
-            return VirtualFileUtils.readNewestBytes(file)
+            val byteArray = VirtualFileUtils.readNewestBytes(file)
+
+            val size = Formats.formatFileSize(byteArray.size.toLong())
+
+            val desc = NlsBundle.nls("binary.body.desc", size, file.absolutePath)
+
+            return Pair(byteArray, desc)
         }
     }
 
@@ -251,15 +264,17 @@ object HttpUtils {
         boundary: String,
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
-    ): MutableList<ByteArray> {
-        val byteArrays = mutableListOf<ByteArray>()
+    ): MutableList<Pair<ByteArray, String>> {
+        val byteArrays = mutableListOf<Pair<ByteArray, String>>()
 
-        val multipartFields = PsiTreeUtil.getChildrenOfType(httpMultipartMessage, HttpMultipartField::class.java)!!
-        multipartFields
+        httpMultipartMessage.multipartFieldList
             .forEach {
-                byteArrays.add("--$boundary\r\n".toByteArray(StandardCharsets.UTF_8))
+                val lineBoundary = "--$boundary$CR_LF"
+                byteArrays.add(Pair(lineBoundary.toByteArray(), lineBoundary))
 
-                it.header.headerFieldList
+                val header = it.header
+
+                header.headerFieldList
                     .forEach { innerIt ->
                         val headerName = innerIt.headerFieldName.text
                         val headerValue = innerIt.headerFieldValue?.text
@@ -267,24 +282,34 @@ object HttpUtils {
                         val value = if (headerValue.isNullOrEmpty()) {
                             ""
                         } else {
-                            variableResolver.resolve(headerValue + "\r\n")
+                            variableResolver.resolve(headerValue)
                         }
 
-                        val header = "$headerName: $value"
-                        byteArrays.add(header.toByteArray(StandardCharsets.UTF_8))
+                        val headerLine = "$headerName: $value$CR_LF"
+                        byteArrays.add(Pair(headerLine.toByteArray(StandardCharsets.UTF_8), headerLine))
                     }
 
-                byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
+                byteArrays.add(Pair(CR_LF.toByteArray(StandardCharsets.UTF_8), CR_LF))
 
-                val content = handleOrdinaryContent(it.requestMessagesGroup, variableResolver)
+                val content = handleOrdinaryContent(it.requestMessagesGroup, variableResolver, header)
+
                 if (content is String) {
-                    byteArrays.add((content + "\r\n").toByteArray(StandardCharsets.UTF_8))
-                } else if (content is ByteArray) {
-                    byteArrays.add(content + "\r\n".toByteArray(StandardCharsets.UTF_8))
+                    val tmpContent = content + CR_LF
+
+                    byteArrays.add(Pair(tmpContent.toByteArray(StandardCharsets.UTF_8), tmpContent))
+                } else if (content is Pair<*, *>) {
+                    @Suppress("UNCHECKED_CAST")
+                    val pair = content as Pair<ByteArray, String>
+
+                    val bytes = pair.first
+                    val desc = pair.second
+
+                    byteArrays.add(Pair(bytes + CR_LF.toByteArray(StandardCharsets.UTF_8), desc + CR_LF))
                 }
             }
 
-        byteArrays.add("--$boundary--".toByteArray(StandardCharsets.UTF_8))
+        val endBoundary = "--$boundary--"
+        byteArrays.add(Pair(endBoundary.toByteArray(StandardCharsets.UTF_8), endBoundary))
 
         return byteArrays
     }
@@ -304,46 +329,36 @@ object HttpUtils {
         headers.map()
             .forEach { (t, u) ->
                 u.forEach {
-                    headerDescList.add("$t: $it\r\n")
+                    headerDescList.add("$t: $it$CR_LF")
                 }
             }
-        headerDescList.add("\r\n")
+
+        headerDescList.add(CR_LF)
+
         return headerDescList
     }
 
-    fun convertToResPair(response: HttpResponse<ByteArray>): Pair<SimpleTypeEnum, ByteArray> {
+    fun convertToResPair(response: HttpResponse<ByteArray>): Triple<SimpleTypeEnum, ByteArray, String> {
         val resBody = response.body()
         val resHeaders = response.headers()
         val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { ContentType.TEXT_PLAIN.mimeType }
 
-        if (contentType.contains(SimpleTypeEnum.JSON.type)) {
+        val simpleTypeEnum = SimpleTypeEnum.convertContentType(contentType)
+
+        if (simpleTypeEnum == SimpleTypeEnum.JSON) {
             val jsonStr = String(resBody, StandardCharsets.UTF_8)
+
             try {
                 val jsonElement = gson.fromJson(jsonStr, JsonElement::class.java)
                 val jsonStrPretty = gson.toJson(jsonElement)
-                return Pair(SimpleTypeEnum.JSON, jsonStrPretty.toByteArray(StandardCharsets.UTF_8))
+
+                return Triple(simpleTypeEnum, jsonStrPretty.toByteArray(StandardCharsets.UTF_8), contentType)
             } catch (e: JsonSyntaxException) {
-                return Pair(SimpleTypeEnum.JSON, resBody)
+                return Triple(simpleTypeEnum, resBody, contentType)
             }
         }
 
-        if (contentType.contains(SimpleTypeEnum.HTML.type)) {
-            return Pair(SimpleTypeEnum.HTML, resBody)
-        }
-
-        if (contentType.contains(SimpleTypeEnum.XML.type)) {
-            return Pair(SimpleTypeEnum.XML, resBody)
-        }
-
-        if (contentType.contains(SimpleTypeEnum.TEXT.type)) {
-            return Pair(SimpleTypeEnum.TEXT, resBody)
-        }
-
-        if (contentType.contains(SimpleTypeEnum.IMAGE.type)) {
-            return Pair(SimpleTypeEnum.IMAGE, resBody)
-        }
-
-        return Pair(SimpleTypeEnum.STREAM, resBody)
+        return Triple(simpleTypeEnum, resBody, contentType)
     }
 
     fun getJsScript(httpResponseHandler: HttpResponseHandler?): HttpScriptBody? {
@@ -748,4 +763,130 @@ object HttpUtils {
 
         return list.joinToString(" ")
     }
+
+    fun convertToJsString(str: String): String {
+        return "`" + str.replace("\\", "\\\\").replace("`", "\\`") + "`"
+    }
+
+    fun convertReqBody(reqBody: Any?): Any {
+        if (reqBody == null) {
+            return "null"
+        }
+
+        if (reqBody is String) {
+            return convertToJsString(reqBody)
+        }
+
+        return when (reqBody) {
+            is Pair<*, *> -> {
+                @Suppress("UNCHECKED_CAST")
+                val pair = reqBody as Pair<ByteArray, String>
+
+                pair.first
+            }
+
+            is MutableList<*> -> {
+                @Suppress("UNCHECKED_CAST")
+                val list = reqBody as MutableList<Pair<ByteArray, String>>
+
+                list.map { it.first }.reduce { a, b -> a + b }
+            }
+
+            else -> {
+                throw IllegalArgumentException(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
+            }
+        }
+
+    }
+
+    fun convertToReqBodyPublisher(reqBody: Any?): Pair<java.net.http.HttpRequest.BodyPublisher, Long> {
+        if (reqBody == null) {
+            return Pair(BodyPublishers.noBody(), 0L)
+        }
+
+        var multipartLength = 0L
+        val bodyPublisher: java.net.http.HttpRequest.BodyPublisher
+
+        when (reqBody) {
+            is String -> {
+                bodyPublisher = BodyPublishers.ofString(reqBody)
+            }
+
+            is Pair<*, *> -> {
+                @Suppress("UNCHECKED_CAST")
+                val pair = reqBody as Pair<ByteArray, String>
+
+                bodyPublisher = BodyPublishers.ofByteArray(pair.first)
+            }
+
+            is List<*> -> {
+                @Suppress("UNCHECKED_CAST")
+                val list = reqBody as MutableList<Pair<ByteArray, String>>
+
+                val byteArrays = list.map { it.first }
+
+                bodyPublisher = BodyPublishers.ofByteArrays(byteArrays)
+
+                multipartLength = byteArrays.sumOf { it.size.toLong() }
+            }
+
+            else -> {
+                throw IllegalArgumentException(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
+            }
+        }
+
+        return Pair(bodyPublisher, multipartLength)
+    }
+
+    fun getReqBodyDesc(reqBody: Any?): MutableList<String> {
+        val maxSizeLimit = 50000
+        val descList = mutableListOf<String>()
+
+        when (reqBody) {
+            is String -> {
+                if (reqBody.length > maxSizeLimit) {
+                    descList.add(
+                        reqBody.substring(0, maxSizeLimit) + "$CR_LF......(${NlsBundle.nls("content.truncated")})"
+                    )
+                } else {
+                    descList.add(reqBody)
+                }
+            }
+
+            is Pair<*, *> -> {
+                @Suppress("UNCHECKED_CAST")
+                val pair = reqBody as Pair<ByteArray, String>
+
+                descList.add(pair.second)
+            }
+
+            is List<*> -> {
+                @Suppress("UNCHECKED_CAST")
+                val list = reqBody as MutableList<Pair<ByteArray, String>>
+
+                list.forEach {
+                    val desc = it.second
+
+                    val bodyDesc = if (desc.length > maxSizeLimit) {
+                        desc + "$CR_LF......(${NlsBundle.nls("content.truncated")})$CR_LF"
+                    } else {
+                        desc
+                    }
+
+                    descList.add(bodyDesc)
+                }
+            }
+        }
+
+        return descList
+    }
+
+    fun getVersionDesc(version: HttpClient.Version): String {
+        return if (version == HttpClient.Version.HTTP_1_1) {
+            "HTTP/1.1"
+        } else {
+            "HTTP/2"
+        }
+    }
+
 }

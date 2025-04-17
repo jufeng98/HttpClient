@@ -14,6 +14,8 @@ import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
+import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.mozilla.javascript.*
 import org.w3c.dom.Document
@@ -60,33 +62,42 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     var xPath: XPath? = null
 
     fun initJsRequestObj(reqInfo: HttpReqInfo, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
-        val reqBody = reqInfo.reqBody
         val environment = reqInfo.environment
 
         val headers = gson.toJson(reqHeaderMap)
 
-        var js = if (reqBody == null) {
+        val jsBody = HttpUtils.convertReqBody(reqInfo.reqBody)
+
+        var js = if (jsBody is String) {
             """
-            request.body = {
-                string: () => {
-                    return null;
-                },
-                tryGetSubstituted: () => {
-                    return null;
-                }
-            };
-        """.trimIndent()
+                request.body = {
+                    string: () => {
+                        return $jsBody;
+                    },
+                    tryGetSubstituted: () => {
+                        return $jsBody;
+                    },
+                    bytes: () => {
+                        return javaBridge.convertBodyToByteArray($jsBody)
+                    }
+                };
+            """.trimIndent()
         } else {
+            bodyArray = jsBody as ByteArray
+
             """
-            request.body = {
-                string: () => {
-                    return `$reqBody`;
-                },
-                tryGetSubstituted: () => {
-                    return `$reqBody`;
-                }
-            };
-        """.trimIndent()
+                request.body = {
+                    string: () => {
+                        return javaBridge.getBodyString();
+                    },
+                    tryGetSubstituted: () => {
+                        return javaBridge.getBodyString();
+                    },
+                    bytes: () => {
+                        return javaBridge.getBodyArray();
+                    }
+                };
+            """.trimIndent()
         }
 
         js += """
@@ -116,7 +127,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         try {
             GlobalLog.setTabName(tabName)
 
-            val resList = mutableListOf("/*\r\n${nls("pre.desc")}:\r\n")
+            val resList = mutableListOf("/*$CR_LF${nls("pre.desc")}:$CR_LF")
 
             val preFilePair = preJsFiles.partition { it.urlFile != null }
 
@@ -143,13 +154,13 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 }
             }
 
-            resList.add(GlobalLog.getAndClearLogs() + "\r\n")
+            resList.add(GlobalLog.getAndClearLogs() + CR_LF)
 
-            resList.add("*/\r\n")
+            resList.add("*/$CR_LF")
 
             return resList
         } catch (e: Exception) {
-            GlobalLog.getAndClearLogs()
+            GlobalLog.clearLogs()
 
             throw e
         }
@@ -204,7 +215,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
     fun evalJsAfterRequest(
         jsScript: HttpScriptBody?,
-        resPair: Pair<SimpleTypeEnum, ByteArray>,
+        resTriple: Triple<SimpleTypeEnum, ByteArray, String>,
         statusCode: Int,
         headerMap: MutableMap<String, MutableList<String>>,
     ): String? {
@@ -212,112 +223,118 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             return null
         }
 
-        GlobalLog.setTabName(tabName)
-
-        val headers = gson.toJson(headerMap)
-
-        var js: String
-        val typeEnum = resPair.first
-        when (typeEnum) {
-            SimpleTypeEnum.JSON -> {
-                val bytes = resPair.second
-                jsonStr = String(bytes, StandardCharsets.UTF_8)
-
-                js = """
-                  // noinspection JSUnresolvedReference
-                  // noinspection JSUnresolvedReference
-                  var response = {
-                    body: $jsonStr
-                  };
-                  response.body.jsonPath = {
-                    evaluate: function(expression) {
-                        return javaBridge.evaluateJsonPath(expression);
-                    }
-                  };
-                """.trimIndent()
-            }
-
-            SimpleTypeEnum.XML -> {
-                val bytes = resPair.second
-                val xmlStr = String(bytes, StandardCharsets.UTF_8)
-
-                val documentBuilder = documentBuilderFactory.newDocumentBuilder()
-
-                xmlDoc = documentBuilder.parse(InputSource(StringReader(xmlStr)))
-                xPath = xPathFactory.newXPath()
-
-                js = """   
-                  // noinspection JSUnresolvedReference
-                  // noinspection JSUnresolvedReference
-                  var response = {
-                    body: javaBridge.getXmlDoc()
-                  };
-                  response.body.xpath = {
-                    evaluate: function(expression) {
-                        return javaBridge.evaluateXPath(expression);
-                    }
-                  };
-                """.trimIndent()
-            }
-
-            SimpleTypeEnum.TEXT -> {
-                val bytes = resPair.second
-                val bodyText = String(bytes, StandardCharsets.UTF_8)
-
-                js = """
-                  // noinspection JSUnusedLocalSymbols
-                  var response = {
-                    body: `$bodyText`
-                  };
-                """.trimIndent()
-            }
-
-            else -> {
-                bodyArray = resPair.second
-
-                js = """
-                  // noinspection JSUnusedLocalSymbols
-                  // noinspection JSUnresolvedReference
-                  var response = {
-                    body: javaBridge.getBodyArray()
-                  };
-                """.trimIndent()
-            }
-        }
-
-        js += """
-            response.status = ${statusCode};
-            response.headers = $headers;
-            response.headers.all = function() {
-                return headersAll(this);
-            };
-            response.headers.findByName = function(name) {
-                return headersFindByName(this, name);
-            };
-            response.headers.valueOf = function(name) {
-                return headersFindByName(this, name);
-            };
-            response.headers.valuesOf = function(name) {
-                return headersFindListByName(this, name) || [];
-            };
-            response.contentType = resolveContentType(response.headers);
-        """.trimIndent()
-
-        context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)
-
-        val virtualFile = jsScript.containingFile.virtualFile
-        val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
-        val rowNum = document.getLineNumber(jsScript.textOffset) + 1
-
         try {
-            evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject)
+            GlobalLog.setTabName(tabName)
+
+            val headers = gson.toJson(headerMap)
+
+            var js: String
+            val typeEnum = resTriple.first
+            when (typeEnum) {
+                SimpleTypeEnum.JSON -> {
+                    val bytes = resTriple.second
+                    jsonStr = String(bytes, StandardCharsets.UTF_8)
+
+                    js = """
+                          // noinspection JSUnresolvedReference
+                          // noinspection JSUnresolvedReference
+                          var response = {
+                            body: $jsonStr
+                          };
+                          response.body.jsonPath = {
+                            evaluate: function(expression) {
+                                return javaBridge.evaluateJsonPath(expression);
+                            }
+                          };
+                        """.trimIndent()
+                }
+
+                SimpleTypeEnum.XML -> {
+                    val bytes = resTriple.second
+                    val xmlStr = String(bytes, StandardCharsets.UTF_8)
+
+                    val documentBuilder = documentBuilderFactory.newDocumentBuilder()
+
+                    xmlDoc = documentBuilder.parse(InputSource(StringReader(xmlStr)))
+                    xPath = xPathFactory.newXPath()
+
+                    js = """   
+                          // noinspection JSUnresolvedReference
+                          // noinspection JSUnresolvedReference
+                          var response = {
+                            body: javaBridge.getXmlDoc()
+                          };
+                          response.body.xpath = {
+                            evaluate: function(expression) {
+                                return javaBridge.evaluateXPath(expression);
+                            }
+                          };
+                        """.trimIndent()
+                }
+
+                SimpleTypeEnum.TEXT -> {
+                    val bytes = resTriple.second
+                    val bodyText = HttpUtils.convertToJsString(String(bytes, StandardCharsets.UTF_8))
+
+                    js = """
+                          // noinspection JSUnusedLocalSymbols
+                          var response = {
+                            body: $bodyText
+                          };
+                        """.trimIndent()
+                }
+
+                else -> {
+                    bodyArray = resTriple.second
+
+                    js = """
+                          // noinspection JSUnusedLocalSymbols
+                          // noinspection JSUnresolvedReference
+                          var response = {
+                            body: javaBridge.getBodyArray()
+                          };
+                        """.trimIndent()
+                }
+            }
+
+            js += """
+                    response.status = ${statusCode};
+                    response.headers = $headers;
+                    response.headers.all = function() {
+                        return headersAll(this);
+                    };
+                    response.headers.findByName = function(name) {
+                        return headersFindByName(this, name);
+                    };
+                    response.headers.valueOf = function(name) {
+                        return headersFindByName(this, name);
+                    };
+                    response.headers.valuesOf = function(name) {
+                        return headersFindListByName(this, name) || [];
+                    };
+                    response.contentType = resolveContentType(response.headers);
+                """.trimIndent()
+
+            context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)
+
+            val virtualFile = jsScript.containingFile.virtualFile
+            val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
+            val rowNum = document.getLineNumber(jsScript.textOffset) + 1
+
+            try {
+                evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject)
+            } catch (e: Exception) {
+                GlobalLog.log("$e")
+            }
+
+            context.evaluateString(reqScriptableObject, "delete response;", "dummy.js", 1, null)
+
+            return GlobalLog.getAndClearLogs()
         } catch (e: Exception) {
-            GlobalLog.log("$e")
+            GlobalLog.clearLogs()
+
+            throw e
         }
-
-        context.evaluateString(reqScriptableObject, "delete response;", "dummy.js", 1, null)
-
-        return GlobalLog.getAndClearLogs()
     }
 
     private fun evalJs(jsStr: String, rowNum: Int, fileName: String, scriptableObject: ScriptableObject) {
@@ -428,7 +445,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
         private val javaBridgeJsStr by lazy {
             JavaBridge::class.java.declaredMethods
-                .joinToString("\r\n") {
+                .joinToString(CR_LF) {
                     val jsBridge = it.getAnnotation(JsBridge::class.java) ?: return@joinToString ""
                     """
                         function ${jsBridge.jsFun} {
