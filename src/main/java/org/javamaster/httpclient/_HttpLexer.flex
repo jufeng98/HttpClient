@@ -179,7 +179,9 @@ STRING=('([^'])*'|\"([^\"])*\")
 
 <IN_PATH> {
   "/"                  { return SLASH; }
-  [^?#/{\s]+           { return SEGMENT; }
+  [^?#/{}\s]+          { return SEGMENT; }
+  "{"                  { return BAD_CHARACTER; }
+  "}"                  { return BAD_CHARACTER; }
   "{{"                 { nextState = IN_PATH; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   "?"                  { nameFlag = true; yybegin(IN_QUERY); return QUESTION; }
   "#"                  { yybegin(IN_FRAGMENT); return HASH; }
