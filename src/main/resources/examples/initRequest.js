@@ -20,7 +20,7 @@ var request = {
             if (val !== null) {
                 val = val + '';
                 if (val.length > 300) {
-                    desc = val.substring(0, 300) + "...(The display has been truncated)"
+                    desc = val.substring(0, 300) + `...(${CONTENT_TRUNCATED})`
                 } else {
                     desc = val;
                 }
@@ -29,7 +29,7 @@ var request = {
             }
 
             this.dataHolder[key] = val;
-            globalLog.log(key + ' was set to(request): ' + desc);
+            globalLog.log(key + ` ${REQUEST_SET} ` + desc);
         },
     }
 };

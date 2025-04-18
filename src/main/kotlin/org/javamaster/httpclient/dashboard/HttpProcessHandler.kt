@@ -265,7 +265,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
                 val size = Formats.formatFileSize(byteArray.size.toLong())
 
-                val httpResDescList = mutableListOf("// Time: ${consumeTimes}ms, size: $size$CR_LF")
+                val comment = nls("res.desc", 200, consumeTimes, size)
+
+                val httpResDescList = mutableListOf("// $comment$CR_LF")
 
                 val evalJsRes = jsExecutor.evalJsAfterRequest(
                     jsAfterReq,
@@ -340,10 +342,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
                     val resTriple = convertToResPair(response)
 
-                    val httpResDescList =
-                        mutableListOf(
-                            "// Status: ${response.statusCode()}, time: ${consumeTimes}ms, size: $size$CR_LF"
-                        )
+                    val comment = nls("res.desc", response.statusCode(), consumeTimes, size)
+
+                    val httpResDescList = mutableListOf("// $comment$CR_LF")
 
                     val evalJsRes = jsExecutor.evalJsAfterRequest(
                         jsAfterReq,
@@ -358,10 +359,12 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                         httpResDescList.add("*/$CR_LF")
                     }
 
+                    val versionDesc = HttpUtils.getVersionDesc(response.version())
+
                     val commentTabName = "### $tabName$CR_LF"
                     httpResDescList.add(commentTabName)
 
-                    httpResDescList.add(methodType + " " + response.uri() + CR_LF)
+                    httpResDescList.add(methodType + " " + response.uri() + " " + versionDesc + CR_LF)
 
                     httpResDescList.addAll(resHeaderList)
 

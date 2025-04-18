@@ -4,6 +4,7 @@ import com.google.common.net.HttpHeaders
 import com.intellij.openapi.util.text.Formats
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
@@ -251,7 +252,7 @@ enum class HttpRequestEnum {
 
             val size = Formats.formatFileSize(contentLength)
 
-            httpReqDescList.add(0, "// Size: $size$CR_LF")
+            httpReqDescList.add(0, "// ${NlsBundle.nls("req.size", size)}$CR_LF")
 
             httpReqDescList.add(CR_LF)
 
@@ -279,7 +280,7 @@ enum class HttpRequestEnum {
             try {
                 return HttpRequestEnum.valueOf(methodName)
             } catch (e: Exception) {
-                throw UnsupportedOperationException("Method not supported: $methodName", e)
+                throw UnsupportedOperationException(NlsBundle.nls("method.unsupported", methodName), e)
             }
         }
 
