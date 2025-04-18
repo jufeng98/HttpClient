@@ -75,8 +75,10 @@ public class HttpDashboardForm implements Disposable {
 
         if (throwable != null) {
             String msg = ExceptionUtils.getStackTrace(throwable);
-            JComponent jComponent = HttpUiUtils.INSTANCE.createEditorCompo(msg.getBytes(StandardCharsets.UTF_8), "error.log",
-                    project, tabName, editorList);
+
+            JComponent jComponent = HttpUiUtils.INSTANCE.createEditorCompo(msg.getBytes(StandardCharsets.UTF_8),
+                    "error.log", project, tabName, editorList);
+
             responsePanel.add(jComponent, constraints);
             return;
         }
@@ -192,7 +194,7 @@ public class HttpDashboardForm implements Disposable {
         wsRequest.setResConsumer(res ->
                 DocumentUtil.writeInRunUndoTransparentAction(() -> {
                             String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");
-                            String replace = res.replace("\r\n", "\n");
+                            String replace = res.replace(HttpUtils.CR_LF, "\n");
                             String s = time + " - " + replace;
 
                             Document document = editor.getDocument();
@@ -254,6 +256,7 @@ public class HttpDashboardForm implements Disposable {
     @Override
     public void dispose() {
         historyMap.values().forEach(HttpDashboardForm::disposeEditors);
+
         historyMap.clear();
 
         editorList.clear();

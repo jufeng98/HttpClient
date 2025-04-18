@@ -4,7 +4,6 @@ import com.google.common.collect.Maps;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
@@ -117,7 +116,8 @@ public class HttpEditorTopForm extends JComponent {
                 createAndReInitEnvCompo(true);
             } else {
                 URL url = classLoader.getResource(option);
-                VirtualFile virtualFile = VfsUtil.findFileByURL(Objects.requireNonNull(url));
+                //noinspection DataFlowIssue
+                VirtualFile virtualFile = VfsUtil.findFileByURL(url);
                 //noinspection DataFlowIssue
                 FileEditorManager.getInstance(project).openFile(virtualFile, true);
             }
@@ -155,11 +155,6 @@ public class HttpEditorTopForm extends JComponent {
         NotifyUtil.INSTANCE.notifyInfo(project, INSTANCE.nls("file.created") + " " + envFileName);
 
         try {
-            Module module = ModuleUtil.findModuleForFile(envFile, project);
-            if (module == null) {
-                return;
-            }
-
             FileEditor @NotNull [] allEditors = fileEditorManager.getAllEditors();
             for (FileEditor editor : allEditors) {
                 HttpEditorTopForm httpEditorTopForm = editor.getUserData(HttpEditorTopForm.KEY);

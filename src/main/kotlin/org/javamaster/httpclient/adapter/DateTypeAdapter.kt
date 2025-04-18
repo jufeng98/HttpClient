@@ -5,13 +5,14 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
 import org.apache.commons.lang3.time.FastDateFormat
+import org.javamaster.httpclient.nls.NlsBundle
 import java.util.*
 
 /**
  * @author yudong
  */
 object DateTypeAdapter : TypeAdapter<Date?>() {
-    private val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss", Locale.SIMPLIFIED_CHINESE)
+    private val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss", NlsBundle.locale)
 
     override fun write(writer: JsonWriter, value: Date?) {
         if (value == null) {

@@ -7,6 +7,12 @@ import com.intellij.psi.PsiExpression
 import com.intellij.psi.PsiMethod
 
 object AnnoUtils {
+    private val javaMetaAnnoSet = setOf(
+        "java.lang.annotation.Target",
+        "java.lang.annotation.Documented",
+        "java.lang.annotation.Retention",
+    )
+
     fun getAttributeValue(attributeValue: JvmAnnotationAttributeValue?): Any? {
         if (attributeValue == null) {
             return null
@@ -25,20 +31,24 @@ object AnnoUtils {
                 val values = attributeValue.values
                 val list: MutableList<Any> = ArrayList(values.size)
                 for (value in values) {
-                    val o = getAttributeValue(value)
-                    if (o != null) {
-                        list.add(o)
+                    val res = getAttributeValue(value)
+                    if (res != null) {
+                        list.add(res)
                     } else {
                         // 如果是jar包里的JvmAnnotationConstantValue则无法正常获取值
                         try {
                             val clazz: Class<out JvmAnnotationAttributeValue> = value.javaClass
+
                             val myElement = clazz.superclass.getDeclaredField("myElement")
                             myElement.isAccessible = true
+
                             val elObj = myElement[value]
+
                             if (elObj is PsiExpression) {
                                 list.add(elObj.text)
                             }
-                        } catch (ignore: Exception) {
+                        } catch (e: Exception) {
+                            System.err.println(e::class.java.simpleName)
                         }
                     }
                 }
@@ -66,8 +76,10 @@ object AnnoUtils {
             }
         }
 
-        val classes: MutableList<PsiClass?> = ArrayList()
+        val classes: MutableList<PsiClass?> = mutableListOf()
+
         classes.add(psiClass.superClass)
+
         classes.addAll(psiClass.interfaces)
 
         for (superPsiClass in classes) {
@@ -85,36 +97,25 @@ object AnnoUtils {
     }
 
     fun collectMethodAnnotations(psiMethod: PsiMethod): List<PsiAnnotation> {
-        val annotations: MutableList<PsiAnnotation> = mutableListOf()
+        val annotations: MutableSet<PsiAnnotation> = mutableSetOf()
 
         annotations.addAll(psiMethod.modifierList.annotations)
 
         for (superMethod in psiMethod.findSuperMethods()) {
-            collectMethodAnnotations(superMethod)
-                .filter { !annotations.contains(it) }
-                .forEach { annotations.add(it) }
+            annotations.addAll(collectMethodAnnotations(superMethod))
         }
 
-        return annotations
+        return annotations.toList()
     }
 
     fun getQualifiedAnnotation(psiAnnotation: PsiAnnotation?, qualifiedName: String): PsiAnnotation? {
-        val targetAnn = "java.lang.annotation.Target"
-        val documentedAnn = "java.lang.annotation.Documented"
-        val retentionAnn = "java.lang.annotation.Retention"
-        if (psiAnnotation == null) {
-            return null
-        }
+        val annotationQualifiedName = psiAnnotation?.qualifiedName ?: return null
 
-        val annotationQualifiedName = psiAnnotation.qualifiedName
         if (qualifiedName == annotationQualifiedName) {
             return psiAnnotation
         }
 
-        if (targetAnn == annotationQualifiedName
-            || documentedAnn == annotationQualifiedName
-            || retentionAnn == annotationQualifiedName
-        ) {
+        if (javaMetaAnnoSet.contains(annotationQualifiedName)) {
             return null
         }
 
@@ -133,6 +134,7 @@ object AnnoUtils {
 
         for (classAnnotation in resolve.annotations) {
             val qualifiedAnnotation = getQualifiedAnnotation(classAnnotation, qualifiedName)
+
             if (qualifiedAnnotation != null) {
                 return qualifiedAnnotation
             }
@@ -180,7 +182,7 @@ object AnnoUtils {
             }
 
             is JvmAnnotationArrayValue -> {
-                val values: MutableList<String?> = ArrayList()
+                val values: MutableList<String?> = mutableListOf()
                 for (value in attributeValue.values) {
                     values.add(findAttributeValue(value) as String?)
                 }

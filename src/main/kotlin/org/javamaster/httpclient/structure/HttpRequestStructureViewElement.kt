@@ -88,6 +88,15 @@ class HttpRequestStructureViewElement private constructor(
     }
 
     companion object {
+        private val imageContentSet = setOf(
+            ContentType.IMAGE_PNG,
+            ContentType.IMAGE_JPEG,
+            ContentType.IMAGE_BMP,
+            ContentType.IMAGE_WEBP,
+            ContentType.IMAGE_SVG,
+            ContentType.IMAGE_GIF,
+            ContentType.IMAGE_TIFF,
+        )
 
         fun create(element: PsiElement, text: String?, icon: Icon?): StructureViewTreeElement {
             return create(element, text, null, icon)
@@ -203,14 +212,7 @@ class HttpRequestStructureViewElement private constructor(
         }
 
         private fun isImageType(contentType: ContentType?): Boolean {
-            if (contentType == null) {
-                return false
-            }
-
-            return contentType == ContentType.IMAGE_PNG || contentType == ContentType.IMAGE_JPEG
-                    || contentType == ContentType.IMAGE_BMP || contentType == ContentType.IMAGE_WEBP
-                    || contentType == ContentType.IMAGE_SVG || contentType == ContentType.IMAGE_GIF
-                    || contentType == ContentType.IMAGE_TIFF
+            return imageContentSet.contains(contentType ?: return false)
         }
 
         private fun getInjectedLanguageIcon(project: Project, messageBody: HttpMessageBody?): Icon? {

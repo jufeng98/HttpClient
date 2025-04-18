@@ -42,7 +42,7 @@ object HttpPsiImplUtil {
 
     @JvmStatic
     fun getName(variableName: HttpGlobalVariableName): String {
-        return getNextSiblingByType(variableName.firstChild, HttpTypes.GLOBAL_NAME, false)!!.text
+        return getNextSiblingByType(variableName.firstChild, HttpTypes.GLOBAL_NAME, false)?.text ?: ""
     }
 
     @JvmStatic

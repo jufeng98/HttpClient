@@ -65,7 +65,8 @@ class HttpInlayActionHandler : InlayActionHandler {
                                     createRequest(project, request)
                                 }
                             }
-                            break
+
+                            return@runReadAction
                         }
                     }
                 }

@@ -11,7 +11,7 @@ internal object NlsBundle {
     @NonNls
     private const val BUNDLE = "messages.HttpClientBundle"
     private const val ZH = "zh"
-    private var locale: Locale = decideLocale()
+    val locale: Locale = decideLocale()
 
     private fun decideLocale(): Locale {
         val locale = DynamicBundle.getLocale()

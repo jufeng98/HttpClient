@@ -68,7 +68,9 @@ object HttpUtils {
     const val TIMEOUT = 10_000
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
+
     private const val VARIABLE_SIGN_END = "}}"
+
     val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
     val requestFinishedKey: Key<Int> = Key.create("REQUEST_FINISHED_KEY")
 
@@ -372,24 +374,16 @@ object HttpUtils {
     fun resolveFileGlobalVariable(variableName: String, httpFile: PsiFile): PsiElement? {
         val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
 
-        val element = globalVariables
-            .map {
-                val firstChild = it.globalVariableName.firstChild
-                val psiElement = getNextSiblingByType(firstChild, HttpTypes.GLOBAL_NAME, false) ?: return@map null
-                if (psiElement.text == variableName) {
-                    return@map psiElement.parent
+        return globalVariables
+            .mapNotNull {
+                val globalVariableName = it.globalVariableName
+                if (globalVariableName.name == variableName) {
+                    return@mapNotNull globalVariableName
                 } else {
-                    return@map null
+                    return@mapNotNull null
                 }
             }
-            .filterNotNull()
             .firstOrNull()
-
-        if (element == null) {
-            return null
-        }
-
-        return element
     }
 
     fun getPreJsFiles(httpFile: HttpFile, excludeRequire: Boolean): List<PreJsFile> {
@@ -742,7 +736,7 @@ object HttpUtils {
     }
 
     fun getMethodDesc(psiMethod: PsiMethod): String {
-        val list = ArrayList<String>(2)
+        val list = mutableListOf<String>()
 
         val docComment = psiMethod.docComment
         if (docComment != null) {

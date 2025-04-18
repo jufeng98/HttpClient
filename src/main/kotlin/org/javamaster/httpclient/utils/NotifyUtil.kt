@@ -16,29 +16,24 @@ object NotifyUtil {
     private val STICKY_STICKY_BALLOON by lazy {
         NotificationGroupManager.getInstance().getNotificationGroup("HttpClient.STICKY_BALLOON")
     }
+    private const val TOOL_WINDOW_ID = ToolWindowId.SERVICES
 
     fun notifyInfo(project: Project, message: String?) {
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        toolWindowManager.notifyByBalloon(
-            ToolWindowId.SERVICES, MessageType.INFO,
-            "<div style='font-size:13pt'>${message}</div>"
-        )
+        notifyServicesBalloon(project, message, MessageType.INFO)
     }
 
     fun notifyWarn(project: Project, message: String?) {
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        toolWindowManager.notifyByBalloon(
-            ToolWindowId.SERVICES, MessageType.WARNING,
-            "<div style='font-size:13pt'>${message}</div>"
-        )
+        notifyServicesBalloon(project, message, MessageType.WARNING)
     }
 
     fun notifyError(project: Project, message: String?) {
+        notifyServicesBalloon(project, message, MessageType.ERROR)
+    }
+
+    private fun notifyServicesBalloon(project: Project, message: String?, type: MessageType) {
         val toolWindowManager = ToolWindowManager.getInstance(project)
-        toolWindowManager.notifyByBalloon(
-            ToolWindowId.SERVICES, MessageType.ERROR,
-            "<div style='font-size:13pt'>${message}</div>"
-        )
+
+        toolWindowManager.notifyByBalloon(TOOL_WINDOW_ID, type, "<div style='font-size:13pt'>${message}</div>")
     }
 
     fun notifyCornerSuccess(project: Project, message: String) {

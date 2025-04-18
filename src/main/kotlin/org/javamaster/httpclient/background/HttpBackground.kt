@@ -38,6 +38,7 @@ class HttpBackground<T> {
                                 d.resultConsumer!!.accept(result)
                             } catch (ex: Exception) {
                                 ex.printStackTrace()
+
                                 d.exceptionConsumer!!.accept(ex)
                             }
                         }
