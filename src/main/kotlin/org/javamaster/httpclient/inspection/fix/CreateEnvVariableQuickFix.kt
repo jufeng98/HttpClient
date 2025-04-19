@@ -6,6 +6,7 @@ import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import org.javamaster.httpclient.action.AddAction
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.env.EnvFileService.Companion.ENV_FILE_NAME
 import org.javamaster.httpclient.env.EnvFileService.Companion.PRIVATE_ENV_FILE_NAME
@@ -45,7 +46,7 @@ class CreateEnvVariableQuickFix(
 
         val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project)
         if (jsonFile == null) {
-            topForm.createAndReInitEnvCompo(isPrivate)
+            AddAction.createAndReInitEnvCompo(isPrivate, project)
             topForm.setSelectEnv("dev")
         } else {
             topForm.selectedEnv ?: return
