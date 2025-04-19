@@ -44,7 +44,7 @@ public class HttpEditorTopForm extends JComponent {
     private final LinkedHashMap<Integer, String> optionIndexMap = Maps.newLinkedHashMap();
 
     {
-        options.add(INSTANCE.nls("examples.and.environments"));
+        options.add(INSTANCE.nls("http.examples"));
         optionIndexMap.put(0, null);
         options.add(INSTANCE.nls("get.requests"));
         optionIndexMap.put(1, "examples/get-requests.http");
