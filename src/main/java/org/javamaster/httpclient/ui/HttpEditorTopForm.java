@@ -78,6 +78,8 @@ public class HttpEditorTopForm extends JComponent {
         this.file = file;
         this.module = module;
 
+        resetEnvCombo();
+
         addBtn.setIcon(AllIcons.General.Add);
         addBtn.setBorder(null);
         addBtn.addMouseListener(new MouseAdapter() {
@@ -149,13 +151,29 @@ public class HttpEditorTopForm extends JComponent {
         runAllBtn.setIcon(HttpIcons.STOP);
     }
 
+    private void resetEnvCombo() {
+        int itemCount = envComboBox.getItemCount();
+        for (int i = 0; i < itemCount; i++) {
+            envComboBox.removeItemAt(i);
+        }
+
+        envComboBox.addItem(INSTANCE.nls("no.env"));
+    }
+
     public void initEnvCombo(Set<String> presetEnvSet) {
+        resetEnvCombo();
+
         presetEnvSet.forEach(it -> envComboBox.addItem(it));
 
         setSelectEnv("uat");
     }
 
-    public String getSelectedEnv() {
+    public @Nullable String getSelectedEnv() {
+        int selectedIndex = envComboBox.getSelectedIndex();
+        if (selectedIndex == 0) {
+            return null;
+        }
+
         return (String) envComboBox.getSelectedItem();
     }
 
