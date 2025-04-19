@@ -99,6 +99,35 @@
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
     </context>
   </template>
+  <template name="dtr" value="### request&#10;DUBBO http://$HOST$:$PORT$&#10;Content-Type: application/json&#10;Interface: $INTERFACE$&#10;method: $METHOD$&#10;version: $VERSION$&#10;&#10;{&#10;}"
+            description="DUBBO http://example.com:25230" toReformat="true" toShortenFQNames="false">
+    <variable name="HOST" expression="" defaultValue="&quot;localhost&quot;" alwaysStopAt="true"/>
+    <variable name="PORT" expression="" defaultValue="&quot;25230&quot;" alwaysStopAt="true"/>
+    <variable name="INTERFACE" expression="" defaultValue="&quot;ServiceExchangeDubboService&quot;" alwaysStopAt="true"/>
+    <variable name="METHOD" expression="" defaultValue="&quot;getExchangeInfo&quot;" alwaysStopAt="true"/>
+    <variable name="VERSION" expression="" defaultValue="&quot;1.0.0&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
+  <template name="dtrp" value="### request&#10;DUBBO http://$HOST$:$PORT$&#10;Content-Type: application/json&#10;Interface-Name: $INTERFACE_NAME$&#10;method: $METHOD$&#10;version: $VERSION$&#10;Arg0-Type:$ARG0$&#10;&#10;{&#10;&quot;Arg0-Type&quot;:{}&#10;}"
+            description="DUBBO http://example.com:25230" toReformat="true" toShortenFQNames="false">
+    <variable name="HOST" expression="" defaultValue="&quot;localhost&quot;" alwaysStopAt="true"/>
+    <variable name="PORT" expression="" defaultValue="&quot;25230&quot;" alwaysStopAt="true"/>
+    <variable name="INTERFACE_NAME" expression="" defaultValue="&quot;org.javamaster.api.serviceorder.dubbo.IMHServiceOrderDubboService&quot;" alwaysStopAt="true"/>
+    <variable name="METHOD" expression="" defaultValue="&quot;getOrderList&quot;" alwaysStopAt="true"/>
+    <variable name="VERSION" expression="" defaultValue="&quot;1.0.0&quot;" alwaysStopAt="true"/>
+    <variable name="ARG0" expression="" defaultValue="&quot;org.javamaster.api.serviceorder.dto.GetOrderListDto&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REQUEST" value="true"/>
+      <option name="REQUEST_AUTH_HEADER" value="false" />
+      <option name="REQUEST_HEADER" value="false" />
+      <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
+    </context>
+  </template>
   <template name="var" value="$COMMA_BEFORE$&quot;$VAR_NAME$&quot;: &quot;$VAR_VALUE$&quot;$COMMA_AFTER$" description="Environment variable"
             toReformat="true" toShortenFQNames="false">
     <variable name="COMMA_BEFORE" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false"/>
