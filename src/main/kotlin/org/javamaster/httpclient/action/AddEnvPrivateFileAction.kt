@@ -13,7 +13,7 @@ class AddEnvPrivateFileAction : AddAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        createAndReInitEnvCompo(true, e.project!!)
+        createAndReInitEnvCompo(true)
     }
 
 }

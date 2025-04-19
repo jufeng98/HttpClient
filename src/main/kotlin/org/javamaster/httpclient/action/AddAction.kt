@@ -9,7 +9,6 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.project.Project
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.env.EnvFileService.Companion.createEnvFile
 import org.javamaster.httpclient.nls.NlsBundle.nls
@@ -48,7 +47,9 @@ abstract class AddAction : AnAction() {
 
     companion object {
 
-        fun createAndReInitEnvCompo(isPrivate: Boolean, project: Project) {
+        fun createAndReInitEnvCompo(isPrivate: Boolean) {
+            val project = ProjectUtil.getActiveProject()!!
+
             val envFileName = if (isPrivate) EnvFileService.PRIVATE_ENV_FILE_NAME else EnvFileService.ENV_FILE_NAME
 
             val envFile = createEnvFile(envFileName, isPrivate, project)

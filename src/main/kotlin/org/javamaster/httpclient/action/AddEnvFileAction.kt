@@ -13,7 +13,7 @@ class AddEnvFileAction : AddAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        createAndReInitEnvCompo(false, e.project!!)
+        createAndReInitEnvCompo(false)
     }
 
 }
