@@ -12,6 +12,7 @@ class AddDubboAction : AddAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
+        startLiveTemplate("dtr")
     }
 
 }

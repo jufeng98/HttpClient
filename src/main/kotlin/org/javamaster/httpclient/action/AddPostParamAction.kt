@@ -12,6 +12,7 @@ class AddPostParamAction : AddAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
+        startLiveTemplate("ptrp")
     }
 
 }

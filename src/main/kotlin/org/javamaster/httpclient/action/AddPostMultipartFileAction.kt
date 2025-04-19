@@ -12,6 +12,7 @@ class AddPostMultipartFileAction : AddAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
+        startLiveTemplate("fptr")
     }
 
 }

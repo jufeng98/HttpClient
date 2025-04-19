@@ -12,6 +12,7 @@ class AddPostMultipartTextAction : AddAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
+        startLiveTemplate("mptr")
     }
 
 }

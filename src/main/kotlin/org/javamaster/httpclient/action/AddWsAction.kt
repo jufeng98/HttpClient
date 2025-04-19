@@ -12,6 +12,7 @@ class AddWsAction : AddAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
+        startLiveTemplate("wsr")
     }
 
 }

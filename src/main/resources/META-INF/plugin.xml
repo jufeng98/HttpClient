@@ -309,6 +309,7 @@
             <action class="org.javamaster.httpclient.action.AddWsAction"/>
             <separator/>
             <action class="org.javamaster.httpclient.action.AddDubboAction"/>
+            <action class="org.javamaster.httpclient.action.AddDubboNameAction"/>
             <separator/>
             <action class="org.javamaster.httpclient.action.AddEnvFileAction"/>
             <action class="org.javamaster.httpclient.action.AddEnvPrivateFileAction"/>

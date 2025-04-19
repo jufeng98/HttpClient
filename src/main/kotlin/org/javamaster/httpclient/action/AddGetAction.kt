@@ -12,6 +12,7 @@ class AddGetAction : AddAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
+        startLiveTemplate("gtr")
     }
 
 }

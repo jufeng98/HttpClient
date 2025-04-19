@@ -6,13 +6,13 @@ import org.javamaster.httpclient.nls.NlsBundle
 /**
  * @author yudong
  */
-class AddPostJsonAction : AddAction() {
+class AddDubboNameAction : AddAction() {
     override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("post.json.req")
+        event.presentation.text = NlsBundle.nls("dubbo.req.name")
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        startLiveTemplate("ptr")
+        startLiveTemplate("dtrp")
     }
 
 }
