@@ -297,6 +297,22 @@
         <action class="org.javamaster.httpclient.action.ApiSearchEverywhereAction" text="Search Api">
             <keyboard-shortcut first-keystroke="control alt SLASH" keymap="$default"/>
         </action>
+
+        <group id="addToHttp">
+            <action class="org.javamaster.httpclient.action.AddGetAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.AddPostJsonAction"/>
+            <action class="org.javamaster.httpclient.action.AddPostParamAction"/>
+            <action class="org.javamaster.httpclient.action.AddPostMultipartTextAction"/>
+            <action class="org.javamaster.httpclient.action.AddPostMultipartFileAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.AddWsAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.AddDubboAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.AddEnvFileAction"/>
+            <action class="org.javamaster.httpclient.action.AddEnvPrivateFileAction"/>
+        </group>
     </actions>
 
 </idea-plugin>
