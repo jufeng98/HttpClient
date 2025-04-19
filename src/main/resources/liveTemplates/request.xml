@@ -58,7 +58,7 @@
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
     </context>
   </template>
-  <template name="mptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: multipart/form-data; boundary=WebAppBoundary&#10;&#10;--WebAppBoundary&#10;Content-Disposition: form-data; name=&quot;$FIELD_NAME$&quot;&#10;&#10;$BODY$&#10;--WebAppBoundary--&#10;&#10;"
+  <template name="mptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: multipart/form-data; boundary=WebAppBoundary&#10;&#10;--WebAppBoundary&#10;Content-Disposition: form-data; name=&quot;$FIELD_NAME$&quot;&#10;&#10;$BODY$&#10;--WebAppBoundary--"
             description="POST multipart/form-data" toReformat="true" toShortenFQNames="false">
     <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
     <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
@@ -71,7 +71,7 @@
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
     </context>
   </template>
-  <template name="fptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: multipart/form-data; boundary=WebAppBoundary&#10;&#10;--WebAppBoundary&#10;Content-Disposition: form-data; name=&quot;$FIELD_NAME$&quot;; filename=&quot;$FILE_NAME$&quot;&#10;&#10;&lt; $FILE_PATH$&#10;--WebAppBoundary--&#10;&#10;"
+  <template name="fptr" value="### request&#10;POST http://$HOST$/$PATH$&#10;Content-Type: multipart/form-data; boundary=WebAppBoundary&#10;&#10;--WebAppBoundary&#10;Content-Disposition: form-data; name=&quot;$FIELD_NAME$&quot;; filename=&quot;$FILE_NAME$&quot;&#10;&#10;&lt; $FILE_PATH$&#10;--WebAppBoundary--"
             description="POST file by multipart/form-data" toReformat="true" toShortenFQNames="false">
     <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
     <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
@@ -113,7 +113,7 @@
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
     </context>
   </template>
-  <template name="dtrp" value="### request&#10;DUBBO http://$HOST$:$PORT$&#10;Content-Type: application/json&#10;Interface-Name: $INTERFACE_NAME$&#10;method: $METHOD$&#10;version: $VERSION$&#10;Arg0-Type:$ARG0$&#10;&#10;{&#10;&quot;Arg0-Type&quot;:{}&#10;}"
+  <template name="dtrp" value="### request&#10;DUBBO http://$HOST$:$PORT$&#10;Content-Type: application/json&#10;Interface-Name: $INTERFACE_NAME$&#10;method: $METHOD$&#10;version: $VERSION$&#10;Arg0-Type: $ARG0$&#10;&#10;{&#10;  &quot;Arg0-Type&quot;: {}&#10;}"
             description="DUBBO http://example.com:25230" toReformat="true" toShortenFQNames="false">
     <variable name="HOST" expression="" defaultValue="&quot;localhost&quot;" alwaysStopAt="true"/>
     <variable name="PORT" expression="" defaultValue="&quot;25230&quot;" alwaysStopAt="true"/>
