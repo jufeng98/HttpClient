@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.ui;
 
 import com.google.common.collect.Maps;
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
@@ -79,6 +80,8 @@ public class HttpEditorTopForm extends JComponent {
         this.module = module;
 
         resetEnvCombo();
+
+        envComboBox.addActionListener(e -> DaemonCodeAnalyzer.getInstance(project).restart());
 
         addBtn.setIcon(AllIcons.General.Add);
         addBtn.setBorder(null);
