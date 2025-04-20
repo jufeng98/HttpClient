@@ -299,20 +299,20 @@
         </action>
 
         <group id="addToHttp">
-            <action class="org.javamaster.httpclient.action.AddGetAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddGetAction"/>
             <separator/>
-            <action class="org.javamaster.httpclient.action.AddPostJsonAction"/>
-            <action class="org.javamaster.httpclient.action.AddPostParamAction"/>
-            <action class="org.javamaster.httpclient.action.AddPostMultipartTextAction"/>
-            <action class="org.javamaster.httpclient.action.AddPostMultipartFileAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddPostJsonAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddPostParamAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddPostMultipartTextAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddPostMultipartFileAction"/>
             <separator/>
-            <action class="org.javamaster.httpclient.action.AddWsAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddWsAction"/>
             <separator/>
-            <action class="org.javamaster.httpclient.action.AddDubboAction"/>
-            <action class="org.javamaster.httpclient.action.AddDubboNameAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddDubboAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddDubboNameAction"/>
             <separator/>
-            <action class="org.javamaster.httpclient.action.AddEnvFileAction"/>
-            <action class="org.javamaster.httpclient.action.AddEnvPrivateFileAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddEnvFileAction"/>
+            <action class="org.javamaster.httpclient.action.addHttp.AddEnvPrivateFileAction"/>
         </group>
     </actions>
 

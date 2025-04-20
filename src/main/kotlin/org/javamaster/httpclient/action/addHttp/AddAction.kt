@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.action
+package org.javamaster.httpclient.action.addHttp
 
 import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.codeInsight.template.impl.TemplateSettings

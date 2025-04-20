@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.action
+package org.javamaster.httpclient.action.addHttp
 
 import com.intellij.openapi.actionSystem.AnActionEvent
 import org.javamaster.httpclient.nls.NlsBundle
@@ -6,13 +6,13 @@ import org.javamaster.httpclient.nls.NlsBundle
 /**
  * @author yudong
  */
-class AddPostMultipartTextAction : AddAction() {
+class AddPostParamAction : AddAction() {
     override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("post.multi.text.req")
+        event.presentation.text = NlsBundle.nls("post.param.req")
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        startLiveTemplate("mptr")
+        startLiveTemplate("ptrp")
     }
 
 }
