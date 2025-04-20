@@ -314,6 +314,20 @@
             <action class="org.javamaster.httpclient.action.addHttp.AddEnvFileAction"/>
             <action class="org.javamaster.httpclient.action.addHttp.AddEnvPrivateFileAction"/>
         </group>
+
+        <group id="exampleHttp">
+            <action class="org.javamaster.httpclient.action.example.GetExampleAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.example.PostExampleAction"/>
+            <action class="org.javamaster.httpclient.action.example.PresentationAction"/>
+            <action class="org.javamaster.httpclient.action.example.ScriptExampleAction"/>
+            <action class="org.javamaster.httpclient.action.example.AuthExampleAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.example.WsExampleAction"/>
+            <action class="org.javamaster.httpclient.action.example.DubboExampleAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.example.CryptoJsExampleAction"/>
+        </group>
     </actions>
 
 </idea-plugin>

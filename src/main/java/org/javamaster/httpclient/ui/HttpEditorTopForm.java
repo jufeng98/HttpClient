@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.ui;
 
-import com.google.common.collect.Maps;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.ActionGroup;
@@ -13,12 +12,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.openapi.util.Key;
-import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.awt.RelativePoint;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.popup.PopupFactoryImpl;
 import kotlin.Triple;
-import org.apache.commons.compress.utils.Lists;
 import org.javamaster.httpclient.HttpIcons;
 import org.javamaster.httpclient.handler.RunFileHandler;
 import org.jetbrains.annotations.Nullable;
@@ -27,9 +25,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.net.URL;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -41,37 +36,13 @@ import static org.javamaster.httpclient.nls.NlsBundle.INSTANCE;
 public class HttpEditorTopForm extends JComponent {
     public static final Key<HttpEditorTopForm> KEY = Key.create("httpRequest.httpEditorTopForm");
 
-    private final List<String> options = Lists.newArrayList();
-    private final LinkedHashMap<Integer, String> optionIndexMap = Maps.newLinkedHashMap();
-
-    {
-        options.add(INSTANCE.nls("http.examples"));
-        optionIndexMap.put(0, null);
-        options.add(INSTANCE.nls("get.requests"));
-        optionIndexMap.put(1, "examples/get-requests.http");
-        options.add(INSTANCE.nls("post.requests"));
-        optionIndexMap.put(2, "examples/post-requests.http");
-        options.add(INSTANCE.nls("request.with.authorization"));
-        optionIndexMap.put(3, "examples/requests-with-authorization.http");
-        options.add(INSTANCE.nls("request.with.tests.and.scripts"));
-        optionIndexMap.put(4, "examples/requests-with-scripts.http");
-        options.add(INSTANCE.nls("response.presentations"));
-        optionIndexMap.put(5, "examples/responses-presentation.http");
-        options.add(INSTANCE.nls("websocket.requests"));
-        optionIndexMap.put(6, "examples/ws-requests.http");
-        options.add(INSTANCE.nls("dubbo.requests"));
-        optionIndexMap.put(7, "examples/dubbo-requests.http");
-        options.add(INSTANCE.nls("show.cryptojs.file"));
-        optionIndexMap.put(8, "examples/crypto-js.js");
-    }
-
     public final VirtualFile file;
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
-    private JComboBox<String> exampleComboBox;
     private JButton showVariableBtn;
-    private JButton runAllBtn;
-    private JButton addBtn;
+    private JBLabel runAllLabel;
+    private JBLabel addHttpLabel;
+    private JLabel exampleLabel;
 
     private final @Nullable Module module;
 
@@ -81,17 +52,22 @@ public class HttpEditorTopForm extends JComponent {
 
         resetEnvCombo();
 
+        Cursor cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+
+        envComboBox.setCursor(cursor);
         envComboBox.addActionListener(e -> DaemonCodeAnalyzer.getInstance(project).restart());
 
-        addBtn.setIcon(AllIcons.General.Add);
-        addBtn.setBorder(null);
-        addBtn.addMouseListener(new MouseAdapter() {
+        ActionManager actionManager = ActionManager.getInstance();
+        JBPopupFactory popupFactory = PopupFactoryImpl.getInstance();
+
+        addHttpLabel.setCursor(cursor);
+        addHttpLabel.setIcon(AllIcons.General.Add);
+        addHttpLabel.setBorder(null);
+        addHttpLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                ActionManager actionManager = ActionManager.getInstance();
                 ActionGroup group = (ActionGroup) actionManager.getAction("addToHttp");
 
-                JBPopupFactory popupFactory = PopupFactoryImpl.getInstance();
                 ListPopup listPopup = popupFactory.createActionGroupPopup(INSTANCE.nls("new"), group,
                         DataContext.EMPTY_CONTEXT, true, null, 10);
 
@@ -100,44 +76,42 @@ public class HttpEditorTopForm extends JComponent {
             }
         });
 
-        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-        model.addAll(options);
-        exampleComboBox.setModel(model);
-        exampleComboBox.setSelectedIndex(0);
-
-        runAllBtn.setBorder(null);
+        runAllLabel.setCursor(cursor);
+        runAllLabel.setBorder(null);
 
         switchRunBtnToInitialing();
 
-        runAllBtn.addActionListener(event -> {
-            if (runAllBtn.getIcon() == HttpIcons.STOP) {
-                switchRunBtnToInitialing();
+        runAllLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (runAllLabel.getIcon() == HttpIcons.STOP) {
+                    switchRunBtnToInitialing();
 
-                RunFileHandler.INSTANCE.stopRunning();
-            } else {
-                switchRunBtnToStopping();
+                    RunFileHandler.INSTANCE.stopRunning();
+                } else {
+                    switchRunBtnToStopping();
 
-                RunFileHandler.INSTANCE.runRequests(project, this, this::switchRunBtnToInitialing);
+                    RunFileHandler.INSTANCE.runRequests(project, HttpEditorTopForm.this,
+                            HttpEditorTopForm.this::switchRunBtnToInitialing);
+                }
             }
         });
 
-        exampleComboBox.addActionListener(e -> {
-            ClassLoader classLoader = getClass().getClassLoader();
+        exampleLabel.setCursor(cursor);
+        exampleLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ActionGroup group = (ActionGroup) actionManager.getAction("exampleHttp");
 
-            String option = optionIndexMap.get(exampleComboBox.getSelectedIndex());
+                ListPopup listPopup = popupFactory.createActionGroupPopup(INSTANCE.nls("http.examples"), group,
+                        DataContext.EMPTY_CONTEXT, true, null, 10);
 
-            exampleComboBox.setSelectedIndex(0);
-
-            if (option == null) {
-                return;
+                Point point = e.getPoint();
+                listPopup.show(new RelativePoint(e.getComponent(), new Point(point.x - 20, point.y + 20)));
             }
-
-            URL url = classLoader.getResource(option);
-            VirtualFile virtualFile = VfsUtil.findFileByURL(url);
-            //noinspection DataFlowIssue
-            FileEditorManager.getInstance(project).openFile(virtualFile, true);
         });
 
+        showVariableBtn.setCursor(cursor);
         showVariableBtn.addActionListener(e -> {
             ViewVariableForm viewVariableForm = new ViewVariableForm(project);
             viewVariableForm.show();
@@ -145,13 +119,13 @@ public class HttpEditorTopForm extends JComponent {
     }
 
     public void switchRunBtnToInitialing() {
-        runAllBtn.setToolTipText(INSTANCE.nls("run.all.tooltip"));
-        runAllBtn.setIcon(HttpIcons.RUN_ALL);
+        runAllLabel.setToolTipText(INSTANCE.nls("run.all.tooltip"));
+        runAllLabel.setIcon(HttpIcons.RUN_ALL);
     }
 
     public void switchRunBtnToStopping() {
-        runAllBtn.setToolTipText(INSTANCE.nls("stop.running"));
-        runAllBtn.setIcon(HttpIcons.STOP);
+        runAllLabel.setToolTipText(INSTANCE.nls("stop.running"));
+        runAllLabel.setIcon(HttpIcons.STOP);
     }
 
     private void resetEnvCombo() {
