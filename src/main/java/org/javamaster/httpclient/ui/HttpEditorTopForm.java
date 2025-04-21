@@ -13,6 +13,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.popup.PopupFactoryImpl;
@@ -39,10 +40,10 @@ public class HttpEditorTopForm extends JComponent {
     public final VirtualFile file;
     public JPanel mainPanel;
     private JComboBox<String> envComboBox;
-    private JButton showVariableBtn;
     private JBLabel runAllLabel;
     private JBLabel addHttpLabel;
     private JLabel exampleLabel;
+    private JLabel variableLabel;
 
     private final @Nullable Module module;
 
@@ -97,7 +98,9 @@ public class HttpEditorTopForm extends JComponent {
             }
         });
 
+        exampleLabel.setForeground(JBColor.BLUE);
         exampleLabel.setCursor(cursor);
+        exampleLabel.setIcon(AllIcons.General.ChevronDown);
         exampleLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -111,10 +114,14 @@ public class HttpEditorTopForm extends JComponent {
             }
         });
 
-        showVariableBtn.setCursor(cursor);
-        showVariableBtn.addActionListener(e -> {
-            ViewVariableForm viewVariableForm = new ViewVariableForm(project);
-            viewVariableForm.show();
+        variableLabel.setCursor(cursor);
+        variableLabel.setIcon(AllIcons.General.InlineVariables);
+        variableLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ViewVariableForm viewVariableForm = new ViewVariableForm(project);
+                viewVariableForm.show();
+            }
         });
     }
 

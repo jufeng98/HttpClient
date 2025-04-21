@@ -114,7 +114,7 @@ object VirtualFileUtils {
 
     private fun isVirtualFileNewest(virtualFile: VirtualFile, file: File): Boolean {
         if (!file.exists()) {
-            return true
+            return false
         }
 
         val timeStamp = virtualFile.timeStamp
