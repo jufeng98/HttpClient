@@ -311,6 +311,8 @@
             <action class="org.javamaster.httpclient.action.addHttp.AddDubboAction"/>
             <action class="org.javamaster.httpclient.action.addHttp.AddDubboNameAction"/>
             <separator/>
+            <action class="org.javamaster.httpclient.action.addHttp.ImportCurlAction"/>
+            <separator/>
             <action class="org.javamaster.httpclient.action.addHttp.AddEnvFileAction"/>
             <action class="org.javamaster.httpclient.action.addHttp.AddEnvPrivateFileAction"/>
         </group>
