@@ -15,9 +15,9 @@ class GitTest {
 
         val proxyAddress = getProxyAddress()
 
-        execCommand("cmd /c git config http.proxy $proxyAddress")
+        execCommand("cmd", "/c", "git config http.proxy $proxyAddress")
 
-        execCommand("cmd /c git push")
+        execCommand("cmd", "/c", "git push")
     }
 
     @Test
