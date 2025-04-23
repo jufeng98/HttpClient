@@ -52,8 +52,12 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         try {
             // tabName会用作文件名,因此需要检测下
             Path.of(tabName)
+
+            if (tabName.contains("/") || tabName.contains("\\")) {
+                throw InvalidPathException(tabName, NlsBundle.nls("tab.name.error", "Illegal char: / \\"))
+            }
         } catch (e: InvalidPathException) {
-            NotifyUtil.notifyError(project, NlsBundle.nls("tab.name.error") + e.message)
+            NotifyUtil.notifyError(project, NlsBundle.nls("tab.name.error", e.message!!))
             loadingRemover?.run()
             return
         }
