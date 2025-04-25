@@ -14,7 +14,6 @@ import org.javamaster.httpclient.utils.RandomStringUtils
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
 import java.io.InputStream
-import java.net.URI
 import java.net.URL
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -22,6 +21,7 @@ import java.util.concurrent.TimeUnit
 /**
  * @author yudong
  */
+@Suppress("DEPRECATION")
 object DubboJars {
     var dubboClassLoader: DubboClassLoader
 
@@ -46,15 +46,15 @@ object DubboJars {
         dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboJars::class.java.classLoader)
 
         jarMap["javassist-3.30.2-GA.jar"] =
-            URL.of(URI("$REPOSITORY_URL/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar"), null)
+            URL("$REPOSITORY_URL/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar")
         jarMap["curator-client-4.0.1.jar"] =
-            URL.of(URI("$REPOSITORY_URL/org/apache/curator/curator-client/4.0.1/curator-client-4.0.1.jar"), null)
+            URL("$REPOSITORY_URL/org/apache/curator/curator-client/4.0.1/curator-client-4.0.1.jar")
         jarMap["curator-framework-4.0.1.jar"] =
-            URL.of(URI("$REPOSITORY_URL/org/apache/curator/curator-framework/4.0.1/curator-framework-4.0.1.jar"), null)
+            URL("$REPOSITORY_URL/org/apache/curator/curator-framework/4.0.1/curator-framework-4.0.1.jar")
         jarMap["netty-3.10.5.Final.jar"] =
-            URL.of(URI("$REPOSITORY_URL/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar"), null)
+            URL("$REPOSITORY_URL/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar")
         jarMap["zookeeper-3.5.3-beta.jar"] =
-            URL.of(URI("$REPOSITORY_URL/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar"), null)
+            URL("$REPOSITORY_URL/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar")
     }
 
     fun jarsNotDownloaded(): Boolean {

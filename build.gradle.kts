@@ -26,7 +26,7 @@ dependencies {
         create("IC", "2025.1")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
         bundledPlugin("com.intellij.java")
-        bundledPlugin("com.intellij.modules.json")
+        plugin("com.intellij.modules.json:251.23774.318")
         plugin("ris58h.webcalm:0.11.1")
     }
 
@@ -48,7 +48,7 @@ sourceSets["main"].java.srcDirs("src/main/gen")
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "251"
+            sinceBuild = "232"
         }
     }
 }
