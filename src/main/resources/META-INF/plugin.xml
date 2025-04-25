@@ -55,6 +55,12 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>3.9.0</b></li>
+                <ul>
+                    <li>新增快速创建 http 请求功能</li>
+                    <li>新增从 curl 导入功能</li>
+                    <li>功能优化及Bug修复</li>
+                </ul>
                 <li><b>3.8.0</b></li>
                 <ul>
                     <li>完善 http 语法错误提示</li>
@@ -190,8 +196,8 @@
         <fileBasedIndex implementation="org.javamaster.httpclient.index.HttpEnvironmentIndex"/>
         <multiHostInjector
                 implementation="org.javamaster.httpclient.inject.MessageBodyInjectionContributor"/>
-        <runLineMarkerContributor language="http"
-                                  implementationClass="org.javamaster.httpclient.gutter.HttpRunLineMarkerContributor"/>
+        <codeInsight.lineMarkerProvider language="http"
+                                        implementationClass="org.javamaster.httpclient.gutter.HttpLineMarkerProvider"/>
         <psi.referenceContributor language="http"
                                   implementation="org.javamaster.httpclient.reference.HttpPsiReferenceContributor"/>
         <psi.referenceContributor language="TEXT"

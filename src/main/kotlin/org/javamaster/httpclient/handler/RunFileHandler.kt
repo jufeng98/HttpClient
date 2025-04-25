@@ -1,8 +1,6 @@
 package org.javamaster.httpclient.handler
 
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.DataContext
+import com.intellij.execution.runners.ProgramRunner
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowId
@@ -11,7 +9,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.action.HttpAction
+import org.javamaster.httpclient.dashboard.HttpProgramRunner
+import org.javamaster.httpclient.dashboard.HttpProgramRunner.Companion.HTTP_RUNNER_ID
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMethod
@@ -50,6 +49,8 @@ object RunFileHandler {
         val toolWindowManager = ToolWindowManager.getInstance(project)
         toolWindowManager.getToolWindow(ToolWindowId.SERVICES)!!.show()
 
+        val httpProgramRunner = ProgramRunner.findRunnerById(HTTP_RUNNER_ID)!! as HttpProgramRunner
+
         application.executeOnPooledThread {
             for (it in httpMethods) {
                 it.putUserData(HttpUtils.requestFinishedKey, null)
@@ -65,24 +66,7 @@ object RunFileHandler {
                         return@runInEdt
                     }
 
-                    val action = HttpAction(it)
-
-                    @Suppress("removal", "DEPRECATION")
-                    val event = AnActionEvent(
-                        null,
-                        DataContext.EMPTY_CONTEXT,
-                        "",
-                        action.templatePresentation.clone(),
-                        ActionManager.getInstance(),
-                        0
-                    )
-
-                    // Avoid the error:
-                    // This method is marked with @ApiStatus.OverrideOnly annotation, which indicates that the method
-                    // must be only overridden but not invoked by client code.
-                    val method = action.javaClass.getDeclaredMethod("actionPerformed", AnActionEvent::class.java)
-                    method.isAccessible = true
-                    method.invoke(action, event)
+                    httpProgramRunner.executeFromGutter(it, null)
                 }
 
                 var code = it.getUserData(HttpUtils.requestFinishedKey)
@@ -100,7 +84,9 @@ object RunFileHandler {
                     break
                 }
 
-                TimeUnit.SECONDS.sleep(2)
+                if (it != httpMethods.last()) {
+                    TimeUnit.SECONDS.sleep(2)
+                }
             }
 
             runInEdt { finishCallback.run() }

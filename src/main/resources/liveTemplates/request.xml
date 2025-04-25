@@ -48,9 +48,9 @@
     <variable name="HOST" expression="" defaultValue="&quot;localhost:80&quot;" alwaysStopAt="true"/>
     <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
     <variable name="PARAM1" expression="" defaultValue="&quot;id&quot;" alwaysStopAt="true"/>
-    <variable name="VALUE1" expression="" defaultValue="&quot;99&quot;" alwaysStopAt="true"/>
-    <variable name="PARAM2" expression="" defaultValue="&quot;content&quot;" alwaysStopAt="true"/>
-    <variable name="VALUE2" expression="" defaultValue="&quot;new-element&quot;" alwaysStopAt="true"/>
+    <variable name="VALUE1" expression="" defaultValue="&quot;88&quot;" alwaysStopAt="true"/>
+    <variable name="PARAM2" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <variable name="VALUE2" expression="" defaultValue="&quot;jufeng98&quot;" alwaysStopAt="true"/>
     <context>
       <option name="REQUEST" value="true"/>
       <option name="REQUEST_AUTH_HEADER" value="false" />
@@ -77,7 +77,7 @@
     <variable name="PATH" expression="" defaultValue="&quot;api/item&quot;" alwaysStopAt="true"/>
     <variable name="FIELD_NAME" expression="" defaultValue="&quot;field-name&quot;" alwaysStopAt="true"/>
     <variable name="FILE_NAME" expression="" defaultValue="&quot;file.txt&quot;" alwaysStopAt="true"/>
-    <variable name="FILE_PATH" expression="" defaultValue="&quot;./relative/path/to/local_file.txt&quot;" alwaysStopAt="true"/>
+    <variable name="FILE_PATH" expression="" defaultValue="&quot;./document/txt/local_file.txt&quot;" alwaysStopAt="true"/>
     <context>
       <option name="REQUEST" value="true"/>
       <option name="REQUEST_AUTH_HEADER" value="false" />
