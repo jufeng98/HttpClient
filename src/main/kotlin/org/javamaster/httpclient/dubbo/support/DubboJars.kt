@@ -14,6 +14,7 @@ import org.javamaster.httpclient.utils.RandomStringUtils
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
 import java.io.InputStream
+import java.net.URI
 import java.net.URL
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -45,15 +46,15 @@ object DubboJars {
         dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboJars::class.java.classLoader)
 
         jarMap["javassist-3.30.2-GA.jar"] =
-            URL("$REPOSITORY_URL/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar")
+            URL.of(URI("$REPOSITORY_URL/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar"), null)
         jarMap["curator-client-4.0.1.jar"] =
-            URL("$REPOSITORY_URL/org/apache/curator/curator-client/4.0.1/curator-client-4.0.1.jar")
+            URL.of(URI("$REPOSITORY_URL/org/apache/curator/curator-client/4.0.1/curator-client-4.0.1.jar"), null)
         jarMap["curator-framework-4.0.1.jar"] =
-            URL("$REPOSITORY_URL/org/apache/curator/curator-framework/4.0.1/curator-framework-4.0.1.jar")
+            URL.of(URI("$REPOSITORY_URL/org/apache/curator/curator-framework/4.0.1/curator-framework-4.0.1.jar"), null)
         jarMap["netty-3.10.5.Final.jar"] =
-            URL("$REPOSITORY_URL/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar")
+            URL.of(URI("$REPOSITORY_URL/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar"), null)
         jarMap["zookeeper-3.5.3-beta.jar"] =
-            URL("$REPOSITORY_URL/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar")
+            URL.of(URI("$REPOSITORY_URL/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar"), null)
     }
 
     fun jarsNotDownloaded(): Boolean {
@@ -150,7 +151,7 @@ object DubboJars {
         val dubboLibPath = getDubboLibPath()
         val libPath = dubboLibPath.parentFile
         return libPath.listFiles()!!
-            .filter { it.name.startsWith("instrumented-HttpRequest") || it.name == "dubbo-2.6.12.jar" }
+            .filter { it.name.contains("HttpRequest") || it.name == "dubbo-2.6.12.jar" }
             .map { it.toURI().toURL() }
     }
 
