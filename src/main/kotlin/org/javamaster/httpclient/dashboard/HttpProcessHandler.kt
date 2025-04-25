@@ -48,6 +48,7 @@ import org.javamaster.httpclient.ws.WsRequest
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.OutputStream
+import java.lang.reflect.InvocationTargetException
 import java.net.http.HttpClient.Version
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -240,10 +241,15 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             val constructor = dubboRequestClazz.declaredConstructors[0]
             constructor.isAccessible = true
 
-            val dubboRequest = constructor.newInstance(
-                tabName, url, reqHeaderMap, reqBody,
-                httpReqDescList, module, project, paramMap
-            ) as DubboHandler
+            val dubboRequest: DubboHandler
+            try {
+                dubboRequest = constructor.newInstance(
+                    tabName, url, reqHeaderMap, reqBody,
+                    httpReqDescList, module, project, paramMap
+                ) as DubboHandler
+            } catch (e: InvocationTargetException) {
+                throw e.targetException
+            }
 
             return@underModalProgress dubboRequest
         }
