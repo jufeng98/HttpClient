@@ -48,7 +48,8 @@ sourceSets["main"].java.srcDirs("src/main/gen")
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "232"
+            sinceBuild = "251"
+            untilBuild = "251.*"
         }
     }
 }
