@@ -10,6 +10,7 @@ import com.intellij.psi.PsiElement
 import org.javamaster.httpclient.inspection.fix.CreateEnvVariableQuickFix
 import org.javamaster.httpclient.inspection.fix.CreateFileVariableQuickFix
 import org.javamaster.httpclient.inspection.fix.CreateJsVariableQuickFix
+import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.reference.support.HttpVariableNamePsiReference
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
@@ -68,8 +69,10 @@ object InspectionHelper {
                 )
 
                 if (reference is HttpVariableNamePsiReference) {
-                    fixes.add(CreateJsVariableQuickFix(true, variableName))
-                    fixes.add(CreateJsVariableQuickFix(false, variableName))
+                    if (JsFacade.isAvailable()) {
+                        fixes.add(CreateJsVariableQuickFix(true, variableName))
+                        fixes.add(CreateJsVariableQuickFix(false, variableName))
+                    }
                 }
 
                 fixes.add(CreateFileVariableQuickFix(variableName))

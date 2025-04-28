@@ -153,4 +153,8 @@ object JavaScript {
         return newExpressionStatement
     }
 
+    fun isAvailable(): Boolean {
+        return pluginClassLoader != null
+    }
+
 }

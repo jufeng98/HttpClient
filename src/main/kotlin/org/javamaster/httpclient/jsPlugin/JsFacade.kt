@@ -65,4 +65,8 @@ object JsFacade {
         return null
     }
 
+    fun isAvailable(): Boolean {
+        return WebCalm.isAvailable() || JavaScript.isAvailable()
+    }
+
 }

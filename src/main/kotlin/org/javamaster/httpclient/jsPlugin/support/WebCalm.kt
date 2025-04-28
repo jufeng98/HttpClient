@@ -103,4 +103,8 @@ object WebCalm {
         }
     }
 
+    fun isAvailable(): Boolean {
+        return !pluginNotAlive
+    }
+
 }
