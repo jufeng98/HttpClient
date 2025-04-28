@@ -5,7 +5,6 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.application.runWriteActionAndWait
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.util.Disposer
@@ -257,61 +256,63 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         val future = dubboRequest.sendAsync()
 
         future.whenCompleteAsync { pair, throwable ->
-            runWriteActionAndWait {
-                if (throwable != null) {
-                    val info = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+            runInEdt {
+                application.runWriteAction {
+                    if (throwable != null) {
+                        val info = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
-                    dealResponse(info, parentPath)
+                        dealResponse(info, parentPath)
 
-                    return@runWriteActionAndWait
-                }
-
-                val byteArray = pair.first
-                val consumeTimes = pair.second
-
-                val size = Formats.formatFileSize(byteArray.size.toLong())
-
-                val comment = nls("res.desc", 200, consumeTimes, size)
-
-                val httpResDescList = mutableListOf("// $comment$CR_LF")
-
-                val evalJsRes = jsExecutor.evalJsAfterRequest(
-                    jsAfterReq,
-                    Triple(SimpleTypeEnum.JSON, byteArray, ContentType.APPLICATION_JSON.mimeType),
-                    200,
-                    mutableMapOf()
-                )
-
-                if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
-                    httpResDescList.add("$evalJsRes$CR_LF")
-                    httpResDescList.add("*/$CR_LF")
-                }
-
-                httpResDescList.add("### $tabName$CR_LF")
-                httpResDescList.add("DUBBO $url $CR_LF")
-                httpResDescList.add("${HttpHeaders.CONTENT_LENGTH}: ${byteArray.size}$CR_LF")
-
-                reqHeaderMap.forEach {
-                    val name = it.key
-                    it.value.forEach { value ->
-                        httpResDescList.add("$name: $value$CR_LF")
+                        return@runWriteAction
                     }
+
+                    val byteArray = pair.first
+                    val consumeTimes = pair.second
+
+                    val size = Formats.formatFileSize(byteArray.size.toLong())
+
+                    val comment = nls("res.desc", 200, consumeTimes, size)
+
+                    val httpResDescList = mutableListOf("// $comment$CR_LF")
+
+                    val evalJsRes = jsExecutor.evalJsAfterRequest(
+                        jsAfterReq,
+                        Triple(SimpleTypeEnum.JSON, byteArray, ContentType.APPLICATION_JSON.mimeType),
+                        200,
+                        mutableMapOf()
+                    )
+
+                    if (!evalJsRes.isNullOrEmpty()) {
+                        httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
+                        httpResDescList.add("$evalJsRes$CR_LF")
+                        httpResDescList.add("*/$CR_LF")
+                    }
+
+                    httpResDescList.add("### $tabName$CR_LF")
+                    httpResDescList.add("DUBBO $url $CR_LF")
+                    httpResDescList.add("${HttpHeaders.CONTENT_LENGTH}: ${byteArray.size}$CR_LF")
+
+                    reqHeaderMap.forEach {
+                        val name = it.key
+                        it.value.forEach { value ->
+                            httpResDescList.add("$name: $value$CR_LF")
+                        }
+                    }
+                    httpResDescList.add(CR_LF)
+
+                    httpResDescList.add(String(byteArray, StandardCharsets.UTF_8))
+
+                    val httpInfo = HttpInfo(
+                        httpReqDescList,
+                        httpResDescList,
+                        SimpleTypeEnum.JSON,
+                        byteArray,
+                        null,
+                        ContentType.APPLICATION_JSON.mimeType
+                    )
+
+                    dealResponse(httpInfo, parentPath)
                 }
-                httpResDescList.add(CR_LF)
-
-                httpResDescList.add(String(byteArray, StandardCharsets.UTF_8))
-
-                val httpInfo = HttpInfo(
-                    httpReqDescList,
-                    httpResDescList,
-                    SimpleTypeEnum.JSON,
-                    byteArray,
-                    null,
-                    ContentType.APPLICATION_JSON.mimeType
-                )
-
-                dealResponse(httpInfo, parentPath)
             }
 
             destroyProcess()
@@ -332,64 +333,66 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         val future = requestEnum.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         future.whenCompleteAsync { response, throwable ->
-            runWriteActionAndWait {
-                try {
-                    if (throwable != null) {
-                        val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+            runInEdt {
+                application.runWriteAction {
+                    try {
+                        if (throwable != null) {
+                            val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+                            dealResponse(httpInfo, parentPath)
+                            return@runWriteAction
+                        }
+
+                        val size = Formats.formatFileSize(response.body().size.toLong())
+
+                        val consumeTimes = System.currentTimeMillis() - start
+
+                        val resHeaderList = convertToResHeaderDescList(response)
+
+                        val resTriple = convertToResPair(response)
+
+                        val comment = nls("res.desc", response.statusCode(), consumeTimes, size)
+
+                        val httpResDescList = mutableListOf("// $comment$CR_LF")
+
+                        val evalJsRes = jsExecutor.evalJsAfterRequest(
+                            jsAfterReq,
+                            resTriple,
+                            response.statusCode(),
+                            response.headers().map()
+                        )
+
+                        if (!evalJsRes.isNullOrEmpty()) {
+                            httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
+                            httpResDescList.add("$evalJsRes$CR_LF")
+                            httpResDescList.add("*/$CR_LF")
+                        }
+
+                        val versionDesc = HttpUtils.getVersionDesc(response.version())
+
+                        val commentTabName = "### $tabName$CR_LF"
+                        httpResDescList.add(commentTabName)
+
+                        httpResDescList.add(methodType + " " + response.uri() + " " + versionDesc + CR_LF)
+
+                        httpResDescList.addAll(resHeaderList)
+
+                        if (resTriple.first.binary) {
+                            httpResDescList.add(nls("res.binary.data", size))
+                        } else {
+                            httpResDescList.add(String(resTriple.second, StandardCharsets.UTF_8))
+                        }
+
+                        val httpInfo = HttpInfo(
+                            httpReqDescList, httpResDescList, resTriple.first, resTriple.second,
+                            null, resTriple.third
+                        )
+
                         dealResponse(httpInfo, parentPath)
-                        return@runWriteActionAndWait
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+
+                        NotifyUtil.notifyError(project, e.toString())
                     }
-
-                    val size = Formats.formatFileSize(response.body().size.toLong())
-
-                    val consumeTimes = System.currentTimeMillis() - start
-
-                    val resHeaderList = convertToResHeaderDescList(response)
-
-                    val resTriple = convertToResPair(response)
-
-                    val comment = nls("res.desc", response.statusCode(), consumeTimes, size)
-
-                    val httpResDescList = mutableListOf("// $comment$CR_LF")
-
-                    val evalJsRes = jsExecutor.evalJsAfterRequest(
-                        jsAfterReq,
-                        resTriple,
-                        response.statusCode(),
-                        response.headers().map()
-                    )
-
-                    if (!evalJsRes.isNullOrEmpty()) {
-                        httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
-                        httpResDescList.add("$evalJsRes$CR_LF")
-                        httpResDescList.add("*/$CR_LF")
-                    }
-
-                    val versionDesc = HttpUtils.getVersionDesc(response.version())
-
-                    val commentTabName = "### $tabName$CR_LF"
-                    httpResDescList.add(commentTabName)
-
-                    httpResDescList.add(methodType + " " + response.uri() + " " + versionDesc + CR_LF)
-
-                    httpResDescList.addAll(resHeaderList)
-
-                    if (resTriple.first.binary) {
-                        httpResDescList.add(nls("res.binary.data", size))
-                    } else {
-                        httpResDescList.add(String(resTriple.second, StandardCharsets.UTF_8))
-                    }
-
-                    val httpInfo = HttpInfo(
-                        httpReqDescList, httpResDescList, resTriple.first, resTriple.second,
-                        null, resTriple.third
-                    )
-
-                    dealResponse(httpInfo, parentPath)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-
-                    NotifyUtil.notifyError(project, e.toString())
                 }
             }
 
@@ -485,7 +488,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             }
 
             if (loadingRemover != null) {
-                runWriteActionAndWait {
+                runInEdt {
                     loadingRemover.run()
                 }
             }
@@ -496,7 +499,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     override fun destroyProcessImpl() {
         if (loadingRemover != null) {
-            runWriteActionAndWait {
+            runInEdt {
                 loadingRemover.run()
             }
         }

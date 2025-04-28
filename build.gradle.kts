@@ -1,23 +1,36 @@
 @file:Suppress("VulnerableLibrariesLocal")
 
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.net.URI
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.21"
-    id("org.jetbrains.intellij") version "1.16.1"
+    id("org.jetbrains.kotlin.jvm") version "1.9.25"
+    id("org.jetbrains.intellij.platform") version "2.3.0"
 }
 
 group = "org.javamaster"
-version = "3.9.0"
+version = "3.9.2"
 
 repositories {
     maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
     mavenLocal()
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
+    intellijPlatform {
+        create("IC", "2024.3")
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
+        bundledPlugin("com.intellij.java")
+        bundledPlugin("com.intellij.modules.json")
+        bundledModule("com.intellij.modules.json")
+        plugin("ris58h.webcalm:0.11.1")
+    }
+
     implementation("org.mozilla:rhino:1.7.15")
     implementation("com.github.javafaker:javafaker:1.0.2")
     implementation("com.jayway.jsonpath:json-path:2.9.0")
@@ -33,17 +46,13 @@ dependencies {
 
 sourceSets["main"].java.srcDirs("src/main/gen")
 
-intellij {
-    version.set("2024.3")
-    type.set("IC")
-    plugins.set(
-        listOf(
-            "tasks",
-            "com.intellij.java",
-            "com.intellij.modules.json",
-            "ris58h.webcalm:0.11.1",
-        )
-    )
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = "232"
+            untilBuild = "252.*"
+        }
+    }
 }
 
 tasks {
@@ -52,22 +61,19 @@ tasks {
         targetCompatibility = "17"
         options.encoding = "UTF-8"
     }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
+    runIde {
+        autoReload = false
     }
 
     jar {
         // kt文件不知道被哪个配置影响导致被编译了两次,所以这里暂时配置下
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
-
-    patchPluginXml {
-        sinceBuild.set("231")
-        untilBuild.set("243.*")
-    }
-
-    runIde {
-        autoReloadPlugins = false
     }
 
     signPlugin {

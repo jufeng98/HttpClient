@@ -2,9 +2,9 @@ package org.javamaster.httpclient.ws
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.application.runWriteActionAndWait
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Disposer.newDisposable
+import com.intellij.util.application
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.dashboard.HttpProcessHandler
 import org.javamaster.httpclient.enums.ParamEnum
@@ -93,7 +93,7 @@ class WsRequest(
 
     fun returnResMsg(msg: String) {
         runInEdt {
-            runWriteActionAndWait {
+            application.runWriteAction {
                 resConsumer.accept(msg)
             }
         }

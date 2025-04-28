@@ -355,7 +355,7 @@ object HttpUtils {
                 val jsonStrPretty = gson.toJson(jsonElement)
 
                 return Triple(simpleTypeEnum, jsonStrPretty.toByteArray(StandardCharsets.UTF_8), contentType)
-            } catch (e: JsonSyntaxException) {
+            } catch (_: JsonSyntaxException) {
                 return Triple(simpleTypeEnum, resBody, contentType)
             }
         }
@@ -400,6 +400,7 @@ object HttpUtils {
                         return@mapNotNull null
                     } else {
                         val url = it.directionValue?.text ?: return@mapNotNull null
+                        @Suppress("DEPRECATION")
                         return@mapNotNull PreJsFile(it, URL(url))
                     }
                 }
@@ -565,7 +566,7 @@ object HttpUtils {
                 } else {
                     url.indexOf(uri.path)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 return null
             }
             tmpIdx

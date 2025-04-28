@@ -55,6 +55,14 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>3.9.2</b></li>
+                <ul>
+                    <li>解决 2025.1版本插件崩溃问题</li>
+                </ul>
+                <li><b>3.9.1</b></li>
+                <ul>
+                    <li>支持 2025.1版本</li>
+                </ul>
                 <li><b>3.9.0</b></li>
                 <ul>
                     <li>新增快速创建 http 请求功能</li>
