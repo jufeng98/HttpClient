@@ -14,6 +14,7 @@ abstract class CurlFormBodyPart(protected var myFieldName: String, protected var
     private var myHeaders: List<CurlRequest.KeyValuePair> =
         ArrayList()
 
+    @Suppress("unused")
     fun addHeader(name: String, value: String): CurlFormBodyPart {
         return this
     }

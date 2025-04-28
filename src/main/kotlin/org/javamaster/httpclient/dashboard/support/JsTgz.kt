@@ -119,7 +119,9 @@ object JsTgz {
 
                                 indicator.fraction = (index + 1) * faction
 
-                                TimeUnit.MILLISECONDS.sleep(1000 + random.nextLong(2000))
+                                if (index != npmFiles.size - 1) {
+                                    TimeUnit.MILLISECONDS.sleep(1000 + random.nextLong(1000))
+                                }
                             }
                     }
 

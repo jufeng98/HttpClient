@@ -55,6 +55,10 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>3.9.2</b></li>
+                <ul>
+                    <li>解决 2025.1版本插件崩溃问题</li>
+                </ul>
                 <li><b>3.9.1</b></li>
                 <ul>
                     <li>支持 2025.1版本</li>
@@ -174,12 +178,9 @@
     </change-notes>
 
     <depends>com.intellij.java</depends>
-    <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.json</depends>
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="httpclient-web-calm.xml">ris58h.webcalm</depends>
-
-    <module value="com.intellij.modules.json"/>
 
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="org.javamaster.httpclient.startup.HttpPostStartupActivity"/>

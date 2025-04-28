@@ -100,7 +100,9 @@ object DubboJars {
 
                                 indicator.fraction = (index + 1) * faction
 
-                                TimeUnit.MILLISECONDS.sleep(1000 + RandomStringUtils.RANDOM.nextLong(2000))
+                                if (index != jarMap.entries.size - 1) {
+                                    TimeUnit.MILLISECONDS.sleep(1000 + RandomStringUtils.RANDOM.nextLong(1000))
+                                }
                             }
                     }
 
@@ -151,7 +153,7 @@ object DubboJars {
         val dubboLibPath = getDubboLibPath()
         val libPath = dubboLibPath.parentFile
         return libPath.listFiles()!!
-            .filter { it.name.contains("HttpRequest") || it.name == "dubbo-2.6.12.jar" }
+            .filter { (it.name.contains("HttpRequest") && Files.size(it.toPath()) > 800000) || it.name == "dubbo-2.6.12.jar" }
             .map { it.toURI().toURL() }
     }
 

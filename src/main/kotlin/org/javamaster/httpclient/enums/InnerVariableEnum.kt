@@ -408,6 +408,7 @@ enum class InnerVariableEnum(val methodName: String) {
                 args[0] as String
             }
 
+            @Suppress("DEPRECATION")
             val process = Runtime.getRuntime().exec(command)
             process.waitFor(3, TimeUnit.SECONDS)
 
