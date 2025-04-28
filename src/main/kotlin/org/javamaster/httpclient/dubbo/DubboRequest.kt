@@ -190,6 +190,7 @@ class DubboRequest(
         val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toInt() ?: HttpUtils.TIMEOUT
         reference.timeout = timeout
         reference.retries = 1
+        reference.isCheck = false
 
         if (!version.isNullOrBlank()) {
             reference.version = version
