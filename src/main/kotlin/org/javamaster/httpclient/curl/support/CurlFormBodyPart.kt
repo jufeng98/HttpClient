@@ -11,39 +11,36 @@ import java.util.stream.Collectors
 
 
 abstract class CurlFormBodyPart(protected var myFieldName: String, protected var myContentType: ContentType) {
-    private var myHeaders: List<CurlRequest.KeyValuePair> =
-        ArrayList()
+    private var myHeaders: List<CurlRequest.KeyValuePair> = mutableListOf()
 
-    @Suppress("unused")
-    fun addHeader(name: String, value: String): CurlFormBodyPart {
+    fun addHeader(
+        @Suppress("UNUSED_PARAMETER") name: String,
+        @Suppress("UNUSED_PARAMETER") value: String,
+    ): CurlFormBodyPart {
         return this
     }
 
     protected fun fillHeaders(builder: FormBodyPartBuilder): FormBodyPartBuilder {
-        for (header in this.myHeaders) {
+        for (header in myHeaders) {
             builder.addField(header.key, header.value)
         }
+
         return builder
     }
 
     abstract fun toBodyPart(): FormBodyPart
 
     open fun toPsiRepresentation(): String {
-        return myHeaders.stream().map { field: CurlRequest.KeyValuePair -> field.key + ": " + field.value }
-            .collect(
-                Collectors.joining("\n")
-            )
+        return myHeaders.stream()
+            .map { field: CurlRequest.KeyValuePair -> field.key + ": " + field.value }
+            .collect(Collectors.joining("\n"))
     }
 
     private class CurlStringBodyPart(fieldName: String, private val myContent: String, contentType: ContentType) :
         CurlFormBodyPart(fieldName, contentType) {
         override fun toBodyPart(): FormBodyPart {
-            val builder = FormBodyPartBuilder.create(
-                this.myFieldName, StringBody(
-                    this.myContent,
-                    this.myContentType
-                )
-            )
+            val builder = FormBodyPartBuilder.create(myFieldName, StringBody(myContent, myContentType))
+
             return fillHeaders(builder).build()
         }
 
@@ -51,7 +48,7 @@ abstract class CurlFormBodyPart(protected var myFieldName: String, protected var
             return """
                 ${super.toPsiRepresentation()}
                 
-                ${StringUtil.convertLineSeparators(this.myContent)}
+                ${StringUtil.convertLineSeparators(myContent)}
                 """.trimIndent()
         }
     }
@@ -64,8 +61,8 @@ abstract class CurlFormBodyPart(protected var myFieldName: String, protected var
     ) :
         CurlFormBodyPart(name, contentType) {
         override fun toBodyPart(): FormBodyPart {
-            val builder =
-                FormBodyPartBuilder.create(this.myFieldName, FileBody(this.myFile, this.myContentType, this.myFileName))
+            val builder = FormBodyPartBuilder.create(myFieldName, FileBody(myFile, myContentType, myFileName))
+
             return fillHeaders(builder).build()
         }
 

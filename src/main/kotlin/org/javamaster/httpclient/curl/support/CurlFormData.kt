@@ -3,12 +3,13 @@ package org.javamaster.httpclient.curl.support
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidFormDataException
 import java.io.File
+import java.nio.charset.StandardCharsets
 
 
 class CurlFormData(formData: String) {
     val headers: MutableList<CurlRequest.KeyValuePair> = mutableListOf()
     var name: String
-    var formContentType: ContentType = ContentType.create("*/*", "UTF-8")
+    var formContentType: ContentType = ContentType.WILDCARD
 
     var file: File? = null
     lateinit var content: String
@@ -19,19 +20,19 @@ class CurlFormData(formData: String) {
         val equalSignPosition = formData.indexOf('=')
         if (equalSignPosition < 0) {
             throw newInvalidFormDataException(formData)
-        } else {
-            name = formData.substring(0, equalSignPosition)
-            val semicolonPosition = formData.indexOf(";")
-            val contentString = formData.substring(
-                equalSignPosition + 1,
-                if (semicolonPosition < 0) formData.length else semicolonPosition
-            )
+        }
 
-            parseContent(contentString)
+        name = formData.substring(0, equalSignPosition)
+        val semicolonPosition = formData.indexOf(";")
+        val contentString = formData.substring(
+            equalSignPosition + 1,
+            if (semicolonPosition < 0) formData.length else semicolonPosition
+        )
 
-            if (semicolonPosition >= 0) {
-                parseAdditionalOption(formData.substring(semicolonPosition + 1))
-            }
+        parseContent(contentString)
+
+        if (semicolonPosition >= 0) {
+            parseAdditionalOption(formData.substring(semicolonPosition + 1))
         }
     }
 
@@ -57,12 +58,14 @@ class CurlFormData(formData: String) {
 
         val additionalOptionKey = additionalFormData.substring(0, equalSignPosition)
 
-        val additionalOptionValue =
-            additionalFormData.substring(equalSignPosition + 1).replace("^\"|\"$|^'|'$".toRegex(), "")
+        val additionalOptionValue = additionalFormData
+            .substring(equalSignPosition + 1)
+            .replace("^\"|\"$|^'|'$".toRegex(), "")
+
         if (additionalOptionKey == "filename" && hasFileContent) {
             file = File(file!!.parent, additionalOptionValue)
         } else if (additionalOptionKey == "type") {
-            formContentType = ContentType.create(additionalOptionValue, "UTF-8")
+            formContentType = ContentType.create(additionalOptionValue, StandardCharsets.UTF_8)
         } else if (additionalOptionKey == "headers") {
             val colonPosition = additionalOptionValue.indexOf(':')
             if (colonPosition < 0) {
@@ -71,7 +74,8 @@ class CurlFormData(formData: String) {
                 headers.add(
                     CurlRequest.KeyValuePair(
                         additionalOptionValue.substring(0, colonPosition),
-                        additionalOptionValue.substring(colonPosition + 1).trim { it <= ' ' })
+                        additionalOptionValue.substring(colonPosition + 1).trim { it <= ' ' }
+                    )
                 )
             }
         }

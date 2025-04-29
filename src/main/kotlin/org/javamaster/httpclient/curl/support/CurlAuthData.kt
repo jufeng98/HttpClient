@@ -9,6 +9,7 @@ import java.security.Principal
 
 class CurlAuthData(private val scope: AuthScope, val authCredentials: Credentials) {
 
+    @Suppress("unused")
     fun isSchemeEquals(scheme: String): Boolean {
         return StringUtil.equalsIgnoreCase(scope.scheme, scheme)
     }

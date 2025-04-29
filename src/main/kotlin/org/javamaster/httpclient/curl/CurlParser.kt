@@ -1,9 +1,9 @@
 package org.javamaster.httpclient.curl
 
-import com.intellij.openapi.util.text.StringUtil
+import com.google.common.net.HttpHeaders
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
-import org.javamaster.httpclient.curl.support.CurlDataOptionFactory.getCurlDataOption
+import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidHeaderException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidMethodException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidPathException
@@ -13,6 +13,8 @@ import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.new
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newNotCurlException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newNotSupportedOptionException
 import org.javamaster.httpclient.curl.support.*
+import org.javamaster.httpclient.curl.support.CurlDataOptionFactory.getCurlDataOption
+import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.utils.CurlUtils
 import java.net.URI
 import java.net.URISyntaxException
@@ -53,6 +55,7 @@ class CurlParser(private val curl: String) {
         if (myContentType != null) {
             addContentTypeHeaderToRequest(curlRequest)
         }
+
         return curlRequest
     }
 
@@ -127,7 +130,7 @@ class CurlParser(private val curl: String) {
 
     private fun addHeaderToRequest(request: CurlRequest, header: String) {
         val keyValueHeaderPair = getKeyValueForHeader(header)
-        if (StringUtil.toLowerCase(keyValueHeaderPair.key) == "content-type") {
+        if (keyValueHeaderPair.key.equals(HttpHeaders.CONTENT_TYPE, ignoreCase = true)) {
             myContentType = if (myContentType != null) {
                 updateContentTypeIfNeeded(request, keyValueHeaderPair.value, myContentType!!)
             } else {
@@ -139,12 +142,14 @@ class CurlParser(private val curl: String) {
     }
 
     private fun addDataToRequest(optionName: String, request: CurlRequest, data: String) {
-        request.httpMethod = "POST"
+        request.httpMethod = HttpMethod.POST.name
         val curlDataOption = getCurlDataOption(optionName, data)
         curlDataOption?.apply(request)
 
         if (myContentType == null) {
-            addHeaderToRequest(request, "Content-Type: application/x-www-form-urlencoded")
+            val header = HttpHeaders.CONTENT_TYPE + ": " + ContentType.APPLICATION_FORM_URLENCODED.mimeType
+
+            addHeaderToRequest(request, header)
         }
     }
 
@@ -199,14 +204,14 @@ class CurlParser(private val curl: String) {
             curlFormBodyPart =
                 CurlFormBodyPart.create(fieldName, filename, file, curlFormData.formContentType)
                     .addHeader(
-                        "Content-Disposition",
+                        HttpHeaders.CONTENT_DISPOSITION,
                         "form-data; name=\"$fieldName\"; filename=\"$filename\""
                     )
         } else {
             curlFormBodyPart =
                 CurlFormBodyPart.create(fieldName, curlFormData.content, curlFormData.formContentType)
                     .addHeader(
-                        "Content-Disposition",
+                        HttpHeaders.CONTENT_DISPOSITION,
                         "form-data; name=\"$fieldName\""
                     )
         }
@@ -217,17 +222,20 @@ class CurlParser(private val curl: String) {
                 additionalHeader.value
             )
         })
+
         request.formBodyPart.add(curlFormBodyPart)
-        request.httpMethod = "POST"
+        request.httpMethod = HttpMethod.POST.name
         request.isFileUpload = true
         request.multipartBoundary = BOUNDARY
         if (myContentType == null) {
-            addHeaderToRequest(request, "Content-Type: multipart/form-data")
+            val header = HttpHeaders.CONTENT_TYPE + ": " + ContentType.MULTIPART_FORM_DATA.mimeType
+
+            addHeaderToRequest(request, header)
         }
     }
 
     private fun addContentTypeHeaderToRequest(request: CurlRequest) {
-        var header = "Content-Type: "
+        var header = "${HttpHeaders.CONTENT_TYPE}: "
         header = if (request.multipartBoundary != null) {
             "$header$myContentType; boundary=WebAppBoundary"
         } else {
@@ -274,7 +282,7 @@ class CurlParser(private val curl: String) {
 
         private fun addURL(request: CurlRequest, currentToken: String) {
             if (request.httpMethod == null) {
-                addHttpMethodToRequest(request, "GET")
+                addHttpMethodToRequest(request, HttpMethod.GET.name)
             }
 
             try {

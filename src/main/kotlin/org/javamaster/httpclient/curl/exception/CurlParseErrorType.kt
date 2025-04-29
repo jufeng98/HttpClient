@@ -9,6 +9,5 @@ enum class CurlParseErrorType {
     INVALID_HTTP_METHOD,
     INVALID_FORM_DATA,
     INVALID_HEADER,
-    UNSUPPORTED_ENCODING,
     INVALID_URL
 }

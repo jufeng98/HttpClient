@@ -26,6 +26,7 @@ class CurlRequest {
 
     var authData: CurlAuthData? = null
 
+    @Suppress("unused")
     fun getHeaderValue(name: String, defaultValue: String?): String? {
         for (header in headers) {
             if (name == header.key) {
@@ -36,8 +37,9 @@ class CurlRequest {
         return defaultValue
     }
 
+    @Suppress("unused")
     fun getHeadersValue(name: String): List<String> {
-        val list: MutableList<String> = ArrayList()
+        val list: MutableList<String> = mutableListOf()
 
         for (header in headers) {
             if (name == header.key) {
@@ -48,18 +50,16 @@ class CurlRequest {
         return if (list.isEmpty()) emptyList() else list
     }
 
+    @Suppress("unused")
     fun deleteHeader(name: String) {
         headers.removeIf { header: KeyValuePair? -> name == header!!.key }
     }
 
     val files: List<File>
         get() {
-            val files: MutableList<File> = ArrayList()
+            val files: MutableList<File> = mutableListOf()
 
-            for (path in StringUtil.split(
-                filesToSend!!,
-                File.pathSeparator
-            )) {
+            for (path in StringUtil.split(filesToSend!!, File.pathSeparator)) {
                 files.add(File(path))
             }
 
@@ -73,8 +73,8 @@ class CurlRequest {
                 base = "$base/"
             }
 
-            base =
-                if (urlPath!!.startsWith("/")) base + urlPath!!.substring(1) else base + urlPath
+            base = if (urlPath!!.startsWith("/")) base + urlPath!!.substring(1) else base + urlPath
+
             return base.replace(" ", "%20")
         }
 
@@ -93,6 +93,7 @@ class CurlRequest {
         )
     }
 
+    @Suppress("unused")
     fun addBiscuit(cookie: Cookie) {
         val date = cookie.expiryDate
         biscuits.add(
@@ -103,9 +104,10 @@ class CurlRequest {
         )
     }
 
-    val isEmptyCredentials: Boolean
-        get() = authData === CurlAuthData.EMPTY_CREDENTIALS
+    @Suppress("unused")
+    val isEmptyCredentials = authData === CurlAuthData.EMPTY_CREDENTIALS
 
+    @Suppress("unused")
     fun setEmptyCredentials() {
         authData = CurlAuthData.EMPTY_CREDENTIALS
     }

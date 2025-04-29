@@ -5,6 +5,7 @@ import java.io.File
 
 
 class CurlFileDataOption(private val myFilename: String) : CurlDataOption {
+
     override fun apply(curlRequest: CurlRequest) {
         if (StringUtil.isNotEmpty(curlRequest.filesToSend)) {
             curlRequest.filesToSend = curlRequest.filesToSend + File.pathSeparator + myFilename
@@ -14,4 +15,5 @@ class CurlFileDataOption(private val myFilename: String) : CurlDataOption {
 
         curlRequest.haveFileToSend = true
     }
+
 }
