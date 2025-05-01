@@ -5,7 +5,7 @@
 
     <description>
         <![CDATA[
-            Provides the ability to edit and execute HTTP requests from the code editor.<br>
+            Provides the ability to edit and execute HTTP requests from the code editor of IDEA.<br>
             <ul>
                 <li>Support sending GET, POST and other requests</li>
                 <li>Support sending WebSocket request</li>

@@ -1,6 +1,6 @@
 # HttpClient
 
-## Provides the ability to edit and execute HTTP requests from the code editor
+## Provides the ability to edit and execute HTTP requests from the code editor of IDEA
 
 ### features
 - Support sending GET, POST and other requests
@@ -36,7 +36,7 @@
 - url 悬浮提示对应的 SpringMVC Controller 方法信息
 - 支持从 json 属性跳转到对应的 SpringMVC Controller 方法的出入参 Bean 字段
 - json 属性悬浮提示对应的 SpringMVC Controller 方法的出入参 Bean 字段信息
-- 支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器(JavaScript 语法高亮功能依赖 WebCalm 插件)
+- 支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器(JavaScript 语法高亮功能依赖 WebCalm 插件. 在安装 WebCalm 插件后, 请重启 IDEA, 否则 js 语法高亮功能不会生效)
 - 支持从文件读取内容作为请求体
 - 支持保存响应到文件
 - 当响应的 Content-Type 为图片时支持直接预览响应的图片
