@@ -4,23 +4,26 @@
 # @require https://registry.npmmirror.com/moment/-/moment-2.30.1.tgz
 # @require https://registry.npmmirror.com/lodash/-/lodash-4.17.21.tgz
 
-// Global import local js file
-// 全局导入本地 js 文件
+// Global import local js file 全局导入本地 js 文件
 # @import ./js/public.js
 
 <! {%
-    // Global js previous handler
-    // 全局前置处理器
-
+    // Global js previous handler 全局前置处理器
     console.log("Call moment format:", moment().format())
     client.global.clearAll();
     client.global.set('globalName', 'jufeng98');
     request.variables.set('requestName', 'jufeng9878');
 
+    // Set request header 设置请求头
+    request.headers.set('My-Header', request.environment.get("token"));
+
+    // Append request header 追加请求头
+    request.headers.add('Set-Cookie', request.environment.get("token1"));
+    request.headers.add('Set-Cookie', request.environment.get("token2"));
+
     const secret = "RHDcnjfmkES"
     const signSource = secret + request.body.string() + secret;
-    // Use builtin CryptoJS object
-    // 使用内置的 CryptoJS 对象
+    // Use builtin CryptoJS object 使用内置的 CryptoJS 对象
     const sign = CryptoJS.MD5(signSource)
     request.variables.set('sign', sign);
     console.log("sign:", sign);
@@ -29,8 +32,7 @@
     params.append("name", "yu");
     console.log("query param:", params.toString());
 
-    // Execute local js file
-    // 执行本地 js 文件
+    // Execute local js file 执行本地 js 文件
     const global = require('./js/myUtils.js');
     const res = global.MyUtils.isBlank('hello');
     client.log(`result: ${res}`);
@@ -42,8 +44,7 @@
 
 ### use variable
 < {%
-    // pre-request handler
-    // 请求前置处理器
+    // pre-request handler 请求前置处理器
     request.variables.set('cnName', 'jufeng987878');
     console.log("Call lodash capitalize:", _.capitalize('FRED'))
 %}

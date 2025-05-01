@@ -165,16 +165,16 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
     }
 
     @JsBridge(jsFun = "setHeader(name, value)")
-    fun setHeader(name: String, value: String) {
+    fun setHeader(name: String, value: String?) {
         val list = LinkedList<String>()
-        list.add(value)
+        list.add(value ?: "")
 
         headerMap[name] = list
     }
 
     @JsBridge(jsFun = "addHeader(name, value)")
-    fun addHeader(name: String, value: String) {
-        headerMap.add(name, value)
+    fun addHeader(name: String, value: String?) {
+        headerMap.add(name, value ?: "")
     }
 
     @JsBridge(jsFun = "callJava(methodName, arg0, arg1)")
