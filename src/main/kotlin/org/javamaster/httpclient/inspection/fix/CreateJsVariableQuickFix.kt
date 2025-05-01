@@ -86,10 +86,11 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
             """.trimIndent()
         } else {
             """
+                ###
                 < {%
                     request.variables.set('$variableName', '');
                 %}
-                
+                GET
             """.trimIndent()
         }
 
@@ -108,8 +109,8 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
 
             globalHandler.globalScript.scriptBody!!
         } else {
-            val request = PsiTreeUtil.findChildOfType(requestBlock, HttpRequest::class.java)!!
-            val newPreRequestHandler = PsiTreeUtil.findChildOfType(tmpFile, HttpPreRequestHandler::class.java)!!
+            val request = requestBlock.request
+            val newPreRequestHandler = tmpFile.getRequestBlocks()[0].preRequestHandler!!
             val preRequestHandler = requestBlock.addBefore(newPreRequestHandler, request) as HttpPreRequestHandler
             preRequestHandler.preRequestScript.scriptBody!!
         }

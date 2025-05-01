@@ -34,13 +34,15 @@ import javax.xml.xpath.XPathFactory
  */
 class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: String) {
     val reqScriptableObject: ScriptableObject
+    private val originalJavaBridge: JavaBridge
 
     init {
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global
 
         // Register js bridge object javaBridge
-        val javaBridge = Context.javaToJS(JavaBridge(this), scriptableObject)
+        originalJavaBridge = JavaBridge(this)
+        val javaBridge = Context.javaToJS(originalJavaBridge, scriptableObject)
         ScriptableObject.putProperty(scriptableObject, "javaBridge", javaBridge)
 
         context.evaluateString(scriptableObject, javaBridgeJsStr, "javaBridge.js", 1, null)
@@ -110,6 +112,12 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             request.headers = $headers;
             request.headers.all = function() {
                 return headersAll(this);
+            };
+            request.headers.set = function(name, value) {
+                javaBridge.setHeader(name, value);
+            };
+            request.headers.add = function(name, value) {
+                javaBridge.addHeader(name, value);
             };
             request.headers.findByName = function(name) {
                 return headersFindByName(this, name);
@@ -417,6 +425,10 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         }
 
         return map
+    }
+
+    fun getHeaderMap(): LinkedMultiValueMap<String, String> {
+        return originalJavaBridge.headerMap
     }
 
     companion object {

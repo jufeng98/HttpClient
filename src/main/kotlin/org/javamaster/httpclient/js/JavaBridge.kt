@@ -6,6 +6,7 @@ import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
@@ -23,6 +24,7 @@ import java.util.*
 @Suppress("unused")
 class JavaBridge(private val jsExecutor: JsExecutor) {
     private val parentPath = jsExecutor.httpFile.virtualFile.parent.path
+    val headerMap: LinkedMultiValueMap<String, String> = LinkedMultiValueMap()
 
     @JsBridge(jsFun = "require(path)")
     fun require(path: String): ScriptableObject {
@@ -160,6 +162,19 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         } catch (e: Exception) {
             throw HttpFileException(e.toString(), e)
         }
+    }
+
+    @JsBridge(jsFun = "setHeader(name, value)")
+    fun setHeader(name: String, value: String) {
+        val list = LinkedList<String>()
+        list.add(value)
+
+        headerMap[name] = list
+    }
+
+    @JsBridge(jsFun = "addHeader(name, value)")
+    fun addHeader(name: String, value: String) {
+        headerMap.add(name, value)
     }
 
     @JsBridge(jsFun = "callJava(methodName, arg0, arg1)")

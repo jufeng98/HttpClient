@@ -400,7 +400,6 @@ object HttpUtils {
                         return@mapNotNull null
                     } else {
                         val url = it.directionValue?.text ?: return@mapNotNull null
-                        @Suppress("DEPRECATION")
                         return@mapNotNull PreJsFile(it, URL(url))
                     }
                 }

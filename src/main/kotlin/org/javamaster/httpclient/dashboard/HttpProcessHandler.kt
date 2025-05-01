@@ -188,6 +188,8 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
+        reqHeaderMap.putAll(jsExecutor.getHeaderMap())
+
         if (methodType == HttpRequestEnum.WEBSOCKET.name) {
             handleWs(url, reqHeaderMap)
             return
