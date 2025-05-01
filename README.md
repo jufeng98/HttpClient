@@ -1,5 +1,29 @@
 # HttpClient
 
+## Provides the ability to edit and execute HTTP requests from the code editor
+
+### features
+- Support sending GET, POST and other requests
+- Support sending WebSocket request
+- Support sending Dubbo request
+- Support Environment, build-in variable and build-in method
+- Support jump to SpringMVC Controller method from url
+- Show SpringMVC Controller method information when hover in url
+- Support jump to SpringMVC Controller method bean field from json property
+- Show SpringMVC Controller method bean field information when hover in json key
+- Support JavaScript previous handler, post handler and global handler(JavaScript syntax highlighting depends on WebCalm 
+  plugin. After install WebCalm, please restart IDEA, Otherwise JavaScript syntax highlighting will not work.)
+- Support reading file content as http request body
+- Support saving http response body to file
+- When the response Content-Type is image type, it supports direct preview of the corresponding image
+- Support searching SpringMVC Api in the SearchEverywhere Dialog
+
+### Getting Started
+
+1. Create a file with an HTTP suffix
+2. Type gtr or ptr to trigger live templates and quickly create HTTP requests
+3. Click the run button on the left side of the editor to sending request and view the response
+
 ## 提供从 IDEA Editor 编写和执行 HTTP 请求的能力
 
 ### 主要功能如下：
