@@ -62,7 +62,7 @@
     <change-notes>
         <![CDATA[
             <ul>
-                <li><b>3.9.3</b></li>
+                <li><b>3.9.5</b></li>
                 <ul>
                     <li>完善 js 语句块的注入逻辑</li>
                     <li>新增在 js 前置处理器设置请求头方法</li>
