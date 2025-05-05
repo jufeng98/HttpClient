@@ -99,7 +99,7 @@
 
 #### 保存响应到文件
 
-![save-response.png](./images/res-to-file.png)
+![res-to-file.png](./images/res-to-file.png)
 
 #### 预览图片
 
@@ -107,7 +107,7 @@
 
 #### multipart请求
 
-![multipart.png](./images/multipart.jpg)
+![multipart.png](./images/multipart.png)
 
 ## 作者信息
 
