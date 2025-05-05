@@ -22,13 +22,13 @@ import org.jetbrains.annotations.Nls
 class HttpHeadersDocumentationProvider : DocumentationProvider {
     private val headerSet = TokenSet.create(HttpTypes.FIELD_NAME, HttpTypes.FIELD_VALUE)
 
-    override fun getUrlFor(element: PsiElement, originalElement: PsiElement): List<String>? {
+    override fun getUrlFor(element: PsiElement?, originalElement: PsiElement?): List<String>? {
         val doc = getDocumentation(element) ?: return null
 
         return SmartList(doc.url)
     }
 
-    override fun generateDoc(element: PsiElement, originalElement: PsiElement?): @Nls String? {
+    override fun generateDoc(element: PsiElement?, originalElement: PsiElement?): @Nls String? {
         val doc = getDocumentation(element) ?: return null
 
         return doc.generateDoc()
@@ -36,8 +36,8 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
 
     override fun getDocumentationElementForLookupItem(
         psiManager: PsiManager?,
-        `object`: Any,
-        element: PsiElement,
+        `object`: Any?,
+        element: PsiElement?,
     ): PsiElement? {
         if (`object` !is HttpHeaderDocumentation) {
             return null
@@ -81,7 +81,7 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
         return null
     }
 
-    private fun getDocumentation(element: PsiElement): HttpHeaderDocumentation? {
+    private fun getDocumentation(element: PsiElement?): HttpHeaderDocumentation? {
         if (element !is HttpHeaderField) return null
 
         val name = element.name
