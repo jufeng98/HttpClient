@@ -82,24 +82,29 @@ class HttpInlayActionHandler : InlayActionHandler {
 
         val pair = generateBody(psiMethod)
 
+        val contentType = pair.first
+        val body = pair.second
+
         if (httpMethod == HttpMethod.POST || httpMethod == HttpMethod.PUT) {
             lightVirtualFile.writeText(
                 """
 ### $methodDesc
 ${httpMethod.name} http://localhost${request.path}
 Accept: application/json
-Content-Type: ${pair.first}
+Content-Type: $contentType
             
-${pair.second}
+$body
                 """.trimIndent()
             )
         } else {
+            val content = if(body.isEmpty()) "" else "?$body"
+
             lightVirtualFile.writeText(
                 """
 ### $methodDesc
-${httpMethod.name} http://localhost${request.path}${pair.second}
+${httpMethod.name} http://localhost${request.path}$content
 Accept: application/json
-Content-Type: ${pair.first}
+Content-Type: $contentType
                                                    
                 """.trimIndent()
             )
@@ -173,7 +178,7 @@ Content-Type: ${pair.first}
             }
         }
 
-        body = if (list.isEmpty()) "" else "?" + list.joinToString("&")
+        body = if (list.isEmpty()) "" else list.joinToString("&")
 
         return Pair("application/x-www-form-urlencoded", body)
     }
