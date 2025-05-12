@@ -10,13 +10,11 @@ import java.io.File
 import java.util.stream.Collectors
 
 
-abstract class CurlFormBodyPart(protected var myFieldName: String, protected var myContentType: ContentType) {
-    private var myHeaders: List<CurlRequest.KeyValuePair> = mutableListOf()
+abstract class CurlFormBodyPart(var myFieldName: String) {
+    private var myHeaders: MutableList<CurlRequest.KeyValuePair> = mutableListOf()
 
-    fun addHeader(
-        @Suppress("UNUSED_PARAMETER") name: String,
-        @Suppress("UNUSED_PARAMETER") value: String,
-    ): CurlFormBodyPart {
+    fun addHeader(name: String, value: String): CurlFormBodyPart {
+        myHeaders.add(CurlRequest.KeyValuePair(name, value))
         return this
     }
 
@@ -36,10 +34,15 @@ abstract class CurlFormBodyPart(protected var myFieldName: String, protected var
             .collect(Collectors.joining("\n"))
     }
 
-    private class CurlStringBodyPart(fieldName: String, private val myContent: String, contentType: ContentType) :
-        CurlFormBodyPart(fieldName, contentType) {
+    private class CurlStringBodyPart(
+        fieldName: String,
+        private val myContent: String,
+        private val contentType: ContentType,
+    ) :
+        CurlFormBodyPart(fieldName) {
+
         override fun toBodyPart(): FormBodyPart {
-            val builder = FormBodyPartBuilder.create(myFieldName, StringBody(myContent, myContentType))
+            val builder = FormBodyPartBuilder.create(myFieldName, StringBody(myContent, contentType))
 
             return fillHeaders(builder).build()
         }
@@ -57,11 +60,11 @@ abstract class CurlFormBodyPart(protected var myFieldName: String, protected var
         name: String,
         private val myFileName: String,
         private val myFile: File,
-        contentType: ContentType,
+        private val contentType: ContentType,
     ) :
-        CurlFormBodyPart(name, contentType) {
+        CurlFormBodyPart(name) {
         override fun toBodyPart(): FormBodyPart {
-            val builder = FormBodyPartBuilder.create(myFieldName, FileBody(myFile, myContentType, myFileName))
+            val builder = FormBodyPartBuilder.create(myFieldName, FileBody(myFile, contentType, myFileName))
 
             return fillHeaders(builder).build()
         }
@@ -70,16 +73,12 @@ abstract class CurlFormBodyPart(protected var myFieldName: String, protected var
             return """
                 ${super.toPsiRepresentation()}
                 
-                < ${myFile.path}
+                < ${myFile.absolutePath}
                 """.trimIndent()
         }
     }
 
     companion object {
-        fun create(fieldName: String, file: File): CurlFormBodyPart {
-            return CurlFileBodyPart(fieldName, file.name, file, ContentType.DEFAULT_BINARY)
-        }
-
         fun create(fieldName: String, fileName: String, file: File, contentType: ContentType): CurlFormBodyPart {
             return CurlFileBodyPart(fieldName, fileName, file, contentType)
         }

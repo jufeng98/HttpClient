@@ -195,6 +195,7 @@ class CurlParser(private val curl: String) {
 
     private fun addFormDataToRequest(request: CurlRequest, formData: String) {
         val curlFormData = CurlFormData(formData)
+
         val fieldName = curlFormData.name
         val curlFormBodyPart: CurlFormBodyPart
         if (curlFormData.hasFileContent()) {
@@ -224,6 +225,7 @@ class CurlParser(private val curl: String) {
         })
 
         request.formBodyPart.add(curlFormBodyPart)
+
         request.httpMethod = HttpMethod.POST.name
         request.isFileUpload = true
         request.multipartBoundary = BOUNDARY
@@ -249,6 +251,7 @@ class CurlParser(private val curl: String) {
         private const val BOUNDARY = "WebAppBoundary"
         private const val MULTIPART_FORM_HEADER_VALUE = "multipart/form-data"
         private const val URLENCODED_HEADER_VALUE = "application/x-www-form-urlencoded"
+
         fun deleteBackslashes(data: String?): String? {
             return data?.replace("\\\\".toRegex(), "")
         }
