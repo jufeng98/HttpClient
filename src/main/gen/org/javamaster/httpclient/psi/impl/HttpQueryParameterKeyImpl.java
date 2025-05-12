@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class HttpQueryParameterKeyImpl extends ASTWrapperPsiElement implements HttpQueryParameterKey {
 
@@ -31,6 +32,12 @@ public class HttpQueryParameterKeyImpl extends ASTWrapperPsiElement implements H
   @Nullable
   public HttpVariable getVariable() {
     return findChildByClass(HttpVariable.class);
+  }
+
+  @Override
+  @NotNull
+  public PsiReference[] getReferences() {
+    return HttpPsiImplUtil.getReferences(this);
   }
 
 }

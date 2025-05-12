@@ -62,6 +62,11 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
+    fun getReferences(element: HttpQueryParameterKey): Array<PsiReference> {
+        return ReferenceProvidersRegistry.getReferencesFromProviders(element)
+    }
+
+    @JvmStatic
     fun getValue(variableValue: HttpGlobalVariableValue): String? {
         return getNextSiblingByType(variableValue.firstChild, HttpTypes.GLOBAL_VALUE, false)?.text
     }

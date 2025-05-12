@@ -154,7 +154,11 @@ query ::= queryParameter (AND queryParameter)*
 queryParameter ::= queryParameterKey EQUALS? queryParameterValue? {
     pin = 1
 }
-queryParameterKey ::= QUERY_NAME | variable
+queryParameterKey ::= QUERY_NAME | variable {
+    methods = [
+        getReferences
+    ]
+}
 queryParameterValue ::= QUERY_VALUE | variable
 fragment ::= FRAGMENT_PART
 version ::= HTTP_VERSION {
