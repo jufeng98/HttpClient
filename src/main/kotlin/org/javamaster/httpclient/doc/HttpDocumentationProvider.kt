@@ -19,6 +19,7 @@ import org.javamaster.httpclient.env.EnvFileService.Companion.getJsonLiteralValu
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.reference.support.QueryNamePsiReference
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
@@ -136,12 +137,17 @@ class HttpDocumentationProvider : DocumentationProvider {
         psiReferences.addAll(parent?.references ?: emptyArray())
 
         for (psiReference in psiReferences) {
-            if (psiReference !is TextVariableNamePsiReference) continue
+            if (psiReference is TextVariableNamePsiReference) {
+                val textRange = psiReference.textRange
+                if (targetOffset < textRange.startOffset || targetOffset > textRange.endOffset) continue
 
-            val textRange = psiReference.textRange
-            if (targetOffset < textRange.startOffset || targetOffset > textRange.endOffset) continue
+                return MyFakePsiElement(contextElement, psiReference.variable)
+            } else if (psiReference is QueryNamePsiReference) {
+                val textRange = psiReference.textRange
+                if (targetOffset < textRange.startOffset || targetOffset > textRange.endOffset) continue
 
-            return MyFakePsiElement(contextElement, psiReference.variable)
+                return psiReference.resolve()
+            }
         }
 
         return contextElement
