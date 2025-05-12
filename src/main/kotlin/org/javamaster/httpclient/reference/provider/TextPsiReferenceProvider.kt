@@ -1,10 +1,7 @@
 package org.javamaster.httpclient.reference.provider
 
 import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiPlainTextFile
-import com.intellij.psi.PsiReference
-import com.intellij.psi.PsiReferenceProvider
+import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.apache.http.entity.ContentType
@@ -39,11 +36,19 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
         val text = plainTextFile.text
         val delta = plainTextFile.textRange.startOffset
 
-        val request = PsiTreeUtil.getParentOfType(injectionHost, HttpRequest::class.java)
-        if (request?.contentType == ContentType.APPLICATION_FORM_URLENCODED) {
+        val request = PsiTreeUtil.getParentOfType(injectionHost, HttpRequest::class.java)!!
+
+        if (request.contentType == ContentType.APPLICATION_FORM_URLENCODED) {
             val query = UrlEncodedLazyFileElement.parse(text) ?: return emptyArray()
 
-            return createUrlEncodedReferences(plainTextFile, injectionHost, query, delta)
+            val references = request.requestTarget!!.references
+            if (references.isEmpty()) {
+                return emptyArray()
+            }
+
+            val controllerMethod = references[0].resolve() as PsiMethod? ?: return emptyArray()
+
+            return createUrlEncodedReferences(plainTextFile, injectionHost, query, delta, controllerMethod)
         }
 
         return createTextVariableReferences(plainTextFile, injectionHost, text, delta)
@@ -54,16 +59,18 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
         messageBody: HttpMessageBody?,
         query: HttpQuery,
         delta: Int,
+        controllerMethod: PsiMethod,
     ): Array<PsiReference> {
         val references = mutableListOf<PsiReference>()
 
         query.queryParameterList
             .forEach {
                 val queryParameterName = it.queryParameterKey
+                val queryName = queryParameterName.text
 
                 val nameRange = queryParameterName.textRange.shiftRight(delta)
 
-                val nameReference = QueryNamePsiReference(psiElement, nameRange)
+                val nameReference = QueryNamePsiReference(psiElement, nameRange, controllerMethod, queryName)
                 references.add(nameReference)
 
                 val queryParameterValue = it.queryParameterValue ?: return@forEach
