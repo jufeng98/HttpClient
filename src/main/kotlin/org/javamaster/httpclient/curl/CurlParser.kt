@@ -287,14 +287,14 @@ class CurlParser(private val curl: String) {
             return data?.replace("\\\\".toRegex(), "")
         }
 
-        fun toCurlString(requestBlock: HttpRequestBlock, project: Project): String {
+        fun toCurlString(requestBlock: HttpRequestBlock, project: Project, consumer: Consumer<String>) {
             val request = requestBlock.request
 
             val editorTopForm = HttpEditorTopForm.getSelectedEditorTopForm(project)
 
             val httpProcessHandler = HttpProcessHandler(request.method, editorTopForm?.selectedEnv)
 
-            return httpProcessHandler.convertToCurl()
+            httpProcessHandler.convertToCurl(consumer)
         }
 
         private fun updateContentTypeIfNeeded(

@@ -348,7 +348,7 @@ object HttpUtils {
 
         reqStr += variableResolver.resolve(str)
 
-        return reqStr.replace("\n", "\n    ")
+        return reqStr
     }
 
     fun constructMultipartBodyCurl(

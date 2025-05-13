@@ -13,6 +13,7 @@ import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.curl.CurlParser
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpRequestBlock
+import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.NotifyUtil
 import java.awt.datatransfer.StringSelection
 
@@ -42,11 +43,20 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
             return
         }
 
-        val curlString = CurlParser.toCurlString(requestBlock, project)
+        try {
+            CurlParser.toCurlString(requestBlock, project) {
+                CopyPasteManager.getInstance().setContents(StringSelection(it))
 
-        CopyPasteManager.getInstance().setContents(StringSelection(curlString))
-
-        HintManager.getInstance().showInformationHint(editor, nls("converted.tip") + "\n" + curlString)
+                val str = if (it.length > 2000) {
+                    it.substring(0, 2000) + "$CR_LF......"
+                } else {
+                    it
+                }
+                HintManager.getInstance().showInformationHint(editor, nls("converted.tip") + "\n" + str)
+            }
+        } catch (e: Exception) {
+            NotifyUtil.notifyError(project, e.toString())
+        }
     }
 
     private fun findRequestBlock(e: AnActionEvent): HttpRequestBlock? {

@@ -54,6 +54,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 import javax.swing.JPanel
 
 /**
@@ -205,7 +206,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
     }
 
-    fun convertToCurl(): String {
+    fun convertToCurl(consumer: Consumer<String>) {
         val httpHeaderFields = request.header?.headerFieldList
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
@@ -215,7 +216,6 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
         reqHeaderMap.putAll(jsExecutor.getHeaderMap())
-
 
         val list = mutableListOf<String>()
 
@@ -229,22 +229,32 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             }
         }
 
-        val body = request.body
-        val requestMessagesGroup = body?.requestMessagesGroup
-        val httpMultipartMessage = body?.multipartMessage
+        HttpBackground.runInBackgroundReadActionAsync {
+            val body = request.body
+            val requestMessagesGroup = body?.requestMessagesGroup
+            val httpMultipartMessage = body?.multipartMessage
 
-        if (requestMessagesGroup != null) {
-            val content = HttpUtils.handleOrdinaryContentCurl(requestMessagesGroup, variableResolver, request.header)
+            if (requestMessagesGroup != null) {
+                val header = request.header
 
-            list.add("    -d '${content}'")
-        } else if (httpMultipartMessage != null) {
+                val content = HttpUtils.handleOrdinaryContentCurl(requestMessagesGroup, variableResolver, header)
+                    .replace("\n", "\n    ")
 
-            val contents = HttpUtils.constructMultipartBodyCurl(httpMultipartMessage, variableResolver)
+                list.add("    -d '${content}'")
+            } else if (httpMultipartMessage != null) {
 
-            list.addAll(contents)
+                val contents = HttpUtils.constructMultipartBodyCurl(httpMultipartMessage, variableResolver)
+
+                list.addAll(contents)
+            }
+
+            list.joinToString(" \\${CR_LF}")
+        }.finishOnUiThread {
+            consumer.accept(it!!)
+        }.exceptionallyOnUiThread {
+            NotifyUtil.notifyError(project, it.toString())
         }
 
-        return list.joinToString(" \\${CR_LF}")
     }
 
     private fun handleException(e: Exception) {
