@@ -4,6 +4,7 @@ import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.ide.CopyPasteManager
@@ -20,8 +21,8 @@ import java.awt.datatransfer.DataFlavor
  * @author yudong
  */
 class ImportCurlAction : AddAction() {
-    override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("import.from.curl")
+    init {
+        templatePresentation.text = NlsBundle.nls("import.from.curl")
     }
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -29,7 +30,7 @@ class ImportCurlAction : AddAction() {
 
         val contents = CopyPasteManager.getInstance().getContents<String?>(DataFlavor.stringFlavor)
 
-        var initialValue = "curl -i http://httpbin.org/ip"
+        var initialValue = "curl -i https://www.baidu.com"
         if (!contents.isNullOrEmpty()) {
             val trim = contents.trim()
             if (trim.startsWith("curl")) {
@@ -55,7 +56,6 @@ class ImportCurlAction : AddAction() {
         }
 
         val sb = StringBuilder()
-        sb.append("\n")
         sb.append("### curl request\n")
         sb.append(curlRequest.httpMethod!!)
         sb.append(" ")
@@ -71,9 +71,9 @@ class ImportCurlAction : AddAction() {
             val textToSend = curlRequest.textToSend
             if (textToSend != null) {
                 sb.append(textToSend)
+                sb.append("\n\n")
             }
         } else {
-
             curlRequest.formBodyPart.forEach {
                 sb.append("--${multipartBoundary}\n")
 
@@ -94,6 +94,7 @@ class ImportCurlAction : AddAction() {
             }
 
             sb.append("--${multipartBoundary}--")
+            sb.append("\n\n")
         }
 
         val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
@@ -101,9 +102,9 @@ class ImportCurlAction : AddAction() {
 
         runWriteAction {
             WriteCommandAction.runWriteCommandAction(project) {
-                document.insertString(document.textLength, sb.toString())
-
-                editor.caretModel.moveToOffset(document.textLength)
+                document.insertString(0, sb.toString())
+                editor.caretModel.moveToOffset(0)
+                editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
             }
         }
     }
