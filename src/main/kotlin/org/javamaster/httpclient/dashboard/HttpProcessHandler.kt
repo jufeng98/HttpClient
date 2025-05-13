@@ -243,7 +243,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
             list.addAll(contents)
         }
-        
+
         return list.joinToString(" \\${CR_LF}")
     }
 

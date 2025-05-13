@@ -58,7 +58,7 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
 
             val extension = fileTypeManagerEx.getFileTypeByExtension(jsonExtension)
             if (extension === jsonFileType) {
-                initTopForm(source, file, module, project, fileEditor)
+                initTopForm(source, file, module, fileEditor)
                 return@executeOnPooledThread
             }
 
@@ -68,7 +68,7 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
                     fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
                     println("The json suffix file has been associated with the $jsonFileType")
 
-                    initTopForm(source, file, module, project, fileEditor)
+                    initTopForm(source, file, module, fileEditor)
                 }
             }
         }
@@ -78,7 +78,6 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
         source: FileEditorManager,
         file: VirtualFile,
         module: Module?,
-        project: Project,
         fileEditor: FileEditor,
     ) {
         HttpBackground
@@ -93,7 +92,7 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
                     return@finishOnUiThread
                 }
 
-                val httpEditorTopForm = HttpEditorTopForm(file, module, project)
+                val httpEditorTopForm = HttpEditorTopForm(file, module,fileEditor)
 
                 httpEditorTopForm.initEnvCombo(it)
 

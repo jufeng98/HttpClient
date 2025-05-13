@@ -62,6 +62,13 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>3.9.6</b></li>
+                <ul>
+                    <li>新增查询参数跳转控制器入参功能</li>
+                    <li>新增查询参数的控制器入参文档提示功能</li>
+                    <li>新增将请求转换为 curl 功能</li>
+                    <li>bug修复及功能优化</li>
+                </ul>
                 <li><b>3.9.5</b></li>
                 <ul>
                     <li>完善 js 语句块的注入逻辑</li>
@@ -69,10 +76,6 @@
                     <li>bug修复</li>
                 </ul>
                 <li><b>3.9.2</b></li>
-                <ul>
-                    <li>解决 2025.1版本插件崩溃问题</li>
-                </ul>
-                <li><b>3.9.1</b></li>
                 <ul>
                     <li>支持 2025.1版本</li>
                 </ul>
@@ -321,11 +324,20 @@
     </extensions>
 
     <actions>
-        <action class="org.javamaster.httpclient.action.ApiSearchEverywhereAction" text="Search Api">
+        <action class="org.javamaster.httpclient.action.ApiSearchEverywhereAction">
             <keyboard-shortcut first-keystroke="control alt SLASH" keymap="$default"/>
         </action>
 
-        <group id="addToHttp">
+        <group id="toolbarLeftGroup">
+            <action class="org.javamaster.httpclient.action.ShowAddHttpPopupAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.ShowVariableFormAction"/>
+            <action class="org.javamaster.httpclient.action.ConvertToCurlAndCpAction"/>
+            <separator/>
+            <action class="org.javamaster.httpclient.action.RunAllRequestAction"/>
+        </group>
+
+        <group id="addToHttpGroup">
             <action class="org.javamaster.httpclient.action.addHttp.AddGetAction"/>
             <separator/>
             <action class="org.javamaster.httpclient.action.addHttp.AddPostJsonAction"/>
@@ -344,7 +356,11 @@
             <action class="org.javamaster.httpclient.action.addHttp.AddEnvPrivateFileAction"/>
         </group>
 
-        <group id="exampleHttp">
+        <group id="toolbarRightBtnGroup">
+            <action class="org.javamaster.httpclient.action.ShowExamplePopupAction"/>
+        </group>
+
+        <group id="exampleHttpGroup">
             <action class="org.javamaster.httpclient.action.example.GetExampleAction"/>
             <separator/>
             <action class="org.javamaster.httpclient.action.example.PostExampleAction"/>
