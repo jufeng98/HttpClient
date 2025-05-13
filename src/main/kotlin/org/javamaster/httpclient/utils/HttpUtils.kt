@@ -316,6 +316,75 @@ object HttpUtils {
         return byteArrays
     }
 
+    fun handleOrdinaryContentCurl(
+        requestMessagesGroup: HttpRequestMessagesGroup,
+        variableResolver: VariableResolver,
+        header: HttpHeader?,
+    ): String {
+        var reqStr: String? = null
+
+        val messageBody = requestMessagesGroup.messageBody
+        if (messageBody != null) {
+            reqStr = variableResolver.resolve(messageBody.text)
+        }
+
+        val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr ?: ""
+
+        val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
+
+        val file = File(path)
+
+        if (!isTxtContentType(header)) {
+            return ""
+        }
+
+        if (reqStr == null) {
+            reqStr = ""
+        } else {
+            reqStr += CR_LF
+        }
+
+        val str = VirtualFileUtils.readNewestContent(file)
+
+        reqStr += variableResolver.resolve(str)
+
+        return reqStr.replace("\n", "\n    ")
+    }
+
+    fun constructMultipartBodyCurl(
+        httpMultipartMessage: HttpMultipartMessage,
+        variableResolver: VariableResolver,
+    ): MutableList<String> {
+        val list = mutableListOf<String>()
+
+        httpMultipartMessage.multipartFieldList
+            .forEach {
+                val requestMessagesGroup = it.requestMessagesGroup
+                val header = it.header
+
+
+                val messageBody = requestMessagesGroup.messageBody
+                if (messageBody != null) {
+                    val content = variableResolver.resolve(messageBody.text)
+
+                    list.add("    -F \"${header.contentDispositionName}=" + content + ";type=${header.contentTypeField?.headerFieldValue?.text}\"")
+                }
+
+                val filePath = requestMessagesGroup.inputFile?.filePath?.text
+                if (filePath != null) {
+                    val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
+
+                    val file = File(path)
+                    val content = "@" + file.absolutePath.replace("\\", "/")
+
+                    list.add("    -F \"${header.contentDispositionName}=" + content + ";filename=${header.contentDispositionFileName};type=${header.contentTypeField?.headerFieldValue?.text}\"")
+                }
+            }
+
+
+        return list
+    }
+
     fun constructFilePath(filePath: String, parentPath: String): String {
         return if (filePath.startsWith("/") || (filePath.length > 1 && filePath[1] == ':')) {
             // 绝对路径

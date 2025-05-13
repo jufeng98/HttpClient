@@ -205,6 +205,48 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
     }
 
+    fun convertToCurl(): String {
+        val httpHeaderFields = request.header?.headerFieldList
+
+        var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
+
+        val url = variableResolver.resolve(requestTarget.url)
+
+        reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
+
+        reqHeaderMap.putAll(jsExecutor.getHeaderMap())
+
+
+        val list = mutableListOf<String>()
+
+        list.add("curl -X ${request.method.text} --location \"$url\"")
+
+
+        reqHeaderMap.forEach {
+            val name = it.key
+            for (value in it.value) {
+                list.add("    -H \"$name: ${value}\"")
+            }
+        }
+
+        val body = request.body
+        val requestMessagesGroup = body?.requestMessagesGroup
+        val httpMultipartMessage = body?.multipartMessage
+
+        if (requestMessagesGroup != null) {
+            val content = HttpUtils.handleOrdinaryContentCurl(requestMessagesGroup, variableResolver, request.header)
+
+            list.add("    -d '${content}'")
+        } else if (httpMultipartMessage != null) {
+
+            val contents = HttpUtils.constructMultipartBodyCurl(httpMultipartMessage, variableResolver)
+
+            list.addAll(contents)
+        }
+        
+        return list.joinToString(" \\${CR_LF}")
+    }
+
     private fun handleException(e: Exception) {
         destroyProcess()
         NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e}</div>")
