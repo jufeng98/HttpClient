@@ -129,6 +129,38 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
+    fun getContentDispositionName(header: HttpHeader): String? {
+        val first = header.headerFieldList
+            .firstOrNull {
+                it.headerFieldName.text.equals(HttpHeaders.CONTENT_DISPOSITION, ignoreCase = true)
+            }
+
+        if (first == null) {
+            return null
+        }
+
+        val headerFieldValue = first.headerFieldValue ?: return null
+
+        return getHeaderFieldOption(headerFieldValue, "name")
+    }
+
+    @JvmStatic
+    fun getContentDispositionFileName(header: HttpHeader): String? {
+        val first = header.headerFieldList
+            .firstOrNull {
+                it.headerFieldName.text.equals(HttpHeaders.CONTENT_DISPOSITION, ignoreCase = true)
+            }
+
+        if (first == null) {
+            return null
+        }
+
+        val headerFieldValue = first.headerFieldValue ?: return null
+
+        return getHeaderFieldOption(headerFieldValue, "filename")
+    }
+
+    @JvmStatic
     fun getContentLength(request: HttpRequest): Int? {
         val first = request.header?.headerFieldList
             ?.firstOrNull {

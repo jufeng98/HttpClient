@@ -171,6 +171,8 @@ header ::= headerField+ {
     methods = [
         getContentTypeField
         getInterfaceField
+        getContentDispositionName
+        getContentDispositionFileName
     ]
 }
 headerField ::= headerFieldName colonFlag headerFieldValue? {
