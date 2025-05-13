@@ -52,6 +52,7 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
                 } else {
                     it
                 }
+
                 HintManager.getInstance().showInformationHint(editor, nls("converted.tip") + "\n" + str)
             }
         } catch (e: Exception) {

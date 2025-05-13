@@ -253,7 +253,6 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         }.exceptionallyOnUiThread {
             NotifyUtil.notifyError(project, it.toString())
         }
-
     }
 
     private fun handleException(e: Exception) {

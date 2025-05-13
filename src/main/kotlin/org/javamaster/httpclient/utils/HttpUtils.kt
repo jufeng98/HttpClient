@@ -328,7 +328,7 @@ object HttpUtils {
             reqStr = variableResolver.resolve(messageBody.text)
         }
 
-        val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr.replace("\n", "\n    ") ?: ""
+        val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr.replace("\n", "\n    ")
 
         val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
