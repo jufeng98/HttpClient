@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.curl
 
 import com.google.common.net.HttpHeaders
+import com.intellij.openapi.project.Project
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.entity.ContentType
@@ -14,7 +15,10 @@ import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.new
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newNotSupportedOptionException
 import org.javamaster.httpclient.curl.support.*
 import org.javamaster.httpclient.curl.support.CurlDataOptionFactory.getCurlDataOption
+import org.javamaster.httpclient.dashboard.HttpProcessHandler
 import org.javamaster.httpclient.enums.HttpMethod
+import org.javamaster.httpclient.psi.HttpRequestBlock
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.CurlUtils
 import java.net.URI
 import java.net.URISyntaxException
@@ -136,9 +140,32 @@ class CurlParser(private val curl: String) {
             } else {
                 keyValueHeaderPair.value
             }
+
+            request.multipartBoundary = detectBoundary(header)
         } else {
             request.headers.add(getKeyValueForHeader(header))
         }
+    }
+
+    private fun detectBoundary(header: String): String? {
+        val split = header.split(";")
+
+        if (split.size <= 1) return null
+
+        split.forEach {
+            val keyValue = it.split("=")
+            if (keyValue.size <= 1) {
+                return@forEach
+            }
+
+            if (keyValue[0].trim() != "boundary") {
+                return@forEach
+            }
+
+            return keyValue[1].trim()
+        }
+
+        return null
     }
 
     private fun addDataToRequest(optionName: String, request: CurlRequest, data: String) {
@@ -161,7 +188,7 @@ class CurlParser(private val curl: String) {
             if (myAuthSchemes == null) "Basic" else myAuthSchemes
         )
         var password = ""
-        val colonPosition = authData.indexOf(58.toChar())
+        val colonPosition = authData.indexOf(':')
         val username: String
         if (colonPosition < 0) {
             username = authData
@@ -228,7 +255,11 @@ class CurlParser(private val curl: String) {
 
         request.httpMethod = HttpMethod.POST.name
         request.isFileUpload = true
-        request.multipartBoundary = BOUNDARY
+
+        if (request.multipartBoundary == null) {
+            request.multipartBoundary = BOUNDARY
+        }
+
         if (myContentType == null) {
             val header = HttpHeaders.CONTENT_TYPE + ": " + ContentType.MULTIPART_FORM_DATA.mimeType
 
@@ -239,7 +270,7 @@ class CurlParser(private val curl: String) {
     private fun addContentTypeHeaderToRequest(request: CurlRequest) {
         var header = "${HttpHeaders.CONTENT_TYPE}: "
         header = if (request.multipartBoundary != null) {
-            "$header$myContentType; boundary=WebAppBoundary"
+            "$header$myContentType; boundary=${request.multipartBoundary}"
         } else {
             header + myContentType
         }
@@ -254,6 +285,16 @@ class CurlParser(private val curl: String) {
 
         fun deleteBackslashes(data: String?): String? {
             return data?.replace("\\\\".toRegex(), "")
+        }
+
+        fun toCurlString(requestBlock: HttpRequestBlock, project: Project): String {
+            val request = requestBlock.request
+
+            val editorTopForm = HttpEditorTopForm.getSelectedEditorTopForm(project)
+
+            val httpProcessHandler = HttpProcessHandler(request.method, editorTopForm?.selectedEnv)
+
+            return httpProcessHandler.convertToCurl()
         }
 
         private fun updateContentTypeIfNeeded(
@@ -298,18 +339,18 @@ class CurlParser(private val curl: String) {
         }
 
         private fun getKeyValueForHeader(header: String): CurlRequest.KeyValuePair {
-            val colonPosition = header.indexOf(58.toChar())
+            val colonPosition = header.indexOf(':')
             if (colonPosition < 0) {
                 return CurlRequest.KeyValuePair(header.trim { it <= ' ' }.replace(";$".toRegex(), ""), "")
-            } else {
-                val name = header.substring(0, colonPosition).trim { it <= ' ' }
-                if (name.isEmpty()) {
-                    throw newInvalidHeaderException(header)
-                } else {
-                    val value = header.substring(colonPosition + 1)
-                    return CurlRequest.KeyValuePair(name, value.trim { it <= ' ' })
-                }
             }
+
+            val name = header.substring(0, colonPosition).trim { it <= ' ' }
+            if (name.isEmpty()) {
+                throw newInvalidHeaderException(header)
+            }
+
+            val value = header.substring(colonPosition + 1)
+            return CurlRequest.KeyValuePair(name, value.trim { it <= ' ' })
         }
     }
 }
