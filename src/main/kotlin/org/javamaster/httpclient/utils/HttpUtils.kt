@@ -321,14 +321,14 @@ object HttpUtils {
         variableResolver: VariableResolver,
         header: HttpHeader?,
     ): String {
-        var reqStr: String? = null
+        var reqStr = ""
 
         val messageBody = requestMessagesGroup.messageBody
         if (messageBody != null) {
             reqStr = variableResolver.resolve(messageBody.text)
         }
 
-        val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr ?: ""
+        val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr.replace("\n", "\n    ") ?: ""
 
         val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
@@ -338,17 +338,13 @@ object HttpUtils {
             return ""
         }
 
-        if (reqStr == null) {
-            reqStr = ""
-        } else {
-            reqStr += CR_LF
-        }
+        reqStr += CR_LF
 
         val str = VirtualFileUtils.readNewestContent(file)
 
         reqStr += variableResolver.resolve(str)
 
-        return reqStr
+        return reqStr.replace("\n", "\n    ")
     }
 
     fun constructMultipartBodyCurl(
@@ -361,7 +357,6 @@ object HttpUtils {
             .forEach {
                 val requestMessagesGroup = it.requestMessagesGroup
                 val header = it.header
-
 
                 val messageBody = requestMessagesGroup.messageBody
                 if (messageBody != null) {

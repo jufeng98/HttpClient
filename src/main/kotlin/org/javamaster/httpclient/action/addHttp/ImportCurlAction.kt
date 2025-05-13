@@ -56,6 +56,7 @@ class ImportCurlAction : AddAction() {
         }
 
         val sb = StringBuilder()
+        sb.append("\n\n")
         sb.append("### curl request\n")
         sb.append(curlRequest.httpMethod!!)
         sb.append(" ")
@@ -94,7 +95,6 @@ class ImportCurlAction : AddAction() {
             }
 
             sb.append("--${multipartBoundary}--")
-            sb.append("\n\n")
         }
 
         val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
@@ -102,8 +102,10 @@ class ImportCurlAction : AddAction() {
 
         runWriteAction {
             WriteCommandAction.runWriteCommandAction(project) {
-                document.insertString(0, sb.toString())
-                editor.caretModel.moveToOffset(0)
+                document.insertString(document.textLength, sb.toString())
+
+                editor.caretModel.moveToOffset(document.textLength)
+
                 editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
             }
         }

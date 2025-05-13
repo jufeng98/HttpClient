@@ -238,7 +238,6 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 val header = request.header
 
                 val content = HttpUtils.handleOrdinaryContentCurl(requestMessagesGroup, variableResolver, header)
-                    .replace("\n", "\n    ")
 
                 list.add("    -d '${content}'")
             } else if (httpMultipartMessage != null) {
