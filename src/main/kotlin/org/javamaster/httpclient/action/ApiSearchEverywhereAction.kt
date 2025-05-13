@@ -9,8 +9,8 @@ import org.javamaster.httpclient.symbol.ApisGotoSEContributor
  * @author yudong
  */
 class ApiSearchEverywhereAction : SearchEverywhereBaseAction() {
-    override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("search.api")
+    init {
+        templatePresentation.text = NlsBundle.nls("search.api")
     }
 
     override fun actionPerformed(e: AnActionEvent) {
