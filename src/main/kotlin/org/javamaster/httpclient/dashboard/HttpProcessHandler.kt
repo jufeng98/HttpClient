@@ -83,7 +83,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private val paramMap = HttpUtils.getReqDirectionCommentParamMap(requestBlock)
 
-    private val httpDashboardForm = HttpDashboardForm(tabName, project)
+    private val httpDashboardForm by lazy {
+        HttpDashboardForm(tabName, project)
+    }
 
     private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
@@ -220,7 +222,6 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         val list = mutableListOf<String>()
 
         list.add("curl -X ${request.method.text} --location \"$url\"")
-
 
         reqHeaderMap.forEach {
             val name = it.key

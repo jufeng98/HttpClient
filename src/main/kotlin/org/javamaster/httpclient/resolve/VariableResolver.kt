@@ -36,13 +36,17 @@ class VariableResolver(
 
             val variable = globalVariableValue.variable
             val value = if (variable != null) {
-                val variableName = variable.variableName!!
-                resolveVariable(
-                    variableName.name,
-                    emptyMap(),
-                    variableName.isBuiltin,
-                    variable.variableArgs?.toArgsList()
-                ) ?: variable.text
+                val variableName = variable.variableName
+                if (variableName == null) {
+                    variable.text
+                } else {
+                    resolveVariable(
+                        variableName.name,
+                        emptyMap(),
+                        variableName.isBuiltin,
+                        variable.variableArgs?.toArgsList()
+                    ) ?: variable.text
+                }
             } else {
                 globalVariableValue.value ?: ""
             }
@@ -62,7 +66,8 @@ class VariableResolver(
             val myJsonValue = TextVariableLazyFileElement.parse(matchStr)
 
             val variable = myJsonValue.variableList[0]
-            val variableName = variable.variableName!!
+            val variableName = variable.variableName ?: return@replaceAll escapeRegexp(matchStr)
+
             val name = variableName.name
             val builtin = variableName.isBuiltin
             val args = variable.variableArgs?.toArgsList()
@@ -166,7 +171,7 @@ class VariableResolver(
                 val myJsonValue = TextVariableLazyFileElement.parse(matchStr)
 
                 val variable = myJsonValue.variableList[0]
-                val variableName = variable.variableName!!
+                val variableName = variable.variableName ?: return@replaceAll escapeRegexp(matchStr)
                 val name = variableName.name
 
                 val result = InnerVariableEnum.getEnum(name)?.exec(parentPath, project) ?: matchStr

@@ -21,10 +21,12 @@ class HttpSettingsEditor(private val env: String, private val httpFilePath: Stri
     }
 
     override fun createEditor(): JComponent {
-        val jPanel = JPanel()
-        jPanel.layout = BorderLayout()
-        jPanel.add(JBTextField(NlsBundle.nls("env") + ": $env"), BorderLayout.NORTH)
-        jPanel.add(JBTextField("http file:$httpFilePath"), BorderLayout.CENTER)
+        val jPanel = JPanel(BorderLayout())
+
+        jPanel.add(JBTextField("${NlsBundle.nls("env")} $env"), BorderLayout.NORTH)
+
+        jPanel.add(JBTextField("${NlsBundle.nls("http.file")} $httpFilePath"), BorderLayout.CENTER)
+
         return jPanel
     }
 }

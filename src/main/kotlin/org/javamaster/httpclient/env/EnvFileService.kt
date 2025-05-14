@@ -217,7 +217,7 @@ class EnvFileService(val project: Project) {
                 val myJsonValue = TextVariableLazyFileElement.parse(matchStr)
 
                 val variable = myJsonValue.variableList[0]
-                val variableName = variable.variableName!!
+                val variableName = variable.variableName ?: return@replaceAll escapeRegexp(matchStr)
                 val variableArgs = variable.variableArgs
                 val args = variableArgs?.toArgsList()
                 val name = variableName.name

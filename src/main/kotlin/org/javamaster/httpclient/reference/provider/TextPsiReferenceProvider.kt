@@ -5,10 +5,7 @@ import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.psi.HttpQuery
-import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.psi.HttpVariable
+import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import org.javamaster.httpclient.psi.impl.UrlEncodedLazyFileElement
 import org.javamaster.httpclient.reference.support.QueryNamePsiReference
@@ -36,17 +33,22 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
         val text = plainTextFile.text
         val delta = plainTextFile.textRange.startOffset
 
+        val parent = (injectionHost as HttpMessageBody).parent.parent
+
         val request = PsiTreeUtil.getParentOfType(injectionHost, HttpRequest::class.java)!!
 
-        if (request.contentType == ContentType.APPLICATION_FORM_URLENCODED) {
+        if (request.contentType == ContentType.APPLICATION_FORM_URLENCODED
+            || (parent is HttpMultipartField && parent.contentType == ContentType.APPLICATION_FORM_URLENCODED)
+        ) {
             val query = UrlEncodedLazyFileElement.parse(text) ?: return emptyArray()
 
             val references = request.requestTarget!!.references
-            if (references.isEmpty()) {
-                return emptyArray()
-            }
 
-            val controllerMethod = references[0].resolve() as PsiMethod? ?: return emptyArray()
+            val controllerMethod = if (references.isNotEmpty()) {
+                references[0].resolve() as PsiMethod?
+            } else {
+                null
+            }
 
             return createUrlEncodedReferences(plainTextFile, injectionHost, query, delta, controllerMethod)
         }
@@ -59,7 +61,7 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
         messageBody: HttpMessageBody?,
         query: HttpQuery,
         delta: Int,
-        controllerMethod: PsiMethod,
+        controllerMethod: PsiMethod?,
     ): Array<PsiReference> {
         val references = mutableListOf<PsiReference>()
 

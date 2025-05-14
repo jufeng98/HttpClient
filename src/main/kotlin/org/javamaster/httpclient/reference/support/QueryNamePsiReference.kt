@@ -12,12 +12,14 @@ import org.javamaster.httpclient.utils.PsiUtils
 class QueryNamePsiReference(
     psiElement: PsiElement,
     val textRange: TextRange,
-    private val controllerMethod: PsiMethod,
+    private val controllerMethod: PsiMethod?,
     private val queryName: String,
 ) :
     PsiReferenceBase<PsiElement>(psiElement, textRange) {
 
     override fun resolve(): PsiElement? {
+        controllerMethod ?: return null
+
         for (parameter in controllerMethod.parameterList.parameters) {
             if (parameter.name == queryName) {
                 return parameter

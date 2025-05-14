@@ -2,10 +2,10 @@ package org.javamaster.httpclient.utils
 
 
 object CurlUtils {
-    private val validRequestOptions: Set<String> = setOf("HEAD", "POST", "PUT", "GET", "DELETE", "PATCH", "OPTIONS")
-    private val alwaysSetShortOptions: Set<String> = setOf("i", "v", "L")
-    private val alwaysSetLongOptions: Set<String> = setOf("verbose", "include", "location", "compressed")
-    private val knownLongOptions: Set<String> = setOf(
+    private val validRequestOptions = setOf("HEAD", "POST", "PUT", "GET", "DELETE", "PATCH", "OPTIONS")
+    private val alwaysSetShortOptions = setOf("i", "v", "L")
+    private val alwaysSetLongOptions = setOf("verbose", "include", "location", "compressed")
+    private val knownLongOptions = setOf(
         "url",
         "request",
         "header",
@@ -17,7 +17,7 @@ object CurlUtils {
         "data-ascii",
         "data-urlencode"
     )
-    private val knownShortOptions: Set<Char> = setOf('X', 'H', 'u', 'F', 'd')
+    private val knownShortOptions = setOf('X', 'H', 'u', 'F', 'd')
 
     fun isKnownLongOption(longOption: String): Boolean {
         return knownLongOptions.contains(longOption)
@@ -76,6 +76,8 @@ object CurlUtils {
     }
 
     fun createCurlStringComment(curlString: String): String {
-        return String.format("# %s\n", curlString.trim { it <= ' ' }.replace("\\\\\\s|\\n".toRegex(), "\n#"))
+        val str = curlString.trim { it <= ' ' }.replace("\r\n".toRegex(), "\n")
+
+        return "%s\n".format(str)
     }
 }

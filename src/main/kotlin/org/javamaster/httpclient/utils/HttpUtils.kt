@@ -328,7 +328,8 @@ object HttpUtils {
             reqStr = variableResolver.resolve(messageBody.text)
         }
 
-        val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr.replace("\n", "\n    ")
+        val filePath = requestMessagesGroup.inputFile?.filePath?.text
+            ?: return reqStr.replace("\n", "\n    ").replace("'","'\\''")
 
         val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
@@ -344,7 +345,7 @@ object HttpUtils {
 
         reqStr += variableResolver.resolve(str)
 
-        return reqStr.replace("\n", "\n    ")
+        return reqStr.replace("\n", "\n    ").replace("'","'\\''")
     }
 
     fun constructMultipartBodyCurl(
