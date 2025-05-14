@@ -31,7 +31,6 @@ public class HttpEditorTopForm extends JComponent {
 
     private JPanel btnLeftPanel;
     private JPanel btnRightPanel;
-    private JPanel btnMiddlePanel;
 
     private final ChooseEnvironmentAction chooseEnvironmentAction;
 
@@ -43,26 +42,23 @@ public class HttpEditorTopForm extends JComponent {
 
         ActionManager actionManager = ActionManager.getInstance();
 
-        ActionGroup toolbarLeftBtnGroup = (ActionGroup) actionManager.getAction("toolbarLeftGroup");
+        chooseEnvironmentAction = new ChooseEnvironmentAction(file);
+
+        ActionGroup toolbarLeftBtnGroup = (ActionGroup) actionManager.getAction("httpToolbarLeftBtnGroup");
         assert toolbarLeftBtnGroup != null;
 
-        ActionToolbar toolbarLeft = actionManager.createActionToolbar("HttpRequestLeftToolbar", toolbarLeftBtnGroup, true);
+        DefaultActionGroup leftGroup = new DefaultActionGroup();
+        leftGroup.addAll(toolbarLeftBtnGroup);
+        leftGroup.addSeparator();
+        leftGroup.add(chooseEnvironmentAction);
+
+        ActionToolbar toolbarLeft = actionManager.createActionToolbar("httpRequestLeftToolbar", leftGroup, true);
 
         toolbarLeft.setTargetComponent(fileEditor.getComponent());
 
         btnLeftPanel.add(toolbarLeft.getComponent(), BorderLayout.CENTER);
 
-        chooseEnvironmentAction = new ChooseEnvironmentAction(file);
-        DefaultActionGroup actionGroup = new DefaultActionGroup(chooseEnvironmentAction);
-
-        ActionToolbar toolbarMiddle = actionManager.createActionToolbar("HttpRequestMiddleToolbar", actionGroup, true);
-
-        toolbarMiddle.setTargetComponent(fileEditor.getComponent());
-
-        btnMiddlePanel.add(toolbarMiddle.getComponent(), BorderLayout.CENTER);
-
-
-        ActionGroup toolbarRightBtnGroup = (ActionGroup) actionManager.getAction("toolbarRightBtnGroup");
+        ActionGroup toolbarRightBtnGroup = (ActionGroup) actionManager.getAction("httpToolbarRightBtnGroup");
         assert toolbarRightBtnGroup != null;
 
         ActionToolbar toolbarRight = actionManager.createActionToolbar("HttpRequestRightToolbar", toolbarRightBtnGroup, true);
@@ -85,7 +81,7 @@ public class HttpEditorTopForm extends JComponent {
     }
 
     public void setSelectEnv(String env) {
-        chooseEnvironmentAction.setSelectEnv(env,null);
+        chooseEnvironmentAction.setSelectEnv(env);
     }
 
     public static @Nullable String getSelectedEnv(Project project) {

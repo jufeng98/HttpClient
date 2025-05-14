@@ -1,7 +1,10 @@
 package org.javamaster.httpclient.action
 
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionGroup
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.ui.popup.PopupFactoryImpl
 import org.javamaster.httpclient.nls.NlsBundle.nls
 
@@ -18,7 +21,7 @@ class ShowAddHttpPopupAction : AnAction(nls("add.to.http"), null, AllIcons.Gener
         val group = actionManager.getAction("addToHttpGroup") as ActionGroup
 
         val listPopup = popupFactory.createActionGroupPopup(
-            nls("new"), group, DataContext.EMPTY_CONTEXT,
+            nls("new"), group, e.dataContext,
             true, null, 16
         )
 

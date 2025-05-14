@@ -1,28 +1,35 @@
 package org.javamaster.httpclient.action
 
-import com.intellij.icons.AllIcons
-import com.intellij.openapi.actionSystem.*
-import com.intellij.ui.popup.PopupFactoryImpl
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.DataContext
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.actionSystem.ex.ComboBoxAction
 import org.javamaster.httpclient.nls.NlsBundle.nls
+import java.awt.Cursor
+import javax.swing.JComponent
 
 /**
  * @author yudong
  */
-@Suppress("ActionPresentationInstantiatedInCtor")
-class ShowExamplePopupAction : AnAction(nls("http.example.desc"), nls("http.examples"), AllIcons.General.ChevronDown) {
+class ShowExamplePopupAction : ComboBoxAction() {
+    init {
+        templatePresentation.text = nls("http.examples")
+        templatePresentation.description = nls("http.example.desc")
+    }
 
-    override fun actionPerformed(e: AnActionEvent) {
+    override fun createComboBoxButton(presentation: Presentation): ComboBoxButton {
+        val button = super.createComboBoxButton(presentation)
+
+        button.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        button.border = null
+
+        return button
+    }
+
+    override fun createPopupActionGroup(button: JComponent, dataContext: DataContext): DefaultActionGroup {
         val actionManager = ActionManager.getInstance()
-        val popupFactory = PopupFactoryImpl.getInstance()
-
-        val group = actionManager.getAction("exampleHttpGroup") as ActionGroup
-
-        val listPopup = popupFactory.createActionGroupPopup(
-            nls("http.examples"), group, DataContext.EMPTY_CONTEXT,
-            true, null, 10
-        )
-
-        listPopup.showUnderneathOf(e.inputEvent!!.component)
+        return actionManager.getAction("exampleHttpGroup") as DefaultActionGroup
     }
 
 }

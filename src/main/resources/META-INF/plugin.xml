@@ -328,7 +328,7 @@
             <keyboard-shortcut first-keystroke="control alt SLASH" keymap="$default"/>
         </action>
 
-        <group id="toolbarLeftGroup">
+        <group id="httpToolbarLeftBtnGroup">
             <action class="org.javamaster.httpclient.action.ShowAddHttpPopupAction"/>
             <separator/>
             <action class="org.javamaster.httpclient.action.ShowVariableFormAction"/>
@@ -356,7 +356,7 @@
             <action class="org.javamaster.httpclient.action.addHttp.AddEnvPrivateFileAction"/>
         </group>
 
-        <group id="toolbarRightBtnGroup">
+        <group id="httpToolbarRightBtnGroup">
             <action class="org.javamaster.httpclient.action.ShowExamplePopupAction"/>
         </group>
 
