@@ -1,5 +1,7 @@
 package org.javamaster.httpclient.curl.support
 
+import org.javamaster.httpclient.curl.enums.QuotesOutside
+
 object CurlTokenizer {
 
     fun splitInCurlTokens(curlString: String): List<String> {

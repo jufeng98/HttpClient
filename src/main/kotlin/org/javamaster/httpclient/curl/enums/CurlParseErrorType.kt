@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.curl.exception
+package org.javamaster.httpclient.curl.enums
 
 
 enum class CurlParseErrorType {

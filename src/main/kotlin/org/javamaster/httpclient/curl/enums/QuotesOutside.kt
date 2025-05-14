@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.curl.support
+package org.javamaster.httpclient.curl.enums
 
 enum class QuotesOutside {
     DOUBLE,

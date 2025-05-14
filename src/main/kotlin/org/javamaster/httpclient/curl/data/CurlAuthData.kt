@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.curl.support
+package org.javamaster.httpclient.curl.data
 
 import com.intellij.openapi.util.text.StringUtil
 import com.sun.security.auth.UserPrincipal

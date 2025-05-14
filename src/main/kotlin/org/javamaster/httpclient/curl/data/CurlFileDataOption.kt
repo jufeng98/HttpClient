@@ -1,6 +1,7 @@
-package org.javamaster.httpclient.curl.support
+package org.javamaster.httpclient.curl.data
 
 import com.intellij.openapi.util.text.StringUtil
+import org.javamaster.httpclient.curl.support.CurlRequest
 import java.io.File
 
 

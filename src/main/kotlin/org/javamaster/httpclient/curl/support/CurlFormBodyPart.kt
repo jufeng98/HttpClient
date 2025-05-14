@@ -15,6 +15,7 @@ abstract class CurlFormBodyPart(var myFieldName: String) {
 
     fun addHeader(name: String, value: String): CurlFormBodyPart {
         myHeaders.add(CurlRequest.KeyValuePair(name, value))
+
         return this
     }
 
@@ -30,7 +31,7 @@ abstract class CurlFormBodyPart(var myFieldName: String) {
 
     open fun toPsiRepresentation(): String {
         return myHeaders.stream()
-            .map { field: CurlRequest.KeyValuePair -> field.key + ": " + field.value }
+            .map { it.key + ": " + it.value }
             .collect(Collectors.joining("\n"))
     }
 
@@ -63,6 +64,7 @@ abstract class CurlFormBodyPart(var myFieldName: String) {
         private val contentType: ContentType,
     ) :
         CurlFormBodyPart(name) {
+
         override fun toBodyPart(): FormBodyPart {
             val builder = FormBodyPartBuilder.create(myFieldName, FileBody(myFile, contentType, myFileName))
 

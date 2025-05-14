@@ -1,6 +1,9 @@
 package org.javamaster.httpclient.curl.support
 
 import com.intellij.openapi.util.text.StringUtil
+import org.javamaster.httpclient.curl.data.CurlDataOption
+import org.javamaster.httpclient.curl.data.CurlFileDataOption
+import org.javamaster.httpclient.curl.data.CurlStringDataOption
 import java.nio.charset.StandardCharsets
 
 

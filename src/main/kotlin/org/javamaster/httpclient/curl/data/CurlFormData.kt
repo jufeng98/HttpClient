@@ -1,49 +1,52 @@
-package org.javamaster.httpclient.curl.support
+package org.javamaster.httpclient.curl.data
 
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.curl.support.CurlRequest
 import java.io.File
 import java.nio.charset.StandardCharsets
 
 
 class CurlFormData(formData: String) {
     val headers: MutableList<CurlRequest.KeyValuePair> = mutableListOf()
-    lateinit var name: String
-    var formContentType: ContentType = ContentType.WILDCARD
 
+    var formContentType: ContentType = ContentType.WILDCARD
     var file: File? = null
+
+    lateinit var name: String
     lateinit var content: String
 
-    private var hasFileContent = false
+    var hasFileContent = false
 
     init {
-        val split = formData.split(";")
+        val parts = formData.split(";")
 
-        for ((index, s) in split.withIndex()) {
-            val strings = s.split("=")
+        for ((index, part) in parts.withIndex()) {
+            val split = part.split("=")
 
             if (index == 0) {
-                name = strings[0]
-                if (strings.size > 1) {
-                    parseContent(strings[1])
+                name = split[0]
+
+                if (split.size > 1) {
+                    parseContent(split[1])
                 }
+
                 continue
             }
 
-            parseAdditionalOption(strings)
+            parseAdditionalOption(split)
         }
-    }
-
-    fun hasFileContent(): Boolean {
-        return hasFileContent
     }
 
     private fun parseContent(contentString: String) {
         if (contentString.startsWith("@")) {
             content = contentString.substring(1)
+
             hasFileContent = true
+
             file = File(content)
         } else {
             content = contentString
+
             hasFileContent = false
         }
     }

@@ -5,16 +5,20 @@ import com.intellij.openapi.project.Project
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.curl.data.CurlAuthData
+import org.javamaster.httpclient.curl.data.CurlFormData
+import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidFormDataException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidHeaderException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidMethodException
-import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidPathException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newInvalidUrlException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newNoRequiredOptionDataException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newNoUrlException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newNotCurlException
 import org.javamaster.httpclient.curl.exception.CurlParseException.Companion.newNotSupportedOptionException
-import org.javamaster.httpclient.curl.support.*
 import org.javamaster.httpclient.curl.support.CurlDataOptionFactory.getCurlDataOption
+import org.javamaster.httpclient.curl.support.CurlFormBodyPart
+import org.javamaster.httpclient.curl.support.CurlRequest
+import org.javamaster.httpclient.curl.support.CurlTokenizer
 import org.javamaster.httpclient.dashboard.HttpProcessHandler
 import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequestBlock
@@ -31,11 +35,12 @@ class CurlParser(private val curl: String) {
 
     fun parseToCurlRequest(): CurlRequest {
         if (!CurlUtils.isCurlString(curl)) {
-            throw newNotCurlException()
+            throw newNotCurlException(curl)
         }
 
-        val curlRequest = CurlRequest()
         val tokens = CurlTokenizer.splitInCurlTokens(curl)
+
+        val curlRequest = CurlRequest()
         var i = 1
 
         while (i < tokens.size) {
@@ -65,6 +70,7 @@ class CurlParser(private val curl: String) {
 
     private fun chooseCategory(request: CurlRequest, currentToken: String, nextToken: String?): Int {
         var shift = 1
+
         if (CurlUtils.isLongOption(currentToken)) {
             shift = addLongOption(request, currentToken.substring(2), nextToken)
         } else if (CurlUtils.isShortOption(currentToken)) {
@@ -77,63 +83,75 @@ class CurlParser(private val curl: String) {
     }
 
     private fun addShortOption(request: CurlRequest, option: String, nextToken: String?): Int {
-        var nextTokenTmp = nextToken
         if (CurlUtils.isAlwaysSetShortOption(option)) {
             return 1
-        } else if (!CurlUtils.isKnownShortOption(option)) {
-            throw newNotSupportedOptionException(option)
-        } else {
-            val withoutSpace: Boolean
-            if (option.length > 1) {
-                withoutSpace = true
-                nextTokenTmp = option.substring(1)
-            } else {
-                withoutSpace = false
-            }
-
-            if (nextTokenTmp == null) {
-                throw newNoRequiredOptionDataException(option)
-            } else {
-                when (option[0]) {
-                    'F' -> addFormDataToRequest(request, nextTokenTmp)
-                    'H' -> addHeaderToRequest(request, nextTokenTmp)
-                    'X' -> addHttpMethodToRequest(request, nextTokenTmp)
-                    'd' -> addDataToRequest("data", request, nextTokenTmp)
-                    'u' -> addAuthorizationDataToRequest(request, nextTokenTmp)
-                }
-
-                return if (withoutSpace) 1 else 2
-            }
         }
+
+        if (!CurlUtils.isKnownShortOption(option)) {
+            throw newNotSupportedOptionException(option)
+        }
+
+        var nextTokenTmp = nextToken
+        val withoutSpace: Boolean
+
+        if (option.length > 1) {
+            withoutSpace = true
+            nextTokenTmp = option.substring(1)
+        } else {
+            withoutSpace = false
+        }
+
+        if (nextTokenTmp == null) {
+            throw newNoRequiredOptionDataException(option)
+        }
+
+        when (option[0]) {
+            'F' -> addFormDataToRequest(request, nextTokenTmp)
+            'H' -> addHeaderToRequest(request, nextTokenTmp)
+            'X' -> addHttpMethodToRequest(request, nextTokenTmp)
+            'd' -> addDataToRequest("data", request, nextTokenTmp)
+            'u' -> addAuthorizationDataToRequest(request, nextTokenTmp)
+        }
+
+        return if (withoutSpace) 1 else 2
     }
 
     private fun addLongOption(request: CurlRequest, option: String, nextToken: String?): Int {
         if (CurlUtils.isAlwaysSetLongOption(option)) {
             return 1
-        } else if (isAuthSchemeOption(request, option)) {
+        }
+
+        if (isAuthSchemeOption(request, option)) {
             return 1
-        } else if (!CurlUtils.isKnownLongOption(option)) {
+        }
+
+        if (!CurlUtils.isKnownLongOption(option)) {
             throw newNotSupportedOptionException(option)
-        } else if (nextToken == null) {
+        }
+
+        if (nextToken == null) {
             throw newNoRequiredOptionDataException(option)
-        } else if (option.startsWith("data")) {
+        }
+
+        if (option.startsWith("data")) {
             addDataToRequest(option, request, nextToken)
             return 2
-        } else {
-            when (option) {
-                "url" -> addURL(request, nextToken)
-                "request" -> addHttpMethodToRequest(request, nextToken)
-                "header" -> addHeaderToRequest(request, nextToken)
-                "user" -> addAuthorizationDataToRequest(request, nextToken)
-                "form" -> addFormDataToRequest(request, nextToken)
-            }
-
-            return 2
         }
+
+        when (option) {
+            "url" -> addURL(request, nextToken)
+            "request" -> addHttpMethodToRequest(request, nextToken)
+            "header" -> addHeaderToRequest(request, nextToken)
+            "user" -> addAuthorizationDataToRequest(request, nextToken)
+            "form" -> addFormDataToRequest(request, nextToken)
+        }
+
+        return 2
     }
 
     private fun addHeaderToRequest(request: CurlRequest, header: String) {
         val keyValueHeaderPair = getKeyValueForHeader(header)
+
         if (keyValueHeaderPair.key.equals(HttpHeaders.CONTENT_TYPE, ignoreCase = true)) {
             myContentType = if (myContentType != null) {
                 updateContentTypeIfNeeded(request, keyValueHeaderPair.value, myContentType!!)
@@ -170,7 +188,9 @@ class CurlParser(private val curl: String) {
 
     private fun addDataToRequest(optionName: String, request: CurlRequest, data: String) {
         request.httpMethod = HttpMethod.POST.name
+
         val curlDataOption = getCurlDataOption(optionName, data)
+
         curlDataOption?.apply(request)
 
         if (myContentType == null) {
@@ -182,14 +202,13 @@ class CurlParser(private val curl: String) {
 
     private fun addAuthorizationDataToRequest(request: CurlRequest, authData: String) {
         val authScope = AuthScope(
-            AuthScope.ANY_HOST,
-            -1,
-            AuthScope.ANY_REALM,
-            if (myAuthSchemes == null) "Basic" else myAuthSchemes
+            AuthScope.ANY_HOST, -1, AuthScope.ANY_REALM, if (myAuthSchemes == null) "Basic" else myAuthSchemes
         )
+
         var password = ""
         val colonPosition = authData.indexOf(':')
         val username: String
+
         if (colonPosition < 0) {
             username = authData
         } else {
@@ -209,13 +228,11 @@ class CurlParser(private val curl: String) {
             else -> return false
         }
 
-        if (request.authData != null) {
-            val authScope = AuthScope(
-                AuthScope.ANY_HOST, -1, AuthScope.ANY_REALM,
-                myAuthSchemes
-            )
-            request.authData = CurlAuthData(authScope, request.authData!!.authCredentials)
-        }
+        if (request.authData == null) return true
+
+        val authScope = AuthScope(AuthScope.ANY_HOST, -1, AuthScope.ANY_REALM, myAuthSchemes)
+
+        request.authData = CurlAuthData(authScope, request.authData!!.authCredentials)
 
         return true
     }
@@ -225,31 +242,22 @@ class CurlParser(private val curl: String) {
 
         val fieldName = curlFormData.name
         val curlFormBodyPart: CurlFormBodyPart
-        if (curlFormData.hasFileContent()) {
-            val file = curlFormData.file ?: throw newInvalidPathException(formData)
+
+        if (curlFormData.hasFileContent) {
+            val file = curlFormData.file ?: throw newInvalidFormDataException(formData)
 
             val filename = file.name
-            curlFormBodyPart =
-                CurlFormBodyPart.create(fieldName, filename, file, curlFormData.formContentType)
-                    .addHeader(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "form-data; name=\"$fieldName\"; filename=\"$filename\""
-                    )
+
+            curlFormBodyPart = CurlFormBodyPart.create(fieldName, filename, file, curlFormData.formContentType)
+                .addHeader(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"$fieldName\"; filename=\"$filename\"")
         } else {
-            curlFormBodyPart =
-                CurlFormBodyPart.create(fieldName, curlFormData.content, curlFormData.formContentType)
-                    .addHeader(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "form-data; name=\"$fieldName\""
-                    )
+            curlFormBodyPart = CurlFormBodyPart.create(fieldName, curlFormData.content, curlFormData.formContentType)
+                .addHeader(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"$fieldName\"")
         }
 
-        curlFormData.headers.forEach(Consumer { additionalHeader: CurlRequest.KeyValuePair ->
-            curlFormBodyPart.addHeader(
-                additionalHeader.key,
-                additionalHeader.value
-            )
-        })
+        curlFormData.headers.forEach {
+            curlFormBodyPart.addHeader(it.key, it.value)
+        }
 
         request.formBodyPart.add(curlFormBodyPart)
 
@@ -268,20 +276,13 @@ class CurlParser(private val curl: String) {
     }
 
     private fun addContentTypeHeaderToRequest(request: CurlRequest) {
-        var header = "${HttpHeaders.CONTENT_TYPE}: "
-        header = if (request.multipartBoundary != null) {
-            "$header$myContentType; boundary=${request.multipartBoundary}"
-        } else {
-            header + myContentType
-        }
+        val header = "${HttpHeaders.CONTENT_TYPE}: $myContentType"
 
         request.headers.add(getKeyValueForHeader(header))
     }
 
     companion object {
         private const val BOUNDARY = "WebAppBoundary"
-        private const val MULTIPART_FORM_HEADER_VALUE = "multipart/form-data"
-        private const val URLENCODED_HEADER_VALUE = "application/x-www-form-urlencoded"
 
         fun deleteBackslashes(data: String?): String? {
             return data?.replace("\\\\".toRegex(), "")
@@ -303,11 +304,12 @@ class CurlParser(private val curl: String) {
             contentType: String,
         ): String {
             var updatedContentType = contentType
+
             if (request.multipartBoundary != null) {
-                if (contentType == MULTIPART_FORM_HEADER_VALUE) {
+                if (contentType == ContentType.MULTIPART_FORM_DATA.mimeType) {
                     updatedContentType = headerValue
                 }
-            } else if (contentType == URLENCODED_HEADER_VALUE) {
+            } else if (contentType == ContentType.APPLICATION_FORM_URLENCODED.mimeType) {
                 updatedContentType = headerValue
             } else {
                 updatedContentType = "$contentType, $headerValue"
@@ -319,9 +321,9 @@ class CurlParser(private val curl: String) {
         private fun addHttpMethodToRequest(request: CurlRequest, method: String) {
             if (!CurlUtils.isValidRequestOption(method)) {
                 throw newInvalidMethodException(method)
-            } else {
-                request.httpMethod = method
             }
+
+            request.httpMethod = method
         }
 
         private fun addURL(request: CurlRequest, currentToken: String) {
@@ -333,8 +335,8 @@ class CurlParser(private val curl: String) {
                 URI(currentToken)
                 request.urlBase = currentToken
                 request.urlPath = ""
-            } catch (var3: URISyntaxException) {
-                throw newInvalidUrlException(currentToken)
+            } catch (e: URISyntaxException) {
+                throw newInvalidUrlException(currentToken, e)
             }
         }
 

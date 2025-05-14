@@ -1,6 +1,7 @@
-package org.javamaster.httpclient.curl.support
+package org.javamaster.httpclient.curl.data
 
 import com.intellij.openapi.util.text.StringUtil
+import org.javamaster.httpclient.curl.support.CurlRequest
 import java.net.URLEncoder
 
 
@@ -30,11 +31,12 @@ class CurlStringDataOption : CurlDataOption {
         private fun encodeData(data: String, encoding: String): String {
             var content = data
             var name: String? = null
+
             if (data.contains("=")) {
                 if (data.indexOf("=") == 0) {
                     content = data.substring(1)
                 } else {
-                    val nameContent = data.split("=".toRegex(), limit = 2).toTypedArray()
+                    val nameContent = data.split("=", limit = 2)
                     name = nameContent[0]
                     content = nameContent[1]
                 }

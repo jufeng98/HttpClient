@@ -2,6 +2,7 @@ package org.javamaster.httpclient.curl.support
 
 import com.intellij.openapi.util.text.StringUtil
 import org.apache.http.cookie.Cookie
+import org.javamaster.httpclient.curl.data.CurlAuthData
 import java.io.File
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
@@ -39,7 +40,7 @@ class CurlRequest {
 
     @Suppress("unused")
     fun getHeadersValue(name: String): List<String> {
-        val list: MutableList<String> = mutableListOf()
+        val list = mutableListOf<String>()
 
         for (header in headers) {
             if (name == header.key) {
@@ -52,42 +53,41 @@ class CurlRequest {
 
     @Suppress("unused")
     fun deleteHeader(name: String) {
-        headers.removeIf { header: KeyValuePair? -> name == header!!.key }
+        headers.removeIf { name == it.key }
     }
 
-    val files: List<File>
-        get() {
-            val files: MutableList<File> = mutableListOf()
+    val files by lazy {
+        val files = mutableListOf<File>()
 
-            for (path in StringUtil.split(filesToSend!!, File.pathSeparator)) {
-                files.add(File(path))
-            }
-
-            return files
+        for (path in StringUtil.split(filesToSend!!, File.pathSeparator)) {
+            files.add(File(path))
         }
 
-    private val url: String
-        get() {
-            var base = urlBase
-            if (!base!!.endsWith("/") && urlPath!!.isNotEmpty()) {
-                base = "$base/"
-            }
+        files
+    }
 
-            base = if (urlPath!!.startsWith("/")) base + urlPath!!.substring(1) else base + urlPath
+    private val url by lazy {
+        var base = urlBase!!
 
-            return base.replace(" ", "%20")
+        if (!base.endsWith("/") && urlPath!!.isNotEmpty()) {
+            base = "$base/"
         }
+
+        base = if (urlPath!!.startsWith("/")) base + urlPath!!.substring(1) else base + urlPath
+
+        base.replace(" ", "%20")
+    }
 
     private fun createQueryString(): String {
         return StringUtil.join(
             parameters,
-            { pair: KeyValuePair? ->
+            {
                 try {
-                    val key = URLEncoder.encode(pair!!.key, "UTF-8")
-                    val value = URLEncoder.encode(pair.value, "UTF-8")
-                    return@join "$key=$value"
+                    val key = URLEncoder.encode(it.key, "UTF-8")
+                    val value = URLEncoder.encode(it.value, "UTF-8")
+                    "$key=$value"
                 } catch (var3: UnsupportedEncodingException) {
-                    return@join ""
+                    ""
                 }
             }, "&"
         )
@@ -96,11 +96,9 @@ class CurlRequest {
     @Suppress("unused")
     fun addBiscuit(cookie: Cookie) {
         val date = cookie.expiryDate
+
         biscuits.add(
-            Biscuit(
-                cookie.name, cookie.value, cookie.domain, cookie.path,
-                date?.time ?: -1L
-            )
+            Biscuit(cookie.name, cookie.value, cookie.domain, cookie.path, date?.time ?: -1L)
         )
     }
 
@@ -114,6 +112,7 @@ class CurlRequest {
 
     override fun toString(): String {
         val queryString = createQueryString()
+
         return if (queryString.isNotEmpty()) url + (if (url.contains("?")) "&" else "?") + queryString else url
     }
 
