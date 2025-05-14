@@ -275,7 +275,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 convertToCurlReal(consumer, it!!)
             }
             .exceptionallyOnUiThread {
-                handleException(it)
+                NotifyUtil.notifyError(project, it.toString())
             }
     }
 
