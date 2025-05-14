@@ -295,7 +295,7 @@ class CurlParser(private val curl: String) {
 
             val httpProcessHandler = HttpProcessHandler(request.method, editorTopForm?.selectedEnv)
 
-            httpProcessHandler.convertToCurl(consumer)
+            httpProcessHandler.prepareJsAndConvertToCurl(consumer)
         }
 
         private fun updateContentTypeIfNeeded(

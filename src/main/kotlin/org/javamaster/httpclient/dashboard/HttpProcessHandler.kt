@@ -183,6 +183,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
     private fun startHandleRequest(reqInfo: HttpReqInfo) {
         val httpHeaderFields = request.header?.headerFieldList
+
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
         jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap)
@@ -213,10 +214,80 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
     }
 
-    fun convertToCurl(consumer: Consumer<String>) {
+    fun prepareJsAndConvertToCurl(consumer: Consumer<String>) {
+        val preFilePair = preJsFiles.partition { it.urlFile != null }
+
+        val npmFiles = preFilePair.first
+
+        if (npmFiles.isEmpty()) {
+            convertToCurl(consumer)
+
+            return
+        }
+
+        val npmFilesNotDownloaded = JsTgz.jsLibrariesNotDownloaded(npmFiles)
+
+        if (npmFilesNotDownloaded.isNotEmpty()) {
+            JsTgz.downloadAsync(project, npmFilesNotDownloaded) {
+                application.executeOnPooledThread {
+                    runReadAction {
+                        JsTgz.initAndCacheNpmJsLibrariesFile(npmFiles, project)
+
+                        convertToCurl(consumer)
+                    }
+                }
+            }
+
+            return
+        }
+
+        application.executeOnPooledThread {
+            runReadAction {
+                JsTgz.initAndCacheNpmJsLibrariesFile(npmFiles, project)
+
+                convertToCurl(consumer)
+            }
+        }
+    }
+
+    private fun convertToCurl(consumer: Consumer<String>) {
+        application.executeOnPooledThread {
+            JsTgz.initJsLibrariesVirtualFile(preJsFiles)
+
+            runInEdt {
+                convertToCurlReal(consumer)
+            }
+        }
+    }
+
+    private fun convertToCurlReal(consumer: Consumer<String>) {
+        HttpBackground
+            .runInBackgroundReadActionAsync {
+                initPreJsFilesContent()
+
+                val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
+
+                val environment = gson.toJson(getEnvMap(project, false))
+
+                HttpReqInfo(reqBody, environment, preJsFiles)
+            }
+            .finishOnUiThread {
+                convertToCurlReal(consumer, it!!)
+            }
+            .exceptionallyOnUiThread {
+                handleException(it)
+            }
+    }
+
+    private fun convertToCurlReal(consumer: Consumer<String>, reqInfo: HttpReqInfo) {
         val httpHeaderFields = request.header?.headerFieldList
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
+
+        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap)
+
+        val resList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
+        println("js执行结果:${resList}")
 
         val url = variableResolver.resolve(requestTarget.url)
 
