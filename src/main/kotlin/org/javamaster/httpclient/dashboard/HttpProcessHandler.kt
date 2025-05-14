@@ -115,6 +115,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         if (npmFiles.isEmpty()) {
             initPreFilesThenStartRequest()
+
             return
         }
 
@@ -147,20 +148,24 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         }
     }
 
+    private fun initPreJsFilesContent() {
+        preJsFiles.forEach {
+            try {
+                val content = VirtualFileUtils.readNewestContent(it.virtualFile)
+                it.content = content
+            } catch (e: Exception) {
+                val document = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
+                val rowNum = document.getLineNumber(it.directionComment.textOffset) + 1
+
+                throw RuntimeException("$e(${httpFile.name}#${rowNum})", e)
+            }
+        }
+    }
+
     private fun startRequest() {
         HttpBackground
             .runInBackgroundReadActionAsync {
-                preJsFiles.forEach {
-                    try {
-                        val content = VirtualFileUtils.readNewestContent(it.virtualFile)
-                        it.content = content
-                    } catch (e: Exception) {
-                        val document = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
-                        val rowNum = document.getLineNumber(it.directionComment.textOffset) + 1
-
-                        throw RuntimeException("$e(${httpFile.name}#${rowNum})", e)
-                    }
-                }
+                initPreJsFilesContent()
 
                 val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
 

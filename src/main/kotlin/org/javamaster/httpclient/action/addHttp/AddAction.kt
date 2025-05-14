@@ -7,7 +7,6 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.env.EnvFileService.Companion.createEnvFile
@@ -29,7 +28,11 @@ abstract class AddAction : AnAction() {
     fun startLiveTemplate(abbreviation: String) {
         val project = ProjectUtil.getActiveProject()!!
         val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
-        val document = FileDocumentManager.getInstance().getDocument(editor.virtualFile)!!
+        val document = editor.document
+
+        if (!document.isWritable) {
+            return
+        }
 
         runWriteAction {
             WriteCommandAction.runWriteCommandAction(project) {

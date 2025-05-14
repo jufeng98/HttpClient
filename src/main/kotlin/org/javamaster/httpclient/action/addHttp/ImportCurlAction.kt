@@ -69,10 +69,10 @@ class ImportCurlAction : AddAction() {
 
         val sb = StringBuilder()
         sb.append("\n\n")
+        sb.append("### curl request\n")
         sb.append("/*\n")
         sb.append(CurlUtils.createCurlStringComment(curlStr))
         sb.append("*/\n")
-        sb.append("### curl request\n")
         sb.append(curlRequest.httpMethod!!)
         sb.append(" ")
         sb.append(curlRequest.toString())
