@@ -131,7 +131,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         application.executeOnPooledThread {
             runReadAction {
-                JsTgz.initJsLibrariesFile(npmFiles, project)
+                JsTgz.initAndCacheNpmJsLibrariesFile(npmFiles, project)
 
                 initPreFilesThenStartRequest()
             }

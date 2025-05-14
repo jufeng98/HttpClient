@@ -52,7 +52,7 @@ object JsTgz {
         }
     }
 
-    fun initJsLibrariesFile(npmFiles: List<PreJsFile>, project: Project) {
+    fun initAndCacheNpmJsLibrariesFile(npmFiles: List<PreJsFile>, project: Project) {
         npmFiles.forEach {
             val urlFile = it.urlFile!!
 
@@ -83,7 +83,7 @@ object JsTgz {
         }
     }
 
-    fun downloadAsync(project: Project, npmFiles: List<PreJsFile>) {
+    fun downloadAsync(project: Project, npmFiles: List<PreJsFile>, finished: Runnable? = null) {
         if (downloading) {
             NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("download.not.finish"))
             return
@@ -127,6 +127,8 @@ object JsTgz {
 
                     application.invokeLater {
                         NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloaded"))
+
+                        finished?.run()
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
