@@ -64,6 +64,7 @@
             <ul>
                 <li><b>3.9.8</b></li>
                 <ul>
+                    <li>Service窗口新增垂直工具栏，包括软换行、滚动到顶部、滚动到底部、复制请求/响应体等功能</li>
                     <li>新增查询参数跳转控制器入参功能</li>
                     <li>新增查询参数的控制器入参文档提示功能</li>
                     <li>新增将请求转换为 curl 功能</li>
@@ -372,6 +373,13 @@
             <action class="org.javamaster.httpclient.action.example.DubboExampleAction"/>
             <separator/>
             <action class="org.javamaster.httpclient.action.example.CryptoJsExampleAction"/>
+        </group>
+
+        <action id="HttpViewSettingsAction" class="org.javamaster.httpclient.action.dashboard.ViewSettingsAction"/>
+        <group id="httpDashboardVerticalGroup">
+            <action class="org.javamaster.httpclient.action.dashboard.ScrollToTopAction"/>
+            <action class="org.javamaster.httpclient.action.dashboard.ScrollToEndAction"/>
+            <action class="org.javamaster.httpclient.action.dashboard.CopyReqResBodyAction"/>
         </group>
     </actions>
 

@@ -3,8 +3,11 @@ package org.javamaster.httpclient.utils
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.putUserData
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiUtil
+import org.javamaster.httpclient.action.dashboard.DashboardBaseAction
+import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.utils.VirtualFileUtils.createHttpVirtualFileFromText
 import javax.swing.JComponent
 
@@ -16,10 +19,25 @@ object HttpUiUtils {
         project: Project,
         tabName: String,
         editorList: MutableList<Editor>,
+        req: Boolean,
+        simpleTypeEnum: SimpleTypeEnum?,
     ): JComponent {
         val editor = createEditor(bytes, suffix, project, tabName, editorList)
 
-        return editor.component
+        val component = editor.component
+
+        component.putUserData(DashboardBaseAction.httpDashboardToolbarKey, req)
+        component.putUserData(DashboardBaseAction.httpDashboardResTypeKey, simpleTypeEnum)
+
+        val key = if (req) {
+            DashboardBaseAction.httpDashboardReqEditorKey
+        } else {
+            DashboardBaseAction.httpDashboardResEditorKey
+        }
+
+        component.putUserData(key, editor)
+
+        return component
     }
 
     fun createEditor(

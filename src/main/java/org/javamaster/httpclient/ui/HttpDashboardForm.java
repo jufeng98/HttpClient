@@ -3,6 +3,11 @@ package org.javamaster.httpclient.ui;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.actionSystem.ActionGroup;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionToolbar;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Document;
@@ -19,6 +24,7 @@ import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.javamaster.httpclient.HttpInfo;
+import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.utils.HttpUiUtils;
@@ -49,6 +55,8 @@ public class HttpDashboardForm implements Disposable {
     public Throwable throwable;
     public JPanel requestPanel;
     public JPanel responsePanel;
+    private JPanel reqVerticalToolbarPanel;
+    private JPanel resVerticalToolbarPanel;
 
     private final String tabName;
     private final Project project;
@@ -67,33 +75,45 @@ public class HttpDashboardForm implements Disposable {
         GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
 
         throwable = httpInfo.getHttpException();
+        SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
 
         byte[] reqBytes = String.join("", httpInfo.getHttpReqDescList()).getBytes(StandardCharsets.UTF_8);
 
-        JComponent reqComponent = HttpUiUtils.INSTANCE.createEditorCompo(reqBytes, "req.http", project, tabName, editorList);
+        JComponent reqComponent = HttpUiUtils.INSTANCE.createEditorCompo(reqBytes, "req.http", project, tabName,
+                editorList, true, simpleTypeEnum);
+
         requestPanel.add(reqComponent, constraints);
+
+        initVerticalToolbarPanel(reqComponent, reqVerticalToolbarPanel);
 
         if (throwable != null) {
             String msg = ExceptionUtils.getStackTrace(throwable);
 
             JComponent jComponent = HttpUiUtils.INSTANCE.createEditorCompo(msg.getBytes(StandardCharsets.UTF_8),
-                    "error.log", project, tabName, editorList);
+                    "error.log", project, tabName, editorList, false, simpleTypeEnum);
 
             responsePanel.add(jComponent, constraints);
+
+            initVerticalToolbarPanel(reqComponent, resVerticalToolbarPanel);
+
             return;
         }
 
-        saveBinaryToFile(httpInfo);
+        saveResponseToFile(httpInfo);
 
         byte[] resBytes = String.join("", httpInfo.getHttpResDescList()).getBytes(StandardCharsets.UTF_8);
 
         GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
-        JComponent resComponent = HttpUiUtils.INSTANCE.createEditorCompo(resBytes, "res.http", project, tabName, editorList);
+        JComponent resComponent = HttpUiUtils.INSTANCE.createEditorCompo(resBytes, "res.http", project, tabName,
+                editorList, false, simpleTypeEnum);
+
         responsePanel.add(resComponent, constraintsRes);
 
-        if (Objects.equals(httpInfo.getType(), SimpleTypeEnum.IMAGE)) {
+        initVerticalToolbarPanel(resComponent, resVerticalToolbarPanel);
+
+        if (Objects.equals(simpleTypeEnum, SimpleTypeEnum.IMAGE)) {
             //noinspection DataFlowIssue
             try (ByteArrayInputStream inputStream = new ByteArrayInputStream(httpInfo.getByteArray())) {
                 BufferedImage bufferedImage = ImageIO.read(inputStream);
@@ -116,14 +136,26 @@ public class HttpDashboardForm implements Disposable {
         }
     }
 
-    private void saveBinaryToFile(HttpInfo httpInfo) {
+    private void initVerticalToolbarPanel(JComponent target, JPanel jPanel) {
+        ActionManager actionManager = ActionManager.getInstance();
+
+        AnAction viewSettingsAction = actionManager.getAction("HttpViewSettingsAction");
+        DefaultActionGroup defaultActionGroup = new DefaultActionGroup(viewSettingsAction, new SoftWrapAction());
+
+        ActionGroup actionGroup = (ActionGroup) actionManager.getAction("httpDashboardVerticalGroup");
+        defaultActionGroup.addAll(actionGroup);
+
+        ActionToolbar toolbar = actionManager.createActionToolbar("httpDashboardVerticalToolbar", defaultActionGroup, false);
+        toolbar.setTargetComponent(target);
+
+        JComponent component = toolbar.getComponent();
+
+        jPanel.add(component);
+    }
+
+    private void saveResponseToFile(HttpInfo httpInfo) {
         try {
             SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
-
-            //noinspection DataFlowIssue
-            if (!simpleTypeEnum.getBinary()) {
-                return;
-            }
 
             String contentType = httpInfo.getContentType();
 
@@ -185,7 +217,7 @@ public class HttpDashboardForm implements Disposable {
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
         Editor editor = WriteAction.computeAndWait(() ->
-                HttpUiUtils.INSTANCE.createEditor("" .getBytes(StandardCharsets.UTF_8), "ws.log",
+                HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
                         project, tabName, editorList)
         );
 

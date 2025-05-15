@@ -29,10 +29,10 @@ enum class SimpleTypeEnum(val type: String, val binary: Boolean) {
                     contentType.split("/").last()
                 }
 
-                PDF -> "pdf"
+                TEXT -> "txt"
                 EXCEL -> "xls"
-                ZIP -> "zip"
-                else -> "bin"
+                STREAM -> "bin"
+                else -> simpleTypeEnum.type
             }
         }
 

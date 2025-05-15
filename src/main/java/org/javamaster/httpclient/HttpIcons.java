@@ -19,4 +19,7 @@ public class HttpIcons {
     public static final Icon RUN_ALL = IconLoader.getIcon("/icons/runAll.svg", HttpIcons.class);
     public static final Icon STOP = IconLoader.getIcon("/icons/stop.svg", HttpIcons.class);
 
+    public static final Icon SCROLL_UP = IconLoader.getIcon("/icons/scrollUp.svg", HttpIcons.class);
+    public static final Icon SCROLL_DOWN = IconLoader.getIcon("/icons/scrollDown.svg", HttpIcons.class);
+
 }
