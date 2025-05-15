@@ -79,22 +79,22 @@ public class HttpDashboardForm implements Disposable {
 
         byte[] reqBytes = String.join("", httpInfo.getHttpReqDescList()).getBytes(StandardCharsets.UTF_8);
 
-        JComponent reqComponent = HttpUiUtils.INSTANCE.createEditorCompo(reqBytes, "req.http", project, tabName,
+        Editor reqEditor = HttpUiUtils.INSTANCE.createEditor(reqBytes, "req.http", project, tabName,
                 editorList, true, simpleTypeEnum);
 
-        requestPanel.add(reqComponent, constraints);
+        requestPanel.add(reqEditor.getComponent(), constraints);
 
-        initVerticalToolbarPanel(reqComponent, reqVerticalToolbarPanel);
+        initVerticalToolbarPanel(reqEditor, reqVerticalToolbarPanel);
 
         if (throwable != null) {
             String msg = ExceptionUtils.getStackTrace(throwable);
 
-            JComponent jComponent = HttpUiUtils.INSTANCE.createEditorCompo(msg.getBytes(StandardCharsets.UTF_8),
+            Editor errorEditor = HttpUiUtils.INSTANCE.createEditor(msg.getBytes(StandardCharsets.UTF_8),
                     "error.log", project, tabName, editorList, false, simpleTypeEnum);
 
-            responsePanel.add(jComponent, constraints);
+            responsePanel.add(errorEditor.getComponent(), constraints);
 
-            initVerticalToolbarPanel(reqComponent, resVerticalToolbarPanel);
+            initVerticalToolbarPanel(errorEditor, resVerticalToolbarPanel);
 
             return;
         }
@@ -106,12 +106,12 @@ public class HttpDashboardForm implements Disposable {
         GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
-        JComponent resComponent = HttpUiUtils.INSTANCE.createEditorCompo(resBytes, "res.http", project, tabName,
+        Editor resEditor = HttpUiUtils.INSTANCE.createEditor(resBytes, "res.http", project, tabName,
                 editorList, false, simpleTypeEnum);
 
-        responsePanel.add(resComponent, constraintsRes);
+        responsePanel.add(resEditor.getComponent(), constraintsRes);
 
-        initVerticalToolbarPanel(resComponent, resVerticalToolbarPanel);
+        initVerticalToolbarPanel(resEditor, resVerticalToolbarPanel);
 
         if (Objects.equals(simpleTypeEnum, SimpleTypeEnum.IMAGE)) {
             //noinspection DataFlowIssue
@@ -129,24 +129,24 @@ public class HttpDashboardForm implements Disposable {
 
                 JLabel jlabel = new JLabel(image);
 
-                renderResponsePresentation(resComponent, jlabel, constraintsRes);
+                renderResponsePresentation(resEditor.getComponent(), jlabel, constraintsRes);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    private void initVerticalToolbarPanel(JComponent target, JPanel jPanel) {
+    private void initVerticalToolbarPanel(Editor target, JPanel jPanel) {
         ActionManager actionManager = ActionManager.getInstance();
 
         AnAction viewSettingsAction = actionManager.getAction("HttpViewSettingsAction");
-        DefaultActionGroup defaultActionGroup = new DefaultActionGroup(viewSettingsAction, new SoftWrapAction());
+        DefaultActionGroup defaultActionGroup = new DefaultActionGroup(viewSettingsAction, new SoftWrapAction(target));
 
         ActionGroup actionGroup = (ActionGroup) actionManager.getAction("httpDashboardVerticalGroup");
         defaultActionGroup.addAll(actionGroup);
 
         ActionToolbar toolbar = actionManager.createActionToolbar("httpDashboardVerticalToolbar", defaultActionGroup, false);
-        toolbar.setTargetComponent(target);
+        toolbar.setTargetComponent(target.getComponent());
 
         JComponent component = toolbar.getComponent();
 

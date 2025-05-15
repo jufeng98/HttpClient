@@ -27,6 +27,12 @@ abstract class DashboardBaseAction(text: String, icon: Icon?) : AnAction(text, n
         }
     }
 
+    fun isReq(e: AnActionEvent): Boolean {
+        val component = PlatformCoreDataKeys.CONTEXT_COMPONENT.getData(e.dataContext)!! as JComponent
+
+        return component.getUserData(httpDashboardToolbarKey)!!
+    }
+
     companion object {
         val httpDashboardToolbarKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardToolbar")
         val httpDashboardResTypeKey = Key.create<SimpleTypeEnum?>("org.javamaster.dashboard.httpDashboardResType")

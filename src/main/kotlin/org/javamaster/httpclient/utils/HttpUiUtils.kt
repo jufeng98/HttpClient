@@ -13,7 +13,7 @@ import javax.swing.JComponent
 
 object HttpUiUtils {
 
-    fun createEditorCompo(
+    fun createEditor(
         bytes: ByteArray,
         suffix: String,
         project: Project,
@@ -21,7 +21,7 @@ object HttpUiUtils {
         editorList: MutableList<Editor>,
         req: Boolean,
         simpleTypeEnum: SimpleTypeEnum?,
-    ): JComponent {
+    ): Editor {
         val editor = createEditor(bytes, suffix, project, tabName, editorList)
 
         val component = editor.component
@@ -37,7 +37,7 @@ object HttpUiUtils {
 
         component.putUserData(key, editor)
 
-        return component
+        return editor
     }
 
     fun createEditor(

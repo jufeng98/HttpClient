@@ -28,8 +28,7 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), AllIcons.Genera
 
         val component = PlatformCoreDataKeys.CONTEXT_COMPONENT.getData(e.dataContext)!! as JComponent
 
-        val req = component.getUserData(httpDashboardToolbarKey)!!
-        if (req) {
+        if (isReq(e)) {
             val text = PsiTreeUtil.findChildOfType(httpFile, HttpBody::class.java)?.text ?: return
 
             copyPasteManager.setContents(StringSelection(text))
