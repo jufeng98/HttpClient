@@ -22,10 +22,17 @@ class SoftWrapAction(private val editor: Editor) :
         val actionButton = ActionButton(this, presentation, place, Dimension(20, 20))
 
         val req = editor.component.getUserData(httpDashboardToolbarKey)!!
-        if (req) {
-            setSoftWrap(reqUseSoftWrap, actionButton)
+
+        val useSoftWrap = if (req) {
+            reqUseSoftWrap
         } else {
-            setSoftWrap(resUseSoftWrap, actionButton)
+            resUseSoftWrap
+        }
+
+        if (useSoftWrap) {
+            actionButton.background = JBColor.LIGHT_GRAY
+        } else {
+            actionButton.background = null
         }
 
         return actionButton
@@ -57,7 +64,7 @@ class SoftWrapAction(private val editor: Editor) :
     }
 
     companion object {
-        private var reqUseSoftWrap: Boolean = false
-        private var resUseSoftWrap: Boolean = false
+        var reqUseSoftWrap: Boolean = false
+        var resUseSoftWrap: Boolean = false
     }
 }

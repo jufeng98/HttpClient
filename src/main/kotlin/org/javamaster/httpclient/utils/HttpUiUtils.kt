@@ -7,9 +7,9 @@ import com.intellij.openapi.ui.putUserData
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.action.dashboard.DashboardBaseAction
+import org.javamaster.httpclient.action.dashboard.SoftWrapAction
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.utils.VirtualFileUtils.createHttpVirtualFileFromText
-import javax.swing.JComponent
 
 object HttpUiUtils {
 
@@ -23,6 +23,13 @@ object HttpUiUtils {
         simpleTypeEnum: SimpleTypeEnum?,
     ): Editor {
         val editor = createEditor(bytes, suffix, project, tabName, editorList)
+
+        val settings = editor.settings
+        if (req) {
+            settings.isUseSoftWraps = SoftWrapAction.reqUseSoftWrap
+        } else {
+            settings.isUseSoftWraps = SoftWrapAction.resUseSoftWrap
+        }
 
         val component = editor.component
 
