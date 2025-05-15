@@ -17,12 +17,14 @@ import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.editor.ScrollingModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.intellij.images.editor.impl.ImageEditorImpl;
 import org.javamaster.httpclient.HttpInfo;
 import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
@@ -33,13 +35,9 @@ import org.javamaster.httpclient.utils.VirtualFileUtils;
 import org.javamaster.httpclient.ws.WsRequest;
 import org.jetbrains.annotations.NotNull;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Date;
@@ -99,7 +97,7 @@ public class HttpDashboardForm implements Disposable {
             return;
         }
 
-        saveResponseToFile(httpInfo);
+        VirtualFile responseBodyFile = saveResponseToFile(httpInfo);
 
         byte[] resBytes = String.join("", httpInfo.getHttpResDescList()).getBytes(StandardCharsets.UTF_8);
 
@@ -114,25 +112,11 @@ public class HttpDashboardForm implements Disposable {
         initVerticalToolbarPanel(resEditor, resVerticalToolbarPanel);
 
         if (Objects.equals(simpleTypeEnum, SimpleTypeEnum.IMAGE)) {
-            //noinspection DataFlowIssue
-            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(httpInfo.getByteArray())) {
-                BufferedImage bufferedImage = ImageIO.read(inputStream);
+            ImageEditorImpl imageEditor = new ImageEditorImpl(project, responseBodyFile);
 
-                int inputWidth = bufferedImage.getWidth();
-                int inputHeight = bufferedImage.getHeight();
+            JBScrollPane presentation = new JBScrollPane(imageEditor.getComponent());
 
-                int outputWidth = 520;
-                int outputHeight = (int) ((double) inputHeight / inputWidth * outputWidth);
-
-                Image newImage = bufferedImage.getScaledInstance(outputWidth, outputHeight, Image.SCALE_FAST);
-                ImageIcon image = new ImageIcon(newImage);
-
-                JLabel jlabel = new JLabel(image);
-
-                renderResponsePresentation(resEditor.getComponent(), jlabel, constraintsRes);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            renderResponsePresentation(resEditor.getComponent(), presentation, constraintsRes);
         }
     }
 
@@ -153,7 +137,7 @@ public class HttpDashboardForm implements Disposable {
         jPanel.add(component);
     }
 
-    private void saveResponseToFile(HttpInfo httpInfo) {
+    private VirtualFile saveResponseToFile(HttpInfo httpInfo) {
         try {
             SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
 
@@ -177,12 +161,13 @@ public class HttpDashboardForm implements Disposable {
             Files.write(file.toPath(), httpInfo.getByteArray());
             System.out.println("已保存到文件:" + absolutePath);
 
-            VfsUtil.findFileByIoFile(file, true);
+            VirtualFile virtualFile = VfsUtil.findFileByIoFile(file, true);
 
             httpInfo.getHttpResDescList().add(HttpUtils.CR_LF + ">> " + absolutePath + HttpUtils.CR_LF);
+
+            return virtualFile;
         } catch (Exception e) {
-            //noinspection CallToPrintStackTrace
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -190,12 +175,14 @@ public class HttpDashboardForm implements Disposable {
         Dimension size = resComponent.getSize();
         resComponent.setPreferredSize(new Dimension(size.width, 160));
 
-        JPanel jPanel = new JPanel();
-        jPanel.setLayout(new BorderLayout());
-
+        JPanel jPanel = new JPanel(new BorderLayout());
         jPanel.add(resComponent, BorderLayout.NORTH);
-        jPanel.add(new JLabel(NlsBundle.INSTANCE.nls("res.render.result")), BorderLayout.CENTER);
-        jPanel.add(presentation, BorderLayout.SOUTH);
+
+        JPanel previewPanel = new JPanel(new BorderLayout());
+        previewPanel.add(new JLabel(NlsBundle.INSTANCE.nls("res.render.result")), BorderLayout.NORTH);
+        previewPanel.add(presentation, BorderLayout.CENTER);
+
+        jPanel.add(previewPanel, BorderLayout.CENTER);
 
         responsePanel.add(new JBScrollPane(jPanel), constraintsRes);
     }
