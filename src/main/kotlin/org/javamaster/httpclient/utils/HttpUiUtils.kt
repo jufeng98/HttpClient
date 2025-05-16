@@ -8,6 +8,8 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.action.dashboard.DashboardBaseAction
 import org.javamaster.httpclient.action.dashboard.SoftWrapAction
+import org.javamaster.httpclient.action.dashboard.view.FoldHeadersAction
+import org.javamaster.httpclient.action.dashboard.view.ShowLineNumberAction
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.utils.VirtualFileUtils.createHttpVirtualFileFromText
 
@@ -23,12 +25,21 @@ object HttpUiUtils {
         simpleTypeEnum: SimpleTypeEnum?,
     ): Editor {
         val editor = createEditor(bytes, suffix, project, tabName, editorList)
+        val document = editor.document
 
         val settings = editor.settings
         if (req) {
             settings.isUseSoftWraps = SoftWrapAction.reqUseSoftWrap
+            settings.isLineNumbersShown = ShowLineNumberAction.reqShowLineNum
+
+            FoldHeadersAction.setEditorFoldHeader(FoldHeadersAction.reqFoldHeader, editor)
+            document.putUserData(FoldHeadersAction.httpDashboardFoldHeaderKey, FoldHeadersAction.reqFoldHeader)
         } else {
             settings.isUseSoftWraps = SoftWrapAction.resUseSoftWrap
+            settings.isLineNumbersShown = ShowLineNumberAction.resShowLineNum
+
+            FoldHeadersAction.setEditorFoldHeader(FoldHeadersAction.resFoldHeader, editor)
+            document.putUserData(FoldHeadersAction.httpDashboardFoldHeaderKey, FoldHeadersAction.resFoldHeader)
         }
 
         val component = editor.component

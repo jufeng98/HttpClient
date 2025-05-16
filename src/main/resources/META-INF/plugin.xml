@@ -199,6 +199,7 @@
     <depends>com.intellij.java</depends>
     <depends>com.intellij.modules.json</depends>
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.intellij.intelliLang</depends>
     <depends optional="true" config-file="httpclient-web-calm.xml">ris58h.webcalm</depends>
 
     <extensions defaultExtensionNs="com.intellij">

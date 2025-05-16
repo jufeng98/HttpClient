@@ -1,14 +1,18 @@
 package org.javamaster.httpclient.folding
 
+import com.intellij.ide.impl.ProjectUtil
 import com.intellij.lang.ASTNode
 import com.intellij.lang.folding.FoldingBuilder
 import com.intellij.lang.folding.FoldingDescriptor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.TokenSet
+import com.intellij.psi.util.PsiUtil
 import com.intellij.util.containers.toArray
+import org.javamaster.httpclient.action.dashboard.view.FoldHeadersAction
 import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpOutputFile
@@ -18,7 +22,9 @@ import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getMultipartFieldDescr
 import java.nio.file.Paths
 import kotlin.io.path.name
 
-
+/**
+ * @author yudong
+ */
 class HttpFoldingBuilder : FoldingBuilder, DumbAware {
     override fun buildFoldRegions(node: ASTNode, document: Document): Array<FoldingDescriptor> {
         val descriptors = collectDescriptors(node)
@@ -80,8 +86,23 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
     }
 
     override fun isCollapsedByDefault(node: ASTNode): Boolean {
+        val foldHeader = getFoldHeaderFlag(node)
+
         val type = node.elementType
-        return type == HttpTypes.HEADER || type == HttpTypes.OUTPUT_FILE
+        return (foldHeader && type == HttpTypes.HEADER) || type == HttpTypes.OUTPUT_FILE
+    }
+
+    private fun getFoldHeaderFlag(node: ASTNode): Boolean {
+        val project = ProjectUtil.getActiveProject() ?: return true
+
+        val virtualFile = PsiUtil.getVirtualFile(node.psi) ?: return true
+
+        val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return true
+
+        val foldFlag = document.getUserData(FoldHeadersAction.httpDashboardFoldHeaderKey) ?: return true
+
+        return foldFlag
     }
 
     private fun collectDescriptors(node: ASTNode): MutableList<FoldingDescriptor> {
