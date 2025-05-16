@@ -1,12 +1,48 @@
 package org.javamaster.httpclient.action.dashboard
 
-import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.ui.popup.PopupFactoryImpl
+import org.javamaster.httpclient.action.dashboard.view.*
+import org.javamaster.httpclient.nls.NlsBundle.nls
 
-class ViewSettingsAction : AnAction() {
+/**
+ * @author yudong
+ */
+@Suppress("ActionPresentationInstantiatedInCtor")
+class ViewSettingsAction : DashboardBaseAction(nls("view.settings"), AllIcons.General.InspectionsEye) {
 
-    override fun actionPerformed(anActionEvent: AnActionEvent) {
+    override fun actionPerformed(e: AnActionEvent) {
+        val editor = getHttpEditor(e)
 
+        val actionGroup = DefaultActionGroup()
+
+        val req = isReq(e)
+
+        val showLineNumberAction = ShowLineNumberAction(editor, req)
+        actionGroup.add(showLineNumberAction)
+
+        val foldHeadersAction = FoldHeadersAction(editor, req)
+        actionGroup.add(foldHeadersAction)
+
+        actionGroup.addSeparator()
+
+        actionGroup.addSeparator("View As")
+
+        val contentTypeActionGroup = ContentTypeActionGroup(editor)
+
+        actionGroup.addAll(contentTypeActionGroup.actions)
+
+        val jbPopupFactory = PopupFactoryImpl.getInstance()
+
+
+        val listPopup = jbPopupFactory.createActionGroupPopup(
+            null, actionGroup, e.dataContext,
+            true, null, 16
+        )
+
+        listPopup.showUnderneathOf(e.inputEvent!!.component)
     }
 
 }
