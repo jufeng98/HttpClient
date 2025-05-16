@@ -3,6 +3,7 @@ package org.javamaster.httpclient.action.dashboard
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.editor.Editor
 import com.intellij.ui.popup.PopupFactoryImpl
 import org.javamaster.httpclient.action.dashboard.view.*
 import org.javamaster.httpclient.nls.NlsBundle.nls
@@ -10,8 +11,11 @@ import org.javamaster.httpclient.nls.NlsBundle.nls
 /**
  * @author yudong
  */
-@Suppress("ActionPresentationInstantiatedInCtor")
-class ViewSettingsAction : DashboardBaseAction(nls("view.settings"), AllIcons.General.InspectionsEye) {
+class ViewSettingsAction(editor: Editor) : DashboardBaseAction(nls("view.settings"), AllIcons.General.InspectionsEye) {
+
+    private val contentTypeActionGroup by lazy {
+        ContentTypeActionGroup(editor)
+    }
 
     override fun actionPerformed(e: AnActionEvent) {
         val editor = getHttpEditor(e)
@@ -29,8 +33,6 @@ class ViewSettingsAction : DashboardBaseAction(nls("view.settings"), AllIcons.Ge
         actionGroup.addSeparator()
 
         actionGroup.addSeparator("View As")
-
-        val contentTypeActionGroup = ContentTypeActionGroup(editor)
 
         actionGroup.addAll(contentTypeActionGroup.actions)
 

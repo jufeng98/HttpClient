@@ -378,7 +378,6 @@
             <action class="org.javamaster.httpclient.action.example.CryptoJsExampleAction"/>
         </group>
 
-        <action id="HttpViewSettingsAction" class="org.javamaster.httpclient.action.dashboard.ViewSettingsAction"/>
         <group id="httpDashboardVerticalGroup">
             <action class="org.javamaster.httpclient.action.dashboard.ScrollToTopAction"/>
             <action class="org.javamaster.httpclient.action.dashboard.ScrollToEndAction"/>

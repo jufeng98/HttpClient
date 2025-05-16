@@ -27,6 +27,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.intellij.images.editor.impl.ImageEditorImpl;
 import org.javamaster.httpclient.HttpInfo;
 import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
+import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.utils.HttpUiUtils;
@@ -123,7 +124,7 @@ public class HttpDashboardForm implements Disposable {
     private void initVerticalToolbarPanel(Editor target, JPanel jPanel) {
         ActionManager actionManager = ActionManager.getInstance();
 
-        AnAction viewSettingsAction = actionManager.getAction("HttpViewSettingsAction");
+        AnAction viewSettingsAction = new ViewSettingsAction(target);
         DefaultActionGroup defaultActionGroup = new DefaultActionGroup(viewSettingsAction, new SoftWrapAction(target));
 
         ActionGroup actionGroup = (ActionGroup) actionManager.getAction("httpDashboardVerticalGroup");
