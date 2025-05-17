@@ -199,19 +199,15 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         reqHeaderMap.putAll(jsExecutor.getHeaderMap())
 
-        if (methodType == HttpRequestEnum.WEBSOCKET.name) {
-            handleWs(url, reqHeaderMap)
-            return
-        }
-
         val reqBody = reqInfo.reqBody
 
-        if (methodType == HttpRequestEnum.DUBBO.name) {
-            handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
-            return
-        }
+        when (methodType) {
+            HttpRequestEnum.WEBSOCKET.name -> handleWs(url, reqHeaderMap)
 
-        handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
+            HttpRequestEnum.DUBBO.name -> handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
+
+            else -> handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
+        }
     }
 
     fun prepareJsAndConvertToCurl(consumer: Consumer<String>) {
@@ -379,7 +375,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 throw e.targetException
             }
 
-            return@underModalProgress dubboRequest
+            dubboRequest
         }
 
         val future = dubboRequest.sendAsync()
