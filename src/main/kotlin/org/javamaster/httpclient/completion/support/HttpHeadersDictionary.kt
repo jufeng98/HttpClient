@@ -124,7 +124,7 @@ object HttpHeadersDictionary {
     }
 
     private fun createMapFromFile(): MutableMap<String, HttpHeaderDocumentation> {
-        val name = "examples/header-documentation.json"
+        val name = "doc/header-documentation.json"
         val stream = HttpHeadersDictionary::class.java.classLoader.getResourceAsStream(name)!!
 
         val jsonText = FileUtil.loadTextAndClose(stream)

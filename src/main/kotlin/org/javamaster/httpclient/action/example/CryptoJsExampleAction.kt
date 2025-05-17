@@ -10,7 +10,7 @@ class CryptoJsExampleAction : ExampleAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        openExample("examples/crypto-js.js")
+        openExample("js/crypto-js.js")
     }
 
 }

@@ -441,7 +441,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             global.defineProperty("GLOBAL_SET", nls("value.global.set"), ScriptableObject.READONLY)
             global.defineProperty("REQUEST_SET", nls("value.req.set"), ScriptableObject.READONLY)
 
-            var url = Companion::class.java.classLoader.getResource("examples/crypto-js.js")!!
+            var url = Companion::class.java.classLoader.getResource("js/crypto-js.js")!!
             var jsStr = url.readText(StandardCharsets.UTF_8)
             context.evaluateString(global, jsStr, "crypto-js.js", 1, null)
             // Register CryptoJS object
@@ -450,7 +450,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val globalLog = Context.javaToJS(GlobalLog, global)
             ScriptableObject.putProperty(global, "globalLog", globalLog)
 
-            url = Companion::class.java.classLoader.getResource("examples/initGlobal.js")!!
+            url = Companion::class.java.classLoader.getResource("js/initGlobal.js")!!
             jsStr = url.readText(StandardCharsets.UTF_8)
             context.evaluateString(global, jsStr, "initGlobal.js", 1, null)
 
@@ -472,7 +472,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         }
 
         private val initRequestJsStr by lazy {
-            val url = Companion::class.java.classLoader.getResource("examples/initRequest.js")!!
+            val url = Companion::class.java.classLoader.getResource("js/initRequest.js")!!
             url.readText(StandardCharsets.UTF_8)
         }
 

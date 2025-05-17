@@ -18,8 +18,8 @@ abstract class ExampleAction : AnAction() {
 
     fun openExample(name: String) {
         val project = ProjectUtil.getActiveProject()!!
-        val url = javaClass.classLoader.getResource(name)
-        val virtualFile = VfsUtil.findFileByURL(url)
-        FileEditorManager.getInstance(project).openFile(virtualFile!!, true)
+        val url = javaClass.classLoader.getResource(name)!!
+        val virtualFile = VfsUtil.findFileByURL(url)!!
+        FileEditorManager.getInstance(project).openFile(virtualFile, true)
     }
 }
