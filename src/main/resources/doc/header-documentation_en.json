@@ -922,6 +922,10 @@
     "name": "Access-Control-Request-Headers"
   },
   {
+    "descr": "<div class=\"section-content\"><p>The HTTP <strong><code>Access-Control-Expose-Headers</code></strong> <a href=\"/en-US/docs/Glossary/Response_header\">response header</a> allows a server to indicate which response headers should be made available to scripts running in the browser in response to a cross-origin request.</p>\n<p>Only the <a href=\"/en-US/docs/Glossary/CORS-safelisted_response_header\">CORS-safelisted response headers</a> are exposed by default. For clients to be able to access other headers, the server must list them using the <code>Access-Control-Expose-Headers</code> header.</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">Header type</th>\n      <td><a href=\"/en-US/docs/Glossary/Response_header\">Response header</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/en-US/docs/Glossary/Forbidden_request_header\">Forbidden request header</a></th>\n      <td>No</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Expose-Headers"
+  },
+  {
     "name": "AMP-Cache-Transform"
   },
   {

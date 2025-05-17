@@ -7,6 +7,7 @@ import com.intellij.openapi.util.io.FileUtil
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.doc.support.HttpHeaderDocumentation
 import org.javamaster.httpclient.doc.support.HttpHeaderDocumentation.Companion.read
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
 
 /**
@@ -124,7 +125,7 @@ object HttpHeadersDictionary {
     }
 
     private fun createMapFromFile(): MutableMap<String, HttpHeaderDocumentation> {
-        val name = "doc/header-documentation.json"
+        val name = "doc/header-documentation_${NlsBundle.lang}.json"
         val stream = HttpHeadersDictionary::class.java.classLoader.getResourceAsStream(name)!!
 
         val jsonText = FileUtil.loadTextAndClose(stream)

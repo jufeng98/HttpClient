@@ -1,0 +1,1061 @@
+[
+  {
+    "name": "A-IM",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Accept</code></strong> 请求 HTTP 标头表示客户端能够理解的内容类型，以 <a href=\"/zh-CN/docs/Web/HTTP/Guides/MIME_types\">MIME 类型</a>的形式表达。借助<a href=\"/zh-CN/docs/Web/HTTP/Guides/Content_negotiation\">内容协商机制</a>, 服务器可以从诸多备选项中选择一项进行应用，并使用 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Content-Type\"><code>Content-Type</code></a> 响应标头通知客户端它的选择。浏览器会基于请求的上下文来为这个请求标头设置合适的值，比如，获取一个 CSS 层叠样式表时的值与获取图片、视频或脚本文件时的值是不同的。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_request_header\">列入 CORS 白名单的请求标头</a>\n      </th>\n      <td>\n        是，但有额外的限制，即值中不能包含 <em>CORS 不安全请求标头字节</em>：0x00-0x1F（除了 0x09（制表符，HT）），<code>\"():&lt;&gt;?@[\\]{}</code> 以及 0x7F（DEL）。\n      </td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Accept",
+    "rfc-ref": "7231#section-5.3.2",
+    "rfc-title": "[RFC7231, Section 5.3.2]"
+  },
+  {
+    "name": "Accept-Additions",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "The <strong><code>Accept-Charset</code></strong> request HTTP header advertises which <a class=\"glossaryLink\" href=\"/en-US/docs/Glossary/character_encoding\" title=\"character encodings: An encoding defines a mapping between bytes and text. A sequence of bytes allows for different textual interpretations. By specifying a particular encoding (such as UTF-8), we specify how the sequence of bytes is to be interpreted.\">character encodings</a> the client understands.",
+    "name": "Accept-Charset",
+    "rfc-ref": "7231#section-5.3.3",
+    "rfc-title": "[RFC7231, Section 5.3.3]"
+  },
+  {
+    "name": "Accept-Datetime",
+    "rfc-ref": "7089",
+    "rfc-title": "[RFC7089]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Accept-Encoding</code></strong> 请求 HTTP 标头表示客户端能够理解的内容编码（通常是某种压缩算法）。服务器使用<a href=\"/zh-CN/docs/Web/HTTP/Guides/Content_negotiation\">内容协商</a>从中选择一个提议，并通过 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Content-Encoding\"><code>Content-Encoding</code></a> 响应标头告知客户端这一选择。</p>\n<p>即使客户端和服务器都支持相同的压缩算法，在 <code>identity</code> 值可以被接受的情况下，服务器也可以选择不对响应体进行压缩。导致出现这种情况的常见原因有两个：</p>\n<ul>\n<li>要发送的数据已经经过压缩，再次压缩不会减少传输的数据量。这适用于预先压缩过的图像格式（如 JPEG）。</li>\n<li>服务器过载，无法分配计算资源来进行压缩。例如，微软建议如果服务器使用超过其计算能力的 80%，则不应进行压缩。</li>\n</ul>\n<p>只要 <code>identity;q=0</code> 或 <code>*;q=0</code> 指令不明确禁止表示无编码的 <code>identity</code> 值，服务器就绝对不应返回 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/406\"><code>406</code></a> <code>Not Acceptable</code> 错误。</p>\n<div class=\"notecard note\">\n<p><strong>备注：</strong></p>\n<ul>\n<li>IANA 维护了<a href=\"https://www.iana.org/assignments/http-parameters/http-parameters.xml#http-parameters-1\" class=\"external\" target=\"_blank\">一个完整的官方支持的编码方式列表</a>。</li>\n<li>另外两种内容编码 <code>bzip</code> 和 <code>bzip2</code> 有时也会被使用。这两种非标准编码实现了这两个 UNIX 程序所使用的算法。请注意，由于专利许可问题，<code>bzip</code> 已被弃用。</li>\n</ul>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Accept-Encoding",
+    "rfc-ref": "7694#section-3",
+    "rfc-title": "[RFC7694, Section 3]"
+  },
+  {
+    "name": "Accept-Features",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Accept-Language</code></strong> 请求 HTTP 标头表示客户端所偏好的自然语言和区域设置。服务器利用<a href=\"/zh-CN/docs/Web/HTTP/Guides/Content_negotiation\">内容协商</a>机制从这些提议中选出一项，并通过 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Content-Language\"><code>Content-Language</code></a> 响应标头将这一选择告知客户端。浏览器会根据其当前活跃的用户界面语言为该标头设定所需的值。用户很少更改此设置，而且也不建议这样做，因为这可能导致<a href=\"/zh-CN/docs/Glossary/Fingerprinting\">指纹识别</a>。</p>\n<p>当服务器无法通过其他方式（比如使用依赖于用户明确决定的特定 URL）确定目标内容语言时，这个标头可作为提示使用。服务器绝不应覆盖用户的明确语言选择。<code>Accept-Language</code> 的内容常常超出用户的控制范围（例如在旅行时）。用户也可能希望访问使用的语言与用户界面并不相同的页面。</p>\n<p>如果服务器不能提供任何可以匹配的语言的版本，那么理论上来说应该返回一个 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/406\"><code>406</code></a>（Not Acceptable，不被接受）的错误码。但是为了更好的用户体验，这种方法很少被采用，取而代之的是将其忽略。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_request_header\">列入 CORS 白名单的请求标头</a>\n      </th>\n      <td>\n        是的，但有附加限制，即值只能是 <code>0-9</code>、<code>A-Z</code>、<code>a-z</code>、空格或 <code>*,-.;=</code>。\n      </td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Accept-Language",
+    "rfc-ref": "7231#section-5.3.5",
+    "rfc-title": "[RFC7231, Section 5.3.5]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Accept-Patch</code></strong> 响应 HTTP 标头中用来声明服务器在 PATCH 请求中能够理解的媒体类型。</p>\n<p>在对任何方法的响应中包含 <strong><code>Accept-Patch</code></strong> 意味着允许对由 Request-URI 所标识的资源执行 PATCH 操作。导致这种情况的常见原因有两个：</p>\n<p>当服务器接收到带有不支持媒体类型的 PATCH 请求时，可以回复 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/415\"><code>415</code></a> <code>Unsupported Media Type</code> 状态码，并在 Accept-Patch 标头中指明一个或多个支持的媒体类型。</p>\n<div class=\"notecard note\">\n<p><strong>备注：</strong>\nIANA 维护了一个<a href=\"https://www.iana.org/assignments/media-types/media-types.xhtml\" class=\"external\" target=\"_blank\">媒体类型列表</a>。</p>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Accept-Patch",
+    "rfc-ref": "5789",
+    "rfc-title": "[RFC5789]"
+  },
+  {
+    "name": "Accept-Post"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Accept-Ranges</code></strong> HTTP 响应标头是服务器使用的一个标记，用于向客户端宣传其对文件下载的部分请求的支持。此字段的值表示可用于定义范围的单位。</p>\n<p>当存在 <code>Accept-Ranges</code> 标头时，浏览器可能会尝试<em>恢复</em>中断的下载，而不是尝试重新启动下载。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Accept-Ranges",
+    "rfc-ref": "7233#section-2.3",
+    "rfc-title": "[RFC7233, Section 2.3]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Age</code></strong> 标头包含对象在代理缓存中停留的时间，以秒为单位。</p>\n<p><code>Age</code> 标头通常接近于 0。如果显示为 <code>Age: 0</code>，则表示该内容可能是从源服务器上获取的；否则，它通常是通过代理服务器当前日期与 HTTP 响应中包含的 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Date\"><code>Date</code></a> 通用标头之间的差值来计算得出的。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Age",
+    "rfc-ref": "7234#section-5.1",
+    "rfc-title": "[RFC7234, Section 5.1]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Allow</code></strong> 标头列出了资源支持的方法集。</p>\n<p>当服务器响应带有 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/405\"><code>405</code></a> <code>Method Not Allowed</code> 状态码时必须发送此标头，以表示可以使用哪些请求方法。<code>Allow</code> 空标头表示该资源不允许使用任何请求方法，例如，这种情况可能针对某个特定资源会临时出现。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Allow",
+    "rfc-ref": "7231#section-7.4.1",
+    "rfc-title": "[RFC7231, Section 7.4.1]"
+  },
+  {
+    "name": "ALPN",
+    "rfc-ref": "7639#section-2",
+    "rfc-title": "[RFC7639, Section 2]"
+  },
+  {
+    "descr": "The <strong><code style=\"white-space: nowrap;\">Alt-Svc</code></strong> HTTP response header is used to advertise alternative services through which the same resource can be reached. An alternative service is defined by a protocol/host/port combination.",
+    "name": "Alt-Svc",
+    "rfc-ref": "7838",
+    "rfc-title": "[RFC7838]"
+  },
+  {
+    "name": "Alt-Used",
+    "rfc-ref": "7838",
+    "rfc-title": "[RFC7838]"
+  },
+  {
+    "name": "Alternates",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Apply-To-Redirect-Ref",
+    "rfc-ref": "4437",
+    "rfc-title": "[RFC4437]"
+  },
+  {
+    "name": "Authentication-Control",
+    "rfc-ref": "8053#section-4",
+    "rfc-title": "[RFC8053, Section 4]"
+  },
+  {
+    "name": "Authentication-Info",
+    "rfc-ref": "7615#section-3",
+    "rfc-title": "[RFC7615, Section 3]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP <strong><code>Authorization</code></strong> 请求标头用于提供服务器验证用户代理身份的凭据，允许访问受保护的资源。</p>\n<p><strong><code>Authorization</code></strong> 标头通常在用户代理首次尝试请求受保护的资源（没有携带凭据）之后发送的，但并不总是发送。服务器响应一条 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/401\"><code>401</code></a> <code>Unauthorized</code> 信息，其中包含至少一个 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/WWW-Authenticate\"><code>WWW-Authenticate</code></a> 标头。该标头表示哪些身份验证的方案可用于访问资源（以及客户端使用它们时需要的额外的信息）。用户代理应该从这些提供的身份验证方案中选择它支持的最安全的身份验证方案，并提示用户提供凭据，然后重新获取资源（包含 <strong><code>Authorization</code></strong> 标头中编码的凭据）。</p>\n<div class=\"notecard note\">\n<p><strong>备注：</strong>\n此标头是<a href=\"/zh-CN/docs/Web/HTTP/Guides/Authentication#通用的_http_认证框架\">通用的 HTTP 认证框架</a>的一部分。它可以与许多<a href=\"/zh-CN/docs/Web/HTTP/Guides/Authentication#身份验证方案\">身份验证方案</a>一起使用。</p>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Authorization",
+    "rfc-ref": "7235#section-4.2",
+    "rfc-title": "[RFC7235, Section 4.2]"
+  },
+  {
+    "name": "C-Ext",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "C-Man",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "C-Opt",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "C-PEP",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "C-PEP-Info",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Cache-Control</code></strong> 通用消息头字段，被用于在 http 请求和响应中，通过指定指令来实现缓存机制。缓存指令是单向的，这意味着在请求中设置的指令，不一定被包含在响应中。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/General_header\">General header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/CORS-safelisted_response_header\">CORS-safelisted response-header</a></td>\n<td>yes</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Cache-Control",
+    "rfc-ref": "7234#section-5.2",
+    "rfc-title": "[RFC7234, Section 5.2]"
+  },
+  {
+    "name": "Cal-Managed-ID",
+    "rfc-ref": "8607#section-5.1",
+    "rfc-title": "[RFC8607, Section 5.1]"
+  },
+  {
+    "name": "CalDAV-Timezones",
+    "rfc-ref": "7809#section-7.1",
+    "rfc-title": "[RFC7809, Section 7.1]"
+  },
+  {
+    "name": "CDN-Loop",
+    "rfc-ref": "8586",
+    "rfc-title": "[RFC8586]"
+  },
+  {
+    "name": "Cert-Not-After"
+  },
+  {
+    "name": "Cert-Not-Before"
+  },
+  {
+    "name": "Close",
+    "rfc-ref": "7230#section-8.1",
+    "rfc-title": "[RFC7230, Section 8.1]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Connection</code></strong> 通用标头控制网络连接在当前会话完成后是否仍然保持打开状态。如果发送的值是 <code>keep-alive</code>，则连接是持久的，不会关闭，允许对同一服务器进行后续请求。</p>\n<div class=\"notecard warning\">\n<p><strong>警告：</strong>\n在 <a href=\"https://httpwg.org/specs/rfc9113.html#ConnectionSpecific\" class=\"external\" target=\"_blank\">HTTP/2</a> 和 <a href=\"https://httpwg.org/specs/rfc9114.html#header-formatting\" class=\"external\" target=\"_blank\">HTTP/3</a> 中，禁止使用特定于连接的标头字段，如 <code>Connection</code> 和 <code>Keep-Alive</code>。Chrome 和 Firefox 会在 HTTP/2 响应中忽略它们，但 Safari 遵循 HTTP/2 规范要求，不会加载包含这些字段的任何响应。</p>\n</div>\n<p>除去标准的逐段传输（hop-by-hop）头（<a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Keep-Alive\"><code>Keep-Alive</code></a>, <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Transfer-Encoding\"><code>Transfer-Encoding</code></a>, <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/TE\"><code>TE</code></a>, <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Connection\" aria-current=\"page\"><code>Connection</code></a>, <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Trailer\"><code>Trailer</code></a>, <a href=\"/en-US/docs/Web/HTTP/Reference/Headers/Upgrade\" class=\"only-in-en-us\"><code>Upgrade</code></a>, <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Proxy-Authorization\"><code>Proxy-Authorization</code></a> and <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Proxy-Authenticate\"><code>Proxy-Authenticate</code></a>），任何逐段传输头都需要在 Connection 头中列出，这样才能让第一个代理知道必须处理它们且不转发这些头。标准的逐段传输头也可以列出（常见的例子是 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Keep-Alive\"><code>Keep-Alive</code></a>，但这不是必须的）。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/General_header\">General header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>yes</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Connection",
+    "rfc-ref": "7230#section-6.1",
+    "rfc-title": "[RFC7230, Section 6.1]"
+  },
+  {
+    "name": "Content-Base",
+    "obsolete": true,
+    "rfc-ref": "2616",
+    "rfc-title": "[RFC2616]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>在常规的 HTTP 应答中，<strong><code>Content-Disposition</code></strong> 响应标头指示回复的内容该以何种形式展示，是以<em>内联</em>的形式（即网页或者页面的一部分），还是以<em>附件</em>的形式下载并保存到本地。</p>\n<p>在 <code>multipart/form-data</code> 类型的应答消息体中，<strong><code>Content-Disposition</code></strong> 通用标头可以被用在 multipart 消息体的子部分中，用来给出其对应字段的相关信息。各个子部分由在 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Content-Type\"><code>Content-Type</code></a> 中定义的<em>边界</em>（boundary）分隔。用在消息体自身则无实际意义。</p>\n<p><code>Content-Disposition</code> 标头最初是在 MIME 标准中定义的，HTTP 表单及 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/POST\"><code>POST</code></a> 请求只用到了其所有参数的一个子集。只有 <code>form-data</code> 以及可选的 <code>name</code> 和 <code>filename</code> 三个参数可以应用在 HTTP 上下文中。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td>\n        <a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a>（对于消息主体），<br>\n        <a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a>、<a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a>（对于多部分主体）\n      </td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Content-Disposition",
+    "rfc-ref": "6266",
+    "rfc-title": "[RFC6266]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><a href=\"/zh-CN/docs/Glossary/Representation_header\">表示标头</a> <strong><code>Content-Encoding</code></strong> 列出了对当前应用资源的任何编码类型，以及编码的顺序。它让接收者知道需要以何种顺序解码数据以获得 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Content-Type\"><code>Content-Type</code></a> 标头中描述的原始内容格式。内容编码主要用于在不丢失原媒体类型内容的情况下压缩内容。</p>\n<p>一般建议服务器应对数据尽可能地进行压缩，并在适当情况下对内容进行编码。对一种压缩过的媒体类型如 .zip 或 .jpeg 进行额外的压缩并不合适，因为这反而有可能会使内容增大。如果原始媒体以某种方式编码（例如 .zip 文件），则该信息不应该被包含在 <code>Content-Encoding</code> 标头内。</p>\n<p>当存在 <code>Content-Encoding</code> 标头时，其他元数据（例如 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Content-Type\"><code>Content-Type</code></a>）指示的是数据编码后的形式，而不是原始数据的形式（除非显式声明）。内容编码与 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Transfer-Encoding\"><code>Transfer-Encoding</code></a> 不同，因为 <code>Transfer-Encoding</code> 处理的是 HTTP 消息本身如何在网络上<a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers#逐跳（hop-by-hop）标头\">逐跳</a>传输。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n <tbody>\n  <tr>\n   <th scope=\"row\">标头类型</th>\n   <td><a href=\"/zh-CN/docs/Glossary/Representation_header\">表示标头</a></td>\n  </tr>\n  <tr>\n   <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n   <td>否</td>\n  </tr>\n </tbody>\n</table></figure></div>",
+    "name": "Content-Encoding",
+    "rfc-ref": "7231#section-3.1.2.2",
+    "rfc-title": "[RFC7231, Section 3.1.2.2]"
+  },
+  {
+    "name": "Content-ID",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP <strong><code>Content-Language</code></strong> <a href=\"/zh-CN/docs/Glossary/Representation_header\">表示标头</a>用来说明访问者希望采用的语言，这样的话用户就可以根据自己偏好的语言来定制不同的内容。</p>\n<p>举个例子，<code>Content-Language: de-DE</code> 说明这份文件是为说德语的人提供的。这个文件可能是用英文写的，而非德语——它可能是为说德语的人开设的英语教程的一部分。要说明文档是用什么语言<strong>写</strong>的，应该用 <a href=\"/zh-CN/docs/Web/HTML/Reference/Global_attributes/lang\"><code>lang</code></a> 属性。</p>\n<p>如果没有指明 <code>Content-Language</code>，那么默认地，文件内容是提供给所有语言的访问者使用的。多个语言标签也是合法的。同样地，<code>Content-Language</code> 标头还适用于不同媒体类型的文件，而不单单局限于文本型文档。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Representation_header\">表示标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_response_header\">列入 CORS 白名单的响应标头</a>\n      </th>\n      <td>是</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_request_header\">列入 CORS 白名单的请求标头</a>\n      </th>\n      <td>\n        是*\n      </td>\n    </tr>\n  </tbody>\n</table></figure>\n<p>* 值只能是 <code>0-9</code>、<code>A-Z</code>、<code>a-z</code>、空格或字符 <code>*,-.;=</code>。</p></div>",
+    "name": "Content-Language",
+    "rfc-ref": "7231#section-3.1.3.2",
+    "rfc-title": "[RFC7231, Section 3.1.3.2]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP <strong><code>Content-Length</code></strong> 标头表示发送给接收方的消息体的大小（以字节为单位）。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td>\n        <a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a>、<a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a>、<a href=\"/zh-CN/docs/Glossary/Content_header\">内容标头</a>\n      </td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>是</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_response_header\">列入 CORS 白名单的响应标头</a>\n      </th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Content-Length",
+    "rfc-ref": "7230#section-3.3.2",
+    "rfc-title": "[RFC7230, Section 3.3.2]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP <strong><code>Content-Location</code></strong> <a href=\"/zh-CN/docs/Glossary/Representation_header\">表示标头</a>指定返回数据的备用地址。最主要的用途是用来指定要访问的资源经过<a href=\"/zh-CN/docs/Web/HTTP/Guides/Content_negotiation\">内容协商</a>后的结果的 URL。</p>\n<p><code>Content-Location</code> 标头和 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Location\"><code>Location</code></a> 标头是不同的。<code>Content-Location</code> 表示在<a href=\"/zh-CN/docs/Web/HTTP/Guides/Content_negotiation\">内容协商</a>发生时访问资源的直接 URL，允许客户端绕过该资源未来的内容协商。相比之下，<code>Location</code> 则表示 <code>3XX</code> 重定向的目标或者 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/201\"><code>201 Created</code></a> 响应中新创建的资源的 URL。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Representation_header\">表示标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Content-Location",
+    "rfc-ref": "7231#section-3.1.4.2",
+    "rfc-title": "[RFC7231, Section 3.1.4.2]"
+  },
+  {
+    "name": "Content-MD5",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Content-Range</code></strong> HTTP 响应标头表示部分消息在完整消息中的位置。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td>\n        <a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a>、<a href=\"/zh-CN/docs/Glossary/Payload_header\">有效负载标头</a>\n      </td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_request_header\">列入 CORS 白名单的请求标头</a>\n      </th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Content-Range",
+    "rfc-ref": "7233#section-4.2",
+    "rfc-title": "[RFC7233, Section 4.2]"
+  },
+  {
+    "name": "Content-Script-Type",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Content-Style-Type",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Content-Type</code></strong> 表示标头用于指示资源的原始<a href=\"/zh-CN/docs/Glossary/MIME_type\">媒体类型</a>（在发送时应用任何内容编码之前）。</p>\n<p>在响应中，<code>Content-Type</code> 标头向客户端提供返回内容的实际内容类型。例如，当浏览器执行 MIME 嗅探时，该标头的值可能会被忽略；将 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options\"><code>X-Content-Type-Options</code></a> 标头值设置为 <code>nosniff</code> 可防止这种行为。</p>\n<p>在请求（例如 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/POST\"><code>POST</code></a> 或 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/PUT\"><code>PUT</code></a>）中，客户端会告诉服务器实际发送的数据类型。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Representation_header\">表示标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_response_header\">列入 CORS 白名单的响应标头</a>\n      </th>\n      <td>是</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_request_header\">列入 CORS 白名单的请求标头</a>\n      </th>\n      <td>\n        是，但额外限制了值不能包含 <em>CORS 不安全的请求标头字节</em>：0x00-0x1F（除了 0x09（HT））、<code>\"():&lt;&gt;?@[\\]{}</code> 和 0x7F（DEL）。\n        <br>解析值（忽略参数）的 MIME 类型也必须是 <code>application/x-www-form-urlencoded</code>、<code>multipart/form-data</code> 或 <code>text/plain</code>。\n      </td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Content-Type",
+    "rfc-ref": "7231#section-3.1.1.5",
+    "rfc-title": "[RFC7231, Section 3.1.1.5]"
+  },
+  {
+    "name": "Content-Version",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Cookie</code></strong> 是一个 HTTP 请求标头，其中含有先前由服务器通过 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Set-Cookie\"><code>Set-Cookie</code></a> 标头投放或通过 JavaScript 的 <a href=\"/zh-CN/docs/Web/API/Document/cookie\"><code>Document.cookie</code></a> 方法设置，然后存储到客户端的 <a href=\"/zh-CN/docs/Web/HTTP/Guides/Cookies\">HTTP cookie</a> 。</p>\n<p>这个标头是可选的，而且可能会被忽略，例如在浏览器的隐私设置里面设置为禁用 cookie。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n <tbody>\n  <tr>\n   <th scope=\"row\">标头类型</th>\n   <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n  </tr>\n  <tr>\n   <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n   <td>是</td>\n  </tr>\n </tbody>\n</table></figure></div>",
+    "name": "Cookie",
+    "rfc-ref": "6265",
+    "rfc-title": "[RFC6265]"
+  },
+  {
+    "descr": "The obsolete <strong><code>Cookie2</code></strong> HTTP request header used to\u00a0advise the server that the user agent understands \"new-style\" cookies, but nowadays user agents will use the <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie\" title=\"The Cookie HTTP request header contains stored HTTP cookies previously sent by the server with the Set-Cookie header.\"><code>Cookie</code></a> header instead, not this one.",
+    "name": "Cookie2",
+    "obsolete": true,
+    "rfc-ref": "6265",
+    "rfc-title": "[RFC6265]"
+  },
+  {
+    "name": "DASL",
+    "rfc-ref": "5323",
+    "rfc-title": "[RFC5323]"
+  },
+  {
+    "name": "DAV",
+    "rfc-ref": "4918",
+    "rfc-title": "[RFC4918]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Date</code></strong> 通用 HTTP 标头包含了消息创建时的日期和时间。</p>\n<div class=\"notecard warning\">\n<p><strong>警告：</strong>\n在 fetch 规范中，<code>Date</code> 被列为<a href=\"https://fetch.spec.whatwg.org/#forbidden-header-name\" class=\"external\" target=\"_blank\">禁止修改的标头</a>，因此这段代码不会发送 <code>Date</code> 标头：</p>\n<div class=\"code-example\"><div class=\"example-header\"><span class=\"language-name\">js</span><button type=\"button\" class=\"icon copy-icon\"><span class=\"visually-hidden\">Copy to Clipboard</span></button><span class=\"copy-icon-message visually-hidden\" role=\"alert\"></span></div><pre class=\"brush: js notranslate\"><code><span class=\"token function\">fetch</span><span class=\"token punctuation\">(</span><span class=\"token string\">\"https://httpbin.org/get\"</span><span class=\"token punctuation\">,</span> <span class=\"token punctuation\">{</span>\n  <span class=\"token literal-property property\">headers</span><span class=\"token operator\">:</span> <span class=\"token punctuation\">{</span>\n    <span class=\"token literal-property property\">Date</span><span class=\"token operator\">:</span> <span class=\"token keyword\">new</span> <span class=\"token class-name\">Date</span><span class=\"token punctuation\">(</span><span class=\"token punctuation\">)</span><span class=\"token punctuation\">.</span><span class=\"token function\">toUTCString</span><span class=\"token punctuation\">(</span><span class=\"token punctuation\">)</span><span class=\"token punctuation\">,</span>\n  <span class=\"token punctuation\">}</span><span class=\"token punctuation\">,</span>\n<span class=\"token punctuation\">}</span><span class=\"token punctuation\">)</span><span class=\"token punctuation\">;</span>\n</code></pre></div>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td>\n        <a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a>、<a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a>\n      </td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Date",
+    "rfc-ref": "7231#section-7.1.1.2",
+    "rfc-title": "[RFC7231, Section 7.1.1.2]"
+  },
+  {
+    "name": "Default-Style",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Delta-Base",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Depth",
+    "rfc-ref": "4918",
+    "rfc-title": "[RFC4918]"
+  },
+  {
+    "name": "Derived-From",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Destination",
+    "rfc-ref": "4918",
+    "rfc-title": "[RFC4918]"
+  },
+  {
+    "name": "Differential-ID",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "The <code><strong>Digest</strong></code> response HTTP header provides a <a class=\"glossaryLink\" href=\"/en-US/docs/Glossary/digest\" title=\"digest: A\u00a0digest is a\u00a0small value generated by a hash function from a whole message. Ideally, a digest is quick to calculate, irreversible,\u00a0and unpredictable, and therefore indicates whether someone has\u00a0tampered with a given message.\">digest</a> of the requested resource.",
+    "name": "Digest",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><div class=\"notecard experimental\"><p><strong>实验性:</strong> <strong>这是一项<a href=\"/zh-CN/docs/MDN/Writing_guidelines/Experimental_deprecated_obsolete#实验性\">实验性技术</a></strong><br>在将其用于生产之前，请仔细检查<a href=\"#浏览器兼容性\">浏览器兼容性表格</a>。</p></div>\n<p><strong><code>Early-Data</code></strong> 头（header）由某个中间者设置来表示请求已在 TLS early data 中传送，且表示 某个中间者理解 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/425\"><code>425 (Too Early)</code></a> 状态码。<strong><code>Early-Data</code></strong> 头（header）不由请求的发起者设置 (例如，浏览器)。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Early-Data",
+    "rfc-ref": "8470",
+    "rfc-title": "[RFC8470]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>ETag</code></strong> HTTP 响应头是资源的特定版本的标识符。这可以让缓存更高效，并节省带宽，因为如果内容没有改变，Web 服务器不需要发送完整的响应。而如果内容发生了变化，使用 ETag 有助于防止资源的同时更新相互覆盖（“空中碰撞”）。</p>\n<p>如果给定 URL 中的资源更改，则<em>一定</em>要生成新的 <code>ETag</code> 值。比较这些 <code>ETag</code> 能快速确定此资源是否变化。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Response_header\">Response header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "ETag",
+    "rfc-ref": "7232#section-2.3",
+    "rfc-title": "[RFC7232, Section 2.3]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Expect</code></strong> 是一个请求消息头，包含一个期望条件，表示服务器只有在满足此期望条件的情况下才能妥善地处理请求。</p>\n<p>规范中只规定了一个期望条件，即 <code>Expect: 100-continue</code>, 对此服务器可以做出如下回应：</p>\n<ul>\n<li><a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/100\"><code>100</code></a> 如果消息头中的期望条件可以得到满足，使得请求可以顺利进行的话，</li>\n<li><a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/417\"><code>417</code></a> (Expectation Failed) 如果服务器不能满足期望条件的话；也可以是其他任意表示客户端错误的状态码（4xx）。</li>\n</ul>\n<p>例如，如果请求中 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Content-Length\"><code>Content-Length</code></a> 的值太大的话，可能会遭到服务器的拒绝。</p>\n<p>常见的浏览器不会发送 <code>Expect</code> 消息头，但是其他类型的客户端如 cURL 默认会这么做。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Expect",
+    "rfc-ref": "7231#section-5.1.1",
+    "rfc-title": "[RFC7231, Section 5.1.1]"
+  },
+  {
+    "descr": "The <code>Expect-CT</code>\u00a0header allows sites to opt in to reporting and/or enforcement of <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Certificate_Transparency\">Certificate Transparency</a> requirements, which prevents the use of misissued certificates for that site from going unnoticed.",
+    "name": "Expect-CT"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Expires</code></strong> 响应标头包含响应应被视为过期的日期/时间。</p>\n<p>无效的日期（比如 0）代表过去的日期，即该资源已经过期。</p>\n<div class=\"notecard note\">\n<p><strong>备注：</strong>\n如果响应中有指令为 <code>max-age</code> 或 <code>s-maxage</code> 的 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Cache-Control\"><code>Cache-Control</code></a> 标头，则 <code>Expires</code> 标头会被忽略。</p>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_response_header\">列入 CORS 安全名单的响应标头</a>\n      </th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Expires",
+    "rfc-ref": "7234#section-5.3",
+    "rfc-title": "[RFC7234, Section 5.3]"
+  },
+  {
+    "name": "Ext",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Forwarded</code></strong> 首部中包含了代理服务器的客户端的信息，即由于代理服务器在请求路径中的介入而被修改或丢失的信息。</p>\n<p>其他可用来替换的，已经成为既成标准的首部是 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/X-Forwarded-For\"><code>X-Forwarded-For</code></a> 、 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/X-Forwarded-Host\"><code>X-Forwarded-Host</code></a> 以及<a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/X-Forwarded-Proto\"><code>X-Forwarded-Proto</code></a> 。</p>\n<p>这个消息首部会被用来进行调试和统计，以及生成基于位置的定制化内容，按照设计的目的，它会暴露一定的隐私和敏感信息，比如客户端的 IP 地址。所以在应用此消息首部的时候，需要将用户的隐私问题考虑在内。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Forwarded",
+    "rfc-ref": "7239",
+    "rfc-title": "[RFC7239]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>From</code></strong> 请求标头包含控制发起请求的用户代理的人类用户的互联网电子邮件地址。</p>\n<p>如果运行的是机器人用户代理（如爬虫），则必须发送 <code>From</code> 标头，以便在服务器出现问题（例如机器人发送过多、不希望收到或无效的请求）时与你联系。</p>\n<div class=\"notecard warning\">\n<p><strong>警告：</strong>\n不可以将 <code>From</code> 标头用于访问控制或身份验证。</p>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "From",
+    "rfc-ref": "7231#section-5.5.1",
+    "rfc-title": "[RFC7231, Section 5.5.1]"
+  },
+  {
+    "name": "GetProfile",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Hobareg",
+    "rfc-ref": "7486#section-6.1.1",
+    "rfc-title": "[RFC7486, Section 6.1.1]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP <strong><code>Host</code></strong> <a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a>指定了接收请求的服务器的主机名和端口号。</p>\n<p>如果没有包含端口，则默认使用请求服务的端口（例如，HTTPS URL 默认为 <code>443</code>，HTTP URL 默认为 <code>80</code>）。</p>\n<p>所有 HTTP/1.1 请求消息中都必须发送一个 <code>Host</code> 标头字段。如果 HTTP/1.1 请求消息中缺少标头字段或包含多个 <code>Host</code> 标头字段，可能会发送 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/400\"><code>400 Bad Request</code></a> 状态码。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Host",
+    "rfc-ref": "7230#section-5.4",
+    "rfc-title": "[RFC7230, Section 5.4]"
+  },
+  {
+    "name": "HTTP2-Settings",
+    "rfc-ref": "7540#section-3.2.1",
+    "rfc-title": "[RFC7540, Section 3.2.1]"
+  },
+  {
+    "name": "IM",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "If",
+    "rfc-ref": "4918",
+    "rfc-title": "[RFC4918]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>请求首部 <strong><code>If-Match</code></strong> 的使用表示这是一个条件请求。在请求方法为 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/GET\"><code>GET</code></a> 和 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/HEAD\"><code>HEAD</code></a> 的情况下，服务器仅在请求的资源满足此首部列出的 <code>ETag</code>值时才会返回资源。而对于 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/PUT\"><code>PUT</code></a> 或其他非安全方法来说，只有在满足条件的情况下才可以将资源上传。</p>\n<p><a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/ETag\"><code>ETag</code></a> 之间的比较使用的是<strong>强比较算法</strong>，即只有在每一个字节都相同的情况下，才可以认为两个文件是相同的。在 ETag 前面添加 <code>W/</code> 前缀表示可以采用相对宽松的算法。</p>\n<p>以下是两个常见的应用场景：</p>\n<ul>\n<li>对于 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/GET\"><code>GET</code></a> 和 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/HEAD\"><code>HEAD</code></a> 方法，搭配 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Range\"><code>Range</code></a>首部使用，可以用来保证新请求的范围与之前请求的范围是对同一份资源的请求。如果 ETag 无法匹配，那么需要返回 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/416\"><code>416</code></a> (Range Not Satisfiable，范围请求无法满足) 响应。</li>\n<li>对于其他方法来说，尤其是 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/PUT\"><code>PUT</code></a>, <code>If-Match</code> 首部可以用来避免<a href=\"https://www.w3.org/1999/04/Editing/#3.1\" class=\"external\" target=\"_blank\">更新丢失问题</a>。它可以用来检测用户想要上传的不会覆盖获取原始资源之后做出的更新。如果请求的条件不满足，那么需要返回 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/412\"><code>412</code></a> (Precondition Failed，先决条件失败) 响应。</li>\n</ul>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "If-Match",
+    "rfc-ref": "7232#section-3.1",
+    "rfc-title": "[RFC7232, Section 3.1]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>If-Modified-Since</code></strong> 是一个条件式请求首部，服务器只在所请求的资源在给定的日期时间之后对内容进行过修改的情况下才会将资源返回，状态码为 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/200\"><code>200</code></a> 。如果请求的资源从那时起未经修改，那么返回一个不带有消息主体的 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/304\"><code>304</code></a> 响应，而在 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Last-Modified\"><code>Last-Modified</code></a> 首部中会带有上次修改时间。不同于 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/If-Unmodified-Since\"><code>If-Unmodified-Since</code></a>, <code>If-Modified-Since</code> 只可以用在 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/GET\"><code>GET</code></a> 或 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/HEAD\"><code>HEAD</code></a> 请求中。</p>\n<p>当与 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/If-None-Match\"><code>If-None-Match</code></a> 一同出现时，它（<strong><code>If-Modified-Since</code></strong>）会被忽略掉，除非服务器不支持 <code>If-None-Match</code>。</p>\n<p>最常见的应用场景是来更新没有特定 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/ETag\"><code>ETag</code></a> 标签的缓存实体。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "If-Modified-Since",
+    "rfc-ref": "7232#section-3.3",
+    "rfc-title": "[RFC7232, Section 3.3]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>If-None-Match</code></strong> 是一个条件式请求首部。对于 GET<a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/GET\"><code>GET</code></a> 和 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/HEAD\"><code>HEAD</code></a> 请求方法来说，当且仅当服务器上没有任何资源的 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/ETag\"><code>ETag</code></a> 属性值与这个首部中列出的相匹配的时候，服务器端才会返回所请求的资源，响应码为 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/200\"><code>200</code></a> 。对于其他方法来说，当且仅当最终确认没有已存在的资源的 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/ETag\"><code>ETag</code></a> 属性值与这个首部中所列出的相匹配的时候，才会对请求进行相应的处理。</p>\n<p>对于 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/GET\"><code>GET</code></a> 和 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/HEAD\"><code>HEAD</code></a> 方法来说，当验证失败的时候，服务器端必须返回响应码 304（Not Modified，未改变）。对于能够引发服务器状态改变的方法，则返回 412（Precondition Failed，前置条件失败）。需要注意的是，服务器端在生成状态码为 304 的响应的时候，必须同时生成以下会存在于对应的 200 响应中的首部：Cache-Control、Content-Location、Date、ETag、Expires 和 Vary。</p>\n<p><a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/ETag\"><code>ETag</code></a> 属性之间的比较采用的是<strong>弱比较算法</strong>，即两个文件除了每个字节都相同外，内容一致也可以认为是相同的。例如，如果两个页面仅仅在页脚的生成时间有所不同，就可以认为二者是相同的。</p>\n<p>当与 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/If-Modified-Since\"><code>If-Modified-Since</code></a> 一同使用的时候，If-None-Match 优先级更高（假如服务器支持的话）。</p>\n<p>以下是两个常见的应用场景：</p>\n<ul>\n<li>采用 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/GET\"><code>GET</code></a> 或 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/HEAD\"><code>HEAD</code></a> 方法，来更新拥有特定的<a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/ETag\"><code>ETag</code></a> 属性值的缓存。</li>\n<li>采用其他方法，尤其是 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/PUT\"><code>PUT</code></a>，将 <code>If-None-Match</code> used 的值设置为 * ，用来生成事先并不知道是否存在的文件，可以确保先前并没有进行过类似的上传操作，防止之前操作数据的丢失。这个问题属于<a href=\"https://www.w3.org/1999/04/Editing/#3.1\" class=\"external\" target=\"_blank\">更新丢失问题</a>的一种。</li>\n</ul>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "If-None-Match",
+    "rfc-ref": "7232#section-3.2",
+    "rfc-title": "[RFC7232, Section 3.2]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>If-Range</code></strong> HTTP 请求标头用于创建具有条件的范围请求：当条件得到满足时，则发出范围请求，服务器将返回 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/206\"><code>206</code></a> <code>Partial Content</code> 状态，以及相应的内容；如果条件没有得到满足，服务器将返回完整的资源以及 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/200\"><code>200</code></a> <code>OK</code> 状态。</p>\n<p>该标头既可用 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Last-Modified\"><code>Last-Modified</code></a> 验证器，也可用 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/ETag\"><code>ETag</code></a> 验证器，但不能同时使用两者。</p>\n<p>最常见的用例是恢复下载，以确保自最后一次片段接收以来，存储的资源没有发生更改。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "If-Range",
+    "rfc-ref": "7233#section-3.2",
+    "rfc-title": "[RFC7233, Section 3.2]"
+  },
+  {
+    "name": "If-Schedule-Tag-Match",
+    "rfc-ref": "6638",
+    "rfc-title": "[RFC6638]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP 协议中的 <strong><code>If-Unmodified-Since</code></strong> 消息头用于请求之中，使得当前请求成为条件式请求：只有当资源在指定的时间之后没有进行过修改的情况下，服务器才会返回请求的资源，或是接受 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/POST\"><code>POST</code></a> 或其他 non-<a href=\"/zh-CN/docs/Glossary/Safe\">safe</a> 方法的请求。如果所请求的资源在指定的时间之后发生了修改，那么会返回 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/412\"><code>412</code></a> (Precondition Failed) 错误。</p>\n<p>常见的应用场景有两种：</p>\n<ul>\n<li>与 non-<a href=\"/zh-CN/docs/Glossary/Safe\">safe</a> 方法如 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/POST\"><code>POST</code></a> 搭配使用，可以用来<a href=\"https://en.wikipedia.org/wiki/Optimistic_concurrency_control\" class=\"external\" target=\"_blank\">优化并发控制</a>，例如在某些 wiki 应用中的做法：假如在原始副本获取之后，服务器上所存储的文档已经被修改，那么对其作出的编辑会被拒绝提交。</li>\n<li>与含有 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/If-Range\"><code>If-Range</code></a> 消息头的范围请求搭配使用，用来确保新的请求片段来自于未经修改的文档。</li>\n</ul>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "If-Unmodified-Since",
+    "rfc-ref": "7232#section-3.4",
+    "rfc-title": "[RFC7232, Section 3.4]"
+  },
+  {
+    "name": "Include-Referred-Token-Binding-ID",
+    "rfc-ref": "8473",
+    "rfc-title": "[RFC8473]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP <strong><code>Keep-Alive</code></strong> <a href=\"/zh-CN/docs/Glossary/Request_header\">响应标头</a>和<a href=\"/zh-CN/docs/Glossary/Response_header\">请求标头</a>允许消息发送者提示连接的状态，还可以用来设置超时时长和最大请求数。</p>\n<div class=\"notecard note\">\n<p><strong>备注：</strong>\n要使得 <code>Keep-Alive</code> 有效，消息必须包含 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Connection\"><code>Connection: keep-alive</code></a> 标头。</p>\n</div>\n<p>HTTP/1.0 默认在每次请求/响应交互后关闭连接，因此 HTTP/1.0 中的持久连接必须经过明确协商。一些客户端和服务器可能希望与以前的持久连接方式兼容，可以使用 <code>Connection: keep-alive</code> 请求标头来实现这一点。连接的其他参数可通过 <code>Keep-Alive</code> 标头请求。</p>\n<div class=\"notecard warning\">\n<p><strong>警告：</strong> <a href=\"https://httpwg.org/specs/rfc9113.html#ConnectionSpecific\" class=\"external\" target=\"_blank\">HTTP/2</a> 和 <a href=\"https://httpwg.org/specs/rfc9114.html#header-formatting\" class=\"external\" target=\"_blank\">HTTP/3</a> 禁止使用特定于连接的标头字段，如 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Connection\"><code>Connection</code></a> 和 <code>Keep-Alive</code>。Chrome 浏览器和 Firefox 浏览器在 HTTP/2 响应中忽略了它们，但 Safari 浏览器符合 HTTP/2 规范要求，不会加载任何包含它们的响应。</p>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td>\n        <a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a>、<a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a>\n      </td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Keep-Alive",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Label",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Last-Modified</code></strong> 是一个响应首部，其中包含源头服务器认定的资源做出修改的日期及时间。它通常被用作一个验证器来判断接收到的或者存储的资源是否彼此一致。由于精确度比 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/ETag\"><code>ETag</code></a> 要低，所以这是一个备用机制。包含有 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/If-Modified-Since\"><code>If-Modified-Since</code></a> 或 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/If-Unmodified-Since\"><code>If-Unmodified-Since</code></a> 首部的条件请求会使用这个字段。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Response_header\">Response header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/CORS-safelisted_response_header\">CORS-safelisted response-header</a></td>\n<td>yes</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Last-Modified",
+    "rfc-ref": "7232#section-2.2",
+    "rfc-title": "[RFC7232, Section 2.2]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP 实体报头 <strong><code>Link</code></strong> 提供了序列化 HTTP 头部链接的方法。它在语义上与 HTML 元素 <a href=\"/zh-CN/docs/Web/HTML/Reference/Elements/link\"><code>&lt;link&gt;</code></a> 相等。</p></div>",
+    "name": "Link",
+    "rfc-ref": "8288",
+    "rfc-title": "[RFC8288]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Location</code></strong> 首部指定的是需要将页面重新定向至的地址。一般在响应码为 3xx 的响应中才会有意义。</p>\n<p>发送新请求，获取 Location 指向的新页面所采用的方法与初始请求使用的方法以及重定向的类型相关：</p>\n<ul>\n<li><a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/303\"><code>303</code></a> (See Also) 始终引致请求使用 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/GET\"><code>GET</code></a> 方法，而，而 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/307\"><code>307</code></a> (Temporary Redirect) 和 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/308\"><code>308</code></a> (Permanent Redirect) 则不转变初始请求中的所使用的方法；</li>\n<li><a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/301\"><code>301</code></a> (Permanent Redirect) 和 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/302\"><code>302</code></a> (Found) 在大多数情况下不会转变初始请求中的方法，不过一些比较早的用户代理可能会引发方法的变更（所以你基本上不知道这一点）。</li>\n</ul>\n<p>状态码为上述之一的所有响应都会带有一个 Location 首部。</p>\n<p>除了重定向响应之外，状态码为 <a class=\"page-not-created\" data-href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/201\" title=\"此文档尚未被撰写，期待你的贡献！\"><code>201</code></a> (Created) 的消息也会带有 Location 首部。它指向的是新创建的资源的地址。</p>\n<p><a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Location\" aria-current=\"page\"><code>Location</code></a> 与 <code>Content-Location</code>是不同的，前者（<a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Location\" aria-current=\"page\"><code>Location</code></a> ）指定的是一个重定向请求的目的地址（或者新创建的文件的 URL），而后者（ <code>Content-Location</code>）指向的是经过内容协商后的资源的直接地址，不需要进行进一步的内容协商。Location 对应的是响应，而 Content-Location 对应的是要返回的实体。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Response_header\">Response header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Location",
+    "rfc-ref": "7231#section-7.1.2",
+    "rfc-title": "[RFC7231, Section 7.1.2]"
+  },
+  {
+    "name": "Lock-Token",
+    "rfc-ref": "4918",
+    "rfc-title": "[RFC4918]"
+  },
+  {
+    "name": "Man",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Max-Forwards",
+    "rfc-ref": "7231#section-5.1.2",
+    "rfc-title": "[RFC7231, Section 5.1.2]"
+  },
+  {
+    "name": "Memento-Datetime",
+    "rfc-ref": "7089",
+    "rfc-title": "[RFC7089]"
+  },
+  {
+    "name": "Meter",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "MIME-Version",
+    "rfc-ref": "7231",
+    "rfc-title": "[RFC7231]"
+  },
+  {
+    "name": "Negotiate",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "OData-EntityId"
+  },
+  {
+    "name": "OData-Isolation"
+  },
+  {
+    "name": "OData-MaxVersion"
+  },
+  {
+    "name": "OData-Version"
+  },
+  {
+    "name": "Opt",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Optional-WWW-Authenticate",
+    "rfc-ref": "8053#section-3",
+    "rfc-title": "[RFC8053, Section 3]"
+  },
+  {
+    "name": "Ordering-Type",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>请求标头 <strong><code>Origin</code></strong> 表示了请求的<a href=\"/zh-CN/docs/Glossary/Origin\">来源</a>（协议、主机、端口）。例如，如果一个用户代理需要请求一个页面中包含的资源，或者执行脚本中的 HTTP 请求（fetch），那么该页面的来源（origin）就可能被包含在这次请求中。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">Header type</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></th>\n      <td>yes</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Origin",
+    "rfc-ref": "6454",
+    "rfc-title": "[RFC6454]"
+  },
+  {
+    "name": "OSCORE",
+    "rfc-ref": "8613#section-11.1",
+    "rfc-title": "[RFC8613, Section 11.1]"
+  },
+  {
+    "name": "Overwrite",
+    "rfc-ref": "4918",
+    "rfc-title": "[RFC4918]"
+  },
+  {
+    "name": "P3P",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "PEP",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "PICS-Label",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Pep-Info",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Position",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><div class=\"notecard deprecated\"><p><strong>已弃用:</strong> 不再推荐使用该特性。虽然一些浏览器仍然支持它，但也许已从相关的 web 标准中移除，也许正准备移除或出于兼容性而保留。请尽量不要使用该特性，并更新现有的代码；参见本页面底部的<a href=\"#浏览器兼容性\">兼容性表格</a>以指导你作出决定。请注意，该特性随时可能无法正常工作。</p></div>\n<p>HTTP <strong><code>Pragma</code></strong> 标头是一个与实现相关的标头，在请求——响应链中可能会产生各种不同的影响。此标头用于向后兼容不支持 HTTP/1.1 中 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Cache-Control\"><code>Cache-Control</code></a> 标头的 HTTP/1.0 缓存。</p>\n<div class=\"notecard note\">\n<p><strong>备注：</strong><code>Pragma</code> 标头并未在 HTTP 响应中定义，因此不能可靠地替代 HTTP/1.1 中的 <code>Cache-Control</code> 标头，虽然在请求中省略 <code>Cache-Control</code> 标头时，<code>Pragma</code> 的行为与 <code>Cache-Control: no-cache</code> 相同，但请仅将其用于向后兼容 HTTP/1.0 客户端。</p>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td>\n        <a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a>、<a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a>（响应行为未作明确规定，且依赖于具体实现）。\n      </td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的请求标头</a></th>\n      <td>否</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">\n        <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_response_header\">列入 CORS 白名单的响应标头</a>\n      </th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Pragma",
+    "rfc-ref": "7234#section-5.4",
+    "rfc-title": "[RFC7234, Section 5.4]"
+  },
+  {
+    "name": "Prefer",
+    "rfc-ref": "7240",
+    "rfc-title": "[RFC7240]"
+  },
+  {
+    "name": "Preference-Applied",
+    "rfc-ref": "7240",
+    "rfc-title": "[RFC7240]"
+  },
+  {
+    "name": "ProfileObject",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Protocol",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Protocol-Info",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Protocol-Query",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Protocol-Request",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>The HTTP <strong><code>Proxy-Authenticate</code></strong> 是一个响应首部，指定了获取 <a href=\"/zh-CN/docs/Glossary/Proxy_server\">proxy server</a>（代理服务器）上的资源访问权限而采用的身份验证方式。代理服务器对请求进行验证，以便它进一步传递请求。</p>\n<p><code>Proxy-Authenticate</code> 首部需要与 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/407\"><code>407</code></a> <code>Proxy Authentication Required</code> 响应一起发送。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Response_header\">Response header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Proxy-Authenticate",
+    "rfc-ref": "7235#section-4.3",
+    "rfc-title": "[RFC7235, Section 4.3]"
+  },
+  {
+    "name": "Proxy-Authentication-Info",
+    "rfc-ref": "7615#section-4",
+    "rfc-title": "[RFC7615, Section 4]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Proxy-Authorization</code></strong> 是一个请求首部，其中包含了用户代理提供给代理服务器的用于身份验证的凭证。这个首部通常是在服务器返回了 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/407\"><code>407</code></a> <code>Proxy Authentication Required</code> 响应状态码及 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Proxy-Authenticate\"><code>Proxy-Authenticate</code></a> 首部后发送的。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Proxy-Authorization",
+    "rfc-ref": "7235#section-4.4",
+    "rfc-title": "[RFC7235, Section 4.4]"
+  },
+  {
+    "name": "Proxy-Features",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Proxy-Instruction",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Public",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "The HTTP <code><strong>Public-Key-Pins</strong></code> response header associates a specific cryptographic public <a class=\"glossaryLink\" href=\"/en-US/docs/Glossary/key\" title=\"key: A key is a piece of information used by a cipher for encryption and/or decryption.\">key</a> with a certain web server to decrease the risk of <a class=\"glossaryLink\" href=\"/en-US/docs/Glossary/MITM\" title=\"MITM: A Man-in-the-middle attack (MitM) intercepts a communication between two systems. For example, a Wi-Fi router can be compromised.\">MITM</a> attacks with forged certificates. If one or several keys are pinned and none of them are used by the server, the browser will not accept the response as legitimate, and will not display it.",
+    "name": "Public-Key-Pins",
+    "rfc-ref": "7469",
+    "rfc-title": "[RFC7469]"
+  },
+  {
+    "descr": "The HTTP <code><strong>Public-Key-Pins-Report-Only</strong></code> response header sends reports of pinning violation to the <code>report-uri</code> specified in the header but, unlike <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Public-Key-Pins\" title=\"The HTTP Public-Key-Pins response header associates a specific cryptographic public key with a certain web server to decrease the risk of MITM attacks with forged certificates. If one or several keys are pinned and none of them are used by the server, the browser will not accept the response as legitimate, and will not display it.\"><code>Public-Key-Pins</code></a> still allows browsers to connect to the server if the pinning is violated.",
+    "name": "Public-Key-Pins-Report-Only",
+    "rfc-ref": "7469",
+    "rfc-title": "[RFC7469]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>The <strong><code>Range</code></strong> 是一个请求首部，告知服务器返回文件的哪一部分。在一个 <code>Range</code> 首部中，可以一次性请求多个部分，服务器会以 multipart 文件的形式将其返回。如果服务器返回的是范围响应，需要使用 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/206\"><code>206</code></a> <code>Partial Content</code> 状态码。假如所请求的范围不合法，那么服务器会返回 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/416\"><code>416</code></a> <code>Range Not Satisfiable</code> 状态码，表示客户端错误。服务器允许忽略 <code>Range</code> 首部，从而返回整个文件，状态码用 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/200\"><code>200</code></a> 。</p>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>no</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Range",
+    "rfc-ref": "7233#section-3.1",
+    "rfc-title": "[RFC7233, Section 3.1]"
+  },
+  {
+    "name": "Redirect-Ref",
+    "rfc-ref": "4437",
+    "rfc-title": "[RFC4437]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Referer</code></strong> 请求头包含了当前请求页面的来源页面的地址，即表示当前页面是通过此来源页面里的链接进入的。服务端一般使用 <code>Referer</code> 请求头识别访问来源，可能会以此进行统计分析、日志记录以及缓存优化等。</p>\n<p>需要注意的是 referer 实际上是 \"referrer\" 误拼写。参见 <a href=\"https://zh.wikipedia.org/wiki/HTTP_referer\" class=\"external\" target=\"_blank\">HTTP referer on Wikipedia</a>（HTTP referer 在维基百科上的条目）来获取更详细的信息。</p>\n<div class=\"notecard warning\">\n<p><strong>警告：</strong> <code>Referer</code> 请求头可能暴露用户的浏览历史，涉及到用户的隐私问题。</p>\n</div>\n<p>在以下两种情况下，<code>Referer</code> 不会被发送：</p>\n<ul>\n<li>来源页面采用的协议为表示本地文件的 \"file\" 或者 \"data\" URI；</li>\n<li>当前请求页面采用的是非安全协议，而来源页面采用的是安全协议（HTTPS）。</li>\n</ul>\n<figure class=\"table-container\"><table>\n<thead>\n<tr>\n<th>Header type</th>\n<th><a href=\"/zh-CN/docs/Glossary/Request_header\">Request header</a></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">Forbidden header name</a></td>\n<td>yes</td>\n</tr>\n</tbody>\n</table></figure></div>",
+    "name": "Referer",
+    "rfc-ref": "7231#section-5.5.2",
+    "rfc-title": "[RFC7231, Section 5.5.2]"
+  },
+  {
+    "name": "Replay-Nonce",
+    "rfc-ref": "8555#section-6.5.1",
+    "rfc-title": "[RFC8555, Section 6.5.1]"
+  },
+  {
+    "descr": "The <strong><code>Retry-After</code></strong> response HTTP header indicates how long the user agent should wait before making a follow-up request. There are three main cases this header is used:",
+    "name": "Retry-After",
+    "rfc-ref": "7231#section-7.1.3",
+    "rfc-title": "[RFC7231, Section 7.1.3]"
+  },
+  {
+    "name": "Safe",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Schedule-Reply",
+    "rfc-ref": "6638",
+    "rfc-title": "[RFC6638]"
+  },
+  {
+    "name": "Schedule-Tag",
+    "rfc-ref": "6638",
+    "rfc-title": "[RFC6638]"
+  },
+  {
+    "name": "Sec-Token-Binding",
+    "rfc-ref": "8473",
+    "rfc-title": "[RFC8473]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong>Sec-WebSocket-Accept</strong> 头（header）用在 websocket 开放握手中。它会出现在响应头中。也就是说，这是由服务器发送到客户端的头（header），用以告知服务器愿发起一个 websocket 连接。</p></div>",
+    "name": "Sec-WebSocket-Accept",
+    "rfc-ref": "6455",
+    "rfc-title": "[RFC6455]"
+  },
+  {
+    "name": "Sec-WebSocket-Extensions",
+    "rfc-ref": "6455",
+    "rfc-title": "[RFC6455]"
+  },
+  {
+    "name": "Sec-WebSocket-Key",
+    "rfc-ref": "6455",
+    "rfc-title": "[RFC6455]"
+  },
+  {
+    "name": "Sec-WebSocket-Protocol",
+    "rfc-ref": "6455",
+    "rfc-title": "[RFC6455]"
+  },
+  {
+    "name": "Sec-WebSocket-Version",
+    "rfc-ref": "6455",
+    "rfc-title": "[RFC6455]"
+  },
+  {
+    "name": "Security-Scheme",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>HTTP <strong><code>Server</code></strong> <a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a>用于描述处理请求并生成响应的源服务器所使用的软件信息。</p>\n<p>通过该标头公开服务器类型和版本的好处在于，它有助于进行分析，并识别特定兼容性问题的普遍程度。以往，客户端会利用服务器的版本信息来规避已知的限制，例如某些软件版本中对<a href=\"/zh-CN/docs/Web/HTTP/Guides/Range_requests\">范围请求</a>支持不一致的问题。</p>\n<div class=\"notecard warning\">\n<p><strong>警告：</strong>\n响应中包含该标头，尤其是在其暴露了有关服务器软件的细粒度实现细节时，可能会使已知漏洞更容易被发现。</p>\n</div>\n<p>出于响应延迟和上述安全因素，并不建议在 <code>Server</code> 标头中包含过多详细信息。隐藏该标头中的信息是否能真正带来好处仍存在争议，因为可以通过其他方式对服务器软件进行指纹识别。总体而言，更稳健的服务器安全策略是确保软件定期更新或修补已知漏洞。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的请求标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Server",
+    "rfc-ref": "7231#section-7.4.2",
+    "rfc-title": "[RFC7231, Section 7.4.2]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Set-Cookie</code></strong> HTTP 响应标头用于将 cookie 由服务器发送到用户代理，以便用户代理在后续的请求中可以将其发送回服务器。要发送多个 cookie，则应在同一响应中发送多个 <strong><code>Set-Cookie</code></strong> 标头。</p>\n<div class=\"notecard warning\">\n<p><strong>警告：</strong>\n根据 Fetch 规范，<code>Set-Cookie</code> 是一个<a href=\"https://fetch.spec.whatwg.org/#forbidden-response-header-name\" class=\"external\" target=\"_blank\">禁止修改的响应标头</a>，对应的响应在被暴露给前端代码前，<a href=\"https://fetch.spec.whatwg.org/#ref-for-forbidden-response-header-name%E2%91%A0\" class=\"external\" target=\"_blank\">必须滤除</a>这一响应标头，即浏览器会阻止前端 JavaScript 代码访问该标头。</p>\n</div>\n<p>更多信息请查阅指南：<a href=\"/zh-CN/docs/Web/HTTP/Guides/Cookies\">使用 HTTP cookie</a>。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_response_header_name\">禁止修改的响应标头</a></th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Set-Cookie",
+    "rfc-ref": "6265",
+    "rfc-title": "[RFC6265]"
+  },
+  {
+    "descr": "The obsolete <strong><code>Set-Cookie2</code></strong> HTTP response header used to send cookies from the server to the user agent, but has been deprecated by the specification. Use <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie\" title=\"The Set-Cookie HTTP response header is used to send cookies from the server to the user agent, so the user agent can send them back to the server later.\"><code>Set-Cookie</code></a> instead.",
+    "name": "Set-Cookie2",
+    "obsolete": true,
+    "rfc-ref": "6265",
+    "rfc-title": "[RFC6265]"
+  },
+  {
+    "name": "SetProfile",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "SLUG",
+    "rfc-ref": "5023",
+    "rfc-title": "[RFC5023]"
+  },
+  {
+    "name": "SoapAction",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Status-URI",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "The <strong>HTTP <code>Strict-Transport-Security</code></strong> response header (often abbreviated as <a class=\"glossaryLink\" href=\"/en-US/docs/Glossary/HSTS\" title=\"HSTS: HTTP Strict Transport Security lets a web site inform the browser that it should never load the site using HTTP\u00a0and should automatically convert all attempts to access the site using HTTP to HTTPS\u00a0requests instead. It consists in one HTTP header, Strict-Transport-Security, sent back by the server with the resource.\">HSTS</a>) lets a web site tell browsers that it should only be accessed using HTTPS, instead of using HTTP.",
+    "name": "Strict-Transport-Security",
+    "rfc-ref": "6797",
+    "rfc-title": "[RFC6797]"
+  },
+  {
+    "name": "Sunset",
+    "rfc-ref": "8594",
+    "rfc-title": "[RFC8594]"
+  },
+  {
+    "name": "Surrogate-Capability",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Surrogate-Control",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "TCN",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "The <code><strong>TE</strong></code> request header specifies the transfer encodings the user agent is willing to accept. (you could informally call it <em><code>Accept-Transfer-Encoding</code></em>, which would be more intuitive).",
+    "name": "TE",
+    "rfc-ref": "7230#section-4.3",
+    "rfc-title": "[RFC7230, Section 4.3]"
+  },
+  {
+    "name": "Timeout",
+    "rfc-ref": "4918",
+    "rfc-title": "[RFC4918]"
+  },
+  {
+    "name": "Topic",
+    "rfc-ref": "8030#section-5.4",
+    "rfc-title": "[RFC8030, Section 5.4]"
+  },
+  {
+    "descr": "The <strong>Trailer</strong> response header allows the sender to include additional fields at the end of chunked messages in order to supply metadata that might be dynamically generated while the message body is sent, such as a message integrity check, digital signature, or post-processing status.",
+    "name": "Trailer",
+    "rfc-ref": "7230#section-4.4",
+    "rfc-title": "[RFC7230, Section 4.4]"
+  },
+  {
+    "descr": "The <strong><code>Transfer-Encoding</code></strong> header specifies the form of encoding used to safely transfer the <a class=\"glossaryLink\" href=\"/en-US/docs/Glossary/Payload_body\" title=\"The definition of that term (payload body) has not been written yet; please consider contributing it!\">payload body</a> to the user.",
+    "name": "Transfer-Encoding",
+    "rfc-ref": "7230#section-3.3.1",
+    "rfc-title": "[RFC7230, Section 3.3.1]"
+  },
+  {
+    "name": "TTL",
+    "rfc-ref": "8030#section-5.2",
+    "rfc-title": "[RFC8030, Section 5.2]"
+  },
+  {
+    "name": "Urgency",
+    "rfc-ref": "8030#section-5.3",
+    "rfc-title": "[RFC8030, Section 5.3]"
+  },
+  {
+    "name": "URI",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Upgrade",
+    "rfc-ref": "7230#section-6.7",
+    "rfc-title": "[RFC7230, Section 6.7]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong>User-Agent</strong> <a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a>是一个特征字符串，使得服务器和对等网络能够识别发出请求的<a href=\"/zh-CN/docs/Glossary/User_agent\">用户代理</a>的应用程序、操作系统、供应商或版本信息。</p>\n<div class=\"notecard warning\">\n<p><strong>警告：</strong>\n请阅读<a href=\"/zh-CN/docs/Web/HTTP/Guides/Browser_detection_using_the_user_agent\">使用用户代理字段进行浏览器检测</a>来了解为什么为不同的浏览器提供不同的页面或者服务通常不是一个好主意。</p>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "User-Agent",
+    "rfc-ref": "7231#section-5.5.3",
+    "rfc-title": "[RFC7231, Section 5.5.3]"
+  },
+  {
+    "name": "Variant-Vary",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Vary</code></strong> HTTP 响应标头描述了除方法和 URL 之外影响响应内容的请求消息。大多数情况下，这用于在使用<a href=\"/zh-CN/docs/Web/HTTP/Guides/Content_negotiation\">内容协商</a>时创建缓存键。</p>\n<p>给定 URL 的所有响应都应使用相同的 <code>Vary</code> 标头值，包括 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Status/304\"><code>304</code></a> <code>Not Modified</code> 响应和“默认”响应。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Vary",
+    "rfc-ref": "7231#section-7.1.4",
+    "rfc-title": "[RFC7231, Section 7.1.4]"
+  },
+  {
+    "descr": "The <code><strong>Via</strong></code> general header is added by proxies, both forward and reverse proxies, and can appear in the request headers and the response headers. It is used for tracking message forwards, avoiding request loops, and identifying the protocol capabilities of senders along the request/response chain.",
+    "name": "Via",
+    "rfc-ref": "7230#section-5.7.1",
+    "rfc-title": "[RFC7230, Section 5.7.1]"
+  },
+  {
+    "descr": "The HTTP <strong><code>WWW-Authenticate</code></strong> response header defines the authentication method that should be used to gain access to a resource.",
+    "name": "WWW-Authenticate",
+    "rfc-ref": "7235#section-4.1",
+    "rfc-title": "[RFC7235, Section 4.1]"
+  },
+  {
+    "descr": "The <code><strong>Want-Digest</strong></code> HTTP header is primarily used in a HTTP request, to ask the responder to provide a <a class=\"glossaryLink\" href=\"/en-US/docs/Glossary/digest\" title=\"digest: A\u00a0digest is a\u00a0small value generated by a hash function from a whole message. Ideally, a digest is quick to calculate, irreversible,\u00a0and unpredictable, and therefore indicates whether someone has\u00a0tampered with a given message.\">digest</a> of the requested resource using the <code><a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Digest\">Digest</a></code> response header.",
+    "name": "Want-Digest",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "The <strong><code>Warning</code></strong> general HTTP header contains information about possible problems with the status of the message. More than one <code>Warning</code> header may appear in a response.",
+    "name": "Warning",
+    "rfc-ref": "7234#section-5.5",
+    "rfc-title": "[RFC7234, Section 5.5]"
+  },
+  {
+    "descr": "The <code><strong>X-Content-Type-Options</strong></code> response HTTP header is a marker used by the server to indicate that the <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types\">MIME types</a> advertised in the <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type\" title=\"The Content-Type entity header is used to indicate the media type of the resource.\"><code>Content-Type</code></a> headers should not be changed and be followed. This allows to opt-out of <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#MIME_sniffing\">MIME type sniffing</a>, or, in other words, it is a way to say that the webmasters knew what they were doing.",
+    "name": "X-Content-Type-Options"
+  },
+  {
+    "descr": "The <strong><code>X-Frame-Options</code></strong> <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP\">HTTP</a> response header can be used to indicate whether or not a browser should be allowed to render a page in a <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTML/Element/frame\" title=\"&lt;frame&gt; is an HTML element which defines a particular area in which another HTML document can be displayed. A frame should be used within a &lt;frameset&gt;.\"><code>&lt;frame&gt;</code></a>, <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe\" title=\"The HTML Inline Frame element (&lt;iframe&gt;) represents a nested browsing context, embedding another HTML page into the current one.\"><code>&lt;iframe&gt;</code></a>, <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTML/Element/embed\" title=\"The HTML &lt;embed&gt; element embeds external content at the specified point in the document. This content is provided by an external application or other source of interactive content such as a browser plug-in.\"><code>&lt;embed&gt;</code></a> or <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTML/Element/object\" title=\"The HTML &lt;object&gt; element represents an external resource, which can be treated as an image, a nested browsing context, or a resource to be handled by a plugin.\"><code>&lt;object&gt;</code></a>. Sites can use this to avoid <a href=\"https://en.wikipedia.org/wiki/clickjacking\" title=\"clickjacking\">clickjacking</a> attacks, by ensuring that their content is not embedded into other sites.",
+    "name": "X-Frame-Options",
+    "rfc-ref": "7034",
+    "rfc-title": "[RFC7034]"
+  },
+  {
+    "name": "Access-Control",
+    "obsolete": true
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Access-Control-Allow-Credentials</code></strong> 响应标头告诉浏览器服务器是否允许 HTTP 跨源请求携带凭据。</p>\n<p>凭据包括 cookie、<a href=\"/zh-CN/docs/Glossary/TLS\">TLS</a> 客户端证书，或包含用户名和密码的认证标头。默认情况下，这些凭据不会在跨源请求中发送，因为这样做可能会使站点容易受到<a href=\"/zh-CN/docs/Glossary/CSRF\">跨站请求伪造</a>攻击。</p>\n<p>客户端可以通过以下两种方式之一在跨站请求中包含凭据：</p>\n<ul>\n<li>使用 <a href=\"/zh-CN/docs/Web/API/Window/fetch\"><code>fetch()</code></a> 时，通过将 <a href=\"/zh-CN/docs/Web/API/Request/Request\" title=\"Request()\"><code>Request()</code></a> 构造函数中的 <a href=\"/zh-CN/docs/Web/API/Request/Request#credentials\"><code>credentials</code></a> 选项设置为 <code>\"include\"</code>。</li>\n<li>使用 <a href=\"/zh-CN/docs/Web/API/XMLHttpRequest\"><code>XMLHttpRequest</code></a> 时，通过将 <a href=\"/zh-CN/docs/Web/API/XMLHttpRequest/withCredentials\"><code>XMLHttpRequest.withCredentials</code></a> 属性设置为 <code>true</code>。</li>\n</ul>\n<p>如果客户端已请求时包含凭据：</p>\n<ul>\n<li>如果请求是<a href=\"/zh-CN/docs/Glossary/Preflight_request\">预检请求</a>，那么在预检请求时不会包含凭据。如果服务器对预检请求的响应将 <code>Access-Control-Allow-Credentials</code> 标头设置为 <code>true</code>，则实际请求时将包含凭据；否则，浏览器将报告网络错误。</li>\n<li>如果请求时未经过预检，则请求将包含凭据；如果服务器的响应没有将 <code>Access-Control-Allow-Credentials</code> 标头设置为 <code>true</code>，浏览器将报告网络错误。</li>\n</ul>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Allow-Credentials"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Access-Control-Allow-Headers</code></strong> 响应标头中用于响应包含了 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Access-Control-Request-Headers\"><code>Access-Control-Request-Headers</code></a> 的<a href=\"/zh-CN/docs/Glossary/Preflight_request\">预检请求</a>，以指示在实际请求中可以使用哪些 HTTP 标头。</p>\n<p>如果请求中包含 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Access-Control-Request-Headers\"><code>Access-Control-Request-Headers</code></a> 标头，那么此响应标头是必需的。</p>\n<div class=\"notecard note\">\n<p><strong>备注：</strong> <a href=\"/zh-CN/docs/Glossary/CORS-safelisted_request_header\">列入 CORS 白名单的请求标头</a>始终被允许，通常无需在 <code>Access-Control-Allow-Headers</code> 中列出（除非有必要绕过白名单的<a href=\"/zh-CN/docs/Glossary/CORS-safelisted_request_header#额外限制\">额外限制</a>）。</p>\n</div>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Allow-Headers"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Access-Control-Allow-Methods</code></strong> 响应标头指定了在响应<a href=\"/zh-CN/docs/Glossary/Preflight_request\">预检请求</a>时访问资源所允许的一个或多个方法。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Allow-Methods"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Access-Control-Allow-Origin</code></strong> 响应标头指定了该响应的资源是否被允许与给定的<a href=\"/zh-CN/docs/Glossary/Origin\">来源（origin）</a>共享。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Allow-Origin"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Access-Control-Max-Age</code></strong> 响应标头指示了<a href=\"/zh-CN/docs/Glossary/Preflight_request\">预检请求</a>（即包含在 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Methods\"><code>Access-Control-Allow-Methods</code></a> 和 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Headers\"><code>Access-Control-Allow-Headers</code></a> 标头中的信息）的结果能够被缓存多久。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Max-Age"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Access-Control-Request-Method</code></strong> 请求标头会由浏览器在发出<a href=\"/zh-CN/docs/Glossary/Preflight_request\">预检请求</a>时使用，通知服务器在实际请求中发出时将会采用哪种 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods\">HTTP 方法</a>。此标头是必需的，因为预检请求总是采用 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Methods/OPTIONS\"><code>OPTIONS</code></a> 方法，这与实际请求所使用的方法并不相同。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Request-Method"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p><strong><code>Access-Control-Request-Headers</code></strong> 请求标头用于浏览器在发起<a href=\"/zh-CN/docs/Glossary/Preflight_request\">预检请求</a>时告知服务器客户端在实际请求发送时（例如使用 <a href=\"/zh-CN/docs/Web/API/Window/fetch\"><code>fetch()</code></a> 或 <a href=\"/zh-CN/docs/Web/API/XMLHttpRequest/setRequestHeader\"><code>XMLHttpRequest.setRequestHeader()</code></a>）可能附带的 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers\">HTTP 标头</a>。服务器端对应的响应标头为 <a href=\"/zh-CN/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Headers\"><code>Access-Control-Allow-Headers</code></a>，表示对浏览器的请求标头的回应。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Request_header\">请求标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>是</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Request-Headers"
+  },
+  {
+    "descr": "<div class=\"section-content\"><p>响应标头 <strong><code>Access-Control-Expose-Headers</code></strong> 允许服务器指示那些响应标头可以暴露给浏览器中运行的脚本，以响应跨源请求。</p>\n<p>默认情况下，仅暴露<a href=\"/zh-CN/docs/Glossary/CORS-safelisted_response_header\">列入 CORS 白名单的请求标头</a>。如果想要让客户端可以访问到其他的标头，服务器必须将它们在 <code>Access-Control-Expose-Headers</code> 里面列出来。</p>\n<figure class=\"table-container\"><table class=\"properties\">\n  <tbody>\n    <tr>\n      <th scope=\"row\">标头类型</th>\n      <td><a href=\"/zh-CN/docs/Glossary/Response_header\">响应标头</a></td>\n    </tr>\n    <tr>\n      <th scope=\"row\"><a href=\"/zh-CN/docs/Glossary/Forbidden_request_header\">禁止修改的标头</a></th>\n      <td>否</td>\n    </tr>\n  </tbody>\n</table></figure></div>",
+    "name": "Access-Control-Expose-Headers"
+  },
+  {
+    "name": "AMP-Cache-Transform"
+  },
+  {
+    "name": "Compliance",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Content-Transfer-Encoding",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Cost",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "EDIINT-Features",
+    "rfc-ref": "6017",
+    "rfc-title": "[RFC6017]"
+  },
+  {
+    "name": "Isolation"
+  },
+  {
+    "name": "Message-ID",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Method-Check",
+    "obsolete": true
+  },
+  {
+    "name": "Method-Check-Expires",
+    "obsolete": true
+  },
+  {
+    "name": "Non-Compliance",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Optional",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Referer-Root",
+    "obsolete": true
+  },
+  {
+    "name": "Resolution-Hint",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Resolver-Location",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "SubOK",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Subst",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "descr": "The <code><strong>Timing-Allow-Origin</strong></code> response header specifies origins that are allowed to see values of attributes retrieved via features of the <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API\">Resource Timing API</a>, which would otherwise be reported as zero due to cross-origin restrictions.",
+    "name": "Timing-Allow-Origin"
+  },
+  {
+    "name": "Title",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Traceparent"
+  },
+  {
+    "name": "Tracestate"
+  },
+  {
+    "name": "UA-Color",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "UA-Media",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "UA-Pixels",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "UA-Resolution",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "UA-Windowpixels",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "Version",
+    "rfc-ref": "4229",
+    "rfc-title": "[RFC4229]"
+  },
+  {
+    "name": "X-Device-Accept"
+  },
+  {
+    "name": "X-Device-Accept-Charset"
+  },
+  {
+    "name": "X-Device-Accept-Encoding"
+  },
+  {
+    "name": "X-Device-Accept-Language"
+  },
+  {
+    "name": "X-Device-User-Agent"
+  }
+]

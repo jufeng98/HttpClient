@@ -2,6 +2,7 @@ package org.javamaster.httpclient.doc.support
 
 import com.google.gson.JsonObject
 import com.intellij.openapi.util.text.StringUtil
+import org.javamaster.httpclient.nls.NlsBundle
 
 /**
  * @author yudong
@@ -15,7 +16,9 @@ class HttpHeaderDocumentation private constructor(
 ) {
     constructor(name: String) : this(name, "", "", "", false)
 
-    val url = URL_PREFIX + name
+    val url by lazy {
+        "https://developer.mozilla.org/${NlsBundle.region}/docs/Web/HTTP/Headers/$name"
+    }
 
     fun generateDoc(): String? {
         if (StringUtil.isEmpty(description)) {
@@ -39,7 +42,6 @@ class HttpHeaderDocumentation private constructor(
     companion object {
         private const val CC_LICENSE =
             " is licensed under <a href=\"https://creativecommons.org/licenses/by-sa/2.5/\">CC-BY-SA 2.5</a>."
-        private const val URL_PREFIX = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/"
         private const val RFC_PREFIX = "https://tools.ietf.org/html/rfc"
 
         fun read(obj: JsonObject): HttpHeaderDocumentation? {
