@@ -98,7 +98,7 @@ preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
 
-request ::= method requestTarget version? header? body? responseHandler? outputFile? historyBodyFile? {
+request ::= method requestTarget version? header? body? responseHandler? outputFile? historyBodyFile* {
     methods = [
         getContentType
         getContentTypeBoundary

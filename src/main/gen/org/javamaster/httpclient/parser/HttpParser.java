@@ -775,7 +775,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // method requestTarget version? header? body? responseHandler? outputFile? historyBodyFile?
+  // method requestTarget version? header? body? responseHandler? outputFile? historyBodyFile*
   public static boolean request(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request")) return false;
     if (!nextTokenIs(b, REQUEST_METHOD)) return false;
@@ -829,10 +829,14 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // historyBodyFile?
+  // historyBodyFile*
   private static boolean request_7(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request_7")) return false;
-    historyBodyFile(b, l + 1);
+    while (true) {
+      int c = current_position_(b);
+      if (!historyBodyFile(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "request_7", c)) break;
+    }
     return true;
   }
 

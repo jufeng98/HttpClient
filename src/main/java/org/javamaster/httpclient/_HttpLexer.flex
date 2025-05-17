@@ -62,7 +62,7 @@ FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
 FIELD_NAME=[a-zA-Z0-9\-]+
 FIELD_VALUE=[^\r\n{ ]+
-FILE_PATH_PART=[^\r\n<>{}]+
+FILE_PATH_PART=[^\r\n<>{}#]+
 MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
 VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
 GLOBAL_VARIABLE_NAME=[^\r\n={} ]+
@@ -316,7 +316,9 @@ STRING=('([^'])*'|\"([^\"])*\")
   "{{"                       { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {FILE_PATH_PART}           { return FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
-  {EOL_MULTI}                { yybegin(YYINITIAL); return WHITE_SPACE; }
+  {EOL}                      { return WHITE_SPACE; }
+  [^]                        { yypushback(yylength()); yybegin(YYINITIAL); }
+  <<EOF>>                    { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 
 <IN_JSON_VALUE> {
