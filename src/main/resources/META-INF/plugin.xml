@@ -325,6 +325,11 @@
             <className>org.javamaster.httpclient.intent.HttpSwitchEnvironmentIntention</className>
             <category>HttpRequest/Env</category>
         </intentionAction>
+        <intentionAction>
+            <language>http</language>
+            <className>org.javamaster.httpclient.intent.ConvertToCurlAndCpIntention</className>
+            <category>HttpRequest/Env</category>
+        </intentionAction>
     </extensions>
 
     <actions>

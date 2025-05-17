@@ -6,7 +6,9 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ide.CopyPasteManager
+import com.intellij.openapi.project.Project
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.HttpRequestEnum
@@ -35,29 +37,7 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
 
         val project = e.project!!
 
-        val method = requestBlock.request.method.text
-        if (method == HttpRequestEnum.WEBSOCKET.name
-            || method == HttpRequestEnum.DUBBO.name
-        ) {
-            NotifyUtil.notifyWarn(project, nls("convert.not.supported"))
-            return
-        }
-
-        try {
-            CurlParser.toCurlString(requestBlock, project) {
-                CopyPasteManager.getInstance().setContents(StringSelection(it))
-
-                val str = if (it.length > 2000) {
-                    it.substring(0, 2000) + "$CR_LF......"
-                } else {
-                    it
-                }
-
-                HintManager.getInstance().showInformationHint(editor, nls("converted.tip") + "\n" + str)
-            }
-        } catch (e: Exception) {
-            NotifyUtil.notifyError(project, e.toString())
-        }
+        convertToCurlAnCy(requestBlock, project, editor)
     }
 
     private fun findRequestBlock(e: AnActionEvent): HttpRequestBlock? {
@@ -72,5 +52,35 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
 
     override fun getActionUpdateThread(): ActionUpdateThread {
         return ActionUpdateThread.BGT
+    }
+
+    companion object {
+
+        fun convertToCurlAnCy(requestBlock: HttpRequestBlock, project: Project, editor: Editor) {
+            val method = requestBlock.request.method.text
+            if (method == HttpRequestEnum.WEBSOCKET.name
+                || method == HttpRequestEnum.DUBBO.name
+            ) {
+                NotifyUtil.notifyWarn(project, nls("convert.not.supported"))
+                return
+            }
+
+            try {
+                CurlParser.toCurlString(requestBlock, project) {
+                    CopyPasteManager.getInstance().setContents(StringSelection(it))
+
+                    val str = if (it.length > 2000) {
+                        it.substring(0, 2000) + "$CR_LF......"
+                    } else {
+                        it
+                    }
+
+                    HintManager.getInstance().showInformationHint(editor, nls("converted.tip") + "\n" + str)
+                }
+            } catch (e: Exception) {
+                NotifyUtil.notifyError(project, e.toString())
+            }
+        }
+
     }
 }
