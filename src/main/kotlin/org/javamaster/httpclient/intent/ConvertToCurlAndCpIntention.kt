@@ -1,7 +1,6 @@
 package org.javamaster.httpclient.intent
 
 import com.intellij.codeInsight.intention.BaseElementAtCaretIntentionAction
-import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
@@ -34,8 +33,6 @@ class ConvertToCurlAndCpIntention : BaseElementAtCaretIntentionAction() {
     override fun invoke(project: Project, editor: Editor, psiElement: PsiElement) {
         val requestBlock = PsiTreeUtil.getParentOfType(psiElement, HttpRequestBlock::class.java) ?: return
 
-        runInEdt {
-            ConvertToCurlAndCpAction.convertToCurlAnCy(requestBlock, project, editor)
-        }
+        ConvertToCurlAndCpAction.convertToCurlAnCy(requestBlock, project, editor)
     }
 }
