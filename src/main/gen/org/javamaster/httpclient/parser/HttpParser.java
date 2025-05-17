@@ -395,6 +395,20 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // HISTORY_FILE_SIGN filePath
+  public static boolean historyBodyFile(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "historyBodyFile")) return false;
+    if (!nextTokenIs(b, HISTORY_FILE_SIGN)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, HISTORY_BODY_FILE, null);
+    r = consumeToken(b, HISTORY_FILE_SIGN);
+    p = r; // pin = 1
+    r = r && filePath(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // HOST_VALUE | variable
   public static boolean host(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "host")) return false;
@@ -761,7 +775,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // method requestTarget version? header? body? responseHandler? outputFile?
+  // method requestTarget version? header? body? responseHandler? outputFile? historyBodyFile?
   public static boolean request(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request")) return false;
     if (!nextTokenIs(b, REQUEST_METHOD)) return false;
@@ -774,7 +788,8 @@ public class HttpParser implements PsiParser, LightPsiParser {
     r = p && report_error_(b, request_3(b, l + 1)) && r;
     r = p && report_error_(b, request_4(b, l + 1)) && r;
     r = p && report_error_(b, request_5(b, l + 1)) && r;
-    r = p && request_6(b, l + 1) && r;
+    r = p && report_error_(b, request_6(b, l + 1)) && r;
+    r = p && request_7(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -811,6 +826,13 @@ public class HttpParser implements PsiParser, LightPsiParser {
   private static boolean request_6(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request_6")) return false;
     outputFile(b, l + 1);
+    return true;
+  }
+
+  // historyBodyFile?
+  private static boolean request_7(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "request_7")) return false;
+    historyBodyFile(b, l + 1);
     return true;
   }
 

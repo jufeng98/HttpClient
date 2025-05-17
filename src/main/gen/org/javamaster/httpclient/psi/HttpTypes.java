@@ -26,6 +26,7 @@ public interface HttpTypes {
   IElementType HEADER_FIELD = new HttpElementType("HEADER_FIELD");
   IElementType HEADER_FIELD_NAME = new HttpElementType("HEADER_FIELD_NAME");
   IElementType HEADER_FIELD_VALUE = new HttpElementType("HEADER_FIELD_VALUE");
+  IElementType HISTORY_BODY_FILE = new HttpElementType("HISTORY_BODY_FILE");
   IElementType HOST = new HttpElementType("HOST");
   IElementType INPUT_FILE = new HttpElementType("INPUT_FILE");
   IElementType MESSAGE_BODY = new HttpElementType("MESSAGE_BODY");
@@ -78,6 +79,7 @@ public interface HttpTypes {
   IElementType GLOBAL_START_SCRIPT_BRACE = new HttpTokenType("<! {%");
   IElementType GLOBAL_VALUE = new HttpTokenType("GLOBAL_VALUE");
   IElementType HASH = new HttpTokenType("#");
+  IElementType HISTORY_FILE_SIGN = new HttpTokenType("<> ");
   IElementType HOST_VALUE = new HttpTokenType("HOST_VALUE");
   IElementType HTTP_VERSION = new HttpTokenType("HTTP_VERSION");
   IElementType IDENTIFIER = new HttpTokenType("IDENTIFIER");
@@ -162,6 +164,9 @@ public interface HttpTypes {
       }
       else if (type == HEADER_FIELD_VALUE) {
         return new HttpHeaderFieldValueImpl(node);
+      }
+      else if (type == HISTORY_BODY_FILE) {
+        return new HttpHistoryBodyFileImpl(node);
       }
       else if (type == HOST) {
         return new HttpHostImpl(node);

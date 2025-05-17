@@ -42,6 +42,12 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   }
 
   @Override
+  @Nullable
+  public HttpHistoryBodyFile getHistoryBodyFile() {
+    return findChildByClass(HttpHistoryBodyFile.class);
+  }
+
+  @Override
   @NotNull
   public HttpMethod getMethod() {
     return findNotNullChildByClass(HttpMethod.class);

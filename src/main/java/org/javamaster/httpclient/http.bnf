@@ -36,6 +36,7 @@
     RIGHT_BRACKET=')'
     INPUT_FILE_SIGN='< '
     OUTPUT_FILE_SIGN='>> '
+    HISTORY_FILE_SIGN='<> '
     GLOBAL_START_SCRIPT_BRACE='<! {%'
     IN_START_SCRIPT_BRACE='< {%'
     OUT_START_SCRIPT_BRACE='> {%'
@@ -97,7 +98,7 @@ preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
 
-request ::= method requestTarget version? header? body? responseHandler? outputFile? {
+request ::= method requestTarget version? header? body? responseHandler? outputFile? historyBodyFile? {
     methods = [
         getContentType
         getContentTypeBoundary
@@ -198,6 +199,9 @@ inputFile ::= INPUT_FILE_SIGN filePath {
     pin = 1
 }
 outputFile ::= OUTPUT_FILE_SIGN filePath {
+    pin = 1
+}
+historyBodyFile ::= HISTORY_FILE_SIGN filePath {
     pin = 1
 }
 filePath ::= variable filePathContent | variable | filePathContent {

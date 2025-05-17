@@ -39,7 +39,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %xstate IN_PATH, IN_JSON_VALUE
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
-%state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION
+%state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION, IN_HISTORY_BODY_FILE_PART
 %state IN_MULTIPART, IN_VARIABLE, IN_DYNAMIC_VARIABLE, IN_DYNAMIC_VARIABLE_ARGS, IN_GLOBAL_VARIABLE, IN_GLOBAL_VARIABLE_VALUE
 %eof{
   return;
@@ -250,6 +250,8 @@ STRING=('([^'])*'|\"([^\"])*\")
   "< "                               { nextState = IN_INPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return INPUT_FILE_SIGN; }
   {EOL_MULTI}">> "                   { nextState = IN_OUTPUT_FILE_PATH; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
   ">> "                              { nextState = IN_OUTPUT_FILE_PATH; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  {EOL_MULTI}"<> "                   { nextState = IN_HISTORY_BODY_FILE_PART; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
+  "<> "                              { nextState = IN_HISTORY_BODY_FILE_PART; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
   {EOL_MULTI}"> {%"{EOL_MULTI}       { nextState = IN_POST_SCRIPT; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
   "> {%"{EOL_MULTI}                  { if(LexerUtils.endsWithLineBreak(this)) { nextState = IN_POST_SCRIPT; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); } }
   {EOL_MULTI}{MESSAGE_BOUNDARY}\s*   { nextState = IN_MULTIPART; yypushback(yylength()); yybegin(IN_TRIM_PREFIX_SPACE); return detectBodyType(this); }
@@ -296,6 +298,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 
 <IN_OUTPUT_FILE> {
   ">> "                      { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return OUTPUT_FILE_SIGN; }
+  "<> "                      { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return HISTORY_FILE_SIGN; }
   {WHITE_SPACE}              { yybegin(YYINITIAL); return WHITE_SPACE; }
   [^]                        { yypushback(yylength()); yybegin(YYINITIAL); }
 }
@@ -303,6 +306,14 @@ STRING=('([^'])*'|\"([^\"])*\")
 <IN_OUTPUT_FILE_PATH> {
   ">> "                      { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return OUTPUT_FILE_SIGN; }
   "{{"                       { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
+  {FILE_PATH_PART}           { return FILE_PATH_PART; }
+  {ONLY_SPACE}               { return WHITE_SPACE; }
+  {EOL_MULTI}                { yybegin(YYINITIAL); return WHITE_SPACE; }
+}
+
+<IN_HISTORY_BODY_FILE_PART> {
+  "<> "                      { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return HISTORY_FILE_SIGN; }
+  "{{"                       { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {FILE_PATH_PART}           { return FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
   {EOL_MULTI}                { yybegin(YYINITIAL); return WHITE_SPACE; }

@@ -80,6 +80,10 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitHistoryBodyFile(@NotNull HttpHistoryBodyFile o) {
+    visitPsiElement(o);
+  }
+
   public void visitHost(@NotNull HttpHost o) {
     visitPsiElement(o);
   }
