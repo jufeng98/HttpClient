@@ -9,8 +9,10 @@ import com.intellij.lang.xml.XMLLanguage
 import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLanguageInjectionHost
+import com.intellij.psi.util.PsiUtil
 import com.intellij.util.SmartList
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.action.dashboard.view.ContentTypeActionGroup
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpRequest
@@ -22,7 +24,15 @@ import org.javamaster.httpclient.utils.InjectionUtils
 class MessageBodyInjectionContributor : MultiHostInjector {
 
     override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
-        var language: Language = PlainTextLanguage.INSTANCE
+        val virtualFile = PsiUtil.getVirtualFile(context)
+        if (virtualFile != null) {
+            val contentType = virtualFile.getUserData(ContentTypeActionGroup.httpDashboardContentTypeKey)
+            if (contentType != null) {
+                tryInject(contentType, context, registrar)
+                return
+            }
+        }
+
         var contentType: ContentType? = null
         val tmpParent = context.parent.parent
         val parent = tmpParent?.parent
@@ -31,6 +41,12 @@ class MessageBodyInjectionContributor : MultiHostInjector {
         } else if (tmpParent is HttpMultipartField) {
             contentType = tmpParent.contentType
         }
+
+        tryInject(contentType, context, registrar)
+    }
+
+    private fun tryInject(contentType: ContentType?, context: PsiElement, registrar: MultiHostRegistrar) {
+        var language: Language = PlainTextLanguage.INSTANCE
 
         when (contentType) {
             ContentType.APPLICATION_JSON -> {
@@ -56,6 +72,5 @@ class MessageBodyInjectionContributor : MultiHostInjector {
     override fun elementsToInjectIn(): List<Class<out PsiElement>> {
         return SmartList(HttpMessageBody::class.java)
     }
-
 
 }

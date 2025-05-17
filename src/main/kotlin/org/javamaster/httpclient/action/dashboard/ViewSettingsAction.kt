@@ -5,8 +5,11 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.editor.Editor
 import com.intellij.ui.popup.PopupFactoryImpl
-import org.javamaster.httpclient.action.dashboard.view.*
+import org.javamaster.httpclient.action.dashboard.view.ContentTypeActionGroup
+import org.javamaster.httpclient.action.dashboard.view.FoldHeadersAction
+import org.javamaster.httpclient.action.dashboard.view.ShowLineNumberAction
 import org.javamaster.httpclient.nls.NlsBundle.nls
+
 
 /**
  * @author yudong

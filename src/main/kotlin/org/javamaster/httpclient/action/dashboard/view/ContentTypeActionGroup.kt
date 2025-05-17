@@ -1,25 +1,15 @@
 package org.javamaster.httpclient.action.dashboard.view
 
 import com.intellij.icons.AllIcons
-import com.intellij.json.JsonLanguage
-import com.intellij.lang.html.HTMLLanguage
-import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.lang.xml.XMLLanguage
+import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileTypes.PlainTextLanguage
-import com.intellij.openapi.util.Computable
+import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiFile
-import com.intellij.psi.injection.Injectable
-import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.util.FileContentUtilCore
 import org.apache.http.entity.ContentType
-import org.intellij.plugins.intelliLang.inject.InjectLanguageAction
-import org.intellij.plugins.intelliLang.inject.UnInjectLanguageAction
-import org.javamaster.httpclient.action.dashboard.DashboardBaseAction
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpMessageBody
+
 
 /**
  * @author yudong
@@ -28,8 +18,7 @@ class ContentTypeActionGroup(private val editor: Editor) {
     private val textAction = TextAction(setOf(ContentType.TEXT_PLAIN))
     private val jsonAction = JsonAction(setOf(ContentType.APPLICATION_JSON))
     private val xmlAction = XmlAction(setOf(ContentType.TEXT_XML, ContentType.APPLICATION_XML))
-    private val htmlAction = HtmlAction(setOf(ContentType.TEXT_HTML))
-
+    private val htmlAction = HtmlAction(setOf(ContentType.TEXT_HTML, ContentType.APPLICATION_XHTML_XML))
 
     val actions = listOf(textAction, jsonAction, xmlAction, htmlAction)
 
@@ -58,6 +47,8 @@ class ContentTypeActionGroup(private val editor: Editor) {
     }
 
     private fun switchActionContentType(contentType: ContentType) {
+        this.contentType = contentType
+
         actions.forEach {
             it.switchContentType(contentType)
         }
@@ -81,7 +72,8 @@ class ContentTypeActionGroup(private val editor: Editor) {
     }
 
     abstract inner class ContentTypeAction(val relateTypes: Set<ContentType>, text: String) :
-        DashboardBaseAction(text, null) {
+        AnAction(text, null, null) {
+
         fun disableAction() {
             templatePresentation.isEnabled = false
         }
@@ -95,65 +87,37 @@ class ContentTypeActionGroup(private val editor: Editor) {
         }
 
         override fun actionPerformed(e: AnActionEvent) {
-            val injectable = getInjectable()
-
             val project = editor.project!!
             val document = editor.document
-            val httpFile = PsiDocumentManager.getInstance(project).getPsiFile(document) as HttpFile
+            val httpFile = PsiDocumentManager.getInstance(project).getPsiFile(document)
+            if (httpFile !is HttpFile) {
+                return
+            }
 
-            val messageBody = PsiTreeUtil.findChildOfType(httpFile, HttpMessageBody::class.java) ?: return
+            if (contentType == null) {
+                return
+            }
 
-            val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
-            val injectedPsiFile = injectedLanguageManager.getInjectedPsiFiles(messageBody)!![0].first as PsiFile
+            val type = relateTypes.iterator().next()
 
-            val application = ApplicationManager.getApplication()
+            httpFile.virtualFile.putUserData(httpDashboardContentTypeKey, type)
 
-            application.runReadAction(Computable {
-                UnInjectLanguageAction.invokeImpl(project, editor, injectedPsiFile)
-                println("unInjectedPsiFile: ${injectedPsiFile.virtualFile.path}")
-                ""
-            })
+            switchActionContentType(type)
 
-            InjectLanguageAction.invokeImpl(project, editor, injectedPsiFile, injectable)
-            println("injectedPsiFile: ${injectedPsiFile.virtualFile.path},injectable: ${injectable.toLanguage()}")
-
-            switchActionContentType(allowContentTypes.iterator().next())
-        }
-
-        abstract fun getInjectable(): Injectable
-    }
-
-
-    private inner class TextAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "Text") {
-
-        override fun getInjectable(): Injectable {
-            return Injectable.fromLanguage(PlainTextLanguage.INSTANCE)!!
-        }
-
-
-    }
-
-    private inner class JsonAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "JSON") {
-
-        override fun getInjectable(): Injectable {
-            return Injectable.fromLanguage(JsonLanguage.INSTANCE)!!
+            FileContentUtilCore.reparseFiles(httpFile.virtualFile)
         }
 
     }
 
-    private inner class XmlAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "XML") {
+    private inner class TextAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "Text")
 
-        override fun getInjectable(): Injectable {
-            return Injectable.fromLanguage(XMLLanguage.INSTANCE)!!
-        }
+    private inner class JsonAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "JSON")
 
-    }
+    private inner class XmlAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "XML")
 
-    private inner class HtmlAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "HTML") {
+    private inner class HtmlAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "HTML")
 
-        override fun getInjectable(): Injectable {
-            return Injectable.fromLanguage(HTMLLanguage.INSTANCE)!!
-        }
-
+    companion object {
+        val httpDashboardContentTypeKey = Key.create<ContentType>("org.javamaster.dashboard.httpDashboardContentType")
     }
 }
