@@ -98,7 +98,7 @@ public class HttpDashboardForm implements Disposable {
             return;
         }
 
-        VirtualFile responseBodyFile = saveResponseToFile(httpInfo);
+        VirtualFile responseBodyFile = saveResponseToFile(httpInfo, tabName);
 
         byte[] resBytes = String.join("", httpInfo.getHttpResDescList()).getBytes(StandardCharsets.UTF_8);
 
@@ -138,7 +138,7 @@ public class HttpDashboardForm implements Disposable {
         jPanel.add(component);
     }
 
-    private VirtualFile saveResponseToFile(HttpInfo httpInfo) {
+    private VirtualFile saveResponseToFile(HttpInfo httpInfo, String tabName) {
         try {
             SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
 
@@ -147,9 +147,16 @@ public class HttpDashboardForm implements Disposable {
             //noinspection DataFlowIssue
             String suffix = SimpleTypeEnum.Companion.getSuffix(simpleTypeEnum, contentType);
 
-            File dateHistoryDir = VirtualFileUtils.INSTANCE.getDateHistoryDir(Objects.requireNonNull(project.getBasePath()));
+            @SuppressWarnings("DataFlowIssue")
+            File dateHistoryDir = VirtualFileUtils.INSTANCE.getDateHistoryDir(project.getBasePath());
 
-            File file = new File(dateHistoryDir, "tmp-" + tabName + "-999999.res." + suffix);
+            File resBodyDir = new File(dateHistoryDir, tabName);
+            if (!resBodyDir.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                resBodyDir.mkdirs();
+            }
+
+            File file = new File(resBodyDir, DateFormatUtils.format(new Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix);
 
             String absolutePath = file.getAbsolutePath();
 
