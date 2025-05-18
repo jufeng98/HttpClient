@@ -210,13 +210,13 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
         }
     }
 
-    fun prepareJsAndConvertToCurl(consumer: Consumer<String>) {
+    fun prepareJsAndConvertToCurl(raw: Boolean, consumer: Consumer<String>) {
         val preFilePair = preJsFiles.partition { it.urlFile != null }
 
         val npmFiles = preFilePair.first
 
         if (npmFiles.isEmpty()) {
-            convertToCurl(consumer)
+            convertToCurl(raw, consumer)
 
             return
         }
@@ -229,7 +229,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     runReadAction {
                         JsTgz.initAndCacheNpmJsLibrariesFile(npmFiles, project)
 
-                        convertToCurl(consumer)
+                        convertToCurl(raw, consumer)
                     }
                 }
             }
@@ -241,22 +241,22 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             runReadAction {
                 JsTgz.initAndCacheNpmJsLibrariesFile(npmFiles, project)
 
-                convertToCurl(consumer)
+                convertToCurl(raw, consumer)
             }
         }
     }
 
-    private fun convertToCurl(consumer: Consumer<String>) {
+    private fun convertToCurl(raw: Boolean, consumer: Consumer<String>) {
         application.executeOnPooledThread {
             JsTgz.initJsLibrariesVirtualFile(preJsFiles)
 
             runInEdt {
-                convertToCurlReal(consumer)
+                convertToCurlReal(raw, consumer)
             }
         }
     }
 
-    private fun convertToCurlReal(consumer: Consumer<String>) {
+    private fun convertToCurlReal(raw: Boolean, consumer: Consumer<String>) {
         HttpBackground
             .runInBackgroundReadActionAsync {
                 initPreJsFilesContent()
@@ -268,14 +268,14 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                 HttpReqInfo(reqBody, environment, preJsFiles)
             }
             .finishOnUiThread {
-                convertToCurlReal(consumer, it!!)
+                convertToCurlReal(raw, consumer, it!!)
             }
             .exceptionallyOnUiThread {
                 NotifyUtil.notifyError(project, it.toString())
             }
     }
 
-    private fun convertToCurlReal(consumer: Consumer<String>, reqInfo: HttpReqInfo) {
+    private fun convertToCurlReal(raw: Boolean, consumer: Consumer<String>, reqInfo: HttpReqInfo) {
         val httpHeaderFields = request.header?.headerFieldList
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
@@ -293,12 +293,24 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         val list = mutableListOf<String>()
 
-        list.add("curl -X ${request.method.text} --location \"$url\"")
+        list.add(
+            if (raw) {
+                "${request.method.text} $url"
+            } else {
+                "curl -X ${request.method.text} --location \"$url\""
+            }
+        )
 
         reqHeaderMap.forEach {
             val name = it.key
             for (value in it.value) {
-                list.add("    -H \"$name: ${value}\"")
+                list.add(
+                    if (raw) {
+                        "$name: $value"
+                    } else {
+                        "    -H \"$name: ${value}\""
+                    }
+                )
             }
         }
 
@@ -312,10 +324,15 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
                 val content = HttpUtils.handleOrdinaryContentCurl(requestMessagesGroup, variableResolver, header)
 
-                list.add("    -d '${content}'")
+                list.add(
+                    if (raw) {
+                        content
+                    } else {
+                        "    -d '${content}'"
+                    }
+                )
             } else if (httpMultipartMessage != null) {
-
-                val contents = HttpUtils.constructMultipartBodyCurl(httpMultipartMessage, variableResolver)
+                val contents = HttpUtils.constructMultipartBodyCurl(httpMultipartMessage, variableResolver, raw)
 
                 list.addAll(contents)
             }

@@ -40,21 +40,21 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
         convertToCurlAnCy(requestBlock, project, editor)
     }
 
-    private fun findRequestBlock(e: AnActionEvent): HttpRequestBlock? {
-        val editor = e.getData(CommonDataKeys.EDITOR) ?: return null
-
-        val httpFile = PsiUtil.getPsiFile(e.project!!, editor.virtualFile)
-
-        val psiElement = httpFile.findElementAt(editor.caretModel.offset) ?: return null
-
-        return PsiTreeUtil.getParentOfType(psiElement, HttpRequestBlock::class.java)
-    }
-
     override fun getActionUpdateThread(): ActionUpdateThread {
         return ActionUpdateThread.BGT
     }
 
     companion object {
+
+        fun findRequestBlock(e: AnActionEvent): HttpRequestBlock? {
+            val editor = e.getData(CommonDataKeys.EDITOR) ?: return null
+
+            val httpFile = PsiUtil.getPsiFile(e.project!!, editor.virtualFile)
+
+            val psiElement = httpFile.findElementAt(editor.caretModel.offset) ?: return null
+
+            return PsiTreeUtil.getParentOfType(psiElement, HttpRequestBlock::class.java)
+        }
 
         fun convertToCurlAnCy(requestBlock: HttpRequestBlock, project: Project, editor: Editor) {
             val method = requestBlock.request.method.text
@@ -66,7 +66,7 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
             }
 
             try {
-                CurlParser.toCurlString(requestBlock, project) {
+                CurlParser.toCurlString(requestBlock, project, false) {
                     CopyPasteManager.getInstance().setContents(StringSelection(it))
 
                     val str = if (it.length > 2000) {

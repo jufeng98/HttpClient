@@ -351,6 +351,7 @@ object HttpUtils {
     fun constructMultipartBodyCurl(
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
+        raw: Boolean,
     ): MutableList<String> {
         val list = mutableListOf<String>()
 

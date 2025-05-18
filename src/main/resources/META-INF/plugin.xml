@@ -339,6 +339,7 @@
 
         <group id="httpToolbarLeftBtnGroup">
             <action class="org.javamaster.httpclient.action.ShowAddHttpPopupAction"/>
+            <action class="org.javamaster.httpclient.action.ShowRequestHistoryAction"/>
             <separator/>
             <action class="org.javamaster.httpclient.action.ShowVariableFormAction"/>
             <action class="org.javamaster.httpclient.action.ConvertToCurlAndCpAction"/>
