@@ -68,6 +68,7 @@ object HttpUtils {
     const val TIMEOUT = 10_000
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
+    const val WEB_BOUNDARY = "boundary"
 
     private const val VARIABLE_SIGN_END = "}}"
 
@@ -320,6 +321,7 @@ object HttpUtils {
         requestMessagesGroup: HttpRequestMessagesGroup,
         variableResolver: VariableResolver,
         header: HttpHeader?,
+        raw: Boolean,
     ): String {
         var reqStr = ""
 
@@ -329,7 +331,13 @@ object HttpUtils {
         }
 
         val filePath = requestMessagesGroup.inputFile?.filePath?.text
-            ?: return reqStr.replace("\n", "\n    ").replace("'","'\\''")
+        if (filePath == null) {
+            return if (raw) {
+                reqStr + CR_LF
+            } else {
+                reqStr.replace("\n", "\n    ").replace("'", "'\\''")
+            }
+        }
 
         val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
@@ -345,12 +353,17 @@ object HttpUtils {
 
         reqStr += variableResolver.resolve(str)
 
-        return reqStr.replace("\n", "\n    ").replace("'","'\\''")
+        return if (raw) {
+            reqStr + CR_LF
+        } else {
+            reqStr.replace("\n", "\n    ").replace("'", "'\\''")
+        }
     }
 
     fun constructMultipartBodyCurl(
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
+        boundary: String,
         raw: Boolean,
     ): MutableList<String> {
         val list = mutableListOf<String>()
@@ -360,11 +373,27 @@ object HttpUtils {
                 val requestMessagesGroup = it.requestMessagesGroup
                 val header = it.header
 
+                if (raw) {
+                    list.add("--$boundary$CR_LF")
+
+                    header.headerFieldList.forEach { innerIt ->
+                        list.add("${innerIt.name}: ${innerIt.value}$CR_LF")
+                    }
+
+                    list.add(CR_LF)
+                }
+
                 val messageBody = requestMessagesGroup.messageBody
                 if (messageBody != null) {
                     val content = variableResolver.resolve(messageBody.text)
 
-                    list.add("    -F \"${header.contentDispositionName}=" + content + ";type=${header.contentTypeField?.headerFieldValue?.text}\"")
+                    list.add(
+                        if (raw) {
+                            content + CR_LF
+                        } else {
+                            "    -F \"${header.contentDispositionName}=" + content + ";type=${header.contentTypeField?.headerFieldValue?.text}\""
+                        }
+                    )
                 }
 
                 val filePath = requestMessagesGroup.inputFile?.filePath?.text
@@ -372,12 +401,22 @@ object HttpUtils {
                     val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
                     val file = File(path)
+
                     val content = "@" + file.absolutePath.replace("\\", "/")
 
-                    list.add("    -F \"${header.contentDispositionName}=" + content + ";filename=${header.contentDispositionFileName};type=${header.contentTypeField?.headerFieldValue?.text}\"")
+                    list.add(
+                        if (raw) {
+                            "< " + file.absolutePath + CR_LF
+                        } else {
+                            "    -F \"${header.contentDispositionName}=" + content + ";filename=${header.contentDispositionFileName};type=${header.contentTypeField?.headerFieldValue?.text}\""
+                        }
+                    )
                 }
             }
 
+        if (raw) {
+            list.add("--$boundary--")
+        }
 
         return list
     }
@@ -659,6 +698,10 @@ object HttpUtils {
 
     fun isFileInIdeaDir(virtualFile: VirtualFile?): Boolean {
         return virtualFile?.name?.startsWith("tmp") == true
+    }
+
+    fun isHistoryFile(virtualFile: VirtualFile?): Boolean {
+        return virtualFile?.nameWithoutExtension?.endsWith("history") == true
     }
 
     fun getTargetHttpMethod(httpFilePath: String, runConfigName: String, project: Project): HttpMethod? {

@@ -8,9 +8,11 @@ import com.intellij.openapi.vfs.readBytes
 import com.intellij.openapi.vfs.readText
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
+import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.nls.NlsBundle
 import java.io.File
 import java.io.FileNotFoundException
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
@@ -76,11 +78,13 @@ object VirtualFileUtils {
         return document?.text ?: virtualFile.readText()
     }
 
-    fun getDateHistoryDir(basePath: String): File {
+    fun getDateHistoryDir(project: Project): File {
         val date = Date()
 
+        val historyFolder = InnerVariableEnum.HISTORY_FOLDER.exec("", project)!!
         val dayStr = DateFormatUtils.format(date, "MM-dd")
-        val parentDir = File("$basePath/.idea/httpClient", dayStr)
+
+        val parentDir = File(historyFolder, dayStr)
         if (!parentDir.exists()) {
             parentDir.mkdirs()
         }
@@ -92,9 +96,9 @@ object VirtualFileUtils {
         txtBytes: ByteArray,
         suffix: String,
         project: Project,
-        tabName: String?,
+        tabName: String,
     ): VirtualFile {
-        val parentDir = getDateHistoryDir(project.basePath!!)
+        val parentDir = getDateHistoryDir(project)
 
         val str = StringUtils.defaultString(tabName) + "-" + DateFormatUtils.format(Date(), "hhmmss")
         val path = Path.of(parentDir.toString(), "tmp-$str.$suffix")
@@ -108,6 +112,28 @@ object VirtualFileUtils {
 
         val virtualFile = findFileByIoFile(file, true)
         virtualFile!!.setBinaryContent(txtBytes)
+
+        return virtualFile
+    }
+
+    fun createHistoryHttpVirtualFile(
+        content: String,
+        project: Project,
+        tabName: String,
+    ): VirtualFile {
+        val parentDir = getDateHistoryDir(project)
+
+        val path = Path.of(parentDir.toString(), "$tabName-history.http")
+
+        val file = if (Files.exists(path)) {
+            path.toFile()
+        } else {
+            val tempFile = Files.createFile(path)
+            tempFile.toFile()
+        }
+
+        val virtualFile = findFileByIoFile(file, true)
+        virtualFile!!.setBinaryContent(content.toByteArray(StandardCharsets.UTF_8))
 
         return virtualFile
     }
