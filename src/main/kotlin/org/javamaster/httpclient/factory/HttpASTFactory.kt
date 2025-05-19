@@ -1,4 +1,4 @@
-package org.javamaster.httpclient
+package org.javamaster.httpclient.factory
 
 import com.intellij.lang.ASTFactory
 import com.intellij.lang.DefaultASTFactory

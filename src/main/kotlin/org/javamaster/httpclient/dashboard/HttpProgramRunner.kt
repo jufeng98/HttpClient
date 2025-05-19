@@ -4,7 +4,6 @@ import com.intellij.execution.ExecutorRegistry
 import com.intellij.execution.configurations.RunProfile
 import com.intellij.execution.configurations.RunProfileState
 import com.intellij.execution.configurations.RunnerSettings
-import com.intellij.execution.executors.DefaultDebugExecutor
 import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.execution.impl.ExecutionManagerImpl.Companion.getAllDescriptors
 import com.intellij.execution.runners.ExecutionEnvironment
@@ -34,7 +33,7 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
     override fun canRun(executorId: String, profile: RunProfile): Boolean {
         return if (profile !is HttpRunConfiguration) false
         else {
-            DefaultDebugExecutor.EXECUTOR_ID == executorId || DefaultRunExecutor.EXECUTOR_ID == executorId
+            DefaultRunExecutor.EXECUTOR_ID == executorId
         }
     }
 

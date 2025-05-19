@@ -2,7 +2,7 @@ package org.javamaster.httpclient.manipulator
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.AbstractElementManipulator
-import org.javamaster.httpclient.HttpPsiFactory
+import org.javamaster.httpclient.factory.HttpPsiFactory
 import org.javamaster.httpclient.psi.HttpVariableName
 
 /**

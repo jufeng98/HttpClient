@@ -25,7 +25,7 @@ import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.intellij.images.editor.impl.ImageEditorImpl;
-import org.javamaster.httpclient.HttpInfo;
+import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
 import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;

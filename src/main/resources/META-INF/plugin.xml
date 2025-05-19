@@ -219,7 +219,7 @@
         <lang.parserDefinition
                 language="http"
                 implementationClass="org.javamaster.httpclient.parser.HttpParserDefinition"/>
-        <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.HttpASTFactory"/>
+        <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.factory.HttpASTFactory"/>
         <editorHighlighterProvider filetype="HTTP"
                                    implementationClass="org.javamaster.httpclient.highlighting.HttpHighlighterProvider"/>
         <fileBasedIndex implementation="org.javamaster.httpclient.index.HttpEnvironmentIndex"/>

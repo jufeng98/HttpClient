@@ -1,8 +1,9 @@
-package org.javamaster.httpclient
+package org.javamaster.httpclient.factory
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpGlobalVariableName
 import org.javamaster.httpclient.psi.HttpVariable

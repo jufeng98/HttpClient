@@ -1,4 +1,4 @@
-package org.javamaster.httpclient
+package org.javamaster.httpclient.model
 
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 

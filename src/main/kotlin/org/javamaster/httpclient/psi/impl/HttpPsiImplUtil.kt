@@ -7,7 +7,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.tree.IElementType
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.HttpPsiFactory
+import org.javamaster.httpclient.factory.HttpPsiFactory
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.utils.DubboUtils

@@ -9,7 +9,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.SmartList
-import org.javamaster.httpclient.HttpPsiFactory.createDummyFile
+import org.javamaster.httpclient.factory.HttpPsiFactory.createDummyFile
 import org.javamaster.httpclient.completion.support.HttpHeadersDictionary
 import org.javamaster.httpclient.doc.support.HttpHeaderDocumentation
 import org.javamaster.httpclient.parser.HttpFile

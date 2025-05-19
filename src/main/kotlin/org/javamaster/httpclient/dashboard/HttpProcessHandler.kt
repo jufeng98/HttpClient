@@ -16,7 +16,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.HttpInfo
+import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.dashboard.support.JsTgz
