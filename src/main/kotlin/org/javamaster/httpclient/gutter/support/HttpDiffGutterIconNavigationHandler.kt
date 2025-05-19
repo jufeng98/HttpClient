@@ -10,7 +10,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.VfsUtil.findFileByIoFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiUtil
-import com.intellij.psi.util.endOffset
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.popup.PopupFactoryImpl
 import org.javamaster.httpclient.nls.NlsBundle
@@ -18,7 +17,6 @@ import org.javamaster.httpclient.psi.HttpHistoryBodyFile
 import org.javamaster.httpclient.psi.HttpHistoryBodyFileList
 import java.awt.event.MouseEvent
 import java.io.File
-import javax.swing.ListCellRenderer
 import javax.swing.SwingConstants
 
 /**
@@ -31,10 +29,7 @@ object HttpDiffGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElem
         val editorVirtualFile = PsiUtil.getVirtualFile(element)!!
 
         val currentBodyFile = element.parent as HttpHistoryBodyFile
-        val currentFilePath = currentBodyFile.filePath
-        if (currentFilePath == null) {
-            return
-        }
+        val currentFilePath = currentBodyFile.filePath ?: return
 
         val editorManager = FileEditorManager.getInstance(project)
         val hintManager = HintManager.getInstance()
@@ -46,7 +41,7 @@ object HttpDiffGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElem
         val currentVirtualFile = findFileByIoFile(currentFile, true)
 
         if (currentVirtualFile == null) {
-            editor.caretModel.moveToOffset(element.endOffset)
+            editor.caretModel.moveToOffset(element.textRange.endOffset)
 
             hintManager.showErrorHint(editor, NlsBundle.nls("file.not.exists", currentFile.name))
             return
@@ -66,17 +61,17 @@ object HttpDiffGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElem
 
         PopupFactoryImpl.getInstance()
             .createPopupChooserBuilder(map.keys.toList())
-            .setRenderer(ListCellRenderer { _, value, _, _, _ ->
+            .setRenderer { _, value, _, _, _ ->
                 val text = "    " + NlsBundle.nls("compare.with") + " " + value!! + "    "
                 JBLabel(text, AllIcons.Actions.Diff, SwingConstants.CENTER)
-            })
+            }
             .setItemChosenCallback {
                 val pair = map[it]!!
                 val chooseFile = pair.second
 
                 val chooseVirtualFile = findFileByIoFile(chooseFile, true)
                 if (chooseVirtualFile == null) {
-                    editor.caretModel.moveToOffset(pair.first.endOffset)
+                    editor.caretModel.moveToOffset(pair.first.textRange.endOffset)
 
                     hintManager.showErrorHint(
                         editor,
@@ -86,7 +81,7 @@ object HttpDiffGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElem
                     return@setItemChosenCallback
                 }
 
-                val chain = createMutableChainFromFiles(project, currentVirtualFile, chooseVirtualFile)
+                val chain = createMutableChainFromFiles(project, currentVirtualFile, chooseVirtualFile, null)
 
                 DiffManager.getInstance().showDiff(project, chain, DiffDialogHints.DEFAULT)
             }

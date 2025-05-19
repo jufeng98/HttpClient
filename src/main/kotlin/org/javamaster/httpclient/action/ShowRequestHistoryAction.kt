@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.action
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -9,6 +8,7 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.util.application
+import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.action.ConvertToCurlAndCpAction.Companion.findRequestBlock
 import org.javamaster.httpclient.curl.CurlParser
@@ -23,7 +23,7 @@ import java.io.File
  * @author yudong
  */
 @Suppress("ActionPresentationInstantiatedInCtor")
-class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, AllIcons.General.History) {
+class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIcons.History) {
     override fun update(e: AnActionEvent) {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
 

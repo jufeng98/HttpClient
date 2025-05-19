@@ -1,12 +1,12 @@
 package org.javamaster.httpclient.action.dashboard
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.ui.getUserData
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpBody
 import org.javamaster.httpclient.psi.HttpOutputFile
@@ -17,7 +17,7 @@ import javax.swing.JComponent
  * @author yudong
  */
 @Suppress("ActionPresentationInstantiatedInCtor")
-class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), AllIcons.General.Copy) {
+class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY) {
 
     override fun actionPerformed(e: AnActionEvent) {
         val editor = getHttpEditor(e)

@@ -22,4 +22,6 @@ public class HttpIcons {
     public static final Icon SCROLL_UP = IconLoader.getIcon("/icons/scrollUp.svg", HttpIcons.class);
     public static final Icon SCROLL_DOWN = IconLoader.getIcon("/icons/scrollDown.svg", HttpIcons.class);
 
+    public static final Icon COPY = IconLoader.getIcon("/icons/Copy.svg", HttpIcons.class);
+    public static final Icon History = IconLoader.getIcon("/icons/History.svg", HttpIcons.class);
 }
