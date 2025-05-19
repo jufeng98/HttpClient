@@ -34,26 +34,22 @@ public class HttpHeaderImpl extends ASTWrapperPsiElement implements HttpHeader {
   }
 
   @Override
-  @Nullable
-  public HttpHeaderField getContentTypeField() {
+  public @Nullable HttpHeaderField getContentTypeField() {
     return HttpPsiImplUtil.getContentTypeField(this);
   }
 
   @Override
-  @Nullable
-  public HttpHeaderField getInterfaceField() {
+  public @Nullable HttpHeaderField getInterfaceField() {
     return HttpPsiImplUtil.getInterfaceField(this);
   }
 
   @Override
-  @Nullable
-  public String getContentDispositionName() {
+  public @Nullable String getContentDispositionName() {
     return HttpPsiImplUtil.getContentDispositionName(this);
   }
 
   @Override
-  @Nullable
-  public String getContentDispositionFileName() {
+  public @Nullable String getContentDispositionFileName() {
     return HttpPsiImplUtil.getContentDispositionFileName(this);
   }
 

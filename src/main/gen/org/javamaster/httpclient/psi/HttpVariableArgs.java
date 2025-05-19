@@ -10,7 +10,6 @@ public interface HttpVariableArgs extends PsiElement {
   @NotNull
   List<HttpVariableArg> getVariableArgList();
 
-  @NotNull
-  Object[] toArgsList();
+  @NotNull Object @NotNull [] toArgsList();
 
 }

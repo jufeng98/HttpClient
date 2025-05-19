@@ -34,8 +34,7 @@ public class HttpVariableArgsImpl extends ASTWrapperPsiElement implements HttpVa
   }
 
   @Override
-  @NotNull
-  public Object[] toArgsList() {
+  public @NotNull Object @NotNull [] toArgsList() {
     return HttpPsiImplUtil.toArgsList(this);
   }
 

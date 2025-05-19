@@ -10,7 +10,6 @@ public interface HttpGlobalVariableValue extends PsiElement {
   @Nullable
   HttpVariable getVariable();
 
-  @Nullable
-  String getValue();
+  @Nullable String getValue();
 
 }

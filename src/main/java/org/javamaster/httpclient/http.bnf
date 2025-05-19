@@ -98,7 +98,7 @@ preRequestScript ::= IN_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
 
-request ::= method requestTarget version? header? body? responseHandler? outputFile? historyBodyFile* {
+request ::= method requestTarget version? header? body? responseHandler? outputFile? historyBodyFileList? {
     methods = [
         getContentType
         getContentTypeBoundary
@@ -201,6 +201,7 @@ inputFile ::= INPUT_FILE_SIGN filePath {
 outputFile ::= OUTPUT_FILE_SIGN filePath {
     pin = 1
 }
+historyBodyFileList ::= historyBodyFile+
 historyBodyFile ::= HISTORY_FILE_SIGN filePath {
     pin = 1
 }

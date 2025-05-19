@@ -409,6 +409,23 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // historyBodyFile+
+  public static boolean historyBodyFileList(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "historyBodyFileList")) return false;
+    if (!nextTokenIs(b, HISTORY_FILE_SIGN)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = historyBodyFile(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!historyBodyFile(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "historyBodyFileList", c)) break;
+    }
+    exit_section_(b, m, HISTORY_BODY_FILE_LIST, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // HOST_VALUE | variable
   public static boolean host(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "host")) return false;
@@ -775,7 +792,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // method requestTarget version? header? body? responseHandler? outputFile? historyBodyFile*
+  // method requestTarget version? header? body? responseHandler? outputFile? historyBodyFileList?
   public static boolean request(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request")) return false;
     if (!nextTokenIs(b, REQUEST_METHOD)) return false;
@@ -829,14 +846,10 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // historyBodyFile*
+  // historyBodyFileList?
   private static boolean request_7(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "request_7")) return false;
-    while (true) {
-      int c = current_position_(b);
-      if (!historyBodyFile(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "request_7", c)) break;
-    }
+    historyBodyFileList(b, l + 1);
     return true;
   }
 

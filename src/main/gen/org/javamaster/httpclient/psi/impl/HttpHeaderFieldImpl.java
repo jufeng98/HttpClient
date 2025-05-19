@@ -40,14 +40,12 @@ public class HttpHeaderFieldImpl extends ASTWrapperPsiElement implements HttpHea
   }
 
   @Override
-  @NotNull
-  public String getName() {
+  public @NotNull String getName() {
     return HttpPsiImplUtil.getName(this);
   }
 
   @Override
-  @Nullable
-  public String getValue() {
+  public @Nullable String getValue() {
     return HttpPsiImplUtil.getValue(this);
   }
 

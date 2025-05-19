@@ -41,8 +41,7 @@ public class HttpMultipartFieldImpl extends ASTWrapperPsiElement implements Http
   }
 
   @Override
-  @Nullable
-  public ContentType getContentType() {
+  public @Nullable ContentType getContentType() {
     return HttpPsiImplUtil.getContentType(this);
   }
 

@@ -42,9 +42,9 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   }
 
   @Override
-  @NotNull
-  public List<HttpHistoryBodyFile> getHistoryBodyFileList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpHistoryBodyFile.class);
+  @Nullable
+  public HttpHistoryBodyFileList getHistoryBodyFileList() {
+    return findChildByClass(HttpHistoryBodyFileList.class);
   }
 
   @Override
@@ -78,32 +78,27 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   }
 
   @Override
-  @Nullable
-  public ContentType getContentType() {
+  public @Nullable ContentType getContentType() {
     return HttpPsiImplUtil.getContentType(this);
   }
 
   @Override
-  @Nullable
-  public String getContentTypeBoundary() {
+  public @Nullable String getContentTypeBoundary() {
     return HttpPsiImplUtil.getContentTypeBoundary(this);
   }
 
   @Override
-  @Nullable
-  public Integer getContentLength() {
+  public @Nullable Integer getContentLength() {
     return HttpPsiImplUtil.getContentLength(this);
   }
 
   @Override
-  @NotNull
-  public Version getHttpVersion() {
+  public @NotNull Version getHttpVersion() {
     return HttpPsiImplUtil.getHttpVersion(this);
   }
 
   @Override
-  @NotNull
-  public String getHttpHost() {
+  public @NotNull String getHttpHost() {
     return HttpPsiImplUtil.getHttpHost(this);
   }
 

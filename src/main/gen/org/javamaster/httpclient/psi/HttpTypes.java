@@ -27,6 +27,7 @@ public interface HttpTypes {
   IElementType HEADER_FIELD_NAME = new HttpElementType("HEADER_FIELD_NAME");
   IElementType HEADER_FIELD_VALUE = new HttpElementType("HEADER_FIELD_VALUE");
   IElementType HISTORY_BODY_FILE = new HttpElementType("HISTORY_BODY_FILE");
+  IElementType HISTORY_BODY_FILE_LIST = new HttpElementType("HISTORY_BODY_FILE_LIST");
   IElementType HOST = new HttpElementType("HOST");
   IElementType INPUT_FILE = new HttpElementType("INPUT_FILE");
   IElementType MESSAGE_BODY = new HttpElementType("MESSAGE_BODY");
@@ -167,6 +168,9 @@ public interface HttpTypes {
       }
       else if (type == HISTORY_BODY_FILE) {
         return new HttpHistoryBodyFileImpl(node);
+      }
+      else if (type == HISTORY_BODY_FILE_LIST) {
+        return new HttpHistoryBodyFileListImpl(node);
       }
       else if (type == HOST) {
         return new HttpHostImpl(node);
