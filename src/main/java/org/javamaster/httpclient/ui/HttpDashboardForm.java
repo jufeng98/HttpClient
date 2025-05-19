@@ -147,8 +147,7 @@ public class HttpDashboardForm implements Disposable {
             //noinspection DataFlowIssue
             String suffix = SimpleTypeEnum.Companion.getSuffix(simpleTypeEnum, contentType);
 
-            @SuppressWarnings("DataFlowIssue")
-            File dateHistoryDir = VirtualFileUtils.INSTANCE.getDateHistoryDir(project.getBasePath());
+            File dateHistoryDir = VirtualFileUtils.INSTANCE.getDateHistoryDir(project);
 
             File resBodyDir = new File(dateHistoryDir, tabName);
             if (!resBodyDir.exists()) {

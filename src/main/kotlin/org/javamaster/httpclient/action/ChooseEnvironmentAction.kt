@@ -22,8 +22,6 @@ class ChooseEnvironmentAction(private val file: VirtualFile) : ComboBoxAction() 
 
     private var selectedEnv: String? = null
 
-    private val noEnv = nls("no.env")
-
     override fun createCustomComponent(presentation: Presentation, place: String): JComponent {
         val button = createComboBoxButton(presentation)
         button.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
@@ -86,6 +84,10 @@ class ChooseEnvironmentAction(private val file: VirtualFile) : ComboBoxAction() 
 
             DaemonCodeAnalyzer.getInstance(e.project!!).restart()
         }
+    }
+
+    companion object {
+        val noEnv = nls("no.env")
     }
 
 }

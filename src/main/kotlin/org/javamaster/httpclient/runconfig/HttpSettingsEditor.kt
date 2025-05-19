@@ -1,32 +1,40 @@
 package org.javamaster.httpclient.runconfig
 
 import com.intellij.openapi.options.SettingsEditor
-import com.intellij.ui.components.JBTextField
-import org.javamaster.httpclient.nls.NlsBundle
-import java.awt.BorderLayout
+import com.intellij.openapi.project.Project
+import org.javamaster.httpclient.ui.ConfigSettingsForm
 import javax.swing.JComponent
-import javax.swing.JPanel
 
 /**
  * @author yudong
  */
-class HttpSettingsEditor(private val env: String, private val httpFilePath: String) :
+class HttpSettingsEditor(env: String, httpFilePath: String, project: Project) :
     SettingsEditor<HttpRunConfiguration>() {
-    override fun resetEditorFrom(s: HttpRunConfiguration) {
+    val configSettingsForm = ConfigSettingsForm()
+
+    init {
+        configSettingsForm.initForm(env, httpFilePath, project)
+    }
+
+    override fun resetEditorFrom(runConfiguration: HttpRunConfiguration) {
 
     }
 
-    override fun applyEditorTo(s: HttpRunConfiguration) {
+    override fun applyEditorTo(runConfiguration: HttpRunConfiguration) {
+        val pair = configSettingsForm.pair
 
+        runConfiguration.env = pair.first
+
+        runConfiguration.httpFilePath = pair.second
+    }
+
+    override fun isReadyForApply(): Boolean {
+        val triple = configSettingsForm.pair
+
+        return triple.second.isNotBlank()
     }
 
     override fun createEditor(): JComponent {
-        val jPanel = JPanel(BorderLayout())
-
-        jPanel.add(JBTextField("${NlsBundle.nls("env")} $env"), BorderLayout.NORTH)
-
-        jPanel.add(JBTextField("${NlsBundle.nls("http.file")} $httpFilePath"), BorderLayout.CENTER)
-
-        return jPanel
+        return configSettingsForm.mainPanel
     }
 }

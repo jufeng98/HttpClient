@@ -41,7 +41,7 @@ class HttpRunConfiguration(
     }
 
     override fun getConfigurationEditor(): SettingsEditor<out RunConfiguration> {
-        return HttpSettingsEditor(env, httpFilePath)
+        return HttpSettingsEditor(env, httpFilePath, project)
     }
 
     override fun writeExternal(element: Element) {

@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.dashboard
 
+import com.intellij.execution.ExecutionBundle
 import com.intellij.execution.Executor
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
@@ -19,16 +20,20 @@ class HttpExecutor : Executor() {
         return AllIcons.Actions.Execute
     }
 
+    override fun getRerunIcon(): Icon {
+        return AllIcons.Actions.Rerun
+    }
+
     override fun getDisabledIcon(): Icon {
         return IconLoader.getDisabledIcon(icon)
     }
 
     override fun getDescription(): String {
-        return "Run selected request"
+        return "Run selected configuration"
     }
 
     override fun getActionName(): String {
-        return "Run Request"
+        return "Run"
     }
 
     override fun getId(): String {
@@ -36,15 +41,15 @@ class HttpExecutor : Executor() {
     }
 
     override fun getStartActionText(): String {
-        return "Run Request"
+        return ExecutionBundle.message("default.runner.start.action.text")
     }
 
     override fun getContextActionId(): String {
         return "RunRequest"
     }
 
-    override fun getHelpId(): String? {
-        return null
+    override fun getHelpId(): String {
+        return "ideaInterface.run"
     }
 
     companion object {

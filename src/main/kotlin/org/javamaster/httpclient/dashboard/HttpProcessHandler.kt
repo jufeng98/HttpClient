@@ -37,10 +37,13 @@ import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.FAILED
 import org.javamaster.httpclient.utils.HttpUtils.SUCCESS
+import org.javamaster.httpclient.utils.HttpUtils.WEB_BOUNDARY
+import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
 import org.javamaster.httpclient.utils.HttpUtils.convertToResHeaderDescList
 import org.javamaster.httpclient.utils.HttpUtils.convertToResPair
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.HttpUtils.gson
+import org.javamaster.httpclient.utils.HttpUtils.handleOrdinaryContentCurl
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.VirtualFileUtils
 import org.javamaster.httpclient.ws.WsRequest
@@ -293,9 +296,14 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         val list = mutableListOf<String>()
 
+        if (raw) {
+            val tabName = HttpUtils.getTabName(request.method)
+            list.add("### $tabName$CR_LF")
+        }
+
         list.add(
             if (raw) {
-                "${request.method.text} $url"
+                "${request.method.text} $url$CR_LF"
             } else {
                 "curl -X ${request.method.text} --location \"$url\""
             }
@@ -306,7 +314,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             for (value in it.value) {
                 list.add(
                     if (raw) {
-                        "$name: $value"
+                        "$name: $value$CR_LF"
                     } else {
                         "    -H \"$name: ${value}\""
                     }
@@ -314,15 +322,18 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
             }
         }
 
+        if (raw) {
+            list.add(CR_LF)
+        }
+
         HttpBackground.runInBackgroundReadActionAsync {
+            val header = request.header
             val body = request.body
             val requestMessagesGroup = body?.requestMessagesGroup
             val httpMultipartMessage = body?.multipartMessage
 
             if (requestMessagesGroup != null) {
-                val header = request.header
-
-                val content = HttpUtils.handleOrdinaryContentCurl(requestMessagesGroup, variableResolver, header)
+                val content = handleOrdinaryContentCurl(requestMessagesGroup, variableResolver, header, raw)
 
                 list.add(
                     if (raw) {
@@ -332,12 +343,18 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
                     }
                 )
             } else if (httpMultipartMessage != null) {
-                val contents = HttpUtils.constructMultipartBodyCurl(httpMultipartMessage, variableResolver, raw)
+                val boundary = request.contentTypeBoundary ?: WEB_BOUNDARY
+
+                val contents = constructMultipartBodyCurl(httpMultipartMessage, variableResolver, boundary, raw)
 
                 list.addAll(contents)
             }
 
-            list.joinToString(" \\${CR_LF}")
+            if (raw) {
+                list.joinToString("")
+            } else {
+                list.joinToString(" \\${CR_LF}")
+            }
         }.finishOnUiThread {
             consumer.accept(it!!)
         }.exceptionallyOnUiThread {
