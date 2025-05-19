@@ -24,6 +24,7 @@ class HttpTypedHandler : TypedHandlerDelegate() {
         fileType: FileType,
     ): Result {
         editor.virtualFile ?: return Result.CONTINUE
+
         val psiFile = PsiUtil.getPsiFile(project, editor.virtualFile)
 
         if (psiFile !is HttpFile || c != '%' && c != '{') {
