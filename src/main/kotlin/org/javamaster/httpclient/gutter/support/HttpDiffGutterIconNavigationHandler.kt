@@ -2,9 +2,10 @@ package org.javamaster.httpclient.gutter.support
 
 import com.intellij.codeInsight.daemon.GutterIconNavigationHandler
 import com.intellij.codeInsight.hint.HintManager
-import com.intellij.diff.DiffDialogHints
+import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
-import com.intellij.diff.actions.BaseShowDiffAction.createMutableChainFromFiles
+import com.intellij.diff.DiffRequestFactory
+import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.VfsUtil.findFileByIoFile
@@ -81,9 +82,17 @@ object HttpDiffGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElem
                     return@setItemChosenCallback
                 }
 
-                val chain = createMutableChainFromFiles(project, currentVirtualFile, chooseVirtualFile, null)
+                val contentFactory = DiffContentFactory.getInstance()
+                val requestFactory = DiffRequestFactory.getInstance()
 
-                DiffManager.getInstance().showDiff(project, chain, DiffDialogHints.DEFAULT)
+                val content1 = contentFactory.create(project, currentVirtualFile)
+                val content2 = contentFactory.create(project, chooseVirtualFile)
+
+                val title = requestFactory.getTitle(currentVirtualFile)
+
+                val request = SimpleDiffRequest(title, content1, content2, null, null)
+
+                DiffManager.getInstance().showDiff(project, request)
             }
             .createPopup()
             .showInScreenCoordinates(event.component, event.locationOnScreen)
