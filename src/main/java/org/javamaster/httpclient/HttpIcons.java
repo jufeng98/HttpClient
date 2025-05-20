@@ -23,5 +23,7 @@ public class HttpIcons {
     public static final Icon SCROLL_DOWN = IconLoader.getIcon("/icons/scrollDown.svg", HttpIcons.class);
 
     public static final Icon COPY = IconLoader.getIcon("/icons/Copy.svg", HttpIcons.class);
-    public static final Icon History = IconLoader.getIcon("/icons/History.svg", HttpIcons.class);
+    public static final Icon HISTORY = IconLoader.getIcon("/icons/History.svg", HttpIcons.class);
+    public static final Icon INSPECTIONS_EYE = IconLoader.getIcon("/icons/inspectionsEye.svg", HttpIcons.class);
+    public static final Icon BLANK = IconLoader.getIcon("/icons/blank.svg", HttpIcons.class);
 }

@@ -64,7 +64,10 @@
             <ul>
                 <li><b>5.0.0</b></li>
                 <ul>
-                    <li>Service 窗口新增垂直工具栏，包括视图设置、软换行、滚动到顶部、滚动到底部、复制请求/响应体内容等功能</li>
+                    <li>
+                        Service 窗口新增垂直工具栏，包括视图设置(是否显示行号/是否默认折叠http头/修改内容类型)、软换行、滚动到顶部、
+                        滚动到底部、复制请求体或响应体内容、预览 html/pdf/image 响应等功能
+                    </li>
                     <li>新增查询参数跳转对应控制器入参功能</li>
                     <li>新增查询参数文档提示对应的控制器入参功能</li>
                     <li>新增查看请求历史及对比历史响应功能</li>
@@ -208,7 +211,8 @@
 
         <notificationGroup id="HttpClient.STICKY_BALLOON"
                            isLogByDefault="true"
-                           displayType="STICKY_BALLOON"/>
+                           displayType="STICKY_BALLOON" bundle="messages.HttpClientBundle"
+                           key="notification.group.httprequest.sticky_balloon"/>
 
         <fileType
                 name="HTTP"
@@ -258,15 +262,18 @@
                    implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
         <annotator language="http"
                    implementationClass="org.javamaster.httpclient.annotator.HttpAnnotator"/>
-        <localInspection groupName="Http" language="http" shortName="HttpInspection"
-                         displayName="Variable problems" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.javamaster.httpclient.inspection.HttpInspection"/>
-        <localInspection groupName="Http" language="JSON" shortName="MyJsonInspection"
-                         displayName="Variable problems" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.javamaster.httpclient.inspection.MyJsonInspection"/>
-        <localInspection groupName="Http" language="TEXT" shortName="MyTextInspection"
-                         displayName="Variable problems" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.javamaster.httpclient.inspection.MyTextInspection"/>
+        <localInspection groupKey="inspection.http.group.name" language="http"
+                         shortName="HttpInspection" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.javamaster.httpclient.inspection.HttpInspection"
+                         key="inspection.http.display.name" bundle="messages.HttpClientBundle"/>
+        <localInspection groupKey="inspection.http.group.name" language="JSON"
+                         shortName="MyJsonInspection" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.javamaster.httpclient.inspection.MyJsonInspection"
+                         key="inspection.http.display.name" bundle="messages.HttpClientBundle"/>
+        <localInspection groupKey="inspection.http.group.name" language="TEXT"
+                         shortName="MyTextInspection" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.javamaster.httpclient.inspection.MyTextInspection"
+                         key="inspection.http.display.name" bundle="messages.HttpClientBundle"/>
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>
         <psi.referenceContributor language="JSON"
@@ -321,15 +328,18 @@
                                         implementationClass="org.javamaster.httpclient.inlay.HttpInlayActionHandler"/>
         <scratch.creationHelper language="http"
                                 implementationClass="org.javamaster.httpclient.scratch.HttpRequestScratchFileCreationHelper"/>
+        <fileEditorProvider implementation="org.javamaster.httpclient.provider.HtmlFileEditorProvider"/>
         <intentionAction>
             <language>http</language>
             <className>org.javamaster.httpclient.intent.HttpSwitchEnvironmentIntention</className>
-            <category>HttpRequest/Env</category>
+            <bundleName>messages.HttpClientBundle</bundleName>
+            <categoryKey>intention.http.category.name</categoryKey>
         </intentionAction>
         <intentionAction>
             <language>http</language>
             <className>org.javamaster.httpclient.intent.ConvertToCurlAndCpIntention</className>
-            <category>HttpRequest/Env</category>
+            <bundleName>messages.HttpClientBundle</bundleName>
+            <categoryKey>intention.http.category.name</categoryKey>
         </intentionAction>
     </extensions>
 

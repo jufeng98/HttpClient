@@ -18,6 +18,7 @@ import com.intellij.openapi.editor.ScrollingModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -25,10 +26,12 @@ import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.intellij.images.editor.impl.ImageEditorImpl;
-import org.javamaster.httpclient.model.HttpInfo;
+import org.javamaster.httpclient.action.dashboard.PreviewFileAction;
 import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
 import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
+import org.javamaster.httpclient.key.HttpKey;
+import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.utils.HttpUiUtils;
 import org.javamaster.httpclient.utils.HttpUtils;
@@ -56,6 +59,11 @@ public class HttpDashboardForm implements Disposable {
     public JPanel responsePanel;
     private JPanel reqVerticalToolbarPanel;
     private JPanel resVerticalToolbarPanel;
+    @SuppressWarnings("unused")
+    private JPanel reqPanel;
+    @SuppressWarnings("unused")
+    private JPanel resPanel;
+    private JBSplitter splitter;
 
     private final String tabName;
     private final Project project;
@@ -63,6 +71,8 @@ public class HttpDashboardForm implements Disposable {
     public HttpDashboardForm(String tabName, Project project) {
         this.tabName = tabName;
         this.project = project;
+
+        splitter.setSplitterProportionKey("httpRequestCustomProportionKey");
 
         disposePreviousReqEditors();
 
@@ -83,7 +93,7 @@ public class HttpDashboardForm implements Disposable {
 
         requestPanel.add(reqEditor.getComponent(), constraints);
 
-        initVerticalToolbarPanel(reqEditor, reqVerticalToolbarPanel);
+        initVerticalToolbarPanel(reqEditor, reqVerticalToolbarPanel, null, null);
 
         if (throwable != null) {
             String msg = ExceptionUtils.getStackTrace(throwable);
@@ -93,7 +103,7 @@ public class HttpDashboardForm implements Disposable {
 
             responsePanel.add(errorEditor.getComponent(), constraints);
 
-            initVerticalToolbarPanel(errorEditor, resVerticalToolbarPanel);
+            initVerticalToolbarPanel(errorEditor, resVerticalToolbarPanel, null, null);
 
             return;
         }
@@ -110,7 +120,7 @@ public class HttpDashboardForm implements Disposable {
 
         responsePanel.add(resEditor.getComponent(), constraintsRes);
 
-        initVerticalToolbarPanel(resEditor, resVerticalToolbarPanel);
+        initVerticalToolbarPanel(resEditor, resVerticalToolbarPanel, simpleTypeEnum, responseBodyFile);
 
         if (Objects.equals(simpleTypeEnum, SimpleTypeEnum.IMAGE)) {
             ImageEditorImpl imageEditor = new ImageEditorImpl(project, responseBodyFile);
@@ -121,7 +131,7 @@ public class HttpDashboardForm implements Disposable {
         }
     }
 
-    private void initVerticalToolbarPanel(Editor target, JPanel jPanel) {
+    private void initVerticalToolbarPanel(Editor target, JPanel jPanel, SimpleTypeEnum resType, VirtualFile resBodyFile) {
         ActionManager actionManager = ActionManager.getInstance();
 
         AnAction viewSettingsAction = new ViewSettingsAction(target);
@@ -129,6 +139,14 @@ public class HttpDashboardForm implements Disposable {
 
         ActionGroup actionGroup = (ActionGroup) actionManager.getAction("httpDashboardVerticalGroup");
         defaultActionGroup.addAll(actionGroup);
+
+        if (Objects.equals(resType, SimpleTypeEnum.HTML) || Objects.equals(resType, SimpleTypeEnum.PDF)) {
+            resBodyFile.putUserData(HttpKey.INSTANCE.getHttpDashboardBinaryBodyKey(), true);
+
+            defaultActionGroup.add(new PreviewFileAction(resBodyFile));
+        } else if (Objects.equals(resType, SimpleTypeEnum.IMAGE)) {
+            defaultActionGroup.add(new PreviewFileAction(resBodyFile));
+        }
 
         ActionToolbar toolbar = actionManager.createActionToolbar("httpDashboardVerticalToolbar", defaultActionGroup, false);
         toolbar.setTargetComponent(target.getComponent());
