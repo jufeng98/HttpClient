@@ -3,12 +3,18 @@ package org.javamaster.httpclient.action.dashboard.view
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.actionSystem.ex.CustomComponentAction
+import com.intellij.openapi.actionSystem.impl.ActionButtonWithText
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.util.FileContentUtilCore
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.parser.HttpFile
+import java.awt.Dimension
+import javax.swing.JComponent
 
 
 /**
@@ -23,6 +29,7 @@ class ContentTypeActionGroup(private val editor: Editor) {
     val actions = listOf(textAction, jsonAction, xmlAction, htmlAction)
 
     private val allowContentTypes = mutableSetOf<ContentType>()
+
     var contentType: ContentType?
 
     init {
@@ -32,26 +39,6 @@ class ContentTypeActionGroup(private val editor: Editor) {
         allowContentTypes.addAll(htmlAction.relateTypes)
 
         contentType = calContentType()
-
-        if (contentType == null) {
-            disableActions()
-        } else {
-            switchActionContentType(contentType!!)
-        }
-    }
-
-    private fun disableActions() {
-        actions.forEach {
-            it.disableAction()
-        }
-    }
-
-    private fun switchActionContentType(contentType: ContentType) {
-        this.contentType = contentType
-
-        actions.forEach {
-            it.switchContentType(contentType)
-        }
     }
 
     private fun calContentType(): ContentType? {
@@ -71,18 +58,38 @@ class ContentTypeActionGroup(private val editor: Editor) {
         return contentType
     }
 
-    abstract inner class ContentTypeAction(val relateTypes: Set<ContentType>, text: String) :
-        AnAction(text, null, null) {
+    private fun changeActionButtons(contentType: ContentType) {
+        this.contentType = contentType
 
-        fun disableAction() {
-            templatePresentation.isEnabled = false
+        actions.forEach {
+            it.changeActionButton(contentType)
+        }
+    }
+
+    abstract inner class ContentTypeAction(val relateTypes: Set<ContentType>, text: String) :
+        AnAction(text, null, null), CustomComponentAction {
+
+        private lateinit var actionButtonWithText: ActionButtonWithText
+
+        override fun createCustomComponent(presentation: Presentation, place: String): JComponent {
+            actionButtonWithText = ActionButtonWithText(this, presentation, place, Dimension(20, 20))
+
+            changeActionButton(contentType)
+
+            return actionButtonWithText
         }
 
-        fun switchContentType(contentType: ContentType) {
+        fun changeActionButton(contentType: ContentType?) {
+            if (contentType == null) {
+                actionButtonWithText.isEnabled = false
+                actionButtonWithText.presentation.icon = HttpIcons.BLANK
+                return
+            }
+
             if (relateTypes.contains(contentType)) {
-                templatePresentation.icon = AllIcons.Actions.Checked
+                actionButtonWithText.presentation.icon = AllIcons.Actions.Checked
             } else {
-                templatePresentation.icon = null
+                actionButtonWithText.presentation.icon = HttpIcons.BLANK
             }
         }
 
@@ -98,11 +105,11 @@ class ContentTypeActionGroup(private val editor: Editor) {
                 return
             }
 
-            val type = relateTypes.iterator().next()
+            val contentType = relateTypes.iterator().next()
 
-            httpFile.virtualFile.putUserData(httpDashboardContentTypeKey, type)
+            httpFile.virtualFile.putUserData(httpDashboardContentTypeKey, contentType)
 
-            switchActionContentType(type)
+            changeActionButtons(contentType)
 
             FileContentUtilCore.reparseFiles(httpFile.virtualFile)
         }
