@@ -10,7 +10,7 @@ import javax.swing.JComponent
  */
 class HttpSettingsEditor(env: String, httpFilePath: String, project: Project) :
     SettingsEditor<HttpRunConfiguration>() {
-    val configSettingsForm = ConfigSettingsForm()
+    private val configSettingsForm = ConfigSettingsForm()
 
     init {
         configSettingsForm.initForm(env, httpFilePath, project)
@@ -29,9 +29,7 @@ class HttpSettingsEditor(env: String, httpFilePath: String, project: Project) :
     }
 
     override fun isReadyForApply(): Boolean {
-        val triple = configSettingsForm.pair
-
-        return triple.second.isNotBlank()
+        return true
     }
 
     override fun createEditor(): JComponent {

@@ -24,6 +24,8 @@ public class ConfigSettingsForm {
     private JComboBox<String> envComboBox;
     private TextFieldWithBrowseButton httpFileBtn;
 
+    private final String noEnv = ChooseEnvironmentAction.Companion.getNoEnv();
+
     public void initForm(String env, String httpFilePath, @NotNull Project project) {
         File httpFile = new File(httpFilePath);
 
@@ -34,8 +36,8 @@ public class ConfigSettingsForm {
 
     public Pair<String, String> getPair() {
         String env = envComboBox.getSelectedItem() + "";
-        if (env.equals(ChooseEnvironmentAction.Companion.getNoEnv())) {
-            env = null;
+        if (env.equals(noEnv)) {
+            env = "";
         }
 
         String fileName = httpFileBtn.getText();
@@ -48,7 +50,7 @@ public class ConfigSettingsForm {
 
         Set<String> presetEnvSet = envFileService.getPresetEnvSet(httpFile.getParentFile().getAbsolutePath());
 
-        List<String> envNameList = Lists.newArrayList(ChooseEnvironmentAction.Companion.getNoEnv());
+        List<String> envNameList = Lists.newArrayList(noEnv);
         envNameList.addAll(presetEnvSet);
 
         envComboBox.setModel(new CollectionComboBoxModel<>(envNameList));
