@@ -16,6 +16,8 @@
 - Support reading file content as http request body
 - Support saving http response body to file
 - When the response Content-Type is image type, it supports direct preview of the corresponding image
+- Support preview HTML response
+- Support preview pdf response
 - Support searching SpringMVC Api in the SearchEverywhere Dialog
 
 ### Getting Started
@@ -39,7 +41,9 @@
 - 支持 JavaScript 语法的前置处理器、后置处理器和全局前置处理器(JavaScript 语法高亮功能依赖 WebCalm 插件. 在安装 WebCalm 插件后, 请重启 IDEA, 否则 js 语法高亮功能不会生效)
 - 支持从文件读取内容作为请求体
 - 支持保存响应到文件
-- 当响应的 Content-Type 为图片时支持直接预览响应的图片
+- 当响应的 Content-Type 为图片类型时支持直接预览响应的图片
+- 支持预览 HTML 响应
+- 支持预览 pdf 响应
 - 支持在 SearchEverywhere 窗口搜索 SpringMVC Api
 
 ### 开始使用
@@ -101,9 +105,17 @@
 
 ![res-to-file.png](./images/res-to-file.png)
 
-#### 预览图片
+#### 预览图片响应
 
 ![preview-img.png](./images/preview-image.png)
+
+#### 预览 HTML 响应
+
+![preview-html.gif](./images/preview-html.gif)
+
+#### 预览 pdf 响应
+
+![preview-pdf.png](images/preview-pdf.png)
 
 #### multipart请求
 
