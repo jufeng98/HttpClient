@@ -3,55 +3,72 @@ package org.javamaster.httpclient.action.dashboard.view
 import com.intellij.codeInsight.folding.impl.FoldingUtil
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.actionSystem.ex.CustomComponentAction
+import com.intellij.openapi.actionSystem.impl.ActionButtonWithText
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ui.getUserData
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiDocumentManager
+import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.action.dashboard.DashboardBaseAction
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.HttpFile
+import java.awt.Dimension
+import javax.swing.JComponent
 
 /**
  * @author yudong
  */
 class FoldHeadersAction(private val editor: Editor, private val req: Boolean) :
-    DashboardBaseAction(nls("fold.headers.default"), null) {
-    init {
-        val foldHeader = if (req) {
-            reqFoldHeader
-        } else {
-            resFoldHeader
-        }
+    DashboardBaseAction(nls("fold.headers.default"), null), CustomComponentAction {
 
-        if (foldHeader) {
-            templatePresentation.icon = AllIcons.Actions.Checked
-        } else {
-            templatePresentation.icon = null
-        }
+    override fun createCustomComponent(presentation: Presentation, place: String): JComponent {
+        val actionButtonWithText = ActionButtonWithText(this, presentation, place, Dimension(20, 20))
+
+        val foldHeader = getFoldHeader()
+
+        setFoldHeader(foldHeader, actionButtonWithText)
+
+        return actionButtonWithText
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        val foldHeader = if (req) {
-            reqFoldHeader = !reqFoldHeader
-            reqFoldHeader
-        } else {
-            resFoldHeader = !resFoldHeader
-            resFoldHeader
-        }
+        val actionButtonWithText = e.inputEvent!!.component as ActionButtonWithText
 
-        setFoldHeader(foldHeader)
+        val foldHeader = switchFoldHeader()
+
+        setFoldHeader(foldHeader, actionButtonWithText)
     }
 
-    private fun setFoldHeader(foldHeader: Boolean) {
+    private fun setFoldHeader(foldHeader: Boolean, actionButtonWithText: ActionButtonWithText) {
         val component = editor.component
         component.getUserData(httpDashboardResTypeKey) ?: return
 
         setEditorFoldHeader(foldHeader, editor)
 
         if (foldHeader) {
-            templatePresentation.icon = AllIcons.Actions.Checked
+            actionButtonWithText.presentation.icon = AllIcons.Actions.Checked
         } else {
-            templatePresentation.icon = null
+            actionButtonWithText.presentation.icon = HttpIcons.BLANK
+        }
+    }
+
+    private fun getFoldHeader(): Boolean {
+        return if (req) {
+            reqFoldHeader
+        } else {
+            resFoldHeader
+        }
+    }
+
+    private fun switchFoldHeader(): Boolean {
+        return if (req) {
+            reqFoldHeader = !reqFoldHeader
+            reqFoldHeader
+        } else {
+            resFoldHeader = !resFoldHeader
+            resFoldHeader
         }
     }
 
