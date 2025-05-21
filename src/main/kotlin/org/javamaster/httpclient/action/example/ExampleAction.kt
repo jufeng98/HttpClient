@@ -10,7 +10,7 @@ import com.intellij.openapi.vfs.VfsUtil
 /**
  * @author yudong
  */
-abstract class ExampleAction : AnAction() {
+abstract class ExampleAction(text: String) : AnAction(text) {
 
     override fun getActionUpdateThread(): ActionUpdateThread {
         return ActionUpdateThread.BGT
