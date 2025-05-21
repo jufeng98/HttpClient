@@ -10,6 +10,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.psi.HttpScriptBody
 import ris58h.webcalm.javascript.JavaScriptLanguage
 import ris58h.webcalm.javascript.psi.*
@@ -56,15 +57,12 @@ object WebCalm {
     private fun resolveJsVariable(variableName: String, jsFile: JavaScriptFile): PsiElement? {
         val expressions = PsiTreeUtil.findChildrenOfType(jsFile, JavaScriptCallExpression::class.java)
         for (expression in expressions) {
-            val dotExpression =
-                PsiTreeUtil.getChildOfType(expression, JavaScriptMemberDotExpression::class.java) ?: continue
+            val dotExpression = PsiTreeUtil.getChildOfType(expression, JavaScriptMemberDotExpression::class.java)
+                ?: continue
 
             val arguments = PsiTreeUtil.getChildOfType(expression, JavaScriptArguments::class.java) ?: continue
 
-            val text = dotExpression.text
-            if (text == "request.variables.set") {
-                return findArgumentName(variableName, arguments) ?: continue
-            } else if (text == "client.global.set") {
+            if (JsFacade.interestedExpressions.contains(dotExpression.text)) {
                 return findArgumentName(variableName, arguments) ?: continue
             }
         }

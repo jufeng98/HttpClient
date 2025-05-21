@@ -14,6 +14,7 @@ import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTreeUtil.findChildrenOfType
 import com.intellij.psi.util.PsiTreeUtil.getChildOfType
+import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.psi.HttpScriptBody
 
 object JavaScript {
@@ -94,10 +95,7 @@ object JavaScript {
 
             val arguments = getChildOfType(expression, clzJSArgumentList) ?: continue
 
-            val text = dotExpression.text
-            if (text == "request.variables.set") {
-                return findArgumentName(variableName, arguments, clzJSLiteralExpression) ?: continue
-            } else if (text == "client.global.set") {
+            if (JsFacade.interestedExpressions.contains(dotExpression.text)) {
                 return findArgumentName(variableName, arguments, clzJSLiteralExpression) ?: continue
             }
         }

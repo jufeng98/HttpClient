@@ -13,6 +13,11 @@ import org.javamaster.httpclient.psi.HttpScriptBody
  */
 object JsFacade {
 
+    val interestedExpressions = setOf(
+        "request.variables.set",
+        "client.global.set",
+    )
+
     fun resolveJsVariable(
         variableName: String,
         project: Project,
