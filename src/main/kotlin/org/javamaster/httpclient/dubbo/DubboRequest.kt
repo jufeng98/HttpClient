@@ -8,6 +8,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiPrimitiveType
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
@@ -59,7 +60,7 @@ class DubboRequest(
     }
 
     private val targetInterfaceName: String
-    private val paramTypeNameArray: Array<String?>
+    private val paramTypeNameArray: Array<String>
     private val paramValueArray: Array<Any?>
 
     init {
@@ -89,8 +90,20 @@ class DubboRequest(
 
             paramTypeNameArray = targetMethod.parameterList.parameters
                 .map {
-                    val psiType = PsiUtils.resolvePsiType(it.type)!!
-                    psiType.qualifiedName
+                    val type = it.type
+                    val psiType = PsiUtils.resolvePsiType(type)
+                    if (psiType != null) {
+                        val qualifiedName = psiType.qualifiedName
+                        if (qualifiedName != null) {
+                            return@map qualifiedName
+                        }
+                    }
+
+                    if (type is PsiPrimitiveType) {
+                        return@map type.name
+                    }
+
+                    throw IllegalArgumentException(NlsBundle.nls("param.not.resolved", it.name))
                 }
                 .toTypedArray()
 
@@ -136,6 +149,18 @@ class DubboRequest(
     }
 
     override fun sendAsync(): CompletableFuture<Pair<ByteArray, Long>> {
+        httpReqDescList.add("/*$CR_LF")
+        httpReqDescList.add(NlsBundle.nls("call.dubbo.name", methodName) + CR_LF)
+
+        httpReqDescList.add(
+            NlsBundle.nls("call.dubbo.param.typeNames", paramTypeNameArray.contentToString()) + CR_LF
+        )
+        
+        httpReqDescList.add(
+            NlsBundle.nls("call.dubbo.params", paramValueArray.contentToString()) + CR_LF
+        )
+        httpReqDescList.add("*/$CR_LF")
+
         val commentTabName = "### $tabName$CR_LF"
         httpReqDescList.add(commentTabName)
         httpReqDescList.add("DUBBO $url$CR_LF")
@@ -163,7 +188,7 @@ class DubboRequest(
                 val genericService = referenceConfig.get()
 
                 val start = System.currentTimeMillis()
-                val result: Any
+                val result: Any?
                 try {
                     result = genericService.`$invoke`(methodName, paramTypeNameArray, paramValueArray)
                 } finally {
