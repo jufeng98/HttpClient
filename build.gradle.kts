@@ -28,7 +28,7 @@ dependencies {
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.modules.json")
         bundledModule("com.intellij.modules.json")
-        plugin("ris58h.webcalm:0.11.1")
+        plugin("ris58h.webcalm","0.12")
     }
 
     implementation("org.mozilla:rhino:1.7.15")

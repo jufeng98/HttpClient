@@ -167,14 +167,21 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
     @JsBridge(jsFun = "setHeader(name, value)")
     fun setHeader(name: String, value: String?) {
         val list = LinkedList<String>()
-        list.add(value ?: "")
+        val str = value ?: ""
+        list.add(str)
 
         headerMap[name] = list
+
+        GlobalLog.log(NlsBundle.nls("req.header.set", name, str))
     }
 
     @JsBridge(jsFun = "addHeader(name, value)")
     fun addHeader(name: String, value: String?) {
-        headerMap.add(name, value ?: "")
+        val str = value ?: ""
+
+        headerMap.add(name, str)
+
+        GlobalLog.log(NlsBundle.nls("req.header.add", name, str))
     }
 
     @JsBridge(jsFun = "callJava(methodName, arg0, arg1)")

@@ -63,7 +63,12 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     var xmlDoc: Document? = null
     var xPath: XPath? = null
 
-    fun initJsRequestObj(reqInfo: HttpReqInfo, method: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
+    fun initJsRequestObj(
+        reqInfo: HttpReqInfo,
+        method: String,
+        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        selectedEnv: String?,
+    ) {
         val environment = reqInfo.environment
 
         val headers = gson.toJson(reqHeaderMap)
@@ -105,6 +110,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         js += """
             request.method = '$method';
             request.environment = $environment;
+            request.environment.selectedEnv = '$selectedEnv';
             request.environment.get = function(name) {
                 return this[name] !== undefined ? this[name] : null;
             };

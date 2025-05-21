@@ -99,8 +99,8 @@
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
     </context>
   </template>
-  <template name="dtr" value="### request&#10;DUBBO http://$HOST$:$PORT$&#10;Content-Type: application/json&#10;Interface: $INTERFACE$&#10;method: $METHOD$&#10;version: $VERSION$&#10;&#10;{&#10;}"
-            description="DUBBO http://example.com:25230" toReformat="true" toShortenFQNames="false">
+  <template name="dtr" value="### request&#10;DUBBO dubbo://$HOST$:$PORT$&#10;Content-Type: application/json&#10;Interface: $INTERFACE$&#10;Method: $METHOD$&#10;Version: $VERSION$&#10;&#10;{&#10;}"
+            description="DUBBO dubbo://example.com:25230" toReformat="true" toShortenFQNames="false">
     <variable name="HOST" expression="" defaultValue="&quot;localhost&quot;" alwaysStopAt="true"/>
     <variable name="PORT" expression="" defaultValue="&quot;25230&quot;" alwaysStopAt="true"/>
     <variable name="INTERFACE" expression="" defaultValue="&quot;ServiceExchangeDubboService&quot;" alwaysStopAt="true"/>
@@ -113,8 +113,8 @@
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="false" />
     </context>
   </template>
-  <template name="dtrp" value="### request&#10;DUBBO http://$HOST$:$PORT$&#10;Content-Type: application/json&#10;Interface-Name: $INTERFACE_NAME$&#10;method: $METHOD$&#10;version: $VERSION$&#10;Arg0-Type: $ARG0$&#10;&#10;{&#10;  &quot;Arg0-Type&quot;: {}&#10;}"
-            description="DUBBO http://example.com:25230" toReformat="true" toShortenFQNames="false">
+  <template name="dtrp" value="### request&#10;DUBBO dubbo://$HOST$:$PORT$&#10;Content-Type: application/json&#10;Interface-Name: $INTERFACE_NAME$&#10;Method: $METHOD$&#10;Version: $VERSION$&#10;Arg0-Type: $ARG0$&#10;&#10;{&#10;  &quot;Arg0-Type&quot;: {}&#10;}"
+            description="DUBBO dubbo://example.com:25230" toReformat="true" toShortenFQNames="false">
     <variable name="HOST" expression="" defaultValue="&quot;localhost&quot;" alwaysStopAt="true"/>
     <variable name="PORT" expression="" defaultValue="&quot;25230&quot;" alwaysStopAt="true"/>
     <variable name="INTERFACE_NAME" expression="" defaultValue="&quot;org.javamaster.api.serviceorder.dubbo.IMHServiceOrderDubboService&quot;" alwaysStopAt="true"/>

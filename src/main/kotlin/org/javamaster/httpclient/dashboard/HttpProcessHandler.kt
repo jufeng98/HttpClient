@@ -16,7 +16,6 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.dashboard.support.JsTgz
@@ -27,6 +26,7 @@ import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.HttpFile
@@ -63,7 +63,7 @@ import javax.swing.JPanel
 /**
  * @author yudong
  */
-class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String?) : ProcessHandler() {
+class HttpProcessHandler(private val httpMethod: HttpMethod, private val selectedEnv: String?) : ProcessHandler() {
     val tabName = HttpUtils.getTabName(httpMethod)
     val project = httpMethod.project
 
@@ -189,7 +189,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
-        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap)
+        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap, selectedEnv)
 
         val beforeJsResList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
 
@@ -283,7 +283,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, selectedEnv: String
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
-        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap)
+        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap, selectedEnv)
 
         val resList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
         println("js执行结果:${resList}")

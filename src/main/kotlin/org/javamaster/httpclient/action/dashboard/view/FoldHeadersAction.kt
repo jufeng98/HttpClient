@@ -85,7 +85,12 @@ class FoldHeadersAction(private val editor: Editor, private val req: Boolean) :
                 return
             }
 
-            val header = psiFile.getRequestBlocks()[0].request.header ?: return
+            val requestBlocks = psiFile.getRequestBlocks()
+            if (requestBlocks.isEmpty()) {
+                return
+            }
+
+            val header = requestBlocks[0].request.header ?: return
 
             val foldingModel = editor.foldingModel
 

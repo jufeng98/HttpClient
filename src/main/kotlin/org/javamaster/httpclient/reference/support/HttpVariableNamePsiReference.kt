@@ -149,7 +149,10 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
 
                 val preJsFiles = HttpUtils.getPreJsFiles(httpFile as HttpFile,true)
 
-                return JsFacade.resolveJsVariable(variableName, preJsFiles)
+                val resolved = JsFacade.resolveJsVariable(variableName, preJsFiles)
+                if (resolved != null) {
+                    return resolved
+                }
             }
 
             val scriptBodyList = HttpUtils.getAllPostJsScripts(httpFile)
