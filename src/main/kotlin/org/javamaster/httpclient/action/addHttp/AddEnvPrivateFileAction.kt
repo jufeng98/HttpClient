@@ -6,11 +6,8 @@ import org.javamaster.httpclient.nls.NlsBundle
 /**
  * @author yudong
  */
-class AddEnvPrivateFileAction : AddAction() {
-
-    override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("create.env.private.json.file")
-    }
+@Suppress("ActionPresentationInstantiatedInCtor")
+class AddEnvPrivateFileAction : AddAction(NlsBundle.nls("create.env.private.json.file")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         createAndReInitEnvCompo(true)

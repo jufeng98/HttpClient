@@ -22,10 +22,8 @@ import java.awt.datatransfer.DataFlavor
 /**
  * @author yudong
  */
-class ImportCurlAction : AddAction() {
-    init {
-        templatePresentation.text = NlsBundle.nls("import.from.curl")
-    }
+@Suppress("ActionPresentationInstantiatedInCtor")
+class ImportCurlAction : AddAction(NlsBundle.nls("import.from.curl")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project!!

@@ -6,10 +6,8 @@ import org.javamaster.httpclient.nls.NlsBundle
 /**
  * @author yudong
  */
-class AddPostMultipartTextAction : AddAction() {
-    override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("post.multi.text.req")
-    }
+@Suppress("ActionPresentationInstantiatedInCtor")
+class AddPostMultipartTextAction : AddAction(NlsBundle.nls("post.multi.text.req")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         startLiveTemplate("mptr")

@@ -19,7 +19,7 @@ import org.javamaster.httpclient.utils.NotifyUtil.notifyWarn
 /**
  * @author yudong
  */
-abstract class AddAction : AnAction() {
+abstract class AddAction(name: String) : AnAction(name) {
 
     override fun getActionUpdateThread(): ActionUpdateThread {
         return ActionUpdateThread.BGT

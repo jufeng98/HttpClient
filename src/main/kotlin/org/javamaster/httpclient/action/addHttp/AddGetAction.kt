@@ -6,10 +6,8 @@ import org.javamaster.httpclient.nls.NlsBundle
 /**
  * @author yudong
  */
-class AddGetAction : AddAction() {
-    override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("get.req")
-    }
+@Suppress("ActionPresentationInstantiatedInCtor")
+class AddGetAction : AddAction(NlsBundle.nls("get.req")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         startLiveTemplate("gtr")

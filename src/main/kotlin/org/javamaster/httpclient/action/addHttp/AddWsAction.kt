@@ -6,10 +6,8 @@ import org.javamaster.httpclient.nls.NlsBundle
 /**
  * @author yudong
  */
-class AddWsAction : AddAction() {
-    override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("ws.req")
-    }
+@Suppress("ActionPresentationInstantiatedInCtor")
+class AddWsAction : AddAction(NlsBundle.nls("ws.req")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         startLiveTemplate("wsr")

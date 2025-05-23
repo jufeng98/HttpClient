@@ -6,10 +6,8 @@ import org.javamaster.httpclient.nls.NlsBundle
 /**
  * @author yudong
  */
-class AddDubboNameAction : AddAction() {
-    override fun update(event: AnActionEvent) {
-        event.presentation.text = NlsBundle.nls("dubbo.req.name")
-    }
+@Suppress("ActionPresentationInstantiatedInCtor")
+class AddDubboNameAction : AddAction(NlsBundle.nls("dubbo.req.name")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         startLiveTemplate("dtrp")
