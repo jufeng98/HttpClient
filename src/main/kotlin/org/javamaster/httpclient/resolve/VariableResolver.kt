@@ -35,9 +35,12 @@ class VariableResolver(
             val globalVariableValue = it.globalVariableValue ?: return@forEach
 
             val variable = globalVariableValue.variable
-            val value = if (variable != null) {
+
+            var value = ""
+            if (variable != null) {
                 val variableName = variable.variableName
-                if (variableName == null) {
+
+                value += if (variableName == null) {
                     variable.text
                 } else {
                     resolveVariable(
@@ -47,9 +50,9 @@ class VariableResolver(
                         variable.variableArgs?.toArgsList()
                     ) ?: variable.text
                 }
-            } else {
-                globalVariableValue.value ?: ""
             }
+
+            value += globalVariableValue.value ?: ""
 
             map[name] = value
         }
