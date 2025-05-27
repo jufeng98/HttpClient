@@ -80,6 +80,8 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
                 }
                 return text ?: "..."
             }
+        } else if (type == HttpTypes.BLOCK_COMMENT) {
+            return "/* ... */"
         }
 
         return "..."
@@ -89,7 +91,7 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         val foldHeader = getFoldHeaderFlag(node)
 
         val type = node.elementType
-        return (foldHeader && type == HttpTypes.HEADER) || type == HttpTypes.OUTPUT_FILE
+        return (foldHeader && type == HttpTypes.HEADER) || type == HttpTypes.OUTPUT_FILE || type == HttpTypes.BLOCK_COMMENT
     }
 
     private fun getFoldHeaderFlag(node: ASTNode): Boolean {
@@ -107,6 +109,10 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
 
     private fun collectDescriptors(node: ASTNode): MutableList<FoldingDescriptor> {
         val descriptors = mutableListOf<FoldingDescriptor>()
+
+        val blockCommentNodes = node.getChildren(TokenSet.create(HttpTypes.BLOCK_COMMENT))
+
+        blockCommentNodes.forEach { descriptors.add(FoldingDescriptor(it, it.textRange)) }
 
         val requestBlockNodes = node.getChildren(TokenSet.create(HttpTypes.REQUEST_BLOCK))
 
