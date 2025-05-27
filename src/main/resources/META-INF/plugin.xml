@@ -292,6 +292,10 @@
         <defaultLiveTemplates file="liveTemplates/request.xml"/>
         <liveTemplateContext contextId="REQUEST"
                              implementation="org.javamaster.httpclient.liveTemplates.HttpTemplateContextType"/>
+        <liveTemplateContext baseContextId="REQUEST" contextId="REQUEST_RESPONSE_HANDLER_PATH"
+                             implementation="org.javamaster.httpclient.liveTemplates.HttpJsHandlerTemplateContextType"/>
+        <liveTemplateContext contextId="HTTP_CLIENT_ENVIRONMENT_INSIDE_ENVIRONMENT"
+                             implementation="org.javamaster.httpclient.liveTemplates.HttpEnvFileTemplateContextType"/>
         <multiHostInjector
                 implementation="org.javamaster.httpclient.inject.ScriptBodyInjectionBackupContributor"/>
         <lang.commenter language="http" implementationClass="org.javamaster.httpclient.commenter.HttpCommenter"/>
@@ -329,6 +333,7 @@
         <scratch.creationHelper language="http"
                                 implementationClass="org.javamaster.httpclient.scratch.HttpRequestScratchFileCreationHelper"/>
         <fileEditorProvider implementation="org.javamaster.httpclient.provider.HtmlFileEditorProvider"/>
+        <copyPastePreProcessor implementation="org.javamaster.httpclient.copyPaste.CurlCopyPastePreProcessor"/>
         <intentionAction>
             <language>http</language>
             <className>org.javamaster.httpclient.intent.HttpSwitchEnvironmentIntention</className>

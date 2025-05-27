@@ -370,7 +370,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, private val selecte
     private fun handleWs(url: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
         loadingRemover?.run()
 
-        wsRequest = WsRequest(url, reqHeaderMap, this, paramMap)
+        wsRequest = WsRequest(url, reqHeaderMap, this, paramMap, httpDashboardForm)
 
         httpDashboardForm.initWsResData(wsRequest)
 

@@ -3,7 +3,6 @@ package org.javamaster.httpclient.ws
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.util.Disposer.newDisposable
 import com.intellij.util.application
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.dashboard.HttpProcessHandler
@@ -29,12 +28,13 @@ class WsRequest(
     private val reqHeaderMap: LinkedMultiValueMap<String, String>,
     private val httpProcessHandler: HttpProcessHandler,
     private val paramMap: Map<String, String>,
+    parentDisposable: Disposable,
 ) : Disposable {
     private var webSocket: WebSocket? = null
     lateinit var resConsumer: Consumer<String>
 
     init {
-        Disposer.register(this, newDisposable())
+        Disposer.register(parentDisposable, this)
     }
 
     fun connect() {

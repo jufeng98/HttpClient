@@ -192,7 +192,7 @@
       <option name="REQUEST_AUTH_HEADER" value="true" />
     </context>
   </template>
-  <template name="jsonPath" value="{% client.log(jsonPath(response.body, &quot;$END$&quot;)) %}" description="Filter response with JSON Path" toReformat="false" toShortenFQNames="true">
+  <template name="jsonPath" value="client.log(response.body.jsonPath.evaluate(&quot;$END$&quot;)) " description="Filter response with JSON Path" toReformat="false" toShortenFQNames="true">
     <context>
       <option name="REQUEST_RESPONSE_HANDLER_PATH" value="true" />
     </context>
