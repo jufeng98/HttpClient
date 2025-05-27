@@ -32,10 +32,8 @@ class ImportCurlAction : AddAction(NlsBundle.nls("import.from.curl")) {
 
         var initialValue = "curl -i https://www.baidu.com"
         if (!contents.isNullOrEmpty()) {
-            val trim = contents.trim()
-
-            if (trim.startsWith("curl")) {
-                initialValue = trim
+            if (CurlUtils.isCurlString(contents)) {
+                initialValue = contents
             }
         }
 
@@ -55,6 +53,7 @@ class ImportCurlAction : AddAction(NlsBundle.nls("import.from.curl")) {
                         curlRequestTmp = CurlParser(str).parseToCurlRequest()
                     } catch (e: Exception) {
                         NotifyUtil.notifyError(project, e.toString())
+
                         return false
                     }
 
@@ -65,63 +64,73 @@ class ImportCurlAction : AddAction(NlsBundle.nls("import.from.curl")) {
 
         val curlRequest = curlRequestTmp!!
 
-        val sb = StringBuilder()
-        sb.append("\n\n")
-        sb.append("### curl request\n")
-        sb.append("/*\n")
-        sb.append(CurlUtils.createCurlStringComment(curlStr))
-        sb.append("*/\n")
-        sb.append(curlRequest.httpMethod!!)
-        sb.append(" ")
-        sb.append(curlRequest.toString())
-        sb.append("\n")
-        curlRequest.headers.forEach {
-            sb.append("${it.key}: ${it.value}\n")
-        }
-        sb.append("\n")
+        val httpStr = toHttpRequest(curlRequest, curlStr)
 
-        val multipartBoundary = curlRequest.multipartBoundary
-        if (multipartBoundary == null) {
-            val textToSend = curlRequest.textToSend
-            if (textToSend != null) {
-                sb.append(textToSend)
-                sb.append("\n\n")
-            }
-        } else {
-            curlRequest.formBodyPart.forEach {
-                sb.append("--${multipartBoundary}\n")
-
-                val bodyPart = it.toBodyPart()
-                for (field in bodyPart.header.fields) {
-                    sb.append("${field.name}: ${field.body}\n")
-                }
-
-                sb.append("\n")
-
-                val body = bodyPart.body
-                if (body is FileBody) {
-                    body.file
-                    sb.append("< ${body.file.absolutePath.replace("\\", "/")}\n")
-                } else if (body is StringBody) {
-                    sb.append("${body.reader.readText()}\n")
-                }
-            }
-
-            sb.append("--${multipartBoundary}--")
-        }
 
         val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
         val document = FileDocumentManager.getInstance().getDocument(editor.virtualFile)!!
 
         runWriteAction {
             WriteCommandAction.runWriteCommandAction(project) {
-                document.insertString(document.textLength, sb.toString())
+                document.insertString(document.textLength, httpStr)
 
                 editor.caretModel.moveToOffset(document.textLength)
 
                 editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
             }
         }
+    }
+
+    companion object {
+
+        fun toHttpRequest(curlRequest: CurlRequest, curlStr: String): String {
+            val sb = StringBuilder()
+            sb.append("\n\n")
+            sb.append("### curl request\n")
+            sb.append("/*\n")
+            sb.append(CurlUtils.createCurlStringComment(curlStr))
+            sb.append("*/\n")
+            sb.append(curlRequest.httpMethod!!)
+            sb.append(" ")
+            sb.append(curlRequest.toString())
+            sb.append("\n")
+            curlRequest.headers.forEach {
+                sb.append("${it.key}: ${it.value}\n")
+            }
+            sb.append("\n")
+
+            val multipartBoundary = curlRequest.multipartBoundary
+            if (multipartBoundary == null) {
+                val textToSend = curlRequest.textToSend
+                if (textToSend != null) {
+                    sb.append(textToSend)
+                    sb.append("\n\n")
+                }
+            } else {
+                curlRequest.formBodyPart.forEach {
+                    sb.append("--${multipartBoundary}\n")
+
+                    val bodyPart = it.toBodyPart()
+                    for (field in bodyPart.header.fields) {
+                        sb.append("${field.name}: ${field.body}\n")
+                    }
+
+                    sb.append("\n")
+
+                    val body = bodyPart.body
+                    if (body is FileBody) {
+                        sb.append("< ${body.file.absolutePath.replace("\\", "/")}\n")
+                    } else if (body is StringBody) {
+                        sb.append("${body.reader.readText()}\n")
+                    }
+                }
+
+                sb.append("--${multipartBoundary}--")
+            }
+
+            return sb.toString()
+        }
+
     }
 
 }
