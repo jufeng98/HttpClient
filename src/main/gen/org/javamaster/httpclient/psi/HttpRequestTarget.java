@@ -29,8 +29,10 @@ public interface HttpRequestTarget extends PsiElement {
   @Nullable
   HttpVariable getVariable();
 
-  @NotNull String getUrl();
+  @NotNull
+  String getUrl();
 
-  @NotNull PsiReference @NotNull [] getReferences();
+  @NotNull
+  PsiReference[] getReferences();
 
 }

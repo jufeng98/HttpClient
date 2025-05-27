@@ -67,7 +67,7 @@ globalVariableName ::= AT globalNameFlag {
 private globalNameFlag ::= GLOBAL_NAME {
     name = "variable name"
 }
-globalVariableValue ::= GLOBAL_VALUE | variable {
+globalVariableValue ::= variable GLOBAL_VALUE | GLOBAL_VALUE variable | GLOBAL_VALUE | variable {
     methods = [
         getValue
     ]

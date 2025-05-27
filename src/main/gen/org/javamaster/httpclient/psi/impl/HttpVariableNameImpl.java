@@ -41,7 +41,8 @@ public class HttpVariableNameImpl extends ASTWrapperPsiElement implements HttpVa
   }
 
   @Override
-  public @NotNull String getName() {
+  @NotNull
+  public String getName() {
     return HttpPsiImplUtil.getName(this);
   }
 
@@ -51,7 +52,8 @@ public class HttpVariableNameImpl extends ASTWrapperPsiElement implements HttpVa
   }
 
   @Override
-  public @NotNull PsiReference @NotNull [] getReferences() {
+  @NotNull
+  public PsiReference[] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
   }
 

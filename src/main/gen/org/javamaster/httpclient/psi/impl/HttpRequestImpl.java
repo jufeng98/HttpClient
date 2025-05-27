@@ -78,27 +78,32 @@ public class HttpRequestImpl extends ASTWrapperPsiElement implements HttpRequest
   }
 
   @Override
-  public @Nullable ContentType getContentType() {
+  @Nullable
+  public ContentType getContentType() {
     return HttpPsiImplUtil.getContentType(this);
   }
 
   @Override
-  public @Nullable String getContentTypeBoundary() {
+  @Nullable
+  public String getContentTypeBoundary() {
     return HttpPsiImplUtil.getContentTypeBoundary(this);
   }
 
   @Override
-  public @Nullable Integer getContentLength() {
+  @Nullable
+  public Integer getContentLength() {
     return HttpPsiImplUtil.getContentLength(this);
   }
 
   @Override
-  public @NotNull Version getHttpVersion() {
+  @NotNull
+  public Version getHttpVersion() {
     return HttpPsiImplUtil.getHttpVersion(this);
   }
 
   @Override
-  public @NotNull String getHttpHost() {
+  @NotNull
+  public String getHttpHost() {
     return HttpPsiImplUtil.getHttpHost(this);
   }
 

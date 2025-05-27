@@ -29,22 +29,26 @@ public class HttpGlobalVariableNameImpl extends ASTWrapperPsiElement implements 
   }
 
   @Override
-  public @NotNull String getName() {
+  @NotNull
+  public String getName() {
     return HttpPsiImplUtil.getName(this);
   }
 
   @Override
-  public @NotNull PsiElement setName(@NotNull String name) {
+  @NotNull
+  public PsiElement setName(@NotNull String name) {
     return HttpPsiImplUtil.setName(this, name);
   }
 
   @Override
-  public @NotNull PsiReference @NotNull [] getReferences() {
+  @NotNull
+  public PsiReference[] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
   }
 
   @Override
-  public @NotNull PsiElement getNameIdentifier() {
+  @NotNull
+  public PsiElement getNameIdentifier() {
     return HttpPsiImplUtil.getNameIdentifier(this);
   }
 

@@ -34,7 +34,8 @@ public class HttpGlobalVariableValueImpl extends ASTWrapperPsiElement implements
   }
 
   @Override
-  public @Nullable String getValue() {
+  @Nullable
+  public String getValue() {
     return HttpPsiImplUtil.getValue(this);
   }
 

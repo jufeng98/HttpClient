@@ -11,6 +11,7 @@ public interface HttpQueryParameterKey extends PsiElement {
   @Nullable
   HttpVariable getVariable();
 
-  @NotNull PsiReference @NotNull [] getReferences();
+  @NotNull
+  PsiReference[] getReferences();
 
 }

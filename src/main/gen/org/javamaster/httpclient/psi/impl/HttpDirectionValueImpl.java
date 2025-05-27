@@ -41,7 +41,8 @@ public class HttpDirectionValueImpl extends ASTWrapperPsiElement implements Http
   }
 
   @Override
-  public @NotNull PsiReference @NotNull [] getReferences() {
+  @NotNull
+  public PsiReference[] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
   }
 

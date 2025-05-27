@@ -35,7 +35,8 @@ public class HttpHeaderFieldValueImpl extends ASTWrapperPsiElement implements Ht
   }
 
   @Override
-  public @NotNull PsiReference @NotNull [] getReferences() {
+  @NotNull
+  public PsiReference[] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
   }
 

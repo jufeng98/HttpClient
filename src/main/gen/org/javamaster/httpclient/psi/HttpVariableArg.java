@@ -14,8 +14,10 @@ public interface HttpVariableArg extends PsiElement {
   @Nullable
   PsiElement getString();
 
-  @NotNull PsiReference @NotNull [] getReferences();
+  @NotNull
+  PsiReference[] getReferences();
 
-  @NotNull Object getValue();
+  @NotNull
+  Object getValue();
 
 }

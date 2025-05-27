@@ -279,15 +279,39 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // GLOBAL_VALUE | variable
+  // variable GLOBAL_VALUE | GLOBAL_VALUE variable | GLOBAL_VALUE | variable
   public static boolean globalVariableValue(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariableValue")) return false;
     if (!nextTokenIs(b, "<global variable value>", GLOBAL_VALUE, START_VARIABLE_BRACE)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_VALUE, "<global variable value>");
-    r = consumeToken(b, GLOBAL_VALUE);
+    r = globalVariableValue_0(b, l + 1);
+    if (!r) r = globalVariableValue_1(b, l + 1);
+    if (!r) r = consumeToken(b, GLOBAL_VALUE);
     if (!r) r = variable(b, l + 1);
     exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // variable GLOBAL_VALUE
+  private static boolean globalVariableValue_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalVariableValue_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = variable(b, l + 1);
+    r = r && consumeToken(b, GLOBAL_VALUE);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // GLOBAL_VALUE variable
+  private static boolean globalVariableValue_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalVariableValue_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, GLOBAL_VALUE);
+    r = r && variable(b, l + 1);
+    exit_section_(b, m, null, r);
     return r;
   }
 

@@ -10,12 +10,16 @@ public interface HttpHeader extends PsiElement {
   @NotNull
   List<HttpHeaderField> getHeaderFieldList();
 
-  @Nullable HttpHeaderField getContentTypeField();
+  @Nullable
+  HttpHeaderField getContentTypeField();
 
-  @Nullable HttpHeaderField getInterfaceField();
+  @Nullable
+  HttpHeaderField getInterfaceField();
 
-  @Nullable String getContentDispositionName();
+  @Nullable
+  String getContentDispositionName();
 
-  @Nullable String getContentDispositionFileName();
+  @Nullable
+  String getContentDispositionFileName();
 
 }

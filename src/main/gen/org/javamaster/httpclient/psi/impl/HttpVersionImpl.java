@@ -29,7 +29,8 @@ public class HttpVersionImpl extends ASTWrapperPsiElement implements HttpVersion
   }
 
   @Override
-  public @NotNull Version getVersion() {
+  @NotNull
+  public Version getVersion() {
     return HttpPsiImplUtil.getVersion(this);
   }
 

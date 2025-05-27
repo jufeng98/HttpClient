@@ -14,6 +14,7 @@ public interface HttpFilePath extends PsiElement {
   @Nullable
   HttpVariable getVariable();
 
-  @NotNull PsiReference @NotNull [] getReferences();
+  @NotNull
+  PsiReference[] getReferences();
 
 }

@@ -11,6 +11,7 @@ public interface HttpHeaderFieldValue extends PsiElement {
   @NotNull
   List<HttpVariable> getVariableList();
 
-  @NotNull PsiReference @NotNull [] getReferences();
+  @NotNull
+  PsiReference[] getReferences();
 
 }

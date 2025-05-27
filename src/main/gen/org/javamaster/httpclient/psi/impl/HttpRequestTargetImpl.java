@@ -71,12 +71,14 @@ public class HttpRequestTargetImpl extends ASTWrapperPsiElement implements HttpR
   }
 
   @Override
-  public @NotNull String getUrl() {
+  @NotNull
+  public String getUrl() {
     return HttpPsiImplUtil.getUrl(this);
   }
 
   @Override
-  public @NotNull PsiReference @NotNull [] getReferences() {
+  @NotNull
+  public PsiReference[] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
   }
 

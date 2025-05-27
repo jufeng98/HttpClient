@@ -8,6 +8,7 @@ import java.net.http.HttpClient.Version;
 
 public interface HttpVersion extends PsiElement {
 
-  @NotNull Version getVersion();
+  @NotNull
+  Version getVersion();
 
 }
