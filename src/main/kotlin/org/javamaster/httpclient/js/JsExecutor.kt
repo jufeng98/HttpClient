@@ -68,10 +68,13 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         method: String,
         reqHeaderMap: LinkedMultiValueMap<String, String>,
         selectedEnv: String?,
+        fileScopeVariableMap: LinkedHashMap<String, String>,
     ) {
         val environment = reqInfo.environment
 
         val headers = gson.toJson(reqHeaderMap)
+
+        val globalVariables = gson.toJson(fileScopeVariableMap)
 
         val jsBody = HttpUtils.convertReqBody(reqInfo.reqBody)
 
@@ -116,6 +119,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             };
             
             request.headers = $headers;
+            request.globalVariables = $globalVariables;
             request.headers.all = function() {
                 return headersAll(this);
             };

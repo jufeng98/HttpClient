@@ -189,7 +189,7 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, private val selecte
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
-        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap, selectedEnv)
+        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap, selectedEnv, variableResolver.fileScopeVariableMap)
 
         val beforeJsResList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
 
@@ -283,7 +283,13 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, private val selecte
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
-        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap, selectedEnv)
+        jsExecutor.initJsRequestObj(
+            reqInfo,
+            methodType,
+            reqHeaderMap,
+            selectedEnv,
+            variableResolver.fileScopeVariableMap
+        )
 
         val resList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
         println("js执行结果:${resList}")

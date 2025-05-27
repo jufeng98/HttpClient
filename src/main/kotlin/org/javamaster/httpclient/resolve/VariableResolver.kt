@@ -23,7 +23,7 @@ class VariableResolver(
     private val project = jsExecutor.project
     val httpFileParentPath = httpFile.virtualFile.parent.path
 
-    private val fileScopeVariableMap = getFileGlobalVariables()
+    val fileScopeVariableMap = getFileGlobalVariables()
 
     fun getFileGlobalVariables(): LinkedHashMap<String, String> {
         val map = LinkedHashMap<String, String>()
