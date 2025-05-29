@@ -67,11 +67,8 @@ globalVariableName ::= AT globalNameFlag {
 private globalNameFlag ::= GLOBAL_NAME {
     name = "variable name"
 }
-globalVariableValue ::= variable GLOBAL_VALUE | GLOBAL_VALUE variable | GLOBAL_VALUE | variable {
-    methods = [
-        getValue
-    ]
-}
+globalVariableValue ::= (variable | globalLiteralValue)+
+globalLiteralValue ::= GLOBAL_VALUE
 globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1

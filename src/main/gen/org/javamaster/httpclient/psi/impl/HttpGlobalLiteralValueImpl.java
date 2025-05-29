@@ -11,32 +11,20 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpGlobalVariableValueImpl extends ASTWrapperPsiElement implements HttpGlobalVariableValue {
+public class HttpGlobalLiteralValueImpl extends ASTWrapperPsiElement implements HttpGlobalLiteralValue {
 
-  public HttpGlobalVariableValueImpl(@NotNull ASTNode node) {
+  public HttpGlobalLiteralValueImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitGlobalVariableValue(this);
+    visitor.visitGlobalLiteralValue(this);
   }
 
   @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof HttpVisitor) accept((HttpVisitor)visitor);
     else super.accept(visitor);
-  }
-
-  @Override
-  @NotNull
-  public List<HttpGlobalLiteralValue> getGlobalLiteralValueList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpGlobalLiteralValue.class);
-  }
-
-  @Override
-  @NotNull
-  public List<HttpVariable> getVariableList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpVariable.class);
   }
 
 }

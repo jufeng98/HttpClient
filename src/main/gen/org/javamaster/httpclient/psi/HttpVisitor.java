@@ -48,6 +48,10 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitGlobalLiteralValue(@NotNull HttpGlobalLiteralValue o) {
+    visitPsiElement(o);
+  }
+
   public void visitGlobalScript(@NotNull HttpGlobalScript o) {
     visitPsiElement(o);
   }

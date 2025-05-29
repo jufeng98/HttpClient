@@ -5,12 +5,6 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface HttpGlobalVariableValue extends PsiElement {
-
-  @NotNull
-  List<HttpGlobalLiteralValue> getGlobalLiteralValueList();
-
-  @NotNull
-  List<HttpVariable> getVariableList();
+public interface HttpGlobalLiteralValue extends PsiElement {
 
 }

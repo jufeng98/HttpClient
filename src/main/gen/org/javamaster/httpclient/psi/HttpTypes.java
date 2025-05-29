@@ -18,6 +18,7 @@ public interface HttpTypes {
   IElementType FILE_PATH_CONTENT = new HttpElementType("FILE_PATH_CONTENT");
   IElementType FRAGMENT = new HttpElementType("FRAGMENT");
   IElementType GLOBAL_HANDLER = new HttpElementType("GLOBAL_HANDLER");
+  IElementType GLOBAL_LITERAL_VALUE = new HttpElementType("GLOBAL_LITERAL_VALUE");
   IElementType GLOBAL_SCRIPT = new HttpElementType("GLOBAL_SCRIPT");
   IElementType GLOBAL_VARIABLE = new HttpElementType("GLOBAL_VARIABLE");
   IElementType GLOBAL_VARIABLE_NAME = new HttpElementType("GLOBAL_VARIABLE_NAME");
@@ -141,6 +142,9 @@ public interface HttpTypes {
       }
       else if (type == GLOBAL_HANDLER) {
         return new HttpGlobalHandlerImpl(node);
+      }
+      else if (type == GLOBAL_LITERAL_VALUE) {
+        return new HttpGlobalLiteralValueImpl(node);
       }
       else if (type == GLOBAL_SCRIPT) {
         return new HttpGlobalScriptImpl(node);
