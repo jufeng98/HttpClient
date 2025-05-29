@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 2048 2048">
-    <rect fill-opacity="0.9" x="0" y="0" width="2048" height="2048" rx="256" ry="256" fill="#db6f06"></rect>
+    <rect fill-opacity="1" x="0" y="0" width="2048" height="2048" rx="256" ry="256" fill="#fffaeb"/>
     <g transform="scale(0.55)">
-        <path fill-opacity="1" transform="translate(-38.860000000000014, 2580) rotate(180) scale(-1, 1)" fill="#ffffff"
-              d="M399 1327v-561h234q140 0 218.5 74t78.5 207t-78 206.5t-219 73.5h-234zM197 1493h436q250 0 379 -113.5t129 -332.5q0 -221 -128.5 -334t-379.5 -113h-234v-600h-202v1493z"></path>
-        <path fill-opacity="1" transform="translate(1194.1399999999999, 2580) rotate(180) scale(-1, 1)" fill="#ffffff"
-              d="M147 573v920h203v-1012q0 -109 6 -155.5t21 -71.5q32 -59 92.5 -89t146.5 -30q87 0 147 30t93 89q15 25 21 71t6 154v1014h202v-920q0 -229 -28.5 -325.5t-98.5 -159.5q-66 -59 -151 -88t-191 -29q-105 0 -190 29t-152 88q-69 62 -98 160.5t-29 324.5z"></path>
-        <path fill-opacity="1" transform="translate(2427.14, 2580) rotate(180) scale(-1, 1)" fill="#ffffff"
-              d="M47 1493h1139v-170h-467v-1323h-203v1323h-469v170z"></path>
+        <path fill-opacity="1" transform="translate(-38.860000000000014, 2580) rotate(180) scale(-1, 1)" fill="#cf9b3d"
+              d="M399 1327v-561h234q140 0 218.5 74t78.5 207t-78 206.5t-219 73.5h-234zM197 1493h436q250 0 379 -113.5t129 -332.5q0 -221 -128.5 -334t-379.5 -113h-234v-600h-202v1493z"/>
+        <path fill-opacity="1" transform="translate(1194.1399999999999, 2580) rotate(180) scale(-1, 1)" fill="#cf9b3d"
+              d="M147 573v920h203v-1012q0 -109 6 -155.5t21 -71.5q32 -59 92.5 -89t146.5 -30q87 0 147 30t93 89q15 25 21 71t6 154v1014h202v-920q0 -229 -28.5 -325.5t-98.5 -159.5q-66 -59 -151 -88t-191 -29q-105 0 -190 29t-152 88q-69 62 -98 160.5t-29 324.5z"/>
+        <path fill-opacity="1" transform="translate(2427.14, 2580) rotate(180) scale(-1, 1)" fill="#cf9b3d"
+              d="M47 1493h1139v-170h-467v-1323h-203v1323h-469v170z"/>
     </g>
 </svg>
