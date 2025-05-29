@@ -9,6 +9,7 @@ import com.intellij.util.system.OS
 import io.ktor.http.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
@@ -198,6 +199,27 @@ enum class InnerVariableEnum(val methodName: String) {
             val seconds = LocalDateTime.of(LocalDate.now().plusDays(count.toLong()), LocalTime.of(0, 0, 0))
                 .toEpochSecond(ZoneOffset.of("+08:00")) * 1000
             return seconds.toString()
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
+    DATE("\$date") {
+        override fun typeText(): String {
+            return NlsBundle.nls("date.desc", methodName)
+        }
+
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is Int) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val count = args[0] as Int
+
+            val date = DateUtils.addDays(Date(), count)
+
+            return DateFormatUtils.format(date, "yyyy-MM-dd")
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -408,7 +430,6 @@ enum class InnerVariableEnum(val methodName: String) {
                 args[0] as String
             }
 
-            @Suppress("DEPRECATION")
             val process = Runtime.getRuntime().exec(command)
             process.waitFor(3, TimeUnit.SECONDS)
 

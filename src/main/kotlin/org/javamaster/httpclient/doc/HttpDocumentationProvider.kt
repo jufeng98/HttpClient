@@ -19,6 +19,7 @@ import org.javamaster.httpclient.env.EnvFileService.Companion.getJsonLiteralValu
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.reference.support.HttpVariableNamePsiReference.JsGlobalVariableValueFakePsiElement
 import org.javamaster.httpclient.reference.support.QueryNamePsiReference
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
@@ -61,7 +62,7 @@ class HttpDocumentationProvider : DocumentationProvider {
 
             return getDocumentation(
                 name,
-                NlsBundle.nls("value") + " " + (globalVariableValue?.value ?: globalVariableValue?.variable?.text)
+                NlsBundle.nls("value") + " " + (globalVariableValue?.text)
             )
         }
 
@@ -105,6 +106,10 @@ class HttpDocumentationProvider : DocumentationProvider {
             }
 
             return null
+        }
+
+        if (element is JsGlobalVariableValueFakePsiElement) {
+            return getDocumentation(element.variableName, "${NlsBundle.nls("value")} ${element.value}")
         }
 
         return null

@@ -358,6 +358,8 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     private fun evalJs(jsStr: String, rowNum: Int, fileName: String, scriptableObject: ScriptableObject) {
         try {
             context.evaluateString(scriptableObject, jsStr, fileName, rowNum, null)
+
+            JsGlobalVariableMap = getJsGlobalVariables()
         } catch (e: WrappedException) {
             System.err.println("WrappedException")
             e.printStackTrace()
@@ -409,13 +411,14 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         return res.toString()
     }
 
-    fun getGlobalVariable(key: String): String? {
+    fun getJsGlobalVariable(key: String): String? {
         val hasKey = ScriptableObject.callMethod(reqScriptableObject, "hasGlobalVariableKey", arrayOf(key)) as Boolean
         if (!hasKey) {
             return null
         }
 
         val res = ScriptableObject.callMethod(reqScriptableObject, "getGlobalVariable", arrayOf(key)) ?: return "null"
+
         return res.toString()
     }
 
@@ -464,6 +467,8 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             jsStr = url.readText(StandardCharsets.UTF_8)
             context.evaluateString(global, jsStr, "initGlobal.js", 1, null)
 
+            JsHelper.alreadyInit()
+
             Pair(context, global)
         }
         val context: Context = pair.first
@@ -496,5 +501,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         val xPathFactory: XPathFactory by lazy {
             XPathFactory.newInstance()
         }
+
+        var JsGlobalVariableMap: Map<String, String>? = null
     }
 }

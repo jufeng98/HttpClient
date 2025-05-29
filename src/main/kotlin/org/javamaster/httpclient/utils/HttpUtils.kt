@@ -23,6 +23,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.HttpIcons
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.adapter.DateTypeAdapter
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
@@ -45,6 +47,7 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.util.*
+import javax.swing.Icon
 import kotlin.jvm.optionals.getOrElse
 
 /**
@@ -331,13 +334,11 @@ object HttpUtils {
         }
 
         val filePath = requestMessagesGroup.inputFile?.filePath?.text
-        if (filePath == null) {
-            return if (raw) {
+            ?: return if (raw) {
                 reqStr + CR_LF
             } else {
                 reqStr.replace("\n", "\n    ").replace("'", "'\\''")
             }
-        }
 
         val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
 
@@ -989,6 +990,24 @@ object HttpUtils {
             "HTTP/1.1"
         } else {
             "HTTP/2"
+        }
+    }
+
+    fun pickMethodIcon(method: String): Icon {
+        return when (method) {
+            HttpRequestEnum.GET.name -> HttpIcons.GET
+
+            HttpRequestEnum.POST.name -> HttpIcons.POST
+
+            HttpRequestEnum.PUT.name -> HttpIcons.PUT
+
+            HttpRequestEnum.DELETE.name -> HttpIcons.DELETE
+
+            HttpRequestEnum.DUBBO.name -> HttpIcons.DUBBO
+
+            HttpRequestEnum.WEBSOCKET.name -> HttpIcons.WS
+
+            else -> HttpIcons.FILE
         }
     }
 

@@ -27,9 +27,9 @@ class RunAllRequestAction : AnAction(nls("run.all.tooltip"), null, HttpIcons.RUN
         } else {
             switchRunBtnToStopping(presentation)
 
-            runRequests(
-                project, topForm
-            ) { switchRunBtnToInitialing(presentation) }
+            runRequests(project, topForm) {
+                switchRunBtnToInitialing(presentation)
+            }
         }
     }
 

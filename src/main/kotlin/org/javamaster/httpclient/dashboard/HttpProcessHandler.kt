@@ -63,9 +63,11 @@ import javax.swing.JPanel
 /**
  * @author yudong
  */
-class HttpProcessHandler(private val httpMethod: HttpMethod, private val selectedEnv: String?) : ProcessHandler() {
+class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: String?) : ProcessHandler() {
     val tabName = HttpUtils.getTabName(httpMethod)
     val project = httpMethod.project
+    var httpStatus: Int? = null
+    var costTimes: Long? = null
 
     private val httpFile = httpMethod.containingFile as HttpFile
     private val parentPath = httpFile.virtualFile.parent.path
@@ -189,7 +191,13 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, private val selecte
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
-        jsExecutor.initJsRequestObj(reqInfo, methodType, reqHeaderMap, selectedEnv, variableResolver.fileScopeVariableMap)
+        jsExecutor.initJsRequestObj(
+            reqInfo,
+            methodType,
+            reqHeaderMap,
+            selectedEnv,
+            variableResolver.fileScopeVariableMap
+        )
 
         val beforeJsResList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
 
@@ -423,6 +431,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, private val selecte
         future.whenCompleteAsync { pair, throwable ->
             runInEdt {
                 application.runWriteAction {
+                    httpStatus = 200
+                    costTimes = pair.second
+
                     if (throwable != null) {
                         val info = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
@@ -501,6 +512,9 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, private val selecte
             runInEdt {
                 application.runWriteAction {
                     try {
+                        httpStatus = response?.statusCode()
+                        costTimes = System.currentTimeMillis() - start
+
                         if (throwable != null) {
                             val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
                             dealResponse(httpInfo, parentPath)
@@ -509,13 +523,11 @@ class HttpProcessHandler(private val httpMethod: HttpMethod, private val selecte
 
                         val size = Formats.formatFileSize(response.body().size.toLong())
 
-                        val consumeTimes = System.currentTimeMillis() - start
-
                         val resHeaderList = convertToResHeaderDescList(response)
 
                         val resTriple = convertToResPair(response)
 
-                        val comment = nls("res.desc", response.statusCode(), consumeTimes, size)
+                        val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
 
                         val httpResDescList = mutableListOf("// $comment$CR_LF")
 

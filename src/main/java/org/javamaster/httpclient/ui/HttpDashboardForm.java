@@ -213,6 +213,9 @@ public class HttpDashboardForm implements Disposable {
     }
 
     public void initWsResData(WsRequest wsRequest) {
+        reqPanel.remove(reqVerticalToolbarPanel);
+        resPanel.remove(resVerticalToolbarPanel);
+
         GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
         GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
         constraints = (GridConstraints) constraints.clone();
@@ -299,10 +302,6 @@ public class HttpDashboardForm implements Disposable {
 
     @Override
     public void dispose() {
-        historyMap.values().forEach(HttpDashboardForm::disposeEditors);
 
-        historyMap.clear();
-
-        editorList.clear();
     }
 }

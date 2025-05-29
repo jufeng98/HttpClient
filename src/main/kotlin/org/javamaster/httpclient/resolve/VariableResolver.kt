@@ -6,7 +6,9 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.psi.HttpGlobalLiteralValue
 import org.javamaster.httpclient.psi.HttpGlobalVariable
+import org.javamaster.httpclient.psi.HttpVariable
 import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import java.util.regex.Pattern
 
@@ -34,25 +36,32 @@ class VariableResolver(
             val name = it.globalVariableName.name
             val globalVariableValue = it.globalVariableValue ?: return@forEach
 
-            val variable = globalVariableValue.variable
+            val value = globalVariableValue.children.joinToString("") { innerIt ->
+                when (innerIt) {
+                    is HttpVariable -> {
+                        val variableName = innerIt.variableName
 
-            var value = ""
-            if (variable != null) {
-                val variableName = variable.variableName
+                        if (variableName == null) {
+                            innerIt.text
+                        } else {
+                            resolveVariable(
+                                variableName.name,
+                                emptyMap(),
+                                variableName.isBuiltin,
+                                innerIt.variableArgs?.toArgsList()
+                            ) ?: innerIt.text
+                        }
+                    }
 
-                value += if (variableName == null) {
-                    variable.text
-                } else {
-                    resolveVariable(
-                        variableName.name,
-                        emptyMap(),
-                        variableName.isBuiltin,
-                        variable.variableArgs?.toArgsList()
-                    ) ?: variable.text
+                    is HttpGlobalLiteralValue -> {
+                        innerIt.text
+                    }
+
+                    else -> {
+                        ""
+                    }
                 }
             }
-
-            value += globalVariableValue.value ?: ""
 
             map[name] = value
         }
@@ -122,7 +131,7 @@ class VariableResolver(
             return innerVariable
         }
 
-        innerVariable = jsExecutor.getGlobalVariable(variable)
+        innerVariable = jsExecutor.getJsGlobalVariable(variable)
         if (innerVariable != null) {
             return innerVariable
         }

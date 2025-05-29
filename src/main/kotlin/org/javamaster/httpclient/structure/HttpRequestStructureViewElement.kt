@@ -14,13 +14,13 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpIcons
-import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
+import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.getTabName
 import javax.swing.Icon
 
@@ -139,24 +139,7 @@ class HttpRequestStructureViewElement private constructor(
             val method = request.method
             tabName = getTabName(method)
 
-            var icon = AllIcons.Actions.Annotate
-            when (method.text) {
-                HttpRequestEnum.GET.name -> {
-                    icon = HttpIcons.GET
-                }
-
-                HttpRequestEnum.POST.name -> {
-                    icon = HttpIcons.POST
-                }
-
-                HttpRequestEnum.PUT.name -> {
-                    icon = HttpIcons.PUT
-                }
-
-                HttpRequestEnum.DELETE.name -> {
-                    icon = HttpIcons.DELETE
-                }
-            }
+            val icon = HttpUtils.pickMethodIcon(method.text)
 
             children.add(
                 create(request, tabName, location.toString(), icon, StringUtil.isNotEmpty(originalHost))

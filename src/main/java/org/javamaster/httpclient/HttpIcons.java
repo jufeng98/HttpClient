@@ -15,6 +15,8 @@ public class HttpIcons {
     public static final Icon PUT = IconLoader.getIcon("/icons/put.svg", HttpIcons.class);
     public static final Icon DELETE = IconLoader.getIcon("/icons/delete.svg", HttpIcons.class);
     public static final Icon IMAGE = IconLoader.getIcon("/icons/image.svg", HttpIcons.class);
+    public static final Icon DUBBO = IconLoader.getIcon("/icons/dubbo.svg", HttpIcons.class);
+    public static final Icon WS = IconLoader.getIcon("/icons/ws.svg", HttpIcons.class);
 
     public static final Icon RUN_ALL = IconLoader.getIcon("/icons/runAll.svg", HttpIcons.class);
     public static final Icon STOP = IconLoader.getIcon("/icons/stop.svg", HttpIcons.class);

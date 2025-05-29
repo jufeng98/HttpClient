@@ -53,7 +53,8 @@ object HttpPsiImplUtil {
 
     @JvmStatic
     fun getNameIdentifier(variableName: HttpGlobalVariableName): PsiElement {
-        return getNextSiblingByType(variableName.firstChild, HttpTypes.GLOBAL_NAME, false)!!
+        val firstChild = variableName.firstChild
+        return getNextSiblingByType(firstChild, HttpTypes.GLOBAL_NAME, false) ?: firstChild
     }
 
     @JvmStatic
@@ -64,11 +65,6 @@ object HttpPsiImplUtil {
     @JvmStatic
     fun getReferences(element: HttpQueryParameterKey): Array<PsiReference> {
         return ReferenceProvidersRegistry.getReferencesFromProviders(element)
-    }
-
-    @JvmStatic
-    fun getValue(variableValue: HttpGlobalVariableValue): String? {
-        return getNextSiblingByType(variableValue.firstChild, HttpTypes.GLOBAL_VALUE, false)?.text
     }
 
     @JvmStatic

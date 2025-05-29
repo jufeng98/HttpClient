@@ -2,6 +2,7 @@ package org.javamaster.httpclient.reference.support
 
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.json.psi.JsonProperty
+import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -9,10 +10,12 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiReferenceBase
+import com.intellij.psi.impl.FakePsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.completion.support.SlashEndInsertHandler
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
+import org.javamaster.httpclient.js.JsHelper
 import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpFilePath
@@ -23,6 +26,7 @@ import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PRE
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
 import java.nio.file.Paths
+import javax.swing.Icon
 
 /**
  * @author yudong
@@ -105,11 +109,15 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
 
             if (builtin) {
                 val innerVariableEnum = InnerVariableEnum.getEnum(variableName)
+
                 if (InnerVariableEnum.isFolderEnum(innerVariableEnum)) {
                     val path = innerVariableEnum!!.exec(httpFileParentPath, project) ?: return null
+
                     val virtualFile = VirtualFileManager.getInstance().findFileByNioPath(Paths.get(path)) ?: return null
+
                     return PsiManager.getInstance(project).findDirectory(virtualFile)
                 }
+
                 return null
             }
 
@@ -127,7 +135,17 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
 
             val jsonLiteral = EnvFileService.getEnvEleLiteral(variableName, selectedEnv, httpFileParentPath, project)
 
-            return PsiTreeUtil.getParentOfType(jsonLiteral, JsonProperty::class.java)
+            val jsonProperty = PsiTreeUtil.getParentOfType(jsonLiteral, JsonProperty::class.java)
+            if (jsonProperty != null) {
+                return jsonProperty
+            }
+
+            val value = JsHelper.getJsGlobalVariable(variableName)
+            if (value != null) {
+                return JsGlobalVariableValueFakePsiElement(element, variableName, value)
+            }
+
+            return null
         }
 
         private fun tryResolveInJsHandler(
@@ -147,7 +165,7 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                     return jsVariable
                 }
 
-                val preJsFiles = HttpUtils.getPreJsFiles(httpFile as HttpFile,true)
+                val preJsFiles = HttpUtils.getPreJsFiles(httpFile as HttpFile, true)
 
                 val resolved = JsFacade.resolveJsVariable(variableName, preJsFiles)
                 if (resolved != null) {
@@ -168,6 +186,35 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                         .withTypeText(it.typeText(), true)
                 }
                 .toTypedArray()
+        }
+    }
+
+
+    class JsGlobalVariableValueFakePsiElement(val element: PsiElement, val variableName: String, val value: String) :
+        FakePsiElement() {
+        override fun getParent(): PsiElement {
+            return element
+        }
+
+        override fun canNavigate(): Boolean {
+            return false
+        }
+
+        override fun navigate(requestFocus: Boolean) {
+        }
+
+        override fun getPresentation(): ItemPresentation {
+            return MyItemPresentation
+        }
+
+        object MyItemPresentation : ItemPresentation {
+            override fun getPresentableText(): String {
+                return ""
+            }
+
+            override fun getIcon(unused: Boolean): Icon? {
+                return null
+            }
         }
     }
 }
