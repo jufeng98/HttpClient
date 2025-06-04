@@ -26,6 +26,7 @@ import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.mock.MockServer
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls
@@ -94,6 +95,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
     private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
+    private var mockServerFuture: CompletableFuture<Void>? = null
 
     var hasError = false
 
@@ -217,8 +219,17 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
             HttpRequestEnum.DUBBO.name -> handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
 
+            HttpRequestEnum.MOCK_SERVER.name -> handleMockServer(url, reqHeaderMap)
+
             else -> handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
         }
+    }
+
+    private fun handleMockServer(
+        url: String,
+        reqHeaderMap: LinkedMultiValueMap<String, String>,
+    ) {
+        mockServerFuture = MockServer.startServerAsync(url, reqHeaderMap, request, variableResolver)
     }
 
     fun prepareJsAndConvertToCurl(raw: Boolean, consumer: Consumer<String>) {
@@ -682,6 +693,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         }
 
         wsRequest?.abortConnect()
+
+        mockServerFuture?.cancel(true)
 
         val code = if (hasError) {
             FAILED

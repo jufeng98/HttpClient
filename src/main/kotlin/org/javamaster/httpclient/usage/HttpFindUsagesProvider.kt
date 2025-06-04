@@ -5,7 +5,6 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.psi.HttpGlobalVariable
 import org.javamaster.httpclient.psi.HttpGlobalVariableName
 import org.javamaster.httpclient.psi.HttpVariableName
 
@@ -42,7 +41,7 @@ class HttpFindUsagesProvider : FindUsagesProvider {
                 StringUtil.notNullize(element.text)
             }
 
-            is HttpGlobalVariable -> {
+            is HttpGlobalVariableName -> {
                 StringUtil.notNullize(element.text)
             }
 

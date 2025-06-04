@@ -176,6 +176,17 @@ enum class HttpRequestEnum {
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
+    },
+    MOCK_SERVER {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            bodyPublisher: HttpRequest.BodyPublisher,
+            paramMap: Map<String, String>,
+        ): HttpRequest {
+            throw UnsupportedOperationException()
+        }
     }
     ;
 

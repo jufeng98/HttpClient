@@ -64,6 +64,7 @@
             <ul>
                 <li><b>5.1.0</b></li>
                 <ul>
+                    <li>新增格式化功能</li>
                     <li>bug修复及功能优化</li>
                 </ul>
                 <li><b>5.0.0</b></li>
@@ -338,6 +339,8 @@
                                 implementationClass="org.javamaster.httpclient.scratch.HttpRequestScratchFileCreationHelper"/>
         <fileEditorProvider implementation="org.javamaster.httpclient.provider.HtmlFileEditorProvider"/>
         <copyPastePreProcessor implementation="org.javamaster.httpclient.copyPaste.CurlCopyPastePreProcessor"/>
+        <lang.formatter language="http"
+                        implementationClass="org.javamaster.httpclient.formatter.HttpFormattingModelBuilder"/>
         <intentionAction>
             <language>http</language>
             <className>org.javamaster.httpclient.intent.HttpSwitchEnvironmentIntention</className>
