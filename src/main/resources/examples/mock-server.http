@@ -1,0 +1,18 @@
+### mock server1
+MOCKSERVER http://localhost
+Content-Type: application/json
+
+{
+  "title": "{{$random.book.title}}",
+  "time": "{{$isoTimestamp}}"
+}
+
+### mock server2
+# @responseStatus 200
+MOCKSERVER http://localhost:8080
+Content-Type: application/json
+
+{
+  "title": "{{$random.book.title}}",
+  "time": "{{$isoTimestamp}}"
+}

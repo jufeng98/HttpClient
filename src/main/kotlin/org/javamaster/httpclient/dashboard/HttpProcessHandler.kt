@@ -52,6 +52,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.OutputStream
 import java.lang.reflect.InvocationTargetException
+import java.net.ServerSocket
 import java.net.http.HttpClient.Version
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -95,7 +96,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
     private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
-    private var mockServerFuture: CompletableFuture<Void>? = null
+    private var serverSocket: ServerSocket? = null
 
     var hasError = false
 
@@ -225,11 +226,14 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         }
     }
 
-    private fun handleMockServer(
-        url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
-    ) {
-        mockServerFuture = MockServer.startServerAsync(url, reqHeaderMap, request, variableResolver)
+    private fun handleMockServer(url: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
+        loadingRemover?.run()
+
+        val mockServer = MockServer()
+
+        httpDashboardForm.initMockServerForm(mockServer)
+
+        serverSocket = mockServer.startServerAsync(url, reqHeaderMap, request, variableResolver, paramMap)
     }
 
     fun prepareJsAndConvertToCurl(raw: Boolean, consumer: Consumer<String>) {
@@ -397,7 +401,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         wsRequest = WsRequest(url, reqHeaderMap, this, paramMap, httpDashboardForm)
 
-        httpDashboardForm.initWsResData(wsRequest)
+        httpDashboardForm.initWsForm(wsRequest)
 
         wsRequest!!.connect()
     }
@@ -694,7 +698,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         wsRequest?.abortConnect()
 
-        mockServerFuture?.cancel(true)
+        serverSocket?.close()
 
         val code = if (hasError) {
             FAILED

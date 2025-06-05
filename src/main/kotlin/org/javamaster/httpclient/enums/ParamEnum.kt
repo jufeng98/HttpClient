@@ -14,6 +14,7 @@ enum class ParamEnum(val param: String, val desc: String) {
     TIMEOUT_NAME("timeout", NlsBundle.nls("timeout.desc")),
     REQUIRE("require", NlsBundle.nls("require.desc")),
     IMPORT("import", NlsBundle.nls("import.desc")),
+    RESPONSE_STATUS("responseStatus", NlsBundle.nls("response.status.desc")),
     ;
 
     open fun insertHandler(): InsertHandler<LookupElement>? {
@@ -42,6 +43,7 @@ enum class ParamEnum(val param: String, val desc: String) {
                 CONNECT_TIMEOUT_NAME,
                 READ_TIMEOUT_NAME,
                 TIMEOUT_NAME,
+                RESPONSE_STATUS,
             )
         }
 

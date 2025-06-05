@@ -19,6 +19,7 @@
 - Support preview HTML response
 - Support preview pdf response
 - Support searching SpringMVC Api in the SearchEverywhere Dialog
+- Support Mock Server
 
 ### Getting Started
 
@@ -45,6 +46,7 @@
 - 支持预览 HTML 响应
 - 支持预览 pdf 响应
 - 支持在 SearchEverywhere 窗口搜索 SpringMVC Api
+- 支持 Mock Server
 
 ### 开始使用
 
@@ -120,6 +122,10 @@
 #### multipart请求
 
 ![multipart.png](./images/multipart.png)
+
+#### Mock Server
+
+![mock-server.png](images/mock-server.png)
 
 ## 作者信息
 

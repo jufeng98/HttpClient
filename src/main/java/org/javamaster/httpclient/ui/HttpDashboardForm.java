@@ -8,6 +8,7 @@ import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Document;
@@ -31,6 +32,7 @@ import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
 import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.key.HttpKey;
+import org.javamaster.httpclient.mock.MockServer;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.utils.HttpUiUtils;
@@ -212,7 +214,7 @@ public class HttpDashboardForm implements Disposable {
         responsePanel.add(new JBScrollPane(jPanel), constraintsRes);
     }
 
-    public void initWsResData(WsRequest wsRequest) {
+    public void initWsForm(WsRequest wsRequest) {
         reqPanel.remove(reqVerticalToolbarPanel);
         resPanel.remove(resVerticalToolbarPanel);
 
@@ -247,7 +249,6 @@ public class HttpDashboardForm implements Disposable {
                             Document document = editor.getDocument();
                             document.insertString(document.getTextLength(), s);
 
-
                             Caret caret = editor.getCaretModel().getPrimaryCaret();
                             caret.moveToOffset(document.getTextLength());
 
@@ -255,6 +256,33 @@ public class HttpDashboardForm implements Disposable {
                             scrollingModel.scrollToCaret(ScrollType.RELATIVE);
                         }
                 )
+        );
+    }
+
+    public void initMockServerForm(MockServer mockServer) {
+        mainPanel.remove(splitter);
+        mainPanel.setLayout(new BorderLayout());
+
+        Editor editor = WriteAction.computeAndWait(() ->
+                HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "mockServer.log",
+                        project, tabName, editorList)
+        );
+
+        mainPanel.add(editor.getComponent(), BorderLayout.CENTER);
+
+        mockServer.setResConsumer(res ->
+                ApplicationManager.getApplication().invokeLater(() ->
+                        DocumentUtil.writeInRunUndoTransparentAction(() -> {
+                                    Document document = editor.getDocument();
+                                    document.insertString(document.getTextLength(), res);
+
+                                    Caret caret = editor.getCaretModel().getPrimaryCaret();
+                                    caret.moveToOffset(document.getTextLength());
+
+                                    ScrollingModel scrollingModel = editor.getScrollingModel();
+                                    scrollingModel.scrollToCaret(ScrollType.RELATIVE);
+                                }
+                        ))
         );
     }
 

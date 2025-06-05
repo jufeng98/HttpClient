@@ -23,7 +23,10 @@
                 <li>Support reading file content as http request body</li>
                 <li>Support saving http response body to file</li>
                 <li>When the response Content-Type is image type, it supports direct preview of the corresponding image</li>
+                <li>Support preview HTML response</li>
+                <li>Support preview pdf response</li>
                 <li>Support searching SpringMVC Api in the SearchEverywhere Dialog</li>
+                <li>Support Mock Server</li>
             </ul>
             Getting Started:<br>
             <ol>
@@ -48,7 +51,10 @@
                 <li>支持从文件读取内容作为请求体</li>
                 <li>支持保存响应到文件</li>
                 <li>当响应的 Content-Type 为图片时支持直接预览响应的图片</li>
+                <li>支持预览 HTML 响应</li>
+                <li>支持预览 pdf 响应</li>
                 <li>支持在 SearchEverywhere 窗口搜索 SpringMVC Api</li>
+                <li>支持 Mock Server</li>
             </ul>
             开始使用：<br>
             <ol>
@@ -62,9 +68,10 @@
     <change-notes>
         <![CDATA[
             <ul>
-                <li><b>5.1.0</b></li>
+                <li><b>5.3.0</b></li>
                 <ul>
                     <li>新增格式化功能</li>
+                    <li>新增 Mock Server 功能</li>
                     <li>bug修复及功能优化</li>
                 </ul>
                 <li><b>5.0.0</b></li>
@@ -403,6 +410,7 @@
             <separator/>
             <action class="org.javamaster.httpclient.action.example.WsExampleAction"/>
             <action class="org.javamaster.httpclient.action.example.DubboExampleAction"/>
+            <action class="org.javamaster.httpclient.action.example.MockServerExampleAction"/>
             <separator/>
             <action class="org.javamaster.httpclient.action.example.CryptoJsExampleAction"/>
         </group>
