@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.mock
 
+import com.google.common.net.HttpHeaders
 import com.intellij.util.application
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.enums.ParamEnum
@@ -26,7 +27,6 @@ class MockServer {
 
     fun startServerAsync(
         url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
         request: HttpRequest,
         variableResolver: VariableResolver,
         paramMap: Map<String, String>,
@@ -45,21 +45,15 @@ class MockServer {
 
                             resConsumer.accept(reqStr.replace(CR_LF, "\n") + "\n")
 
-                            val reqBody = computeReqBody(request, variableResolver)
+                            val resBody = computeResInfo(request, variableResolver)
 
-                            val resList = constructResponse(reqHeaderMap, reqBody, paramMap)
+                            val resStr = constructResponse(resBody, paramMap)
 
-                            outputStream.write(resList.joinToString(CR_LF).toByteArray(StandardCharsets.UTF_8))
+                            outputStream.write(resStr.toByteArray(StandardCharsets.UTF_8))
 
                             resConsumer.accept(appendTime(NlsBundle.nls("mock.server.res") + "\n"))
 
-                            resList.forEach {
-                                if (it == CR_LF) {
-                                    resConsumer.accept("\n")
-                                } else {
-                                    resConsumer.accept(it + "\n")
-                                }
-                            }
+                            resConsumer.accept(resStr.replace(CR_LF, "\n") + "\n")
 
                             resConsumer.accept("-----------------------------\n")
                         }
@@ -82,34 +76,51 @@ class MockServer {
         return out.toString()
     }
 
-    private fun computeReqBody(request: HttpRequest, variableResolver: VariableResolver): Any? {
-        return application.runReadAction<Any?> {
-            HttpUtils.convertToReqBody(request, variableResolver)
+    private fun computeResInfo(
+        request: HttpRequest,
+        variableResolver: VariableResolver,
+    ): Pair<Any?, LinkedMultiValueMap<String, String>> {
+        return application.runReadAction<Pair<Any?, LinkedMultiValueMap<String, String>>> {
+            val httpHeaderFields = request.header?.headerFieldList
+            val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
+
+            Pair(HttpUtils.convertToReqBody(request, variableResolver), reqHeaderMap)
         }
     }
 
     private fun constructResponse(
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
-        reqBody: Any?,
+        pair: Pair<Any?, LinkedMultiValueMap<String, String>>,
         paramMap: Map<String, String>,
-    ): MutableList<String> {
+    ): String {
         val statusCode = paramMap[ParamEnum.RESPONSE_STATUS.param]?.toLong() ?: 200
 
-        val list = mutableListOf("HTTP/1.1 $statusCode OK")
+        val list = mutableListOf("HTTP/1.1 $statusCode OK$CR_LF")
 
-        reqHeaderMap.forEach { (t, u) ->
+        pair.second.forEach { (t, u) ->
             u.forEach {
-                list.add("$t: $it")
+                list.add("$t: $it$CR_LF")
             }
         }
 
-        list.add(CR_LF)
+        var length = 0
+        var bodyStr: String? = null
 
-        if (reqBody != null) {
-            list.add(reqBody.toString())
+        val resBody = pair.first
+        if (resBody != null) {
+            bodyStr = resBody.toString()
+
+            length = bodyStr.toByteArray(StandardCharsets.UTF_8).size
         }
 
-        return list
+        list.add("${HttpHeaders.CONTENT_LENGTH}: $length$CR_LF")
+
+        list.add(CR_LF)
+
+        if (bodyStr != null) {
+            list.add(bodyStr)
+        }
+
+        return list.joinToString("")
     }
 
     private fun resolvePort(url: String): Int {

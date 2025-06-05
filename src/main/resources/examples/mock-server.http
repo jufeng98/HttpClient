@@ -1,5 +1,5 @@
 ### mock server1
-MOCKSERVER http://localhost
+MOCK_SERVER http://localhost
 Content-Type: application/json
 
 {
@@ -9,7 +9,7 @@ Content-Type: application/json
 
 ### mock server2
 # @responseStatus 200
-MOCKSERVER http://localhost:8080
+MOCK_SERVER http://localhost:8080
 Content-Type: application/json
 
 {
