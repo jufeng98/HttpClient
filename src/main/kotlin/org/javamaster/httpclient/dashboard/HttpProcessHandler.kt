@@ -220,20 +220,20 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
             HttpRequestEnum.DUBBO.name -> handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
 
-            HttpRequestEnum.MOCK_SERVER.name -> handleMockServer(url)
+            HttpRequestEnum.MOCK_SERVER.name -> handleMockServer()
 
             else -> handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
         }
     }
 
-    private fun handleMockServer(url: String) {
+    private fun handleMockServer() {
         loadingRemover?.run()
 
         val mockServer = MockServer()
 
         httpDashboardForm.initMockServerForm(mockServer)
 
-        serverSocket = mockServer.startServerAsync(url, request, variableResolver, paramMap)
+        serverSocket = mockServer.startServerAsync(request, variableResolver, paramMap)
     }
 
     fun prepareJsAndConvertToCurl(raw: Boolean, consumer: Consumer<String>) {

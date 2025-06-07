@@ -15,6 +15,7 @@ enum class ParamEnum(val param: String, val desc: String) {
     REQUIRE("require", NlsBundle.nls("require.desc")),
     IMPORT("import", NlsBundle.nls("import.desc")),
     RESPONSE_STATUS("responseStatus", NlsBundle.nls("response.status.desc")),
+    STATIC_FOLDER("staticFolder", NlsBundle.nls("static.folder.desc")),
     ;
 
     open fun insertHandler(): InsertHandler<LookupElement>? {
@@ -31,7 +32,10 @@ enum class ParamEnum(val param: String, val desc: String) {
             return@lazy map
         }
 
-        private val filePathParamSet = setOf(IMPORT.param)
+        private val filePathParamSet = setOf(
+            IMPORT.param,
+            STATIC_FOLDER.param,
+        )
 
 
         fun getEnum(param: String): ParamEnum? {
@@ -44,6 +48,7 @@ enum class ParamEnum(val param: String, val desc: String) {
                 READ_TIMEOUT_NAME,
                 TIMEOUT_NAME,
                 RESPONSE_STATUS,
+                STATIC_FOLDER,
             )
         }
 
