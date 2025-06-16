@@ -9,6 +9,7 @@ import org.javamaster.httpclient.nls.NlsBundle
  * @author yudong
  */
 enum class ParamEnum(val param: String, val desc: String) {
+    NO_AUTO_ENCODING("no-auto-encoding", NlsBundle.nls("no.auto.encoding.desc")),
     CONNECT_TIMEOUT_NAME("connectTimeout", NlsBundle.nls("connect.timeout.desc")),
     READ_TIMEOUT_NAME("readTimeout", NlsBundle.nls("read.timeout.desc")),
     TIMEOUT_NAME("timeout", NlsBundle.nls("timeout.desc")),
@@ -49,6 +50,7 @@ enum class ParamEnum(val param: String, val desc: String) {
                 TIMEOUT_NAME,
                 RESPONSE_STATUS,
                 STATIC_FOLDER,
+                NO_AUTO_ENCODING,
             )
         }
 

@@ -91,7 +91,7 @@ class MockServer {
                                     }
                                 } else {
                                     val resStr = if (reqPath == path) {
-                                        val resBody = computeResInfo(request, variableResolver)
+                                        val resBody = computeResInfo(request, variableResolver, paramMap)
 
                                         constructResponse(resBody, paramMap)
                                     } else {
@@ -142,9 +142,10 @@ class MockServer {
     private fun computeResInfo(
         request: HttpRequest,
         variableResolver: VariableResolver,
+        paramMap: Map<String, String>,
     ): Pair<Any?, LinkedMultiValueMap<String, String>> {
         return application.runReadAction<Pair<Any?, LinkedMultiValueMap<String, String>>> {
-            val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
+            val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
             val httpHeaderFields = request.header?.headerFieldList
             val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
@@ -377,7 +378,10 @@ class MockServer {
         }
     }
 
-    private fun resolvePath(request: HttpRequest, variableResolver: VariableResolver): String {
+    private fun resolvePath(
+        request: HttpRequest,
+        variableResolver: VariableResolver,
+    ): String {
         val pathAbsolute = request.requestTarget!!.pathAbsolute
         return if (pathAbsolute != null) {
             variableResolver.resolve(pathAbsolute.text)

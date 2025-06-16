@@ -23,6 +23,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
+import org.intellij.markdown.html.urlEncode
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.adapter.DateTypeAdapter
@@ -189,7 +190,29 @@ object HttpUtils {
         return map
     }
 
-    fun convertToReqBody(request: HttpRequest, variableResolver: VariableResolver): Any? {
+    fun encodeUrl(url: String): String {
+        val split = url.split("?")
+        if (split.size == 1) {
+            return url
+        }
+
+        return split[0] + "?" + encodeQueryParam(split[1])
+    }
+
+    private fun encodeQueryParam(queryParam: String): String {
+        val split = queryParam.split("&")
+
+        return split.joinToString("&") {
+            val list = it.split("=")
+            urlEncode(list[0]) + "=" + urlEncode(list[1])
+        }
+    }
+
+    fun convertToReqBody(
+        request: HttpRequest,
+        variableResolver: VariableResolver,
+        paramMap: Map<String, String>,
+    ): Any? {
         if (request.contentLength != null) {
             throw IllegalArgumentException(NlsBundle.nls("content.length.error"))
         }
@@ -198,7 +221,13 @@ object HttpUtils {
 
         val requestMessagesGroup = body?.requestMessagesGroup
         if (requestMessagesGroup != null) {
-            return handleOrdinaryContent(requestMessagesGroup, variableResolver, request.header)
+            return handleOrdinaryContent(
+                requestMessagesGroup,
+                variableResolver,
+                request.header,
+                request.contentType,
+                paramMap
+            )
         }
 
         val httpMultipartMessage = body?.multipartMessage
@@ -206,7 +235,7 @@ object HttpUtils {
             val boundary = request.contentTypeBoundary
                 ?: throw IllegalArgumentException(NlsBundle.nls("lack.boundary", CONTENT_TYPE))
 
-            return constructMultipartBody(boundary, httpMultipartMessage, variableResolver)
+            return constructMultipartBody(boundary, httpMultipartMessage, variableResolver, paramMap)
         }
 
         return null
@@ -227,14 +256,23 @@ object HttpUtils {
         requestMessagesGroup: HttpRequestMessagesGroup?,
         variableResolver: VariableResolver,
         header: HttpHeader?,
+        contentType: ContentType?,
+        paramMap: Map<String, String>,
     ): Any? {
         requestMessagesGroup ?: return null
+
+        val shouldEncode = contentType == ContentType.APPLICATION_FORM_URLENCODED
+                && !paramMap.containsKey(ParamEnum.NO_AUTO_ENCODING.param)
 
         var reqStr: String? = null
 
         val messageBody = requestMessagesGroup.messageBody
         if (messageBody != null) {
             reqStr = variableResolver.resolve(messageBody.text)
+
+            if (shouldEncode) {
+                reqStr = encodeQueryParam(reqStr)
+            }
         }
 
         val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr
@@ -250,7 +288,11 @@ object HttpUtils {
                 reqStr += CR_LF
             }
 
-            val str = VirtualFileUtils.readNewestContent(file)
+            var str = VirtualFileUtils.readNewestContent(file)
+
+            if (shouldEncode) {
+                str = encodeQueryParam(str)
+            }
 
             reqStr += variableResolver.resolve(str)
 
@@ -270,6 +312,7 @@ object HttpUtils {
         boundary: String,
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
+        paramMap: Map<String, String>,
     ): MutableList<Pair<ByteArray, String>> {
         val byteArrays = mutableListOf<Pair<ByteArray, String>>()
 
@@ -297,7 +340,13 @@ object HttpUtils {
 
                 byteArrays.add(Pair(CR_LF.toByteArray(StandardCharsets.UTF_8), CR_LF))
 
-                val content = handleOrdinaryContent(it.requestMessagesGroup, variableResolver, header)
+                val content = handleOrdinaryContent(
+                    it.requestMessagesGroup,
+                    variableResolver,
+                    it.header,
+                    it.contentType,
+                    paramMap
+                )
 
                 if (content is String) {
                     val tmpContent = content + CR_LF

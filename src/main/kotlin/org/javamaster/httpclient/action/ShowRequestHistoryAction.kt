@@ -69,7 +69,7 @@ class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIco
                         .map { historyBodyFile ->
                             "<> ${tabName}/${historyBodyFile.name}"
                         }
-                        .take(6)
+                        .take(30)
                         .joinToString(CR_LF)
 
                     val content = it + CR_LF + historyBodyFileStrList

@@ -21,6 +21,7 @@ import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.dashboard.support.JsTgz
 import org.javamaster.httpclient.dubbo.DubboHandler
 import org.javamaster.httpclient.dubbo.support.DubboJars
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.handler.RunFileHandler
@@ -175,7 +176,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             .runInBackgroundReadActionAsync {
                 initPreJsFilesContent()
 
-                val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
+                val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
                 val environment = gson.toJson(getEnvMap(project, false))
 
@@ -207,7 +208,11 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
 
-        val url = variableResolver.resolve(requestTarget.url)
+        var url = variableResolver.resolve(requestTarget.url)
+
+        if (!paramMap.containsKey(ParamEnum.NO_AUTO_ENCODING.param)) {
+            url = HttpUtils.encodeUrl(url)
+        }
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
@@ -287,7 +292,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             .runInBackgroundReadActionAsync {
                 initPreJsFilesContent()
 
-                val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
+                val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
                 val environment = gson.toJson(getEnvMap(project, false))
 
@@ -317,7 +322,11 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         val resList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
         println("js执行结果:${resList}")
 
-        val url = variableResolver.resolve(requestTarget.url)
+        var url = variableResolver.resolve(requestTarget.url)
+
+        if (!paramMap.containsKey(ParamEnum.NO_AUTO_ENCODING.param)) {
+            url = HttpUtils.encodeUrl(url)
+        }
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
