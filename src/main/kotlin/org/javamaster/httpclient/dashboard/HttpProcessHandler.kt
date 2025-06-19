@@ -210,7 +210,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         var url = variableResolver.resolve(requestTarget.url)
 
-        if (!paramMap.containsKey(ParamEnum.NO_AUTO_ENCODING.param)) {
+        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
             url = HttpUtils.encodeUrl(url)
         }
 
@@ -324,7 +324,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         var url = variableResolver.resolve(requestTarget.url)
 
-        if (!paramMap.containsKey(ParamEnum.NO_AUTO_ENCODING.param)) {
+        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
             url = HttpUtils.encodeUrl(url)
         }
 

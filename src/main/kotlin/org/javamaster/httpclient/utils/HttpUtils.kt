@@ -262,7 +262,7 @@ object HttpUtils {
         requestMessagesGroup ?: return null
 
         val shouldEncode = contentType == ContentType.APPLICATION_FORM_URLENCODED
-                && !paramMap.containsKey(ParamEnum.NO_AUTO_ENCODING.param)
+                && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
 
         var reqStr: String? = null
 
