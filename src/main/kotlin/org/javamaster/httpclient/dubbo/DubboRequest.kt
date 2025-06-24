@@ -155,7 +155,7 @@ class DubboRequest(
         httpReqDescList.add(
             NlsBundle.nls("call.dubbo.param.typeNames", paramTypeNameArray.contentToString()) + CR_LF
         )
-        
+
         httpReqDescList.add(
             NlsBundle.nls("call.dubbo.params", paramValueArray.contentToString()) + CR_LF
         )

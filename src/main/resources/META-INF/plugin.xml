@@ -68,6 +68,12 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>5.5.0</b></li>
+                <ul>
+                    <li>新增 no-log 指令</li>
+                    <li>查看可用变量窗口支持直接新增或修改变量</li>
+                    <li>bug修复及功能优化</li>
+                </ul>
                 <li><b>5.3.0</b></li>
                 <ul>
                     <li>新增格式化功能</li>

@@ -455,9 +455,6 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         future.whenCompleteAsync { pair, throwable ->
             runInEdt {
                 application.runWriteAction {
-                    httpStatus = 200
-                    costTimes = pair.second
-
                     if (throwable != null) {
                         val info = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
@@ -465,6 +462,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         return@runWriteAction
                     }
+
+                    httpStatus = 200
+                    costTimes = pair.second
 
                     val byteArray = pair.first
                     val consumeTimes = pair.second
@@ -629,7 +629,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             Disposer.register(Disposer.newDisposable(), httpDashboardForm)
         }
 
-        httpDashboardForm.initHttpResContent(httpInfo)
+        httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param))
 
         val myThrowable = httpDashboardForm.throwable
         hasError = myThrowable != null

@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VfsUtil.findFileByIoFile
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.readBytes
 import com.intellij.openapi.vfs.readText
+import com.intellij.testFramework.LightVirtualFile
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.enums.InnerVariableEnum
@@ -97,11 +98,19 @@ object VirtualFileUtils {
         suffix: String,
         project: Project,
         tabName: String,
+        noLog: Boolean,
     ): VirtualFile {
         val parentDir = getDateHistoryDir(project)
 
         val str = StringUtils.defaultString(tabName) + "-" + DateFormatUtils.format(Date(), "hhmmss")
         val path = Path.of(parentDir.toString(), "tmp-$str.$suffix")
+
+        if (noLog) {
+            val lightVirtualFile = LightVirtualFile(path.toFile().name)
+            lightVirtualFile.charset = StandardCharsets.UTF_8
+            lightVirtualFile.setBinaryContent(txtBytes)
+            return lightVirtualFile
+        }
 
         val file = if (Files.exists(path)) {
             path.toFile()

@@ -1,7 +1,6 @@
 package org.javamaster.httpclient.env
 
 import com.intellij.json.JsonElementTypes
-import com.intellij.json.JsonLanguage
 import com.intellij.json.psi.*
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.Service
@@ -12,13 +11,12 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.writeText
 import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.indexing.FileBasedIndex
 import org.javamaster.httpclient.enums.InnerVariableEnum
+import org.javamaster.httpclient.factory.JsonPsiFactory
 import org.javamaster.httpclient.index.HttpEnvironmentIndex.Companion.INDEX_ID
 import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
@@ -104,16 +102,8 @@ class EnvFileService(val project: Project) {
             return
         }
 
-        val text = """
-            {
-                "$key": "",
-            }
-        """.trimIndent()
+        val newProperty = JsonPsiFactory.createStringProperty(project, key, "")
 
-        val psiFileFactory = PsiFileFactory.getInstance(project)
-        val tmpFile = psiFileFactory.createFileFromText("dummy.json", JsonLanguage.INSTANCE, text)
-
-        val newProperty = PsiTreeUtil.findChildOfType(tmpFile, JsonProperty::class.java)!!
         val newComma = HttpPsiUtils.getNextSiblingByType(newProperty, JsonElementTypes.COMMA, false)!!
 
         val propertyList = value.propertyList
@@ -373,17 +363,9 @@ class EnvFileService(val project: Project) {
             envFileName: String,
             project: Project,
         ): JsonLiteral? {
-            val env = selectedEnv ?: COMMON_ENV_NAME
-
             val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return null
 
-            val topLevelValue = jsonFile.topLevelValue
-            if (topLevelValue !is JsonObject) {
-                System.err.println("The environment file: ${jsonFile.virtualFile.path} outer format does not conform to the specification!")
-                return null
-            }
-
-            val envProperty = topLevelValue.findProperty(env) ?: return null
+            val envProperty = getEnvJsonProperty(selectedEnv, httpFileParentPath, envFileName, project) ?: return null
 
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
@@ -413,6 +395,48 @@ class EnvFileService(val project: Project) {
                     return null
                 }
             }
+        }
+
+        fun getEnvJsonProperty(
+            selectedEnv: String?,
+            httpFileParentPath: String,
+            project: Project,
+        ): JsonProperty? {
+            var jsonProperty = getEnvJsonProperty(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+            if (jsonProperty != null) {
+                return jsonProperty
+            }
+
+            jsonProperty = getEnvJsonProperty( selectedEnv, httpFileParentPath, ENV_FILE_NAME, project)
+            if (jsonProperty != null) {
+                return jsonProperty
+            }
+
+            jsonProperty = getEnvJsonProperty( COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+            if (jsonProperty != null) {
+                return jsonProperty
+            }
+
+            return getEnvJsonProperty(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project)
+        }
+
+        private fun getEnvJsonProperty(
+            selectedEnv: String?,
+            httpFileParentPath: String,
+            envFileName: String,
+            project: Project,
+        ): JsonProperty? {
+            val env = selectedEnv ?: COMMON_ENV_NAME
+
+            val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return null
+
+            val topLevelValue = jsonFile.topLevelValue
+            if (topLevelValue !is JsonObject) {
+                System.err.println("The environment file: ${jsonFile.virtualFile.path} outer format does not conform to the specification!")
+                return null
+            }
+
+            return topLevelValue.findProperty(env)
         }
 
         fun getJsonLiteralValue(literal: JsonLiteral): String {

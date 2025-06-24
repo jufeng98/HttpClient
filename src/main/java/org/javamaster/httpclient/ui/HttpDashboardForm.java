@@ -19,6 +19,7 @@ import com.intellij.openapi.editor.ScrollingModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -81,7 +82,7 @@ public class HttpDashboardForm implements Disposable {
         historyMap.put(tabName, this);
     }
 
-    public void initHttpResContent(HttpInfo httpInfo) {
+    public void initHttpResContent(HttpInfo httpInfo, boolean noLog) {
         GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
         GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
 
@@ -91,7 +92,7 @@ public class HttpDashboardForm implements Disposable {
         byte[] reqBytes = String.join("", httpInfo.getHttpReqDescList()).getBytes(StandardCharsets.UTF_8);
 
         Editor reqEditor = HttpUiUtils.INSTANCE.createEditor(reqBytes, "req.http", project, tabName,
-                editorList, true, simpleTypeEnum);
+                editorList, true, simpleTypeEnum, noLog);
 
         requestPanel.add(reqEditor.getComponent(), constraints);
 
@@ -101,7 +102,7 @@ public class HttpDashboardForm implements Disposable {
             String msg = ExceptionUtils.getStackTrace(throwable);
 
             Editor errorEditor = HttpUiUtils.INSTANCE.createEditor(msg.getBytes(StandardCharsets.UTF_8),
-                    "error.log", project, tabName, editorList, false, simpleTypeEnum);
+                    "error.log", project, tabName, editorList, false, simpleTypeEnum, noLog);
 
             responsePanel.add(errorEditor.getComponent(), constraints);
 
@@ -110,7 +111,7 @@ public class HttpDashboardForm implements Disposable {
             return;
         }
 
-        VirtualFile responseBodyFile = saveResponseToFile(httpInfo, tabName);
+        VirtualFile responseBodyFile = saveResponseToFile(httpInfo, tabName, noLog);
 
         byte[] resBytes = String.join("", httpInfo.getHttpResDescList()).getBytes(StandardCharsets.UTF_8);
 
@@ -118,7 +119,7 @@ public class HttpDashboardForm implements Disposable {
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
         Editor resEditor = HttpUiUtils.INSTANCE.createEditor(resBytes, "res.http", project, tabName,
-                editorList, false, simpleTypeEnum);
+                editorList, false, simpleTypeEnum, noLog);
 
         responsePanel.add(resEditor.getComponent(), constraintsRes);
 
@@ -158,7 +159,7 @@ public class HttpDashboardForm implements Disposable {
         jPanel.add(component);
     }
 
-    private VirtualFile saveResponseToFile(HttpInfo httpInfo, String tabName) {
+    private VirtualFile saveResponseToFile(HttpInfo httpInfo, String tabName, boolean noLog) {
         try {
             SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
 
@@ -166,6 +167,16 @@ public class HttpDashboardForm implements Disposable {
 
             //noinspection DataFlowIssue
             String suffix = SimpleTypeEnum.Companion.getSuffix(simpleTypeEnum, contentType);
+
+            String fileName = DateFormatUtils.format(new Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix;
+
+            if (noLog) {
+                LightVirtualFile lightVirtualFile = new LightVirtualFile(fileName);
+                lightVirtualFile.setCharset(StandardCharsets.UTF_8);
+                //noinspection DataFlowIssue
+                lightVirtualFile.setBinaryContent(httpInfo.getByteArray());
+                return lightVirtualFile;
+            }
 
             File dateHistoryDir = VirtualFileUtils.INSTANCE.getDateHistoryDir(project);
 
@@ -175,7 +186,7 @@ public class HttpDashboardForm implements Disposable {
                 resBodyDir.mkdirs();
             }
 
-            File file = new File(resBodyDir, DateFormatUtils.format(new Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix);
+            File file = new File(resBodyDir, fileName);
 
             String absolutePath = file.getAbsolutePath();
 
@@ -235,7 +246,7 @@ public class HttpDashboardForm implements Disposable {
 
         Editor editor = WriteAction.computeAndWait(() ->
                 HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
-                        project, tabName, editorList)
+                        project, tabName, editorList, false)
         );
 
         responsePanel.add(editor.getComponent(), constraintsRes);
@@ -265,7 +276,7 @@ public class HttpDashboardForm implements Disposable {
 
         Editor editor = WriteAction.computeAndWait(() ->
                 HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "mockServer.log",
-                        project, tabName, editorList)
+                        project, tabName, editorList, false)
         );
 
         mainPanel.add(editor.getComponent(), BorderLayout.CENTER);

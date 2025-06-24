@@ -23,8 +23,9 @@ object HttpUiUtils {
         editorList: MutableList<Editor>,
         req: Boolean,
         simpleTypeEnum: SimpleTypeEnum?,
+        noLog: Boolean,
     ): Editor {
-        val editor = createEditor(bytes, suffix, project, tabName, editorList)
+        val editor = createEditor(bytes, suffix, project, tabName, editorList, noLog)
         val document = editor.document
 
         val settings = editor.settings
@@ -64,8 +65,9 @@ object HttpUiUtils {
         project: Project,
         tabName: String,
         editorList: MutableList<Editor>,
+        noLog: Boolean,
     ): Editor {
-        val virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, tabName)
+        val virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, tabName, noLog)
 
         val psiDocumentManager = PsiDocumentManager.getInstance(project)
         val psiFile = PsiUtil.getPsiFile(project, virtualFile)
