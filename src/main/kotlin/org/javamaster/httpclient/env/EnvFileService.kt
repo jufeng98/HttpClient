@@ -402,22 +402,22 @@ class EnvFileService(val project: Project) {
             httpFileParentPath: String,
             project: Project,
         ): JsonProperty? {
-            var jsonProperty = getEnvJsonProperty(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+            var jsonProperty = getEnvJsonProperty(selectedEnv, httpFileParentPath, ENV_FILE_NAME, project)
             if (jsonProperty != null) {
                 return jsonProperty
             }
 
-            jsonProperty = getEnvJsonProperty( selectedEnv, httpFileParentPath, ENV_FILE_NAME, project)
+            jsonProperty = getEnvJsonProperty(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
             if (jsonProperty != null) {
                 return jsonProperty
             }
 
-            jsonProperty = getEnvJsonProperty( COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+            jsonProperty = getEnvJsonProperty(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project)
             if (jsonProperty != null) {
                 return jsonProperty
             }
 
-            return getEnvJsonProperty(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project)
+            return getEnvJsonProperty(COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
         }
 
         private fun getEnvJsonProperty(

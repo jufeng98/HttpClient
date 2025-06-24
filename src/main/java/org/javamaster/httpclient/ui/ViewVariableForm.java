@@ -2,10 +2,13 @@ package org.javamaster.httpclient.ui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.intellij.json.JsonElementTypes;
 import com.intellij.json.psi.JsonBooleanLiteral;
 import com.intellij.json.psi.JsonLiteral;
 import com.intellij.json.psi.JsonNumberLiteral;
+import com.intellij.json.psi.JsonObject;
 import com.intellij.json.psi.JsonProperty;
+import com.intellij.json.psi.JsonValue;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -27,6 +30,7 @@ import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.factory.JsonPsiFactory;
 import org.javamaster.httpclient.js.JsExecutor;
 import org.javamaster.httpclient.nls.NlsBundle;
+import org.javamaster.httpclient.psi.HttpPsiUtils;
 import org.javamaster.httpclient.resolve.VariableResolver;
 import org.javamaster.httpclient.utils.NotifyUtil;
 import org.jetbrains.annotations.NotNull;
@@ -169,8 +173,10 @@ public class ViewVariableForm extends DialogWrapper {
                 String newKey = pair.getFirst();
                 String newValue = pair.getSecond();
 
-                rowData[row][0] = newKey;
-                rowData[row][1] = newValue;
+                if (!add) {
+                    rowData[row][0] = newKey;
+                    rowData[row][1] = newValue;
+                }
 
                 try {
                     switch (type) {
@@ -179,9 +185,11 @@ public class ViewVariableForm extends DialogWrapper {
                         case TYPE_JS:
                             break;
                         case TYPE_ENV:
-                            modifyEnvFile(key, newKey, newValue, add);
+                            boolean success = modifyEnvFile(key, newKey, newValue, add);
 
-                            Messages.showInfoMessage("Success!", "Tip");
+                            if (success) {
+                                Messages.showInfoMessage("Success!", "Tip");
+                            }
 
                             break;
                         default:
@@ -266,7 +274,7 @@ public class ViewVariableForm extends DialogWrapper {
             boolean match = type == TYPE_GLOBAL || type == TYPE_JS || type == TYPE_ENV;
             if (match) {
                 rowData[i][2] = btnAdd;
-                rowData[i][3] = 0;
+                rowData[i][3] = type;
             } else {
                 rowData[i][2] = "";
                 rowData[i][3] = -1;
@@ -305,22 +313,38 @@ public class ViewVariableForm extends DialogWrapper {
         return rowData;
     }
 
-    private void modifyEnvFile(String key, String newKey, String newValue, boolean add) {
+    private boolean modifyEnvFile(String key, String newKey, String newValue, boolean add) {
         Triple<String, VirtualFile, Module> triple = HttpEditorTopForm.getTriple(project);
         @SuppressWarnings("DataFlowIssue")
         String selectedEnv = triple.getFirst();
         String httpFileParentPath = triple.getSecond().getParent().getPath();
 
         if (add) {
-            PsiElement jsonProperty = EnvFileService.Companion.getEnvJsonProperty(selectedEnv, httpFileParentPath, project);
-
-            if (jsonProperty != null) {
-                WriteCommandAction.runWriteCommandAction(project, () -> {
-                    JsonProperty newProperty = JsonPsiFactory.INSTANCE.createStringProperty(project, newKey, newValue);
-
-                    jsonProperty.add(newProperty);
-                });
+            JsonProperty jsonProperty = EnvFileService.Companion.getEnvJsonProperty(selectedEnv, httpFileParentPath, project);
+            if (jsonProperty == null) {
+                return false;
             }
+
+            JsonValue jsonValue = jsonProperty.getValue();
+            if (!(jsonValue instanceof JsonObject)) {
+                return false;
+            }
+
+            WriteCommandAction.runWriteCommandAction(project, () -> {
+                JsonProperty newProperty = JsonPsiFactory.INSTANCE.createStringProperty(project, newKey, newValue);
+
+                PsiElement newComma = HttpPsiUtils.getNextSiblingByType(newProperty, JsonElementTypes.COMMA, false);
+                List<JsonProperty> propertyList = ((JsonObject) jsonValue).getPropertyList();
+
+                if (propertyList.isEmpty()) {
+                    jsonValue.addAfter(newProperty, jsonValue.getFirstChild());
+                } else {
+                    //noinspection DataFlowIssue
+                    PsiElement psiElement = jsonValue.addAfter(newComma, propertyList.get(propertyList.size() - 1));
+                    jsonValue.addAfter(newProperty, psiElement);
+                }
+
+            });
         } else {
             JsonLiteral jsonLiteral = EnvFileService.Companion.getEnvEleLiteral(key, selectedEnv, httpFileParentPath, project);
             //noinspection DataFlowIssue
@@ -345,6 +369,8 @@ public class ViewVariableForm extends DialogWrapper {
                 jsonProperty.replace(newProperty);
             });
         }
+
+        return true;
     }
 
     protected Action @NotNull [] createActions() {
