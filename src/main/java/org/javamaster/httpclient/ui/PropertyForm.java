@@ -17,7 +17,7 @@ public class PropertyForm extends DialogWrapper {
     private JTextField textFieldKey;
     private JTextField textFieldValue;
 
-    public PropertyForm(Project project,String title, String key, String value) {
+    public PropertyForm(Project project, String title, String key, String value, boolean js, boolean add) {
         super(project, false);
 
         textFieldKey.setText(key);
@@ -25,6 +25,10 @@ public class PropertyForm extends DialogWrapper {
 
         setModal(true);
         setTitle(title);
+
+        if (js && !add) {
+            textFieldKey.setEnabled(false);
+        }
 
         init();
     }

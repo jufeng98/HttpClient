@@ -2,39 +2,26 @@ package org.javamaster.httpclient.ui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.intellij.json.JsonElementTypes;
-import com.intellij.json.psi.JsonBooleanLiteral;
-import com.intellij.json.psi.JsonLiteral;
-import com.intellij.json.psi.JsonNumberLiteral;
-import com.intellij.json.psi.JsonObject;
-import com.intellij.json.psi.JsonProperty;
-import com.intellij.json.psi.JsonValue;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtil;
-import com.intellij.refactoring.rename.RenameProcessor;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.popup.PopupFactoryImpl;
 import com.intellij.ui.table.JBTable;
 import kotlin.Pair;
 import kotlin.Triple;
 import org.javamaster.httpclient.env.EnvFileService;
-import org.javamaster.httpclient.factory.JsonPsiFactory;
 import org.javamaster.httpclient.js.JsExecutor;
 import org.javamaster.httpclient.nls.NlsBundle;
-import org.javamaster.httpclient.psi.HttpPsiUtils;
 import org.javamaster.httpclient.resolve.VariableResolver;
+import org.javamaster.httpclient.utils.HttpUtils;
 import org.javamaster.httpclient.utils.NotifyUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -162,8 +149,7 @@ public class ViewVariableForm extends DialogWrapper {
                     add = true;
                 }
 
-
-                PropertyForm propertyForm = new PropertyForm(project, title, key, value);
+                PropertyForm propertyForm = new PropertyForm(project, title, key, value, type == TYPE_JS, add);
                 boolean b = propertyForm.showAndGet();
                 if (!b) {
                     return;
@@ -181,14 +167,24 @@ public class ViewVariableForm extends DialogWrapper {
                 try {
                     switch (type) {
                         case TYPE_GLOBAL:
-                            break;
-                        case TYPE_JS:
-                            break;
-                        case TYPE_ENV:
-                            boolean success = modifyEnvFile(key, newKey, newValue, add);
+                            boolean success = HttpUtils.INSTANCE.modifyFileGlobalVariable(key, newKey, newValue, add, project);
 
                             if (success) {
-                                Messages.showInfoMessage("Success!", "Tip");
+                                PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
+                            }
+
+                            break;
+                        case TYPE_JS:
+                            HttpUtils.INSTANCE.modifyJsVariable(newKey, newValue);
+
+                            PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
+
+                            break;
+                        case TYPE_ENV:
+                            boolean success1 = HttpUtils.INSTANCE.modifyEnvVariable(key, newKey, newValue, add, project);
+
+                            if (success1) {
+                                PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
                             }
 
                             break;
@@ -256,7 +252,10 @@ public class ViewVariableForm extends DialogWrapper {
 
     private Object[][] createRowData(List<Triple<String, Map<String, String>, Integer>> resList, int rows) {
         JButton btnAdd = new JButton(NlsBundle.INSTANCE.nls("add"));
+        btnAdd.setForeground(new JBColor(new Color(64, 158, 255), new Color(64, 158, 255)));
+
         JButton btnEdit = new JButton(NlsBundle.INSTANCE.nls("edit"));
+        btnEdit.setForeground(new JBColor(new Color(230, 162, 60), new Color(230, 162, 60)));
 
         String repeat = "-".repeat(160);
         Object[][] rowData = new Object[rows][4];
@@ -313,72 +312,12 @@ public class ViewVariableForm extends DialogWrapper {
         return rowData;
     }
 
-    private boolean modifyEnvFile(String key, String newKey, String newValue, boolean add) {
-        Triple<String, VirtualFile, Module> triple = HttpEditorTopForm.getTriple(project);
-        @SuppressWarnings("DataFlowIssue")
-        String selectedEnv = triple.getFirst();
-        String httpFileParentPath = triple.getSecond().getParent().getPath();
-
-        if (add) {
-            JsonProperty jsonProperty = EnvFileService.Companion.getEnvJsonProperty(selectedEnv, httpFileParentPath, project);
-            if (jsonProperty == null) {
-                return false;
-            }
-
-            JsonValue jsonValue = jsonProperty.getValue();
-            if (!(jsonValue instanceof JsonObject)) {
-                return false;
-            }
-
-            WriteCommandAction.runWriteCommandAction(project, () -> {
-                JsonProperty newProperty = JsonPsiFactory.INSTANCE.createStringProperty(project, newKey, newValue);
-
-                PsiElement newComma = HttpPsiUtils.getNextSiblingByType(newProperty, JsonElementTypes.COMMA, false);
-                List<JsonProperty> propertyList = ((JsonObject) jsonValue).getPropertyList();
-
-                if (propertyList.isEmpty()) {
-                    jsonValue.addAfter(newProperty, jsonValue.getFirstChild());
-                } else {
-                    //noinspection DataFlowIssue
-                    PsiElement psiElement = jsonValue.addAfter(newComma, propertyList.get(propertyList.size() - 1));
-                    jsonValue.addAfter(newProperty, psiElement);
-                }
-
-            });
-        } else {
-            JsonLiteral jsonLiteral = EnvFileService.Companion.getEnvEleLiteral(key, selectedEnv, httpFileParentPath, project);
-            //noinspection DataFlowIssue
-            PsiElement jsonProperty = jsonLiteral.getParent();
-
-            if (!key.equals(newKey)) {
-                RenameProcessor renameProcessor = new RenameProcessor(project, jsonProperty, newKey,
-                        GlobalSearchScope.projectScope(project), false, true);
-                renameProcessor.run();
-            }
-
-            WriteCommandAction.runWriteCommandAction(project, () -> {
-                JsonProperty newProperty;
-                if (jsonLiteral instanceof JsonNumberLiteral) {
-                    newProperty = JsonPsiFactory.INSTANCE.createNumberProperty(project, newKey, newValue);
-                } else if (jsonLiteral instanceof JsonBooleanLiteral) {
-                    newProperty = JsonPsiFactory.INSTANCE.createBoolProperty(project, newKey, newValue);
-                } else {
-                    newProperty = JsonPsiFactory.INSTANCE.createStringProperty(project, newKey, newValue);
-                }
-
-                jsonProperty.replace(newProperty);
-            });
-        }
-
-        return true;
-    }
-
     protected Action @NotNull [] createActions() {
         return new Action[]{getOKAction()};
     }
 
     @Override
-    protected @Nullable JComponent createCenterPanel() {
+    protected JComponent createCenterPanel() {
         return contentPane;
     }
 }
