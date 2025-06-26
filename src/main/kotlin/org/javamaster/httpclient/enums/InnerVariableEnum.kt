@@ -20,13 +20,11 @@ import org.mozilla.javascript.Context
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
+import java.time.*
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
+
 
 enum class InnerVariableEnum(val methodName: String) {
     RANDOM_ALPHABETIC("\$random.alphabetic") {
@@ -164,6 +162,31 @@ enum class InnerVariableEnum(val methodName: String) {
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             return System.currentTimeMillis().toString()
+        }
+    },
+    TIMESTAMP_FULL("\$timestampFull") {
+        override fun typeText(): String {
+            return NlsBundle.nls("timestampFull.desc", methodName)
+        }
+
+        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 3 || args[0] !is Int || args[1] !is Int || args[2] !is Int) {
+                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+            }
+
+            val day = args[0] as Int
+            val hour = args[1] as Int
+            val minute = args[2] as Int
+
+            val now = LocalDateTime.now().plusDays(day.toLong())
+            val localDateTime = LocalDateTime.of(now.year, now.month, now.dayOfMonth, hour, minute, 0)
+            val zonedDateTime = localDateTime.atZone(ZoneId.systemDefault())
+            val instant = zonedDateTime.toInstant()
+            return instant.toEpochMilli().toString()
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
         }
     },
     ISO_TIMESTAMP("\$isoTimestamp") {
