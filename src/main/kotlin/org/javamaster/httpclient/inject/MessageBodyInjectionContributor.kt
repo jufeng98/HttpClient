@@ -1,16 +1,14 @@
 package org.javamaster.httpclient.inject
 
-import com.intellij.json.JsonLanguage
 import com.intellij.lang.Language
-import com.intellij.lang.html.HTMLLanguage
 import com.intellij.lang.injection.MultiHostInjector
 import com.intellij.lang.injection.MultiHostRegistrar
-import com.intellij.lang.xml.XMLLanguage
 import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.SmartList
+import com.intellij.util.containers.ContainerUtil
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.action.dashboard.view.ContentTypeActionGroup
 import org.javamaster.httpclient.psi.HttpMessageBody
@@ -46,21 +44,10 @@ class MessageBodyInjectionContributor : MultiHostInjector {
     }
 
     private fun tryInject(contentType: ContentType?, context: PsiElement, registrar: MultiHostRegistrar) {
-        var language: Language = PlainTextLanguage.INSTANCE
+        val mimeType = contentType?.mimeType ?: ContentType.TEXT_PLAIN.mimeType
 
-        when (contentType) {
-            ContentType.APPLICATION_JSON -> {
-                language = JsonLanguage.INSTANCE
-            }
-
-            ContentType.APPLICATION_XML, ContentType.TEXT_XML -> {
-                language = XMLLanguage.INSTANCE
-            }
-
-            ContentType.TEXT_HTML, ContentType.APPLICATION_XHTML_XML -> {
-                language = HTMLLanguage.INSTANCE
-            }
-        }
+        val languages = Language.findInstancesByMimeType(mimeType)
+        val language = ContainerUtil.getFirstItem(languages) ?: PlainTextLanguage.INSTANCE
 
         val textRange = InjectionUtils.innerRange(context) ?: return
 
