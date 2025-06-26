@@ -6,21 +6,26 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunnerAndConfigurationSettings
-import com.intellij.json.psi.JsonProperty
-import com.intellij.json.psi.JsonStringLiteral
+import com.intellij.json.JsonElementTypes
+import com.intellij.json.psi.*
 import com.intellij.lang.injection.InjectedLanguageManager
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
+import com.intellij.refactoring.rename.RenameProcessor
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
 import org.intellij.markdown.html.urlEncode
@@ -30,6 +35,13 @@ import org.javamaster.httpclient.adapter.DateTypeAdapter
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
+import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvEleLiteral
+import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvJsonProperty
+import org.javamaster.httpclient.factory.HttpPsiFactory.createGlobalVariable
+import org.javamaster.httpclient.factory.JsonPsiFactory.createBoolProperty
+import org.javamaster.httpclient.factory.JsonPsiFactory.createNumberProperty
+import org.javamaster.httpclient.factory.JsonPsiFactory.createStringProperty
+import org.javamaster.httpclient.js.JsExecutor.Companion.setGlobalVariable
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
@@ -1060,4 +1072,138 @@ object HttpUtils {
         }
     }
 
+    fun createGlobalVariableAndInsert(variableName: String, variableValue: String, project: Project): PsiElement? {
+        val textEditor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
+        val httpFile = PsiUtil.getPsiFile(project, textEditor.virtualFile) as HttpFile
+
+        val newGlobalVariable = createGlobalVariable(variableName, variableValue, project)
+
+        val directionComments = httpFile.getDirectionComments()
+        val globalHandler = httpFile.getGlobalHandler()
+
+        val elementCopy = if (directionComments.isNotEmpty()) {
+            httpFile.addAfter(newGlobalVariable, directionComments.last().nextSibling)
+        } else if (globalHandler != null) {
+            httpFile.addAfter(newGlobalVariable, globalHandler)
+        } else {
+            httpFile.addBefore(newGlobalVariable, httpFile.firstChild)
+        }
+
+        val whitespace = newGlobalVariable.nextSibling
+        elementCopy.add(whitespace)
+
+        val cr = whitespace.nextSibling
+        if (cr != null) {
+            elementCopy.add(cr)
+        }
+
+        return elementCopy
+    }
+
+    fun modifyFileGlobalVariable(
+        key: String,
+        newKey: String,
+        newValue: String,
+        add: Boolean,
+        project: Project,
+    ): Boolean {
+        return WriteCommandAction.runWriteCommandAction(project, Computable {
+            if (add) {
+                val variable = createGlobalVariableAndInsert(newKey, newValue, project)
+
+                variable != null
+            } else {
+                val textEditor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@Computable false
+
+                val httpFile = PsiUtil.getPsiFile(project, textEditor.virtualFile) as HttpFile
+                val children = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
+
+                val globalVariable = children
+                    .firstOrNull { it: HttpGlobalVariable -> it.globalVariableName.name == key }
+                    ?: return@Computable false
+
+                if (key != newKey) {
+                    val renameProcessor = RenameProcessor(
+                        project, globalVariable, newKey,
+                        GlobalSearchScope.projectScope(project), false, true
+                    )
+                    renameProcessor.run()
+                }
+
+                val newGlobalVariable = createGlobalVariable(newKey, newValue, project)
+
+                globalVariable.replace(newGlobalVariable)
+            }
+
+            true
+        })
+    }
+
+    fun modifyJsVariable(newKey: String, newValue: String) {
+        setGlobalVariable(newKey, newValue)
+    }
+
+    fun modifyEnvVariable(
+        key: String,
+        newKey: String,
+        newValue: String,
+        add: Boolean,
+        project: Project,
+    ): Boolean {
+        val triple = HttpEditorTopForm.getTriple(project) ?: return false
+
+        val selectedEnv = triple.first
+        val httpFileParentPath = triple.second.parent.path
+
+        if (add) {
+            val jsonProperty = getEnvJsonProperty(selectedEnv, httpFileParentPath, project) ?: return false
+
+            val jsonValue = jsonProperty.value as? JsonObject ?: return false
+
+            WriteCommandAction.runWriteCommandAction(project) {
+                val newProperty = createStringProperty(project, newKey, newValue)
+                val newComma = getNextSiblingByType(newProperty, JsonElementTypes.COMMA, false)
+                val propertyList = jsonValue.propertyList
+
+                if (propertyList.isEmpty()) {
+                    jsonValue.addAfter(newProperty, jsonValue.firstChild)
+                } else {
+                    val psiElement = jsonValue.addAfter(newComma!!, propertyList[propertyList.size - 1])
+                    jsonValue.addAfter(newProperty, psiElement)
+                }
+            }
+        } else {
+            val jsonLiteral = getEnvEleLiteral(key, selectedEnv, httpFileParentPath, project) ?: return false
+
+            val jsonProperty = jsonLiteral.parent
+
+            if (key != newKey) {
+                val renameProcessor = RenameProcessor(
+                    project, jsonProperty, newKey,
+                    GlobalSearchScope.projectScope(project), false, true
+                )
+                renameProcessor.run()
+            }
+
+            WriteCommandAction.runWriteCommandAction(project) {
+                val newProperty = when (jsonLiteral) {
+                    is JsonNumberLiteral -> {
+                        createNumberProperty(project, newKey, newValue)
+                    }
+
+                    is JsonBooleanLiteral -> {
+                        createBoolProperty(project, newKey, newValue)
+                    }
+
+                    else -> {
+                        createStringProperty(project, newKey, newValue)
+                    }
+                }
+
+                jsonProperty.replace(newProperty)
+            }
+        }
+
+        return true
+    }
 }
