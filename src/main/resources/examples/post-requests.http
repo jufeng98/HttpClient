@@ -16,7 +16,7 @@ Content-Type: application/json
   "desc": "{{$random.alphabetic(10)}}",
   "desc1": "{{$random.alphanumeric(10)}}",
   "desc2": "{{$random.numeric(10)}}",
-  "base64": "{{$imageToBase64(E:\\image\\test.jpg)}}",
+  "base64": "{{$imageToBase64('E:\\image\\test.jpg')}}",
   "value": "content",
   "ts": "{{$timestamp}}",
   "price2": {{$randomInt}}
