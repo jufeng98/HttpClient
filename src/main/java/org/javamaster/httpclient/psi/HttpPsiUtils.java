@@ -1,11 +1,16 @@
 package org.javamaster.httpclient.psi;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HttpPsiUtils {
     public static @Nullable PsiElement getNextSiblingByType(@Nullable PsiElement element,
@@ -40,5 +45,25 @@ public class HttpPsiUtils {
         }
 
         return false;
+    }
+
+    public static List<TextRange> collectVariablesRangesInMessageBody(String body) {
+        List<TextRange> result = new ArrayList<>();
+
+        int closeBraceIndex;
+        for (int index = 0; index < body.length(); index = closeBraceIndex + 2) {
+            int openBraceIndex = body.indexOf("{{", index);
+            closeBraceIndex = body.indexOf("}}", openBraceIndex);
+            if (openBraceIndex < 0 || closeBraceIndex < 0) {
+                break;
+            }
+
+            TextRange range = TextRange.create(openBraceIndex, closeBraceIndex + 2);
+            if (!range.isEmpty() && !StringUtil.isEmptyOrSpaces(body.substring(openBraceIndex + 2, closeBraceIndex))) {
+                result.add(range);
+            }
+        }
+
+        return result;
     }
 }
