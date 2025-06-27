@@ -8,6 +8,7 @@ import com.intellij.lang.documentation.DocumentationProvider
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -16,14 +17,17 @@ import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getJsonLiteralValue
+import org.javamaster.httpclient.js.JsHelper
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.reference.support.HttpVariableNamePsiReference.JsGlobalVariableValueFakePsiElement
 import org.javamaster.httpclient.reference.support.QueryNamePsiReference
 import org.javamaster.httpclient.reference.support.TextVariableNamePsiReference
+import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.jetbrains.annotations.Nls
 import javax.swing.Icon
 
@@ -46,13 +50,13 @@ class HttpDocumentationProvider : DocumentationProvider {
 
             val name = variableName.name
 
-            return getHttpDoc(name)
+            return getHttpDoc(name, element.project, psiFile)
         }
 
         if (element is HttpVariableName) {
             val name = element.name
 
-            return getHttpDoc(name)
+            return getHttpDoc(name, element.project, psiFile)
         }
 
         if (element is HttpGlobalVariableName) {
@@ -158,7 +162,7 @@ class HttpDocumentationProvider : DocumentationProvider {
         return contextElement
     }
 
-    private fun getHttpDoc(name: String): String? {
+    private fun getHttpDoc(name: String, project: Project, httpFile: HttpFile): String? {
         val variableEnum = InnerVariableEnum.getEnum(name)
         if (variableEnum != null) {
             return getDocumentation(name, variableEnum.typeText())
@@ -180,7 +184,22 @@ class HttpDocumentationProvider : DocumentationProvider {
             )
         }
 
-        return null
+        var value = JsHelper.getJsGlobalVariable(name)
+        if (value != null) {
+            return getDocumentation(name, NlsBundle.nls("value") + " $value")
+        }
+
+        val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
+
+        val variableResolver = VariableResolver(null, httpFile, selectedEnv, project)
+
+        val str = "{{$name}}"
+        value = variableResolver.resolve(str)
+        if (value == str) {
+            return null
+        }
+
+        return getDocumentation(name, NlsBundle.nls("value") + " $value")
     }
 
     private fun getDocumentation(identifier: String, description: String): String {
@@ -194,6 +213,10 @@ class HttpDocumentationProvider : DocumentationProvider {
 
         override fun getPresentation(): ItemPresentation {
             return MyItemPresentation
+        }
+
+        override fun toString(): String {
+            return this.javaClass.simpleName + "(" + variable.text + ")"
         }
 
         object MyItemPresentation : ItemPresentation {

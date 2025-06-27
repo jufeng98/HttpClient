@@ -214,7 +214,7 @@ public class ViewVariableForm extends DialogWrapper {
         List<Triple<String, Map<String, String>, Integer>> resList = Lists.newArrayList();
 
         JsExecutor jsExecutor = new JsExecutor(project, httpFile, "");
-        VariableResolver variableResolver = new VariableResolver(jsExecutor, httpFile, selectedEnv);
+        VariableResolver variableResolver = new VariableResolver(jsExecutor, httpFile, selectedEnv, project);
 
         LinkedHashMap<String, String> fileGlobalVariables = variableResolver.getFileGlobalVariables();
         resList.add(new Triple<>(NlsBundle.INSTANCE.nls("file.global.desc"), fileGlobalVariables, TYPE_GLOBAL));

@@ -269,9 +269,9 @@
                                 id="httpRunDashboardCustomizer"/>
         <executor implementation="org.javamaster.httpclient.dashboard.HttpExecutor" order="first" id="httpExecutor"/>
         <programRunner implementation="org.javamaster.httpclient.dashboard.HttpProgramRunner"/>
-        <highlightErrorFilter implementation="org.javamaster.httpclient.suppress.MyHighlightErrorFilter"/>
-        <lang.inspectionSuppressor language="JSON"
-                                   implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>
+<!--        <highlightErrorFilter implementation="org.javamaster.httpclient.suppress.MyHighlightErrorFilter"/>-->
+<!--        <lang.inspectionSuppressor language="JSON"-->
+<!--                                   implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>-->
         <annotator language="JSON"
                    implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
         <annotator language="TEXT"
@@ -292,8 +292,8 @@
                          shortName="MyTextInspection" enabledByDefault="true" level="WARNING"
                          implementationClass="org.javamaster.httpclient.inspection.MyTextInspection"
                          key="inspection.http.display.name" bundle="messages.HttpClientBundle"/>
-        <psi.referenceContributor language="JSON"
-                                  implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>
+<!--        <psi.referenceContributor language="JSON"-->
+<!--                                  implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>-->
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonKeyDubboServiceMethodFieldPsiReferenceContributor"/>
         <lang.documentationProvider language="JSON"

@@ -18,11 +18,11 @@ import java.util.regex.Pattern
  * @author yudong
  */
 class VariableResolver(
-    private val jsExecutor: JsExecutor,
+    private val jsExecutor: JsExecutor?,
     private val httpFile: PsiFile,
     private val selectedEnv: String?,
+    private val project: Project,
 ) {
-    private val project = jsExecutor.project
     val httpFileParentPath = httpFile.virtualFile.parent.path
 
     val fileScopeVariableMap = getFileGlobalVariables()
@@ -126,12 +126,12 @@ class VariableResolver(
             return innerVariable
         }
 
-        innerVariable = jsExecutor.getRequestVariable(variable)
+        innerVariable = jsExecutor?.getRequestVariable(variable)
         if (innerVariable != null) {
             return innerVariable
         }
 
-        innerVariable = jsExecutor.getJsGlobalVariable(variable)
+        innerVariable = jsExecutor?.getJsGlobalVariable(variable)
         if (innerVariable != null) {
             return innerVariable
         }
@@ -146,7 +146,7 @@ class VariableResolver(
     }
 
     fun getJsGlobalVariables(): LinkedHashMap<String, String> {
-        val globalVariables = jsExecutor.getJsGlobalVariables()
+        val globalVariables = jsExecutor?.getJsGlobalVariables() ?: return linkedMapOf()
 
         val map = linkedMapOf<String, String>()
         map.putAll(globalVariables)

@@ -75,7 +75,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     private val httpFile = httpMethod.containingFile as HttpFile
     private val parentPath = httpFile.virtualFile.parent.path
     private val jsExecutor = JsExecutor(project, httpFile, tabName)
-    private val variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv)
+    private val variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv, project)
     private val loadingRemover = httpMethod.getUserData(HttpUtils.gutterIconLoadingKey)
     private val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
     private val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
