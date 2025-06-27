@@ -7,6 +7,8 @@ import com.intellij.psi.PsiReferenceRegistrar
 import org.javamaster.httpclient.reference.provider.JsonValuePsiReferenceProvider
 
 /**
+ * Json里的所有变量声明都已脱离出来单独注入为 PlainText 类型,所以这个 Contributor 不再需要
+ *
  * @author yudong
  */
 class JsonValuePsiReferenceContributor : PsiReferenceContributor() {
