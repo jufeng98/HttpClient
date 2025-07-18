@@ -68,6 +68,11 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
+    fun getReferences(element: HttpPathAbsolute): Array<PsiReference> {
+        return ReferenceProvidersRegistry.getReferencesFromProviders(element)
+    }
+
+    @JvmStatic
     fun isBuiltin(variableName: HttpVariableName): Boolean {
         return variableName.variableBuiltin != null
     }

@@ -147,7 +147,11 @@ variable_arg ::= INTEGER | STRING {
 }
 
 port ::= COLON PORT_SEGMENT
-pathAbsolute ::= (SLASH (SEGMENT | variable)?)+
+pathAbsolute ::= (SLASH (SEGMENT | variable)?)+ {
+    methods = [
+        getReferences
+    ]
+}
 query ::= queryParameter (AND queryParameter)*
 queryParameter ::= queryParameterKey EQUALS? queryParameterValue? {
     pin = 1

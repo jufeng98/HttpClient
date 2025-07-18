@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class HttpPathAbsoluteImpl extends ASTWrapperPsiElement implements HttpPathAbsolute {
 
@@ -31,6 +32,12 @@ public class HttpPathAbsoluteImpl extends ASTWrapperPsiElement implements HttpPa
   @NotNull
   public List<HttpVariable> getVariableList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpVariable.class);
+  }
+
+  @Override
+  @NotNull
+  public PsiReference[] getReferences() {
+    return HttpPsiImplUtil.getReferences(this);
   }
 
 }
