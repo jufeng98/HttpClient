@@ -68,6 +68,12 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>5.6.0</b></li>
+                <ul>
+                    <li>http 的 PATCH 和 DELETE 请求支持请求体</li>
+                    <li>path路径输入智能提示</li>
+                    <li>bug修复及功能优化</li>
+                </ul>
                 <li><b>5.5.0</b></li>
                 <ul>
                     <li>新增 no-log 指令</li>
@@ -259,6 +265,8 @@
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpFilePathManipulator"/>
         <lang.elementManipulator forClass="org.javamaster.httpclient.psi.HttpVariableName"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpVariableNameManipulator"/>
+        <lang.elementManipulator forClass="org.javamaster.httpclient.psi.HttpRequestTarget"
+                                 implementationClass="org.javamaster.httpclient.manipulator.HttpRequestTargetManipulator"/>
         <renameHandler implementation="org.javamaster.httpclient.manipulator.HttpRenameHandler"/>
         <renamePsiElementProcessor
                 implementation="org.javamaster.httpclient.manipulator.HttpRenamePsiElementProcessor"/>

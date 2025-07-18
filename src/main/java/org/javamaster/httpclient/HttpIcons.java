@@ -28,4 +28,5 @@ public class HttpIcons {
     public static final Icon HISTORY = IconLoader.getIcon("/icons/History.svg", HttpIcons.class);
     public static final Icon INSPECTIONS_EYE = IconLoader.getIcon("/icons/inspectionsEye.svg", HttpIcons.class);
     public static final Icon BLANK = IconLoader.getIcon("/icons/blank.svg", HttpIcons.class);
+    public static final Icon REQUEST_MAPPING = IconLoader.getIcon("/icons/requestMapping.svg", HttpIcons.class);
 }

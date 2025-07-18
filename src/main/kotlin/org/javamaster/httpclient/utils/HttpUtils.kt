@@ -996,7 +996,9 @@ object HttpUtils {
             }
 
             else -> {
-                throw IllegalArgumentException(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
+                System.err.println(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
+
+                bodyPublisher = BodyPublishers.noBody()
             }
         }
 

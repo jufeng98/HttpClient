@@ -1,8 +1,11 @@
 package org.javamaster.httpclient.reference
 
 import com.intellij.patterns.PlatformPatterns
-import com.intellij.psi.*
+import com.intellij.psi.PsiReferenceContributor
+import com.intellij.psi.PsiReferenceRegistrar
+import org.javamaster.httpclient.psi.HttpPathAbsolute
 import org.javamaster.httpclient.psi.HttpRequestTarget
+import org.javamaster.httpclient.reference.provider.HttpPathAbsolutePsiReferenceProvider
 import org.javamaster.httpclient.reference.provider.HttpUrlControllerMethodPsiReferenceProvider
 
 /**
@@ -16,6 +19,11 @@ class HttpUrlControllerMethodPsiReferenceContributor : PsiReferenceContributor()
         registrar.registerReferenceProvider(
             PlatformPatterns.psiElement(HttpRequestTarget::class.java),
             HttpUrlControllerMethodPsiReferenceProvider()
+        )
+
+        registrar.registerReferenceProvider(
+            PlatformPatterns.psiElement(HttpPathAbsolute::class.java),
+            HttpPathAbsolutePsiReferenceProvider()
         )
     }
 
