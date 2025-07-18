@@ -59,11 +59,10 @@ enum class HttpRequestEnum {
             val builder = HttpRequest.newBuilder()
                 .version(version)
                 .timeout(Duration.ofSeconds(readTimeout))
+                .POST(bodyPublisher)
                 .uri(URI.create(url))
 
             setHeaders(reqHeaderMap, builder)
-
-            builder.POST(bodyPublisher)
 
             return builder.build()
         }
@@ -76,17 +75,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
-
-            val builder = HttpRequest.newBuilder()
-                .version(version)
-                .timeout(Duration.ofSeconds(readTimeout))
-                .DELETE()
-                .uri(URI.create(url))
-
-            setHeaders(reqHeaderMap, builder)
-
-            return builder.build()
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, bodyPublisher)
         }
     },
     PUT {
@@ -102,11 +91,10 @@ enum class HttpRequestEnum {
             val builder = HttpRequest.newBuilder()
                 .version(version)
                 .timeout(Duration.ofSeconds(readTimeout))
+                .PUT(bodyPublisher)
                 .uri(URI.create(url))
 
             setHeaders(reqHeaderMap, builder)
-
-            builder.PUT(bodyPublisher)
 
             return builder.build()
         }
@@ -119,7 +107,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
         }
     },
     PATCH {
@@ -130,7 +118,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, bodyPublisher)
         }
     },
     HEAD {
@@ -141,7 +129,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
         }
     },
     TRACE {
@@ -152,7 +140,7 @@ enum class HttpRequestEnum {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap)
+            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
         }
     },
     WEBSOCKET {
@@ -205,13 +193,14 @@ enum class HttpRequestEnum {
         version: Version,
         reqHeaderMap: LinkedMultiValueMap<String, String>,
         paramMap: Map<String, String>,
+        bodyPublisher: HttpRequest.BodyPublisher,
     ): HttpRequest {
         val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
 
         val builder = HttpRequest.newBuilder()
             .version(version)
             .timeout(Duration.ofSeconds(readTimeout))
-            .method(methodName, BodyPublishers.noBody())
+            .method(methodName, bodyPublisher)
             .uri(URI.create(url))
 
         setHeaders(reqHeaderMap, builder)
