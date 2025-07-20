@@ -18,14 +18,15 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import javax.swing.Icon
 
 /**
  * Sending http request
  *
  * @author yudong
  */
-enum class HttpRequestEnum {
-    GET {
+enum class HttpRequestEnum(val icon: Icon) {
+    GET(HttpIcons.GET) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -46,7 +47,7 @@ enum class HttpRequestEnum {
             return builder.build()
         }
     },
-    POST {
+    POST(HttpIcons.POST) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -67,7 +68,7 @@ enum class HttpRequestEnum {
             return builder.build()
         }
     },
-    DELETE {
+    DELETE(HttpIcons.DELETE) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -78,7 +79,7 @@ enum class HttpRequestEnum {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, bodyPublisher)
         }
     },
-    PUT {
+    PUT(HttpIcons.PUT) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -99,7 +100,7 @@ enum class HttpRequestEnum {
             return builder.build()
         }
     },
-    OPTIONS {
+    OPTIONS(HttpIcons.FILE) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -110,7 +111,7 @@ enum class HttpRequestEnum {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
         }
     },
-    PATCH {
+    PATCH(HttpIcons.FILE) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -121,7 +122,7 @@ enum class HttpRequestEnum {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, bodyPublisher)
         }
     },
-    HEAD {
+    HEAD(HttpIcons.FILE) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -132,7 +133,7 @@ enum class HttpRequestEnum {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
         }
     },
-    TRACE {
+    TRACE(HttpIcons.FILE) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -143,7 +144,7 @@ enum class HttpRequestEnum {
             return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
         }
     },
-    WEBSOCKET {
+    WEBSOCKET(HttpIcons.WS) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -154,7 +155,7 @@ enum class HttpRequestEnum {
             throw UnsupportedOperationException()
         }
     },
-    DUBBO {
+    DUBBO(HttpIcons.DUBBO) {
         override fun createRequest(
             url: String,
             version: Version,
@@ -165,7 +166,7 @@ enum class HttpRequestEnum {
             throw UnsupportedOperationException()
         }
     },
-    MOCK_SERVER {
+    MOCK_SERVER(HttpIcons.FILE) {
         override fun createRequest(
             url: String,
             version: Version,

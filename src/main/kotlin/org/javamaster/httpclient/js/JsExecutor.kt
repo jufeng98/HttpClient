@@ -3,6 +3,7 @@ package org.javamaster.httpclient.js
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
@@ -65,7 +66,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
     fun initJsRequestObj(
         reqInfo: HttpReqInfo,
-        method: String,
+        method: HttpRequestEnum,
         reqHeaderMap: LinkedMultiValueMap<String, String>,
         selectedEnv: String?,
         fileScopeVariableMap: LinkedHashMap<String, String>,
@@ -111,7 +112,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         }
 
         js += """
-            request.method = '$method';
+            request.method = '${method.name}';
             request.environment = $environment;
             request.environment.selectedEnv = '$selectedEnv';
             request.environment.get = function(name) {

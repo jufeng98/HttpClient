@@ -80,7 +80,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     private val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
     private val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
     private val requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
-    private val methodType = httpMethod.text
+    private val methodType = HttpRequestEnum.getInstance(httpMethod.text)
     private val responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
 
     private val preJsFiles = HttpUtils.getPreJsFiles(httpFile, false)
@@ -221,11 +221,11 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         val reqBody = reqInfo.reqBody
 
         when (methodType) {
-            HttpRequestEnum.WEBSOCKET.name -> handleWs(url, reqHeaderMap)
+            HttpRequestEnum.WEBSOCKET -> handleWs(url, reqHeaderMap)
 
-            HttpRequestEnum.DUBBO.name -> handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
+            HttpRequestEnum.DUBBO -> handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
 
-            HttpRequestEnum.MOCK_SERVER.name -> handleMockServer()
+            HttpRequestEnum.MOCK_SERVER -> handleMockServer()
 
             else -> handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
         }
@@ -529,8 +529,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     ) {
         val start = System.currentTimeMillis()
 
-        val requestEnum = HttpRequestEnum.getInstance(methodType)
-        val future = requestEnum.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
+        val future = methodType.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         future.whenCompleteAsync { response, throwable ->
             runInEdt {
@@ -573,7 +572,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                         val commentTabName = "### $tabName$CR_LF"
                         httpResDescList.add(commentTabName)
 
-                        httpResDescList.add(methodType + " " + response.uri() + " " + versionDesc + CR_LF)
+                        httpResDescList.add(methodType.name + " " + response.uri() + " " + versionDesc + CR_LF)
 
                         httpResDescList.addAll(resHeaderList)
 

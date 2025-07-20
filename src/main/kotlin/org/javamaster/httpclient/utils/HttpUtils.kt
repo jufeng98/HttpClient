@@ -1057,20 +1057,12 @@ object HttpUtils {
     }
 
     fun pickMethodIcon(method: String): Icon {
-        return when (method) {
-            HttpRequestEnum.GET.name -> HttpIcons.GET
+        try {
+            val methodType = HttpRequestEnum.getInstance(method)
 
-            HttpRequestEnum.POST.name -> HttpIcons.POST
-
-            HttpRequestEnum.PUT.name -> HttpIcons.PUT
-
-            HttpRequestEnum.DELETE.name -> HttpIcons.DELETE
-
-            HttpRequestEnum.DUBBO.name -> HttpIcons.DUBBO
-
-            HttpRequestEnum.WEBSOCKET.name -> HttpIcons.WS
-
-            else -> HttpIcons.FILE
+            return methodType.icon
+        } catch (ignored: UnsupportedOperationException) {
+            return HttpIcons.FILE
         }
     }
 
