@@ -526,7 +526,10 @@ enum class InnerVariableEnum(val methodName: String) {
                 throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
             }
 
-            return RandomStringUtils.faker().number().numberBetween(args[0] as Int, args[1] as Int).toString()
+            val start = args[0] as Int
+            val end = args[1] as Int
+
+            return RandomStringUtils.faker().number().numberBetween(start, end).toString()
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -720,7 +723,7 @@ enum class InnerVariableEnum(val methodName: String) {
                 .forEach {
                     map[it.methodName] = it
                 }
-            return@lazy map
+            map
         }
 
         fun isFolderEnum(innerVariableEnum: InnerVariableEnum?): Boolean {

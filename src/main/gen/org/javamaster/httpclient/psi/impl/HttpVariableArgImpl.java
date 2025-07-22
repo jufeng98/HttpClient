@@ -30,8 +30,8 @@ public class HttpVariableArgImpl extends ASTWrapperPsiElement implements HttpVar
 
   @Override
   @Nullable
-  public PsiElement getInteger() {
-    return findChildByType(INTEGER);
+  public PsiElement getNumber() {
+    return findChildByType(NUMBER);
   }
 
   @Override

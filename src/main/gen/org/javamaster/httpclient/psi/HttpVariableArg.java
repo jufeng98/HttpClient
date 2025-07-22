@@ -9,7 +9,7 @@ import com.intellij.psi.PsiReference;
 public interface HttpVariableArg extends PsiElement {
 
   @Nullable
-  PsiElement getInteger();
+  PsiElement getNumber();
 
   @Nullable
   PsiElement getString();

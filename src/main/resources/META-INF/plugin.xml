@@ -68,6 +68,12 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>5.7.0</b></li>
+                <ul>
+                    <li>内置方法的参数支持输入负数</li>
+                    <li>路径元素支持#</li>
+                    <li>bug修复及功能优化</li>
+                </ul>
                 <li><b>5.6.0</b></li>
                 <ul>
                     <li>http 的 PATCH 和 DELETE 请求支持请求体</li>

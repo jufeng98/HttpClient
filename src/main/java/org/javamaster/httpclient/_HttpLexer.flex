@@ -62,13 +62,13 @@ FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
 FIELD_NAME=[a-zA-Z0-9\-]+
 FIELD_VALUE=[^\r\n{ ]+
-FILE_PATH_PART=[^\r\n<>{}#]+
+FILE_PATH_PART=[^\r\n<>{}]+
 MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
 VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
 GLOBAL_VARIABLE_NAME=[^\r\n={} ]+
 DIRECTION_NAME_PART=[^\r\n ]+
 DIRECTION_VALUE_PART=[^\r\n{]+
-INTEGER=[0-9]+
+NUMBER=-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]*)?
 STRING=('([^'])*'|\"([^\"])*\")
 %%
 
@@ -122,7 +122,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_DYNAMIC_VARIABLE_ARGS> {
-  {INTEGER}                    { return INTEGER; }
+  {NUMBER}                    { return NUMBER; }
   {STRING}                     { return STRING; }
   ","                          { return COMMA; }
   ")"                          { yybegin(IN_DYNAMIC_VARIABLE); return RIGHT_BRACKET; }

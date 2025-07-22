@@ -1112,13 +1112,13 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // INTEGER | STRING
+  // NUMBER | STRING
   public static boolean variable_arg(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "variable_arg")) return false;
-    if (!nextTokenIs(b, "<variable arg>", INTEGER, STRING)) return false;
+    if (!nextTokenIs(b, "<variable arg>", NUMBER, STRING)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, VARIABLE_ARG, "<variable arg>");
-    r = consumeToken(b, INTEGER);
+    r = consumeToken(b, NUMBER);
     if (!r) r = consumeToken(b, STRING);
     exit_section_(b, l, m, r, false, null);
     return r;

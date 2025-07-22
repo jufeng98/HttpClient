@@ -64,7 +64,7 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
         fillMap(ATTRIBUTE_MAP, HTTP_REQUEST_NAME, HttpTypes.REQUEST_COMMENT);
         fillMap(ATTRIBUTE_MAP, HttpTypeSets.VARIABLE_BRACES, HTTP_VARIABLE_BRACES);
         fillMap(ATTRIBUTE_MAP, DefaultLanguageHighlighterColors.STRING, HttpTypes.STRING);
-        fillMap(ATTRIBUTE_MAP, DefaultLanguageHighlighterColors.NUMBER, HttpTypes.INTEGER);
+        fillMap(ATTRIBUTE_MAP, DefaultLanguageHighlighterColors.NUMBER, HttpTypes.NUMBER);
     }
 
     public @NotNull Lexer getHighlightingLexer() {

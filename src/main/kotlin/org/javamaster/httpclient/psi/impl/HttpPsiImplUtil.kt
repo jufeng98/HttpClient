@@ -231,9 +231,16 @@ object HttpPsiImplUtil {
 
     @JvmStatic
     fun getValue(param: HttpVariableArg): Any {
-        val integer = param.integer
-        if (integer != null) {
-            return integer.text.toInt()
+        val numberEle = param.number
+        if (numberEle != null) {
+            val text = numberEle.text
+            return if (text.contains(".")) {
+                text.toDouble()
+            } else if (text.contains("e", ignoreCase = true)) {
+                text.toBigDecimal()
+            } else {
+                text.toInt()
+            }
         } else {
             val text = param.string!!.text
             return text.substring(1, text.length - 1)

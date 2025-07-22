@@ -86,12 +86,12 @@ public interface HttpTypes {
   IElementType HTTP_VERSION = new HttpTokenType("HTTP_VERSION");
   IElementType IDENTIFIER = new HttpTokenType("IDENTIFIER");
   IElementType INPUT_FILE_SIGN = new HttpTokenType("< ");
-  IElementType INTEGER = new HttpTokenType("INTEGER");
   IElementType IN_START_SCRIPT_BRACE = new HttpTokenType("< {%");
   IElementType LEFT_BRACKET = new HttpTokenType("(");
   IElementType LINE_COMMENT = new HttpTokenType("LINE_COMMENT");
   IElementType MESSAGE_BOUNDARY = new HttpTokenType("MESSAGE_BOUNDARY");
   IElementType MESSAGE_TEXT = new HttpTokenType("MESSAGE_TEXT");
+  IElementType NUMBER = new HttpTokenType("NUMBER");
   IElementType OUTPUT_FILE_SIGN = new HttpTokenType(">> ");
   IElementType OUT_START_SCRIPT_BRACE = new HttpTokenType("> {%");
   IElementType PORT_SEGMENT = new HttpTokenType("PORT_SEGMENT");
