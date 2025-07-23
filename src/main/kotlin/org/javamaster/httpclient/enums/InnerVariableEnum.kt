@@ -10,7 +10,7 @@ import io.ktor.http.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.time.DateUtils
-import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.RandomStringUtils
@@ -29,12 +29,12 @@ import java.util.concurrent.TimeUnit
 enum class InnerVariableEnum(val methodName: String) {
     RANDOM_ALPHABETIC("\$random.alphabetic") {
         override fun typeText(): String {
-            return NlsBundle.nls("alphabetic.desc", methodName)
+            return nls("alphabetic.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val count = args[0] as Int
@@ -47,12 +47,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_ALPHA_NUMERIC("\$random.alphanumeric") {
         override fun typeText(): String {
-            return NlsBundle.nls("alphanumeric.desc", methodName)
+            return nls("alphanumeric.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val count = args[0] as Int
@@ -65,12 +65,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_HEXADECIMAL("\$random.hexadecimal") {
         override fun typeText(): String {
-            return NlsBundle.nls("hexadecimal.desc", methodName)
+            return nls("hexadecimal.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val max = args[0] as Int
@@ -83,12 +83,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NUMERIC("\$random.numeric") {
         override fun typeText(): String {
-            return NlsBundle.nls("numeric.desc", methodName)
+            return nls("numeric.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val count = args[0] as Int
@@ -101,7 +101,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_UUID("\$random.uuid") {
         override fun typeText(): String {
-            return NlsBundle.nls("uuid.desc")
+            return nls("uuid.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -110,7 +110,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_INT("\$randomInt") {
         override fun typeText(): String {
-            return NlsBundle.nls("randomInt.desc")
+            return nls("randomInt.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -119,12 +119,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_INTEGER("\$random.integer") {
         override fun typeText(): String {
-            return NlsBundle.nls("integer.desc", methodName)
+            return nls("integer.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val start = args[0] as Int
@@ -138,12 +138,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_FLOAT("\$random.float") {
         override fun typeText(): String {
-            return NlsBundle.nls("float.desc", methodName)
+            return nls("float.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val start = args[0] as Int
@@ -157,7 +157,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     TIMESTAMP("\$timestamp") {
         override fun typeText(): String {
-            return NlsBundle.nls("timestamp.desc")
+            return nls("timestamp.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -166,12 +166,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     TIMESTAMP_FULL("\$timestampFull") {
         override fun typeText(): String {
-            return NlsBundle.nls("timestampFull.desc", methodName)
+            return nls("timestampFull.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 3 || args[0] !is Int || args[1] !is Int || args[2] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val day = args[0] as Int
@@ -191,7 +191,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     ISO_TIMESTAMP("\$isoTimestamp") {
         override fun typeText(): String {
-            return NlsBundle.nls("isoTimestamp.desc")
+            return nls("isoTimestamp.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -200,7 +200,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     DATETIME("\$datetime") {
         override fun typeText(): String {
-            return NlsBundle.nls("datetime.desc")
+            return nls("datetime.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -209,12 +209,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     TIMESTAMP_DATE("\$timestampDate") {
         override fun typeText(): String {
-            return NlsBundle.nls("timestampDate.desc", methodName)
+            return nls("timestampDate.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val count = args[0] as Int
@@ -230,12 +230,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     DATE("\$date") {
         override fun typeText(): String {
-            return NlsBundle.nls("date.desc", methodName)
+            return nls("date.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val count = args[0] as Int
@@ -251,12 +251,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     IMAGE_TO_BASE64("\$imageToBase64") {
         override fun typeText(): String {
-            return NlsBundle.nls("imageToBase64.desc", methodName)
+            return nls("imageToBase64.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is String) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val path = args[0] as String
@@ -290,12 +290,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     READ_STRING("\$readString") {
         override fun typeText(): String {
-            return NlsBundle.nls("readString.desc", methodName)
+            return nls("readString.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is String) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val path = args[0] as String
@@ -311,7 +311,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_ADDRESS("\$random.address.full") {
         override fun typeText(): String {
-            return NlsBundle.nls("address.desc")
+            return nls("address.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -320,7 +320,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_BOOL("\$random.bool") {
         override fun typeText(): String {
-            return NlsBundle.nls("bool.desc")
+            return nls("bool.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -329,7 +329,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NAME("\$random.name") {
         override fun typeText(): String {
-            return NlsBundle.nls("name.desc")
+            return nls("name.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -338,7 +338,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_BOOK_TITLE("\$random.book.title") {
         override fun typeText(): String {
-            return NlsBundle.nls("book.desc")
+            return nls("book.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -347,7 +347,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_APP_NAME("\$random.app.name") {
         override fun typeText(): String {
-            return NlsBundle.nls("app.desc")
+            return nls("app.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -356,7 +356,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_COMPANY_NAME("\$random.company.name") {
         override fun typeText(): String {
-            return NlsBundle.nls("company.desc")
+            return nls("company.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -365,7 +365,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_HERO_NAME("\$random.hero.name") {
         override fun typeText(): String {
-            return NlsBundle.nls("hero.desc")
+            return nls("hero.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -374,7 +374,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_NATION_NAME("\$random.nation.name") {
         override fun typeText(): String {
-            return NlsBundle.nls("nation.desc")
+            return nls("nation.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -383,7 +383,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_UNIVERSITY_NAME("\$random.university.name") {
         override fun typeText(): String {
-            return NlsBundle.nls("university.desc")
+            return nls("university.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -523,7 +523,7 @@ enum class InnerVariableEnum(val methodName: String) {
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val start = args[0] as Int
@@ -565,7 +565,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     PICK("\$random.pick") {
         override fun typeText(): String {
-            return NlsBundle.nls("pick.desc", methodName, methodName)
+            return nls("pick.desc", methodName, methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -582,12 +582,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     REPEAT("\$repeat") {
         override fun typeText(): String {
-            return NlsBundle.nls("repeat.desc", methodName)
+            return nls("repeat.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is String || args[1] !is Int) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val str = args[0] as String
@@ -602,12 +602,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     EVAL("\$eval") {
         override fun typeText(): String {
-            return NlsBundle.nls("eval.desc", methodName)
+            return nls("eval.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is String) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val context = Context.enter()
@@ -625,12 +625,12 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     EXEC("\$exec") {
         override fun typeText(): String {
-            return NlsBundle.nls("exec.desc", methodName)
+            return nls("exec.desc", methodName)
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is String) {
-                throw IllegalArgumentException("$methodName has wrong arguments.${typeText()}")
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val command = if (OS.CURRENT == OS.Windows) {
@@ -657,7 +657,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     MVN_TARGET("\$mvnTarget") {
         override fun typeText(): String {
-            return NlsBundle.nls("mvnTarget.desc")
+            return nls("mvnTarget.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -676,7 +676,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     PROJECT_ROOT("\$projectRoot") {
         override fun typeText(): String {
-            return NlsBundle.nls("projectRoot.desc")
+            return nls("projectRoot.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
@@ -689,7 +689,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     HISTORY_FOLDER("\$historyFolder") {
         override fun typeText(): String {
-            return NlsBundle.nls("historyFolder.desc")
+            return nls("historyFolder.desc")
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
