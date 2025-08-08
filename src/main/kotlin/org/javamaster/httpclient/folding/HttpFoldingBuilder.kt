@@ -101,7 +101,7 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         }
 
         if (project.isDisposed) {
-            return false
+            return true
         }
 
         val virtualFile = PsiUtil.getVirtualFile(node.psi) ?: return true
