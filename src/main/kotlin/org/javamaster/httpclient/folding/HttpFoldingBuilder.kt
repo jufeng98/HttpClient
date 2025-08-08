@@ -96,6 +96,13 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
 
     private fun getFoldHeaderFlag(node: ASTNode): Boolean {
         val project = ProjectUtil.getActiveProject() ?: return true
+        if (!project.isInitialized) {
+            return true
+        }
+
+        if (project.isDisposed) {
+            return false
+        }
 
         val virtualFile = PsiUtil.getVirtualFile(node.psi) ?: return true
 
