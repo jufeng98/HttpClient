@@ -68,7 +68,7 @@
     <change-notes>
         <![CDATA[
             <ul>
-                <li><b>5.7.0</b></li>
+                <li><b>5.7.1</b></li>
                 <ul>
                     <li>内置方法的参数支持输入负数</li>
                     <li>路径元素支持#</li>
