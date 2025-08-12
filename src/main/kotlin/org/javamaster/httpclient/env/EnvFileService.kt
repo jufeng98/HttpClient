@@ -9,6 +9,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.findFile
 import com.intellij.openapi.vfs.writeText
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiManager
@@ -466,19 +467,32 @@ class EnvFileService(val project: Project) {
         }
 
         fun getEnvJsonFile(envFileName: String, httpFileParentPath: String, project: Project): JsonFile? {
-            var fileName = "$httpFileParentPath/$envFileName"
+            val dir = VfsUtil.findFileByIoFile(File(project.basePath!!), true)!!
 
-            var virtualFile = VfsUtil.findFileByIoFile(File(fileName), true)
+            return getEnvJsonFile(envFileName, httpFileParentPath, project, dir)
+        }
+
+        private fun getEnvJsonFile(
+            envFileName: String,
+            httpFileParentPath: String,
+            project: Project,
+            projectDir: VirtualFile,
+        ): JsonFile? {
+            val dir = VfsUtil.findFileByIoFile(File(httpFileParentPath), true) ?: return null
+
+            val virtualFile = dir.findFile(envFileName)
 
             if (virtualFile != null) {
                 return PsiUtil.getPsiFile(project, virtualFile) as JsonFile
             }
 
-            fileName = "${project.basePath}/$envFileName"
+            if (dir == projectDir) {
+                return null
+            }
 
-            virtualFile = VfsUtil.findFileByIoFile(File(fileName), true)
-            if (virtualFile != null) {
-                return PsiUtil.getPsiFile(project, virtualFile) as JsonFile
+            if (dir.parent != null) {
+                val path = dir.parent.path
+                return getEnvJsonFile(envFileName, path, project)
             }
 
             return null
