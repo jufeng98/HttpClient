@@ -68,6 +68,10 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>5.7.8</b></li>
+                <ul>
+                    <li>bug修复及功能优化</li>
+                </ul>
                 <li><b>5.7.5</b></li>
                 <ul>
                     <li>

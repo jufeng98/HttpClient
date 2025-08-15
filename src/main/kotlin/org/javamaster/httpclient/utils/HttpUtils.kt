@@ -6,6 +6,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunnerAndConfigurationSettings
+import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.JsonElementTypes
 import com.intellij.json.psi.*
 import com.intellij.lang.injection.InjectedLanguageManager
@@ -1200,4 +1201,18 @@ object HttpUtils {
 
         return true
     }
+
+    fun getActiveValidProject(): Project? {
+        val project = ProjectUtil.getActiveProject() ?: return null
+        if (!project.isInitialized) {
+            return null
+        }
+
+        if (project.isDisposed) {
+            return null
+        }
+
+        return project
+    }
+
 }

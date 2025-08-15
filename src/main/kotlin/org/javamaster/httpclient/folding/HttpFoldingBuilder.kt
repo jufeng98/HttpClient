@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.folding
 
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.lang.ASTNode
 import com.intellij.lang.folding.FoldingBuilder
 import com.intellij.lang.folding.FoldingDescriptor
@@ -19,6 +18,7 @@ import org.javamaster.httpclient.psi.HttpOutputFile
 import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getMultipartFieldDescription
+import org.javamaster.httpclient.utils.HttpUtils
 import java.nio.file.Paths
 import kotlin.io.path.name
 
@@ -95,14 +95,7 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
     }
 
     private fun getFoldHeaderFlag(node: ASTNode): Boolean {
-        val project = ProjectUtil.getActiveProject() ?: return true
-        if (!project.isInitialized) {
-            return true
-        }
-
-        if (project.isDisposed) {
-            return true
-        }
+        val project = HttpUtils.getActiveValidProject() ?: return true
 
         val virtualFile = PsiUtil.getVirtualFile(node.psi) ?: return true
 

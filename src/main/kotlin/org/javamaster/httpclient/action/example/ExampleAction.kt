@@ -1,10 +1,10 @@
 package org.javamaster.httpclient.action.example
 
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.VfsUtil
+import org.javamaster.httpclient.utils.HttpUtils
 
 
 /**
@@ -17,7 +17,8 @@ abstract class ExampleAction(text: String) : AnAction(text) {
     }
 
     fun openExample(name: String) {
-        val project = ProjectUtil.getActiveProject()!!
+        val project = HttpUtils.getActiveValidProject() ?: return
+
         val url = javaClass.classLoader.getResource(name)!!
         val virtualFile = VfsUtil.findFileByURL(url)!!
         FileEditorManager.getInstance(project).openFile(virtualFile, true)

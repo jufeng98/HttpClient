@@ -2,7 +2,6 @@ package org.javamaster.httpclient.action.addHttp
 
 import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.codeInsight.template.impl.TemplateSettings
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.application.runWriteAction
@@ -12,6 +11,7 @@ import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.env.EnvFileService.Companion.createEnvFile
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.NotifyUtil.notifyInfo
 import org.javamaster.httpclient.utils.NotifyUtil.notifyWarn
 
@@ -26,7 +26,8 @@ abstract class AddAction(name: String) : AnAction(name) {
     }
 
     fun startLiveTemplate(abbreviation: String) {
-        val project = ProjectUtil.getActiveProject()!!
+        val project = HttpUtils.getActiveValidProject() ?: return
+
         val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
         val document = editor.document
 
@@ -51,7 +52,7 @@ abstract class AddAction(name: String) : AnAction(name) {
     companion object {
 
         fun createAndReInitEnvCompo(isPrivate: Boolean) {
-            val project = ProjectUtil.getActiveProject()!!
+            val project = HttpUtils.getActiveValidProject() ?: return
 
             val envFileName = if (isPrivate) EnvFileService.PRIVATE_ENV_FILE_NAME else EnvFileService.ENV_FILE_NAME
 
