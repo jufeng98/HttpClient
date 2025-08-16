@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.action.dashboard
 
-import com.intellij.codeInsight.hint.HintManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.ide.CopyPasteManager
@@ -11,6 +10,7 @@ import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpBody
 import org.javamaster.httpclient.psi.HttpOutputFile
+import org.javamaster.httpclient.utils.NotifyUtil
 import java.awt.datatransfer.StringSelection
 import javax.swing.JComponent
 
@@ -34,7 +34,7 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY)
 
             copyPasteManager.setContents(StringSelection(text))
 
-            HintManager.getInstance().showSuccessHint(editor, "Copy request body success!")
+            NotifyUtil.notifyInfo(project, "Copy request body success!")
         } else {
             val simpleTypeEnum = component.getUserData(httpDashboardResTypeKey) ?: return
 
@@ -43,7 +43,7 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY)
 
                 copyPasteManager.setContents(StringSelection(outputFile.filePath!!.text))
 
-                HintManager.getInstance().showSuccessHint(editor, "Copy file path success!")
+                NotifyUtil.notifyInfo(project, "Copy file path success!")
 
                 return
             }
@@ -52,7 +52,7 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY)
 
             copyPasteManager.setContents(StringSelection(text))
 
-            HintManager.getInstance().showSuccessHint(editor, "Copy response body success!")
+            NotifyUtil.notifyInfo(project, "Copy response body success!")
         }
 
     }
