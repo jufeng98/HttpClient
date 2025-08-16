@@ -532,15 +532,19 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         val future = methodType.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         future.whenCompleteAsync { response, throwable ->
+
+            costTimes = System.currentTimeMillis() - start
+
             runInEdt {
                 application.runWriteAction {
                     try {
                         httpStatus = response?.statusCode()
-                        costTimes = System.currentTimeMillis() - start
 
                         if (throwable != null) {
                             val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+
                             dealResponse(httpInfo, parentPath)
+
                             return@runWriteAction
                         }
 
@@ -640,10 +644,10 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             } else {
                 nls("req.failed", tabName, myThrowable)
             }
-            val msg = "<div style='font-size:13pt'>$error</div>"
+            val msg = "<div style='font-size:12pt'>$error</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)
         } else {
-            val msg = "<div style='font-size:13pt'>$tabName ${nls("request.success")}!</div>"
+            val msg = "<div style='font-size:12pt'>$tabName ${nls("request.success")}!</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
         }
     }

@@ -17,6 +17,7 @@ import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpRequest
+import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.InjectionUtils
 
 /**
@@ -54,9 +55,14 @@ class MessageBodyInjectionContributor : MultiHostInjector {
         val languages = Language.findInstancesByMimeType(mimeType)
         val language = ContainerUtil.getFirstItem(languages) ?: PlainTextLanguage.INSTANCE
 
+        val text = host.text
+        if (text.length > HttpUtils.RES_BODY_SIZE_LIMIT) {
+            // 大文本不在注入语言，防止 IDEA 卡顿
+            return
+        }
+
         if (language == JsonLanguage.INSTANCE) {
             registrar.startInjecting(language)
-            val text = host.text
 
             val variableRanges = injectBody(registrar, host, text)
 

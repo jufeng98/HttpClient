@@ -83,6 +83,7 @@ object HttpUtils {
     const val READ_TIMEOUT = 3600L
     const val CONNECT_TIMEOUT = 30L
     const val TIMEOUT = 10_000
+    const val RES_BODY_SIZE_LIMIT = 1 * 1024 * 1024
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
     const val WEB_BOUNDARY = "boundary"
@@ -516,6 +517,11 @@ object HttpUtils {
         val simpleTypeEnum = SimpleTypeEnum.convertContentType(contentType)
 
         if (simpleTypeEnum == SimpleTypeEnum.JSON) {
+            if (resBody.size > RES_BODY_SIZE_LIMIT) {
+                // 大 JSON 不在格式化处理，防止 IDEA 卡顿
+                return Triple(simpleTypeEnum, resBody, contentType)
+            }
+
             val jsonStr = String(resBody, StandardCharsets.UTF_8)
 
             try {
