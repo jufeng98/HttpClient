@@ -56,7 +56,7 @@ class MessageBodyInjectionContributor : MultiHostInjector {
         val language = ContainerUtil.getFirstItem(languages) ?: PlainTextLanguage.INSTANCE
 
         val text = host.text
-        if (text.length > HttpUtils.RES_BODY_SIZE_LIMIT) {
+        if (text.length > HttpUtils.RES_TEXT_SIZE_LIMIT) {
             // 大文本不在注入语言，防止 IDEA 卡顿
             return
         }

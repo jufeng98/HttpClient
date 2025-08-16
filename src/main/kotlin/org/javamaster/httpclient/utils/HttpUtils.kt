@@ -83,7 +83,9 @@ object HttpUtils {
     const val READ_TIMEOUT = 3600L
     const val CONNECT_TIMEOUT = 30L
     const val TIMEOUT = 10_000
-    const val RES_BODY_SIZE_LIMIT = 1 * 1024 * 1024
+
+    private const val RES_BODY_SIZE_LIMIT = 1 * 1024 * 1024
+    const val RES_TEXT_SIZE_LIMIT = (1.5 * 1024 * 1024).toInt()
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
     const val WEB_BOUNDARY = "boundary"
