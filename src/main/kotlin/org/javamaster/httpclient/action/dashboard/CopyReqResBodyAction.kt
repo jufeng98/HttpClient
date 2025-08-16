@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.action.dashboard
 
+import com.intellij.codeInsight.hint.HintManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.ide.CopyPasteManager
@@ -32,6 +33,8 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY)
             val text = PsiTreeUtil.findChildOfType(httpFile, HttpBody::class.java)?.text ?: return
 
             copyPasteManager.setContents(StringSelection(text))
+
+            HintManager.getInstance().showSuccessHint(editor, "Copy request body success!")
         } else {
             val simpleTypeEnum = component.getUserData(httpDashboardResTypeKey) ?: return
 
@@ -40,12 +43,16 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY)
 
                 copyPasteManager.setContents(StringSelection(outputFile.filePath!!.text))
 
+                HintManager.getInstance().showSuccessHint(editor, "Copy file path success!")
+
                 return
             }
 
             val text = PsiTreeUtil.findChildOfType(httpFile, HttpBody::class.java)?.text ?: return
 
             copyPasteManager.setContents(StringSelection(text))
+
+            HintManager.getInstance().showSuccessHint(editor, "Copy response body success!")
         }
 
     }
