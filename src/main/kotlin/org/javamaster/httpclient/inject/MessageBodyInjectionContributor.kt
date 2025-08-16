@@ -56,12 +56,17 @@ class MessageBodyInjectionContributor : MultiHostInjector {
         val language = ContainerUtil.getFirstItem(languages) ?: PlainTextLanguage.INSTANCE
 
         val text = host.text
-        if (text.length > HttpUtils.RES_TEXT_SIZE_LIMIT) {
-            // 大文本不在注入语言，防止 IDEA 卡顿
+        if (text.length > HttpUtils.RES_SIZE_LIMIT) {
+            // 大文本不再注入语言，防止 IDEA 卡顿
             return
         }
 
         if (language == JsonLanguage.INSTANCE) {
+            if (text.indexOf('\n', text.length - 3000) == -1) {
+                // 表明是未格式化过的JSON，注入语言也没有意义，跳过注入
+                return
+            }
+
             registrar.startInjecting(language)
 
             val variableRanges = injectBody(registrar, host, text)

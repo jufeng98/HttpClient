@@ -30,6 +30,7 @@ import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.mock.MockServer
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpReqInfo
+import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
@@ -42,7 +43,7 @@ import org.javamaster.httpclient.utils.HttpUtils.SUCCESS
 import org.javamaster.httpclient.utils.HttpUtils.WEB_BOUNDARY
 import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
 import org.javamaster.httpclient.utils.HttpUtils.convertToResHeaderDescList
-import org.javamaster.httpclient.utils.HttpUtils.convertToResPair
+import org.javamaster.httpclient.utils.HttpUtils.convertResponse
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.javamaster.httpclient.utils.HttpUtils.handleOrdinaryContentCurl
@@ -55,7 +56,6 @@ import java.io.OutputStream
 import java.lang.reflect.InvocationTargetException
 import java.net.ServerSocket
 import java.net.http.HttpClient.Version
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.CancellationException
@@ -452,32 +452,38 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         val future = dubboRequest.sendAsync()
 
-        future.whenCompleteAsync { pair, throwable ->
+        future.whenCompleteAsync { triple, throwable ->
+
             runInEdt {
                 application.runWriteAction {
                     if (throwable != null) {
-                        val info = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+                        val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
-                        dealResponse(info, parentPath)
+                        dealResponse(httpInfo, parentPath)
 
                         return@runWriteAction
                     }
 
                     httpStatus = 200
-                    costTimes = pair.second
+                    costTimes = triple.third
 
-                    val byteArray = pair.first
-                    val consumeTimes = pair.second
+                    val bodyBytes = triple.first
+                    val bodyStr = triple.second
 
-                    val size = Formats.formatFileSize(byteArray.size.toLong())
+                    val size = Formats.formatFileSize(bodyBytes.size.toLong())
 
-                    val comment = nls("res.desc", 200, consumeTimes, size)
+                    val comment = nls("res.desc", 200, costTimes!!, size)
 
                     val httpResDescList = mutableListOf("// $comment$CR_LF")
 
+                    val httpResInfo = HttpResInfo(
+                        SimpleTypeEnum.JSON, bodyBytes, bodyStr,
+                        ContentType.APPLICATION_JSON.mimeType
+                    )
+
                     val evalJsRes = jsExecutor.evalJsAfterRequest(
                         jsAfterReq,
-                        Triple(SimpleTypeEnum.JSON, byteArray, ContentType.APPLICATION_JSON.mimeType),
+                        httpResInfo,
                         200,
                         mutableMapOf()
                     )
@@ -490,7 +496,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                     httpResDescList.add("### $tabName$CR_LF")
                     httpResDescList.add("DUBBO $url $CR_LF")
-                    httpResDescList.add("${HttpHeaders.CONTENT_LENGTH}: ${byteArray.size}$CR_LF")
+                    httpResDescList.add("${HttpHeaders.CONTENT_LENGTH}: ${bodyBytes.size}$CR_LF")
 
                     reqHeaderMap.forEach {
                         val name = it.key
@@ -500,13 +506,13 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                     }
                     httpResDescList.add(CR_LF)
 
-                    httpResDescList.add(String(byteArray, StandardCharsets.UTF_8))
+                    httpResDescList.add(bodyStr)
 
                     val httpInfo = HttpInfo(
                         httpReqDescList,
                         httpResDescList,
                         SimpleTypeEnum.JSON,
-                        byteArray,
+                        bodyBytes,
                         null,
                         ContentType.APPLICATION_JSON.mimeType
                     )
@@ -552,7 +558,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val resHeaderList = convertToResHeaderDescList(response)
 
-                        val resTriple = convertToResPair(response)
+                        val httpResInfo = convertResponse(response)
 
                         val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
 
@@ -560,7 +566,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val evalJsRes = jsExecutor.evalJsAfterRequest(
                             jsAfterReq,
-                            resTriple,
+                            httpResInfo,
                             response.statusCode(),
                             response.headers().map()
                         )
@@ -580,15 +586,20 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         httpResDescList.addAll(resHeaderList)
 
-                        if (resTriple.first.binary) {
+                        val simpleTypeEnum = httpResInfo.simpleTypeEnum
+                        val bodyBytes = httpResInfo.bodyBytes
+                        val bodyStr = httpResInfo.bodyStr
+                        val contentType = httpResInfo.contentType
+
+                        if (simpleTypeEnum.binary) {
                             httpResDescList.add(nls("res.binary.data", size))
                         } else {
-                            httpResDescList.add(String(resTriple.second, StandardCharsets.UTF_8))
+                            httpResDescList.add(bodyStr!!)
                         }
 
                         val httpInfo = HttpInfo(
-                            httpReqDescList, httpResDescList, resTriple.first, resTriple.second,
-                            null, resTriple.third
+                            httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
+                            null, contentType
                         )
 
                         dealResponse(httpInfo, parentPath)

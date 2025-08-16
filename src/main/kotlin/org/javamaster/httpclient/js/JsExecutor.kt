@@ -10,6 +10,7 @@ import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
+import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpScriptBody
@@ -234,7 +235,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
     fun evalJsAfterRequest(
         jsScript: HttpScriptBody?,
-        resTriple: Triple<SimpleTypeEnum, ByteArray, String>,
+        httpResInfo: HttpResInfo,
         statusCode: Int,
         headerMap: MutableMap<String, MutableList<String>>,
     ): String? {
@@ -248,11 +249,10 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val headers = gson.toJson(headerMap)
 
             var js: String
-            val typeEnum = resTriple.first
+            val typeEnum = httpResInfo.simpleTypeEnum
             when (typeEnum) {
                 SimpleTypeEnum.JSON -> {
-                    val bytes = resTriple.second
-                    jsonStr = String(bytes, StandardCharsets.UTF_8)
+                    jsonStr = httpResInfo.bodyStr!!
 
                     js = """
                           // noinspection JSUnresolvedReference
@@ -269,8 +269,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 }
 
                 SimpleTypeEnum.XML -> {
-                    val bytes = resTriple.second
-                    val xmlStr = String(bytes, StandardCharsets.UTF_8)
+                    val xmlStr = httpResInfo.bodyStr!!
 
                     val documentBuilder = documentBuilderFactory.newDocumentBuilder()
 
@@ -292,8 +291,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 }
 
                 SimpleTypeEnum.TEXT -> {
-                    val bytes = resTriple.second
-                    val bodyText = HttpUtils.convertToJsString(String(bytes, StandardCharsets.UTF_8))
+                    val bodyText = HttpUtils.convertToJsString(httpResInfo.bodyStr!!)
 
                     js = """
                           // noinspection JSUnusedLocalSymbols
@@ -304,7 +302,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 }
 
                 else -> {
-                    bodyArray = resTriple.second
+                    bodyArray = httpResInfo.bodyBytes
 
                     js = """
                           // noinspection JSUnusedLocalSymbols

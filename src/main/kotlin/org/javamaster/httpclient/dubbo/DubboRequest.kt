@@ -148,7 +148,7 @@ class DubboRequest(
         }
     }
 
-    override fun sendAsync(): CompletableFuture<Pair<ByteArray, Long>> {
+    override fun sendAsync(): CompletableFuture<Triple<ByteArray, String, Long>> {
         httpReqDescList.add("/*$CR_LF")
         httpReqDescList.add(NlsBundle.nls("call.dubbo.name", methodName) + CR_LF)
 
@@ -200,7 +200,7 @@ class DubboRequest(
 
                 val byteArray = resJsonStr.toByteArray(StandardCharsets.UTF_8)
 
-                Pair(byteArray, consumeTimes)
+                Triple(byteArray, resJsonStr, consumeTimes)
             } finally {
                 Thread.currentThread().contextClassLoader = classLoader
             }

@@ -4,6 +4,6 @@ import java.util.concurrent.CompletableFuture
 
 interface DubboHandler {
 
-    fun sendAsync(): CompletableFuture<Pair<ByteArray, Long>>
+    fun sendAsync(): CompletableFuture<Triple<ByteArray, String, Long>>
 
 }

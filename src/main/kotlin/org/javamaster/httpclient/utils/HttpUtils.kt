@@ -44,6 +44,7 @@ import org.javamaster.httpclient.factory.JsonPsiFactory.createNumberProperty
 import org.javamaster.httpclient.factory.JsonPsiFactory.createStringProperty
 import org.javamaster.httpclient.js.JsExecutor.Companion.setGlobalVariable
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
@@ -84,8 +85,7 @@ object HttpUtils {
     const val CONNECT_TIMEOUT = 30L
     const val TIMEOUT = 10_000
 
-    private const val RES_BODY_SIZE_LIMIT = 1 * 1024 * 1024
-    const val RES_TEXT_SIZE_LIMIT = 2 * 1024 * 1024
+    const val RES_SIZE_LIMIT = 2 * 1024 * 1024
 
     const val HTTP_TYPE_ID = "intellijHttpClient"
     const val WEB_BOUNDARY = "boundary"
@@ -511,32 +511,45 @@ object HttpUtils {
         return headerDescList
     }
 
-    fun convertToResPair(response: HttpResponse<ByteArray>): Triple<SimpleTypeEnum, ByteArray, String> {
+    fun convertResponse(response: HttpResponse<ByteArray>): HttpResInfo {
         val resBody = response.body()
         val resHeaders = response.headers()
         val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { ContentType.TEXT_PLAIN.mimeType }
 
         val simpleTypeEnum = SimpleTypeEnum.convertContentType(contentType)
 
-        if (simpleTypeEnum == SimpleTypeEnum.JSON) {
-            if (resBody.size > RES_BODY_SIZE_LIMIT) {
-                // 大 JSON 不在格式化处理，防止 IDEA 卡顿
-                return Triple(simpleTypeEnum, resBody, contentType)
-            }
+        val bodyStr = if (simpleTypeEnum.binary) {
+            null
+        } else {
+            val str = String(resBody, StandardCharsets.UTF_8)
 
-            val jsonStr = String(resBody, StandardCharsets.UTF_8)
-
-            try {
-                val jsonElement = gson.fromJson(jsonStr, JsonElement::class.java)
-                val jsonStrPretty = gson.toJson(jsonElement)
-
-                return Triple(simpleTypeEnum, jsonStrPretty.toByteArray(StandardCharsets.UTF_8), contentType)
-            } catch (_: JsonSyntaxException) {
-                return Triple(simpleTypeEnum, resBody, contentType)
+            if (simpleTypeEnum == SimpleTypeEnum.JSON) {
+                if (resBody.size > RES_SIZE_LIMIT) {
+                    str
+                } else {
+                    val prettyStr = formatJson(str)
+                    if (prettyStr.length> RES_SIZE_LIMIT) {
+                        str
+                    } else {
+                        prettyStr
+                    }
+                }
+            } else {
+                str
             }
         }
 
-        return Triple(simpleTypeEnum, resBody, contentType)
+        return HttpResInfo(simpleTypeEnum, resBody, bodyStr, contentType)
+    }
+
+    private fun formatJson(jsonStr: String): String {
+        try {
+            val jsonElement = gson.fromJson(jsonStr, JsonElement::class.java)
+
+            return gson.toJson(jsonElement)
+        } catch (_: JsonSyntaxException) {
+            return jsonStr
+        }
     }
 
     fun getJsScript(httpResponseHandler: HttpResponseHandler?): HttpScriptBody? {
