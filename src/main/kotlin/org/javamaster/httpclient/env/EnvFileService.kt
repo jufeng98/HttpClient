@@ -492,7 +492,7 @@ class EnvFileService(val project: Project) {
 
             if (dir.parent != null) {
                 val path = dir.parent.path
-                return getEnvJsonFile(envFileName, path, project)
+                return getEnvJsonFile(envFileName, path, project, projectDir)
             }
 
             return null
