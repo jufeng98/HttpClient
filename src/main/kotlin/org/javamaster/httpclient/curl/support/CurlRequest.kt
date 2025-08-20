@@ -86,7 +86,7 @@ class CurlRequest {
                     val key = URLEncoder.encode(it.key, "UTF-8")
                     val value = URLEncoder.encode(it.value, "UTF-8")
                     "$key=$value"
-                } catch (var3: UnsupportedEncodingException) {
+                } catch (_: UnsupportedEncodingException) {
                     ""
                 }
             }, "&"
@@ -118,5 +118,5 @@ class CurlRequest {
 
     class KeyValuePair(var key: String, var value: String)
 
-    class Biscuit(var name: String?, var value: String?, var domain: String?, var path: String?, var date: Long)
+    class Biscuit(var name: String?, var value: String?, @Suppress("unused") var domain: String?, var path: String?, var date: Long)
 }

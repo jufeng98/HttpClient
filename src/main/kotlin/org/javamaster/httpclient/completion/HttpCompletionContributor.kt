@@ -78,7 +78,7 @@ class HttpCompletionContributor : CompletionContributor() {
             }
 
             if (parent is HttpRequestTarget) {
-                context.replacementOffset = parent.getTextRange().startOffset
+                context.replacementOffset = parent.textRange.startOffset
                 if (context.startOffset > 0) {
                     val previousElement = context.file.findElementAt(context.startOffset - 1)
                     val previousElementParent = previousElement?.parent
@@ -165,8 +165,8 @@ class HttpCompletionContributor : CompletionContributor() {
         parent: PsiElement?,
     ): PsiElement? {
         if (parent is HttpVariable) {
-            val toReplace = parent.getFirstChild()
-            return toReplace ?: parent.getFirstChild()
+            val toReplace = parent.firstChild
+            return toReplace ?: parent.firstChild
         } else {
             if (context.startOffset <= 0) return null
 

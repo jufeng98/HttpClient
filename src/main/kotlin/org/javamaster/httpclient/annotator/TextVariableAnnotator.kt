@@ -26,7 +26,7 @@ class TextVariableAnnotator : Annotator {
         references.forEach {
             when (it) {
                 is TextVariableNamePsiReference -> {
-                    val builtin = it.variable.variableName?.isBuiltin ?: false
+                    val builtin = it.variable.variableName?.isBuiltin == true
                     annotateVariableName(builtin, it.textRange, holder)
                 }
 

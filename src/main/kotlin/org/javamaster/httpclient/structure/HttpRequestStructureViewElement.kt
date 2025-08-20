@@ -56,7 +56,7 @@ class HttpRequestStructureViewElement private constructor(
             }
 
             for (block in blocks) {
-                val list = Companion.getChildren(block)
+                val list = getChildren(block)
                 children.addAll(list)
             }
             return children

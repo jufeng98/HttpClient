@@ -209,7 +209,7 @@ class SpringControllerScanService {
             val methodValues = findAnnotationValue(attribute, "method")
 
             if (methodValues != null) {
-                val methods = if (methodValues is List<*>) methodValues else listOf(methodValues)
+                val methods = methodValues as? List<*> ?: listOf(methodValues)
                 if (methods.isEmpty()) {
                     continue
                 }
@@ -228,7 +228,7 @@ class SpringControllerScanService {
             val pathValues = findAnnotationValue(attribute, "path", "value")
 
             if (pathValues != null) {
-                val paths = if (pathValues is List<*>) pathValues else listOf(pathValues)
+                val paths = pathValues as? List<*> ?: listOf(pathValues)
                 for (path in paths) {
                     if (path == null) {
                         continue
@@ -249,11 +249,7 @@ class SpringControllerScanService {
             return slash
         }
 
-        val currPath = if (path is String) {
-            path
-        } else {
-            path.toString()
-        }
+        val currPath = path as? String ?: path.toString()
 
         if (currPath.startsWith(slash)) {
             return currPath

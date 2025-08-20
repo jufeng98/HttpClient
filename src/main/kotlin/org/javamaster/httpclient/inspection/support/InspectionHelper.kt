@@ -36,7 +36,7 @@ object InspectionHelper {
 
                     is TextVariableNamePsiReference -> {
                         textRange = reference.textRange.shiftLeft(element.textRange.startOffset)
-                        builtin = reference.variable.variableName?.isBuiltin ?: true
+                        builtin = reference.variable.variableName?.isBuiltin != false
                         reference.variable.variableName?.name
                     }
 

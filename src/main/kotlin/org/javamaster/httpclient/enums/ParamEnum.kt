@@ -20,7 +20,7 @@ enum class ParamEnum(val param: String, val desc: String) {
     STATIC_FOLDER("staticFolder", NlsBundle.nls("static.folder.desc")),
     ;
 
-    open fun insertHandler(): InsertHandler<LookupElement>? {
+    open fun insertHandler(): InsertHandler<LookupElement> {
         return AddSpaceInsertHandler.INSTANCE
     }
 

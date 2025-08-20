@@ -5,6 +5,4 @@ import com.intellij.lang.parser.GeneratedParserUtilBase
 /**
  * @author yudong
  */
-object HttpParserUtil : GeneratedParserUtilBase() {
-
-}
+object HttpParserUtil : GeneratedParserUtilBase()

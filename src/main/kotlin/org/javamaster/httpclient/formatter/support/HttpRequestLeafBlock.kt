@@ -16,7 +16,7 @@ class HttpRequestLeafBlock @JvmOverloads constructor(node: ASTNode, private val 
     }
 
     override fun getIndent(): Indent? {
-        return if (this.myWithIndent) Indent.getNoneIndent() else super.getIndent()
+        return if (this.myWithIndent) Indent.getNoneIndent() else super.indent
     }
 
     override fun getSpacing(child1: Block?, child2: Block): Spacing? {
