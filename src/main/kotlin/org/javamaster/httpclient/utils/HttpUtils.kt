@@ -58,8 +58,8 @@ import java.io.File
 import java.net.URI
 import java.net.URL
 import java.net.http.HttpClient
+import java.net.http.HttpHeaders
 import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.swing.Icon
@@ -496,9 +496,9 @@ object HttpUtils {
         }
     }
 
-    fun convertToResHeaderDescList(response: HttpResponse<ByteArray>): MutableList<String> {
+    fun convertResponseHeaders(headers: HttpHeaders): MutableList<String> {
         val headerDescList = mutableListOf<String>()
-        val headers = response.headers()
+
         headers.map()
             .forEach { (t, u) ->
                 u.forEach {
@@ -511,9 +511,8 @@ object HttpUtils {
         return headerDescList
     }
 
-    fun convertResponse(response: HttpResponse<ByteArray>): HttpResInfo {
-        var resBody = response.body()
-        val resHeaders = response.headers()
+    fun convertResponseBody(resBody: ByteArray, resHeaders: HttpHeaders): HttpResInfo {
+        var bodyBytes = resBody
         val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { ContentType.TEXT_PLAIN.mimeType }
 
         val simpleTypeEnum = SimpleTypeEnum.convertContentType(contentType)
@@ -521,17 +520,17 @@ object HttpUtils {
         val bodyStr = if (simpleTypeEnum.binary) {
             null
         } else {
-            val str = String(resBody, StandardCharsets.UTF_8)
+            val str = String(bodyBytes, StandardCharsets.UTF_8)
 
             if (simpleTypeEnum == SimpleTypeEnum.JSON) {
-                if (resBody.size > RES_SIZE_LIMIT) {
+                if (bodyBytes.size > RES_SIZE_LIMIT) {
                     str
                 } else {
                     val prettyStr = formatJson(str)
-                    if (prettyStr.length> RES_SIZE_LIMIT) {
+                    if (prettyStr.length > RES_SIZE_LIMIT) {
                         str
                     } else {
-                        resBody = prettyStr.toByteArray(StandardCharsets.UTF_8)
+                        bodyBytes = prettyStr.toByteArray(StandardCharsets.UTF_8)
 
                         prettyStr
                     }
@@ -541,7 +540,7 @@ object HttpUtils {
             }
         }
 
-        return HttpResInfo(simpleTypeEnum, resBody, bodyStr, contentType)
+        return HttpResInfo(simpleTypeEnum, bodyBytes, bodyStr, contentType)
     }
 
     private fun formatJson(jsonStr: String): String {

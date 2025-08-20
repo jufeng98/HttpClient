@@ -42,8 +42,8 @@ import org.javamaster.httpclient.utils.HttpUtils.FAILED
 import org.javamaster.httpclient.utils.HttpUtils.SUCCESS
 import org.javamaster.httpclient.utils.HttpUtils.WEB_BOUNDARY
 import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
-import org.javamaster.httpclient.utils.HttpUtils.convertToResHeaderDescList
-import org.javamaster.httpclient.utils.HttpUtils.convertResponse
+import org.javamaster.httpclient.utils.HttpUtils.convertResponseHeaders
+import org.javamaster.httpclient.utils.HttpUtils.convertResponseBody
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.javamaster.httpclient.utils.HttpUtils.handleOrdinaryContentCurl
@@ -556,9 +556,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val size = Formats.formatFileSize(response.body().size.toLong())
 
-                        val resHeaderList = convertToResHeaderDescList(response)
+                        val resHeaderList = convertResponseHeaders(response.headers())
 
-                        val httpResInfo = convertResponse(response)
+                        val httpResInfo = convertResponseBody(response.body(), response.headers())
 
                         val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
 
