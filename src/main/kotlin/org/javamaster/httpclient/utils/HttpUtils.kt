@@ -512,7 +512,7 @@ object HttpUtils {
     }
 
     fun convertResponse(response: HttpResponse<ByteArray>): HttpResInfo {
-        val resBody = response.body()
+        var resBody = response.body()
         val resHeaders = response.headers()
         val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { ContentType.TEXT_PLAIN.mimeType }
 
@@ -531,6 +531,8 @@ object HttpUtils {
                     if (prettyStr.length> RES_SIZE_LIMIT) {
                         str
                     } else {
+                        resBody = prettyStr.toByteArray(StandardCharsets.UTF_8)
+
                         prettyStr
                     }
                 }
@@ -1083,7 +1085,7 @@ object HttpUtils {
             val methodType = HttpRequestEnum.getInstance(method)
 
             return methodType.icon
-        } catch (ignored: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             return HttpIcons.FILE
         }
     }
