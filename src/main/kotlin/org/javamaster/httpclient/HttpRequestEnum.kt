@@ -34,17 +34,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
-
-            val builder = HttpRequest.newBuilder()
-                .version(version)
-                .timeout(Duration.ofSeconds(readTimeout))
-                .GET()
-                .uri(URI.create(url))
-
-            setHeaders(reqHeaderMap, builder)
-
-            return builder.build()
+            return createBuilder(url, reqHeaderMap, version, paramMap).GET().build()
         }
     },
     POST(HttpIcons.POST) {
@@ -55,17 +45,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
-
-            val builder = HttpRequest.newBuilder()
-                .version(version)
-                .timeout(Duration.ofSeconds(readTimeout))
-                .POST(bodyPublisher)
-                .uri(URI.create(url))
-
-            setHeaders(reqHeaderMap, builder)
-
-            return builder.build()
+            return createBuilder(url, reqHeaderMap, version, paramMap).POST(bodyPublisher).build()
         }
     },
     DELETE(HttpIcons.DELETE) {
@@ -76,7 +56,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, bodyPublisher)
+            return createBuilder(url, reqHeaderMap, version, paramMap).method(name, bodyPublisher).build()
         }
     },
     PUT(HttpIcons.PUT) {
@@ -87,17 +67,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
-
-            val builder = HttpRequest.newBuilder()
-                .version(version)
-                .timeout(Duration.ofSeconds(readTimeout))
-                .PUT(bodyPublisher)
-                .uri(URI.create(url))
-
-            setHeaders(reqHeaderMap, builder)
-
-            return builder.build()
+            return createBuilder(url, reqHeaderMap, version, paramMap).PUT(bodyPublisher).build()
         }
     },
     OPTIONS(HttpIcons.FILE) {
@@ -108,7 +78,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
+            return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
         }
     },
     PATCH(HttpIcons.FILE) {
@@ -119,7 +89,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, bodyPublisher)
+            return createBuilder(url, reqHeaderMap, version, paramMap).method(name, bodyPublisher).build()
         }
     },
     HEAD(HttpIcons.FILE) {
@@ -130,7 +100,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
+            return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
         }
     },
     TRACE(HttpIcons.FILE) {
@@ -141,7 +111,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
-            return buildOtherRequest(name, url, version, reqHeaderMap, paramMap, BodyPublishers.noBody())
+            return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
         }
     },
     WEBSOCKET(HttpIcons.WS) {
@@ -179,34 +149,27 @@ enum class HttpRequestEnum(val icon: Icon) {
     }
     ;
 
-    fun setHeaders(reqHeaderMap: LinkedMultiValueMap<String, String>, builder: HttpRequest.Builder) {
+    internal fun createBuilder(
+        url: String,
+        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        version: Version,
+        paramMap: Map<String, String>,
+    ): HttpRequest.Builder {
+        val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
+
+        val builder = HttpRequest.newBuilder()
+            .version(version)
+            .timeout(Duration.ofSeconds(readTimeout))
+            .uri(URI.create(url))
+
         reqHeaderMap.forEach {
             val name = it.key
             it.value.forEach { value ->
                 builder.header(name, value)
             }
         }
-    }
 
-    fun buildOtherRequest(
-        methodName: String,
-        url: String,
-        version: Version,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
-        paramMap: Map<String, String>,
-        bodyPublisher: HttpRequest.BodyPublisher,
-    ): HttpRequest {
-        val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
-
-        val builder = HttpRequest.newBuilder()
-            .version(version)
-            .timeout(Duration.ofSeconds(readTimeout))
-            .method(methodName, bodyPublisher)
-            .uri(URI.create(url))
-
-        setHeaders(reqHeaderMap, builder)
-
-        return builder.build()
+        return builder
     }
 
     fun execute(
