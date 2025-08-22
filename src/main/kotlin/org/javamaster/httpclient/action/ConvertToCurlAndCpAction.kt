@@ -48,8 +48,10 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
 
         fun findRequestBlock(e: AnActionEvent): HttpRequestBlock? {
             val editor = e.getData(CommonDataKeys.EDITOR) ?: return null
+            val project = e.project ?: return null
+            val file = editor.virtualFile ?: return null
 
-            val httpFile = PsiUtil.getPsiFile(e.project!!, editor.virtualFile)
+            val httpFile = PsiUtil.getPsiFile(project, file)
 
             val psiElement = httpFile.findElementAt(editor.caretModel.offset) ?: return null
 
