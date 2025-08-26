@@ -30,8 +30,11 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
 
     override suspend fun execute(project: Project) {
         val fileEditorManager = FileEditorManager.getInstance(project)
-        fileEditorManager.openFiles.forEach {
-            fileOpened(fileEditorManager, it)
+
+        runInEdt {
+            fileEditorManager.openFiles.forEach {
+                fileOpened(fileEditorManager, it)
+            }
         }
 
         project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this)
