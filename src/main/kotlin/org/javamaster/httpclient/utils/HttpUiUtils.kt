@@ -2,16 +2,19 @@ package org.javamaster.httpclient.utils
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.putUserData
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.util.PsiUtil
+import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.testFramework.LightVirtualFile
 import org.javamaster.httpclient.action.dashboard.DashboardBaseAction
 import org.javamaster.httpclient.action.dashboard.SoftWrapAction
 import org.javamaster.httpclient.action.dashboard.view.FoldHeadersAction
 import org.javamaster.httpclient.action.dashboard.view.ShowLineNumberAction
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.utils.VirtualFileUtils.createHttpVirtualFileFromText
+import java.nio.charset.StandardCharsets
+
 
 object HttpUiUtils {
 
@@ -67,15 +70,25 @@ object HttpUiUtils {
         editorList: MutableList<Editor>,
         noLog: Boolean,
     ): Editor {
+        val editorFactory = EditorFactory.getInstance()
+        val fileDocumentManager = FileDocumentManager.getInstance()
+
         val virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, tabName, noLog)
 
-        val psiDocumentManager = PsiDocumentManager.getInstance(project)
-        val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+        val psiFile = virtualFile.findPsiFile(project)
 
-        val document = psiDocumentManager.getDocument(psiFile)
+        val editor = if (psiFile != null) {
+            val document = fileDocumentManager.getDocument(virtualFile)!!
+            editorFactory.createEditor(document, project, virtualFile, true)
+        } else {
+            val lightVirtualFile = LightVirtualFile(virtualFile.name)
+            lightVirtualFile.charset = StandardCharsets.UTF_8
+            lightVirtualFile.setBinaryContent(bytes)
 
-        val editorFactory = EditorFactory.getInstance()
-        val editor = editorFactory.createEditor(document!!, project, virtualFile, true)
+            val document = fileDocumentManager.getDocument(lightVirtualFile)!!
+            editorFactory.createEditor(document, project, lightVirtualFile, true)
+        }
+
         editorList.add(editor)
 
         return editor

@@ -102,7 +102,14 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
                 it.processHandler is HttpProcessHandler && it.displayName == handler.tabName
             }
 
-        return RunContentBuilder(executionResult, environment).showRunContent(environment.contentToReuse)
+        val contentToReuse = environment.contentToReuse
+        if (contentToReuse != null) {
+            contentToReuse.isSelectContentWhenAdded = false
+            contentToReuse.isAutoFocusContent = false
+            contentToReuse.isActivateToolWindowWhenAdded = false
+        }
+
+        return RunContentBuilder(executionResult, environment).showRunContent(contentToReuse)
     }
 
     companion object {

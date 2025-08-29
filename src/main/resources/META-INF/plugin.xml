@@ -68,7 +68,7 @@
     <change-notes>
         <![CDATA[
             <ul>
-                <li><b>5.8.0</b></li>
+                <li><b>5.8.1</b></li>
                 <ul>
                     <li>调整最低兼容版本为230</li>
                     <li>bug修复及功能优化</li>
