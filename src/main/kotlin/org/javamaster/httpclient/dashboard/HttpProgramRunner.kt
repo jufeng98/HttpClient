@@ -105,8 +105,6 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         val contentToReuse = environment.contentToReuse
         if (contentToReuse != null) {
             contentToReuse.isSelectContentWhenAdded = false
-            contentToReuse.isAutoFocusContent = false
-            contentToReuse.isActivateToolWindowWhenAdded = false
         }
 
         return RunContentBuilder(executionResult, environment).showRunContent(contentToReuse)

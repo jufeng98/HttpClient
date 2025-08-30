@@ -30,8 +30,17 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
     override fun updatePresentation(presentation: PresentationData, node: RunDashboardRunConfigurationNode): Boolean {
         val processHandler = node.descriptor?.processHandler as HttpProcessHandler? ?: return false
 
+        val time = System.currentTimeMillis() - processHandler.finishedTime
+        val current = time < 1000 && time > 0
+
+        val attributes = if (current) {
+            SimpleTextAttributes.SYNTHETIC_ATTRIBUTES
+        } else {
+            SimpleTextAttributes.GRAY_ATTRIBUTES
+        }
+
         if (processHandler.hasError) {
-            presentation.addText(" Status: Error in the request", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+            presentation.addText(" Status: Error in the request", attributes)
             return true
         }
 
@@ -42,7 +51,7 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
         presentation.setIcon(icon)
 
         val costTimes = processHandler.costTimes
-        presentation.addText(" Status: $status($costTimes ms)", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+        presentation.addText(" Status: $status($costTimes ms)", attributes)
 
         return true
     }

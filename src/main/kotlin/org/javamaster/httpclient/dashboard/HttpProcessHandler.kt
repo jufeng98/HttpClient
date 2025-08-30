@@ -71,6 +71,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     val project = httpMethod.project
     var httpStatus: Int? = null
     var costTimes: Long? = null
+    var finishedTime = Long.MAX_VALUE
 
     private val httpFile = httpMethod.containingFile as HttpFile
     private val parentPath = httpFile.virtualFile.parent.path
@@ -661,6 +662,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             val msg = "<div style='font-size:12pt'>$tabName ${nls("request.success")}!</div>"
             toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
         }
+
+        finishedTime = System.currentTimeMillis()
     }
 
     private fun saveResToFile(outPutFilePath: String?, parentPath: String, byteArray: ByteArray?): String? {
