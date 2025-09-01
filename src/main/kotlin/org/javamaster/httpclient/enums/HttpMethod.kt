@@ -23,7 +23,7 @@ enum class HttpMethod(val icon: Icon) {
                 }
 
                 return valueOf(method.toString())
-            } catch (ignore: Exception) {
+            } catch (_: Exception) {
                 return REQUEST
             }
         }

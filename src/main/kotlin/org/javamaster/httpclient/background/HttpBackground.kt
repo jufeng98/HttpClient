@@ -15,18 +15,20 @@ class HttpBackground<T> {
 
     fun finishOnUiThread(resultConsumer: Consumer<T?>): HttpBackground<T> {
         this.resultConsumer = resultConsumer
+
         return this
     }
 
     fun exceptionallyOnUiThread(exceptionConsumer: Consumer<Exception>): HttpBackground<T> {
         this.exceptionConsumer = exceptionConsumer
+
         return this
     }
 
     companion object {
 
         fun <T> runInBackgroundReadActionAsync(supplier: Supplier<T?>): HttpBackground<T> {
-            val d = HttpBackground<T>()
+            val background = HttpBackground<T>()
 
             application.executeOnPooledThread {
                 runReadAction {
@@ -35,24 +37,24 @@ class HttpBackground<T> {
 
                         runInEdt {
                             try {
-                                d.resultConsumer!!.accept(result)
+                                background.resultConsumer!!.accept(result)
                             } catch (ex: Exception) {
                                 ex.printStackTrace()
 
-                                d.exceptionConsumer!!.accept(ex)
+                                background.exceptionConsumer!!.accept(ex)
                             }
                         }
                     } catch (ex: Exception) {
                         ex.printStackTrace()
 
                         runInEdt {
-                            d.exceptionConsumer!!.accept(ex)
+                            background.exceptionConsumer!!.accept(ex)
                         }
                     }
                 }
             }
 
-            return d
+            return background
         }
     }
 
