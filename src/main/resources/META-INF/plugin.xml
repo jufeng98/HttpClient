@@ -336,6 +336,8 @@
                                     implementationClass="org.javamaster.httpclient.doc.JsonKeyMethodFieldDocumentationProvider"/>
         <completion.contributor language="http" id="HttpCompletionContributor" order="last"
                                 implementationClass="org.javamaster.httpclient.completion.HttpCompletionContributor"/>
+        <completion.contributor language="JSON" id="JsonCompletionContributor" order="last"
+                                implementationClass="org.javamaster.httpclient.completion.JsonCompletionContributor"/>
         <typedHandler implementation="org.javamaster.httpclient.typeHandler.HttpTypedHandler"/>
         <braceMatcher filetype="http"
                       implementationClass="org.javamaster.httpclient.braceMatcher.HttpBraceMatcher"/>

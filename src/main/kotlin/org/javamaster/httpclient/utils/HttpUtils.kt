@@ -952,6 +952,30 @@ object HttpUtils {
         return list.joinToString(" ")
     }
 
+
+    fun getPsiElementDesc(psiField: PsiField): String {
+        val list = mutableListOf<String>()
+
+        val docComment = psiField.docComment
+        if (docComment != null) {
+            val comment = getNextSiblingByType(docComment.firstChild, JavaDocTokenType.DOC_COMMENT_DATA, false)
+                ?.text?.trim()
+
+            comment?.let { list.add(it) }
+        }
+
+        val annotation = psiField.getAnnotation(API_OPERATION_ANNO_NAME)
+        if (annotation != null) {
+            val attributeValue = annotation.findAttributeValue("value") as PsiLiteralExpression?
+
+            val desc = attributeValue?.value?.toString()?.trim()
+
+            desc?.let { list.add(it) }
+        }
+
+        return list.joinToString(" ")
+    }
+
     fun convertToJsString(str: String): String {
         return "`" + str.replace("\\", "\\\\").replace("`", "\\`") + "`"
     }
