@@ -20,13 +20,10 @@ class JsonKeyControllerMethodFieldPsiReference(
     override fun resolve(): PsiElement? {
         val virtualFile = jsonString.containingFile.virtualFile
 
-        val paramPsiType: PsiType?
-        if (virtualFile?.name?.endsWith("res.http") == true) {
-            paramPsiType = controllerMethod.returnType
+        val paramPsiType = if (virtualFile?.name?.endsWith("res.http") == true) {
+            controllerMethod.returnType
         } else {
-            val psiParameter = HttpUtils.resolveTargetParam(controllerMethod)
-
-            paramPsiType = psiParameter?.type
+            HttpUtils.resolveTargetParam(controllerMethod)?.type
         }
 
         val paramPsiCls: PsiClass = PsiUtils.resolvePsiType(paramPsiType) ?: return null
