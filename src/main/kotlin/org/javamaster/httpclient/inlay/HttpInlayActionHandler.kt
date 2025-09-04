@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.inlay
 
+import com.google.common.collect.Lists
 import com.intellij.codeInsight.hints.declarative.InlayActionHandler
 import com.intellij.codeInsight.hints.declarative.InlayActionPayload
 import com.intellij.codeInsight.hints.declarative.PsiPointerInlayActionPayload
@@ -14,8 +15,10 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.writeText
+import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.LightVirtualFile
 import org.javamaster.httpclient.enums.HttpMethod
@@ -89,7 +92,7 @@ class HttpInlayActionHandler : InlayActionHandler {
             lightVirtualFile.writeText(
                 """
 ### $methodDesc
-${httpMethod.name} http://localhost${request.path}
+${httpMethod.name} {{baseUrl}}${request.path}
 Accept: application/json
 Content-Type: $contentType
             
@@ -97,12 +100,12 @@ $body
                 """.trimIndent()
             )
         } else {
-            val content = if(body.isEmpty()) "" else "?$body"
+            val content = if (body.isEmpty()) "" else "?$body"
 
             lightVirtualFile.writeText(
                 """
 ### $methodDesc
-${httpMethod.name} http://localhost${request.path}$content
+${httpMethod.name} {{baseUrl}}${request.path}$content
 Accept: application/json
 Content-Type: $contentType
                                                    
@@ -122,13 +125,13 @@ Content-Type: $contentType
             hasAnno = true
             val psiClass = PsiUtils.resolvePsiType(parameter.type)!!
 
-            val map = mutableMapOf<String, String>()
+            val map = mutableMapOf<String, Any>()
             psiClass.fields.forEach {
                 if (it.modifierList?.hasModifierProperty("static") == true) {
                     return@forEach
                 }
 
-                map[it.name] = ""
+                map[it.name] = getTypeDefault(it)
             }
 
             val superClass = psiClass.superClass
@@ -138,7 +141,7 @@ Content-Type: $contentType
                         return@forEach
                     }
 
-                    map[it.name] = ""
+                    map[it.name] = getTypeDefault(it)
                 }
             }
 
@@ -182,4 +185,28 @@ Content-Type: $contentType
 
         return Pair("application/x-www-form-urlencoded", body)
     }
+
+    private fun getTypeDefault(field: PsiField): Any {
+        val type = field.type
+        val name = type.toString()
+
+        val isCollection = InheritanceUtil.isInheritor(type, "java.util.Collection")
+        if (isCollection) {
+            return Lists.newArrayList<String>()
+        } else if (name.contains("Boolean")) {
+            return false
+        } else if (name.contains("Integer") || name.contains("int") || name.contains("Long") || name.contains("long")) {
+            return 0
+        } else if (name.contains("Double") || name.contains("double")) {
+            return 0.0
+        }
+
+        val psiClass = PsiUtils.resolvePsiType(type)
+        if (psiClass?.qualifiedName?.startsWith("java") == false) {
+            return Any()
+        }
+
+        return ""
+    }
+
 }
