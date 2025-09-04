@@ -42,11 +42,10 @@ class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
 
         val controllerMethod = references[0].resolve() as PsiMethod? ?: return
 
-        val paramPsiType: PsiType?
-        if (virtualFile.name.endsWith("res.http") == true) {
-            paramPsiType = controllerMethod.returnType
+        val paramPsiType = if (virtualFile.name.endsWith("res.http") == true) {
+            controllerMethod.returnType
         } else {
-            paramPsiType = HttpUtils.resolveTargetParam(controllerMethod)?.type
+            HttpUtils.resolveTargetParam(controllerMethod)?.type
         }
 
         val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return
