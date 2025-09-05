@@ -222,7 +222,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 return@forEach
             }
 
-            previous!!.prototype = it
+            previous.prototype = it
 
             previous = it
         }
