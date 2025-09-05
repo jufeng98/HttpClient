@@ -23,9 +23,14 @@ object HttpInlayHintsCollector : SharedBypassCollector {
             return
         }
 
-        val nameValuePair = element.parent
+        var nameValuePair = element.parent
+
         if (nameValuePair !is PsiNameValuePair) {
-            return
+            nameValuePair = nameValuePair.parent
+
+            if (nameValuePair !is PsiNameValuePair) {
+                return
+            }
         }
 
         val psiAnno = nameValuePair.parent.parent
@@ -33,7 +38,13 @@ object HttpInlayHintsCollector : SharedBypassCollector {
             return
         }
 
-        if (!mvcAnnoSet.contains(psiAnno.qualifiedName)) {
+        val qualifiedName = psiAnno.qualifiedName ?: return
+
+        if (!mvcAnnoSet.contains(qualifiedName)) {
+            return
+        }
+
+        if (psiAnno.parent.parent !is PsiMethod) {
             return
         }
 
