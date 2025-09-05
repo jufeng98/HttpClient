@@ -2,7 +2,9 @@ package org.javamaster.httpclient.reference.support
 
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.*
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.PsiUtils
@@ -18,15 +20,9 @@ class JsonKeyControllerMethodFieldPsiReference(
     PsiReferenceBase<JsonStringLiteral>(jsonString, range) {
 
     override fun resolve(): PsiElement? {
-        val virtualFile = jsonString.containingFile.virtualFile
+        val paramPsiType = HttpUtils.getUrlControllerMethodParamType(jsonString, controllerMethod)
 
-        val paramPsiType = if (virtualFile?.name?.endsWith("res.http") == true) {
-            controllerMethod.returnType
-        } else {
-            HttpUtils.resolveTargetParam(controllerMethod)?.type
-        }
-
-        val paramPsiCls: PsiClass = PsiUtils.resolvePsiType(paramPsiType) ?: return null
+        val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return null
 
         val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
 

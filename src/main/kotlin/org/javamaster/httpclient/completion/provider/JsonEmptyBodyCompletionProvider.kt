@@ -4,9 +4,12 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.utils.DubboUtils.fillTargetDubboMethodParams
+import org.javamaster.httpclient.utils.DubboUtils.findDubboServiceMethod
 import org.javamaster.httpclient.utils.DubboUtils.getTargetPsiFieldClass
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.resolveUrlControllerTargetPsiClass
@@ -14,7 +17,7 @@ import org.javamaster.httpclient.utils.HttpUtils.resolveUrlControllerTargetPsiCl
 /**
  * @author yudong
  */
-class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
+class JsonEmptyBodyCompletionProvider : CompletionProvider<CompletionParameters>() {
 
     override fun addCompletions(
         parameters: CompletionParameters,
@@ -22,28 +25,35 @@ class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
         result: CompletionResultSet,
     ) {
         val psiElement = parameters.position
-        val currentJsonString = psiElement.parent as JsonStringLiteral
 
-        var targetPsiClass = resolveUrlControllerTargetPsiClass(currentJsonString)
+        var targetPsiClass = resolveUrlControllerTargetPsiClass(psiElement)
         if (targetPsiClass == null) {
-            val filled = fillTargetDubboMethodParams(currentJsonString, result, "")
-            if (filled) {
+            val jsonProperty = PsiTreeUtil.getParentOfType(psiElement, JsonProperty::class.java)
+            val parentJsonProperty = PsiTreeUtil.getParentOfType(jsonProperty, JsonProperty::class.java)
+
+            if (parentJsonProperty != null) {
+                val jsonString = PsiTreeUtil.getChildOfType(parentJsonProperty, JsonStringLiteral::class.java)!!
+                val filled = fillTargetDubboMethodParams(jsonString, result, "\"")
+                if (filled) {
+                    return
+                }
+
+                targetPsiClass = getTargetPsiFieldClass(jsonString, true)
+            } else {
+                val dubboServiceMethod = findDubboServiceMethod(psiElement) ?: return
+
+                fillTargetDubboMethodParams(dubboServiceMethod, result)
+
                 return
             }
-
-            targetPsiClass = getTargetPsiFieldClass(currentJsonString, false)
         }
 
         targetPsiClass ?: return
 
-        val prefixMatcher = result.prefixMatcher
-        val prefix = prefixMatcher.prefix
-        if (prefix.length < 2) {
+        val prefix = result.prefixMatcher.prefix
+        if (prefix.contains("\"")) {
             return
         }
-
-        val newPrefix = prefix.substring(1)
-        val completionResultSet = result.withPrefixMatcher(newPrefix)
 
         targetPsiClass.fields
             .forEach {
@@ -54,10 +64,10 @@ class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
                 val typeText = it.type.presentableText + " " + HttpUtils.getPsiFieldDesc(it)
 
                 val builder = LookupElementBuilder
-                    .create(it.name)
+                    .create("\"" + it.name + "\"")
                     .withTypeText(typeText, true)
 
-                completionResultSet.addElement(builder)
+                result.addElement(builder)
             }
     }
 

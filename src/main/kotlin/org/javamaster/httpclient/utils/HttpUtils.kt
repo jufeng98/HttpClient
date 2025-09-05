@@ -22,11 +22,13 @@ import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.refactoring.rename.RenameProcessor
+import com.intellij.util.SmartList
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
 import org.intellij.markdown.html.urlEncode
@@ -156,19 +158,6 @@ object HttpUtils {
         }
 
         return "HTTP Request ▏#0"
-    }
-
-    fun getInjectHost(jsonString: JsonStringLiteral, project: Project): HttpMessageBody? {
-        if (!jsonString.isPropertyName) {
-            return null
-        }
-
-        val injectionHost = InjectedLanguageManager.getInstance(project).getInjectionHost(jsonString)
-        if (injectionHost !is HttpMessageBody) {
-            return null
-        }
-
-        return injectionHost
     }
 
     fun convertToReqHeaderMap(
@@ -953,8 +942,8 @@ object HttpUtils {
     }
 
 
-    fun getPsiElementDesc(psiField: PsiField): String {
-        val list = mutableListOf<String>()
+    fun getPsiFieldDesc(psiField: PsiField): String {
+        val list = SmartList<String>()
 
         val docComment = psiField.docComment
         if (docComment != null) {
@@ -964,7 +953,7 @@ object HttpUtils {
             comment?.let { list.add(it) }
         }
 
-        val annotation = psiField.getAnnotation(API_OPERATION_ANNO_NAME)
+        val annotation = psiField.getAnnotation(API_MODEL_PROPERTY_ANNO_NAME)
         if (annotation != null) {
             val attributeValue = annotation.findAttributeValue("value") as PsiLiteralExpression?
 
@@ -1259,6 +1248,87 @@ object HttpUtils {
         }
 
         return project
+    }
+
+    fun getUrlControllerMethod(jsonString: JsonStringLiteral): PsiMethod? {
+        val project = jsonString.project
+
+        if (!jsonString.isPropertyName) {
+            return null
+        }
+
+        return getUrlControllerMethod(jsonString, project)
+    }
+
+    fun getUrlControllerMethod(psiElement: PsiElement, project: Project): PsiMethod? {
+        val messageBody = InjectedLanguageManager.getInstance(project).getInjectionHost(psiElement)
+        if (messageBody !is HttpMessageBody) {
+            return null
+        }
+
+        val httpRequest = PsiTreeUtil.getParentOfType(messageBody, HttpRequest::class.java)!!
+
+        val references = httpRequest.requestTarget!!.references
+        if (references.isEmpty()) {
+            return null
+        }
+
+        return references[0].resolve() as PsiMethod?
+    }
+
+    fun getUrlControllerMethodParamType(psiElement: PsiElement, controllerMethod: PsiMethod): PsiType? {
+        val virtualFile = PsiUtil.getVirtualFile(psiElement)
+
+        return if (virtualFile?.name?.endsWith("res.http") == true) {
+            controllerMethod.returnType
+        } else {
+            resolveTargetParam(controllerMethod)?.type
+        }
+    }
+
+    fun resolveUrlControllerTargetPsiClass(psiElement: PsiElement): PsiClass? {
+        val jsonProperty = PsiTreeUtil.getParentOfType(psiElement, JsonProperty::class.java)
+        val parentJsonProperty = PsiTreeUtil.getParentOfType(jsonProperty, JsonProperty::class.java)
+
+        val noParentProperty = parentJsonProperty == null
+
+        val jsonString = if (noParentProperty) {
+            psiElement
+        } else {
+            PsiTreeUtil.getChildOfType(parentJsonProperty, JsonStringLiteral::class.java)!!
+        }
+
+        val controllerMethod = getUrlControllerMethod(jsonString, jsonString.project) ?: return null
+
+        val paramPsiType = getUrlControllerMethodParamType(jsonString, controllerMethod)
+
+        val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return null
+
+        if (noParentProperty) {
+            return paramPsiCls
+        }
+
+        val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
+
+        val jsonPropertyNameLevels = collectJsonPropertyNameLevels(jsonString as JsonStringLiteral)
+
+        val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters) ?: return null
+
+        val psiType = targetField.type
+
+        val psiClass = PsiUtils.resolvePsiType(psiType)
+
+        val isCollection = InheritanceUtil.isInheritor(psiClass, "java.util.Collection")
+        return if (isCollection) {
+            val parameters = (psiType as PsiClassReferenceType).parameters
+            if (parameters.size > 0) {
+                PsiUtils.resolvePsiType(parameters[0])
+            } else {
+                null
+            }
+        } else {
+            psiClass
+        }
     }
 
 }
