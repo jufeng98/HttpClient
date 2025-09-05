@@ -36,7 +36,7 @@ import org.javamaster.httpclient.key.HttpKey;
 import org.javamaster.httpclient.mock.MockServer;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
-import org.javamaster.httpclient.utils.HttpUiUtils;
+import org.javamaster.httpclient.utils.EditorUtils;
 import org.javamaster.httpclient.utils.HttpUtils;
 import org.javamaster.httpclient.utils.VirtualFileUtils;
 import org.javamaster.httpclient.ws.WsRequest;
@@ -91,7 +91,7 @@ public class HttpDashboardForm implements Disposable {
 
         byte[] reqBytes = String.join("", httpInfo.getHttpReqDescList()).getBytes(StandardCharsets.UTF_8);
 
-        Editor reqEditor = HttpUiUtils.INSTANCE.createEditor(reqBytes, "req.http", project, tabName,
+        Editor reqEditor = EditorUtils.INSTANCE.createEditor(reqBytes, "req.http", project, tabName,
                 editorList, true, simpleTypeEnum, noLog);
 
         requestPanel.add(reqEditor.getComponent(), constraints);
@@ -101,7 +101,7 @@ public class HttpDashboardForm implements Disposable {
         if (throwable != null) {
             String msg = ExceptionUtils.getStackTrace(throwable);
 
-            Editor errorEditor = HttpUiUtils.INSTANCE.createEditor(msg.getBytes(StandardCharsets.UTF_8),
+            Editor errorEditor = EditorUtils.INSTANCE.createEditor(msg.getBytes(StandardCharsets.UTF_8),
                     "error.log", project, tabName, editorList, false, simpleTypeEnum, noLog);
 
             responsePanel.add(errorEditor.getComponent(), constraints);
@@ -118,7 +118,7 @@ public class HttpDashboardForm implements Disposable {
         GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
-        Editor resEditor = HttpUiUtils.INSTANCE.createEditor(resBytes, "res.http", project, tabName,
+        Editor resEditor = EditorUtils.INSTANCE.createEditor(resBytes, "res.http", project, tabName,
                 editorList, false, simpleTypeEnum, noLog);
 
         responsePanel.add(resEditor.getComponent(), constraintsRes);
@@ -245,7 +245,7 @@ public class HttpDashboardForm implements Disposable {
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
         Editor editor = WriteAction.computeAndWait(() ->
-                HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
+                EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
                         project, tabName, editorList, false)
         );
 
@@ -275,7 +275,7 @@ public class HttpDashboardForm implements Disposable {
         mainPanel.setLayout(new BorderLayout());
 
         Editor editor = WriteAction.computeAndWait(() ->
-                HttpUiUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "mockServer.log",
+                EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "mockServer.log",
                         project, tabName, editorList, false)
         );
 

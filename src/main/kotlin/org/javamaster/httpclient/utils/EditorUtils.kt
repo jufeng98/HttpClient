@@ -16,7 +16,7 @@ import org.javamaster.httpclient.utils.VirtualFileUtils.createHttpVirtualFileFro
 import java.nio.charset.StandardCharsets
 
 
-object HttpUiUtils {
+object EditorUtils {
 
     fun createEditor(
         bytes: ByteArray,
