@@ -4,7 +4,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiReferenceBase
-import org.javamaster.httpclient.utils.PsiUtils
+import org.javamaster.httpclient.utils.PsiTypeUtils
 
 /**
  * @author yudong
@@ -26,7 +26,7 @@ class QueryNamePsiReference(
             }
 
             val paramPsiType = parameter.type
-            val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: continue
+            val paramPsiCls = PsiTypeUtils.resolvePsiType(paramPsiType) ?: continue
 
             return paramPsiCls.allFields.firstOrNull { it.name == queryName } ?: continue
         }

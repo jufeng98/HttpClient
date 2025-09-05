@@ -15,7 +15,7 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
-import org.javamaster.httpclient.utils.PsiUtils
+import org.javamaster.httpclient.utils.PsiTypeUtils
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 
@@ -91,7 +91,7 @@ class DubboRequest(
             paramTypeNameArray = targetMethod.parameterList.parameters
                 .map {
                     val type = it.type
-                    val psiType = PsiUtils.resolvePsiType(type)
+                    val psiType = PsiTypeUtils.resolvePsiType(type)
                     if (psiType != null) {
                         val qualifiedName = psiType.qualifiedName
                         if (qualifiedName != null) {

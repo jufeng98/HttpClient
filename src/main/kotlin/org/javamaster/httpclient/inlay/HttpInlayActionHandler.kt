@@ -28,7 +28,7 @@ import org.javamaster.httpclient.scan.support.Request
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.REQUEST_BODY_ANNO_NAME
 import org.javamaster.httpclient.utils.HttpUtils.gson
-import org.javamaster.httpclient.utils.PsiUtils
+import org.javamaster.httpclient.utils.PsiTypeUtils
 
 /**
  * @author yudong
@@ -123,7 +123,7 @@ Content-Type: $contentType
             parameter.getAnnotation(REQUEST_BODY_ANNO_NAME) ?: continue
 
             hasAnno = true
-            val psiClass = PsiUtils.resolvePsiType(parameter.type)!!
+            val psiClass = PsiTypeUtils.resolvePsiType(parameter.type)!!
 
             val map = mutableMapOf<String, Any>()
             psiClass.fields.forEach {
@@ -156,7 +156,7 @@ Content-Type: $contentType
         val list = mutableListOf<String>()
         for (parameter in psiMethod.parameterList.parameters) {
             val name = parameter.name
-            val psiClass = PsiUtils.resolvePsiType(parameter.type)
+            val psiClass = PsiTypeUtils.resolvePsiType(parameter.type)
             if (psiClass?.qualifiedName?.startsWith("java") == true) {
                 list.add("$name=")
             } else {
@@ -201,7 +201,7 @@ Content-Type: $contentType
             return 0.0
         }
 
-        val psiClass = PsiUtils.resolvePsiType(type)
+        val psiClass = PsiTypeUtils.resolvePsiType(type)
         if (psiClass?.qualifiedName?.startsWith("java") == false) {
             return Any()
         }

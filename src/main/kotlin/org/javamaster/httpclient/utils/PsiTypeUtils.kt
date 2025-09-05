@@ -7,7 +7,8 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 /**
  * @author yudong
  */
-object PsiUtils {
+object PsiTypeUtils {
+
     fun resolvePsiType(psiType: PsiType?): PsiClass? {
         if (psiType !is PsiClassReferenceType) {
             return null
@@ -15,4 +16,5 @@ object PsiUtils {
 
         return psiType.resolve()
     }
+
 }

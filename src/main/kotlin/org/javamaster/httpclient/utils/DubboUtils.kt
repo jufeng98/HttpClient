@@ -131,7 +131,7 @@ object DubboUtils {
             paramPsiType = psiParameter.type
         }
 
-        val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return null
+        val paramPsiCls = PsiTypeUtils.resolvePsiType(paramPsiType) ?: return null
 
         val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
 
@@ -206,13 +206,13 @@ object DubboUtils {
             field.type
         }
 
-        val psiClass = PsiUtils.resolvePsiType(psiType)
+        val psiClass = PsiTypeUtils.resolvePsiType(psiType)
 
         val isCollection = InheritanceUtil.isInheritor(psiClass, "java.util.Collection")
         return if (isCollection) {
             val parameters = (psiType as PsiClassReferenceType).parameters
             if (parameters.size > 0) {
-                PsiUtils.resolvePsiType(parameters[0])
+                PsiTypeUtils.resolvePsiType(parameters[0])
             } else {
                 null
             }

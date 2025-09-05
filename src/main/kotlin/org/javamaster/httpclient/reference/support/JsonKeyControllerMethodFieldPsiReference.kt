@@ -7,7 +7,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.javamaster.httpclient.utils.HttpUtils
-import org.javamaster.httpclient.utils.PsiUtils
+import org.javamaster.httpclient.utils.PsiTypeUtils
 
 /**
  * @author yudong
@@ -22,7 +22,7 @@ class JsonKeyControllerMethodFieldPsiReference(
     override fun resolve(): PsiElement? {
         val paramPsiType = HttpUtils.getUrlControllerMethodParamType(jsonString, controllerMethod)
 
-        val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return null
+        val paramPsiCls = PsiTypeUtils.resolvePsiType(paramPsiType) ?: return null
 
         val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
 

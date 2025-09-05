@@ -865,7 +865,7 @@ object HttpUtils {
                 }
 
                 // Get the generic parameter type
-                fieldTypeCls = PsiUtils.resolvePsiType(classGenericParameters[0]) ?: return null
+                fieldTypeCls = PsiTypeUtils.resolvePsiType(classGenericParameters[0]) ?: return null
             } else {
                 fieldTypeCls = paramPsiCls
             }
@@ -882,18 +882,18 @@ object HttpUtils {
                 val parameters = psiType.parameters
                 if (parameters.isNotEmpty()) {
                     // Get the generic parameter type
-                    fieldTypeCls = PsiUtils.resolvePsiType(parameters[0]) ?: return null
+                    fieldTypeCls = PsiTypeUtils.resolvePsiType(parameters[0]) ?: return null
                 } else {
-                    val psiFieldTypeCls = PsiUtils.resolvePsiType(psiType) ?: return null
+                    val psiFieldTypeCls = PsiTypeUtils.resolvePsiType(psiType) ?: return null
                     if (psiFieldTypeCls is PsiTypeParameter && classGenericParameters.isNotEmpty()) {
                         // The parameter itself is a generic type, such as T, and the first one is taken directly
                         val genericActualType = classGenericParameters[0] as PsiClassType
                         if (genericActualType.parameters.isNotEmpty()) {
                             val psiFieldGenericTypeCls =
-                                PsiUtils.resolvePsiType(genericActualType.parameters[0]) ?: return null
+                                PsiTypeUtils.resolvePsiType(genericActualType.parameters[0]) ?: return null
                             fieldTypeCls = psiFieldGenericTypeCls
                         } else {
-                            fieldTypeCls = PsiUtils.resolvePsiType(genericActualType) ?: return null
+                            fieldTypeCls = PsiTypeUtils.resolvePsiType(genericActualType) ?: return null
                         }
                     } else {
                         fieldTypeCls = psiFieldTypeCls
@@ -1302,7 +1302,7 @@ object HttpUtils {
 
         val paramPsiType = getUrlControllerMethodParamType(jsonString, controllerMethod)
 
-        val paramPsiCls = PsiUtils.resolvePsiType(paramPsiType) ?: return null
+        val paramPsiCls = PsiTypeUtils.resolvePsiType(paramPsiType) ?: return null
 
         if (noParentProperty) {
             return paramPsiCls
@@ -1316,13 +1316,13 @@ object HttpUtils {
 
         val psiType = targetField.type
 
-        val psiClass = PsiUtils.resolvePsiType(psiType)
+        val psiClass = PsiTypeUtils.resolvePsiType(psiType)
 
         val isCollection = InheritanceUtil.isInheritor(psiClass, "java.util.Collection")
         return if (isCollection) {
             val parameters = (psiType as PsiClassReferenceType).parameters
             if (parameters.size > 0) {
-                PsiUtils.resolvePsiType(parameters[0])
+                PsiTypeUtils.resolvePsiType(parameters[0])
             } else {
                 null
             }
