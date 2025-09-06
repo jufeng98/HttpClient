@@ -222,7 +222,8 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 return@forEach
             }
 
-            previous.prototype = it
+            @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
+            previous!!.prototype = it
 
             previous = it
         }

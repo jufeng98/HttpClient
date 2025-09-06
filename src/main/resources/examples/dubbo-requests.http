@@ -1,4 +1,4 @@
-### Test project exist dubbo interface
+### Test project exist dubbo interface source code
 DUBBO dubbo://10.255.0.1:31299
 Content-Type: application/json
 Interface: org.javamaster.service.washing.admin.api.dubbo.ServiceExchangeDubboService
@@ -13,7 +13,7 @@ Version: 1.0.0
 
 // Registry Description: This header indicates the configuration of the registration center,
 // specifying this header will ignore the address on the url and obtain services from the registration center
-### Test project not exist dubbo interface
+### Test project not exist dubbo interface source code
 DUBBO dubbo://dubbo.javamaster.org:31299
 Content-Type: application/json
 Interface-Name: org.javamaster.api.serviceorder.dubbo.IMHServiceOrderDubboService

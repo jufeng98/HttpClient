@@ -1,6 +1,6 @@
 # HttpClient
 
-## Provides the ability to edit and execute HTTP requests from the code editor of IDEA
+## Provides the ability to edit and execute HTTP / WebSocket / Dubbo requests from the code editor of IDEA
 
 ### features
 - Support sending GET, POST and other requests
@@ -27,7 +27,7 @@
 2. Type gtr or ptr to trigger live templates and quickly create HTTP requests
 3. Click the run button on the left side of the editor to sending request and view the response
 
-## 提供从 IDEA Editor 编写和执行 HTTP 请求的能力
+## 提供从 IDEA Editor 编写和执行 HTTP / WebSocket / Dubbo 请求的能力
 
 ### 主要功能如下：
 
@@ -62,11 +62,11 @@
 
 ![post.png](./images/post.png)
 
-#### DUBBO 请求(针对项目中存在 Dubbo 接口类情况)
+#### DUBBO 请求(针对项目中存在 Dubbo 接口类源码情况)
 
 ![dubbo-1.png](./images/dubbo-1.png)
 
-#### DUBBO 请求(针对项目中不存在 Dubbo 接口类情况)
+#### DUBBO 请求(针对项目中不存在 Dubbo 接口类源码情况)
 
 ![dubbo-2.png](./images/dubbo-2.png)
 
