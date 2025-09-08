@@ -64,7 +64,7 @@ class JsonEmptyBodyCompletionProvider : CompletionProvider<CompletionParameters>
                 val typeText = it.type.presentableText + " " + HttpUtils.getPsiFieldDesc(it)
 
                 val builder = LookupElementBuilder
-                    .create("\"" + it.name + "\"")
+                    .create(it, "\"" + it.name + "\"")
                     .withTypeText(typeText, true)
 
                 result.addElement(builder)

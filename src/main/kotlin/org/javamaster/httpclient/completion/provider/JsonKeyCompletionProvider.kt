@@ -54,7 +54,7 @@ class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
                 val typeText = it.type.presentableText + " " + HttpUtils.getPsiFieldDesc(it)
 
                 val builder = LookupElementBuilder
-                    .create(it.name)
+                    .create(it)
                     .withTypeText(typeText, true)
 
                 completionResultSet.addElement(builder)
