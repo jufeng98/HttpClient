@@ -43,8 +43,11 @@ object DubboUtils {
     }
 
     fun findDubboServiceMethod(psiElement: PsiElement): PsiMethod? {
-        val httpMessageBody =
-            InjectedLanguageManager.getInstance(psiElement.project).getInjectionHost(psiElement) as HttpMessageBody
+        val project = psiElement.project
+        val manager = InjectedLanguageManager.getInstance(project)
+
+        val httpMessageBody = manager.getInjectionHost(psiElement) as HttpMessageBody? ?: return null
+
         val httpRequest = PsiTreeUtil.getParentOfType(httpMessageBody, HttpRequest::class.java)
 
         val headerField = httpRequest?.header?.headerFieldList

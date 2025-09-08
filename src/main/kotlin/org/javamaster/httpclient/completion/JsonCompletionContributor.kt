@@ -1,11 +1,15 @@
 package org.javamaster.httpclient.completion
 
 import com.intellij.codeInsight.completion.CompletionContributor
+import com.intellij.codeInsight.completion.CompletionParameters
+import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.json.JsonElementTypes
 import com.intellij.json.psi.*
+import com.intellij.openapi.vfs.impl.http.HttpVirtualFile
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.completion.provider.JsonEmptyBodyCompletionProvider
 import org.javamaster.httpclient.completion.provider.JsonKeyCompletionProvider
 
@@ -27,6 +31,18 @@ class JsonCompletionContributor : CompletionContributor() {
                 .beforeLeaf(PlatformPatterns.psiElement(JsonElementTypes.R_CURLY)),
             JsonEmptyBodyCompletionProvider()
         )
+    }
+
+    override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
+        val psiElement = parameters.position
+
+        val virtualFile = PsiUtil.getVirtualFile(psiElement) ?: return
+
+        if (virtualFile !is HttpVirtualFile) {
+            result
+        }
+
+        super.fillCompletionVariants(parameters, result)
     }
 
     @Suppress("OVERRIDE_DEPRECATION")
