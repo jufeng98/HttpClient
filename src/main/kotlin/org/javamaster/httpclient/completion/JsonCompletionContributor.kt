@@ -6,12 +6,12 @@ import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.json.JsonElementTypes
 import com.intellij.json.psi.*
-import com.intellij.openapi.vfs.impl.http.HttpVirtualFile
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.completion.provider.JsonEmptyBodyCompletionProvider
 import org.javamaster.httpclient.completion.provider.JsonKeyCompletionProvider
+import org.javamaster.httpclient.psi.HttpMessageBody
 
 class JsonCompletionContributor : CompletionContributor() {
 
@@ -36,10 +36,9 @@ class JsonCompletionContributor : CompletionContributor() {
     override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         val psiElement = parameters.position
 
-        val virtualFile = PsiUtil.getVirtualFile(psiElement) ?: return
-
-        if (virtualFile !is HttpVirtualFile) {
-            result
+        val host = InjectedLanguageManager.getInstance(psiElement.project).getInjectionHost(psiElement)
+        if (host !is HttpMessageBody) {
+            return
         }
 
         super.fillCompletionVariants(parameters, result)
