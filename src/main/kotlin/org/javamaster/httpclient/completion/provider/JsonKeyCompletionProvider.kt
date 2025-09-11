@@ -10,6 +10,7 @@ import org.javamaster.httpclient.utils.DubboUtils.fillTargetDubboMethodParams
 import org.javamaster.httpclient.utils.DubboUtils.getTargetPsiFieldClass
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.resolveUrlControllerTargetPsiClass
+import org.javamaster.httpclient.utils.PsiTypeUtils
 
 /**
  * @author yudong
@@ -45,7 +46,7 @@ class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
         val newPrefix = prefix.substring(1)
         val completionResultSet = result.withPrefixMatcher(newPrefix)
 
-        targetPsiClass.fields
+        PsiTypeUtils.collectFields(targetPsiClass)
             .forEach {
                 if (it.modifierList?.hasModifierProperty("static") == true) {
                     return@forEach
@@ -54,7 +55,7 @@ class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
                 val typeText = it.type.presentableText + " " + HttpUtils.getPsiFieldDesc(it)
 
                 val builder = LookupElementBuilder
-                    .create(it.name)
+                    .create(it)
                     .withTypeText(typeText, true)
 
                 completionResultSet.addElement(builder)
