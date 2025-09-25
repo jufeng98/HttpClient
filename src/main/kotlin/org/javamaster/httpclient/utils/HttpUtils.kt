@@ -280,9 +280,11 @@ object HttpUtils {
             }
         }
 
-        val filePath = requestMessagesGroup.inputFile?.filePath?.text ?: return reqStr
+        val filePath = requestMessagesGroup.inputFile?.filePath ?: return reqStr
 
-        val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
+        var filePathStr = resolveToActualFilePath(filePath)
+
+        val path = constructFilePath(filePathStr, variableResolver.httpFileParentPath)
 
         val file = File(path)
 
@@ -592,24 +594,28 @@ object HttpUtils {
             }
     }
 
-    private fun resolveDirOfVariable(variable: HttpVariable?): PsiDirectory? {
+    private fun resolveVariable(variable: HttpVariable?): PsiElement? {
         val references = variable?.variableName?.references ?: return null
         if (references.isEmpty()) {
             return null
         }
 
-        val psiElement = references[0].resolve()
-        if (psiElement !is PsiDirectory) {
-            return null
-        }
-
-        return psiElement
+        return references[0].resolve()
     }
 
     fun resolvePathOfVariable(variable: HttpVariable?): String? {
-        val psiElement = resolveDirOfVariable(variable) ?: return null
+        val psiElement = resolveVariable(variable) ?: return null
 
-        return psiElement.virtualFile.path
+        if (psiElement is PsiDirectory) {
+            return psiElement.virtualFile.path
+        }
+
+        if (psiElement is HttpGlobalVariableName) {
+            val globalVariable = psiElement.parent as HttpGlobalVariable
+            return globalVariable.globalVariableValue?.text
+        }
+
+        return null
     }
 
     fun getDirectionPath(directionComment: HttpDirectionComment, parentPath: String): String? {
@@ -788,6 +794,27 @@ object HttpUtils {
             val tabName = getTabName(it)
             runConfigName == tabName
         }
+    }
+
+    fun resolveToActualFilePath(httpFilePath: HttpFilePath): String {
+        var path = ""
+
+        var child = httpFilePath.firstChild
+        while (child != null) {
+            if (child is HttpVariable) {
+                val resolvedPath = resolvePathOfVariable(child)
+                if (resolvedPath != null) {
+                    path += resolvedPath
+                }
+            } else {
+                val filePathContent = child as HttpFilePathContent
+                path += filePathContent.text ?: ""
+            }
+
+            child = child.nextSibling
+        }
+
+        return path
     }
 
     fun resolveFilePath(path: String, httpFileParentPath: String, project: Project): PsiElement? {

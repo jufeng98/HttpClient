@@ -72,8 +72,8 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         } else if (type == HttpTypes.OUTPUT_FILE) {
             val filePath = (node.psi as HttpOutputFile).filePath
             if (filePath != null) {
-                val text = filePath.filePathContent?.text
-                if (filePath.variable == null) {
+                val text = filePath.filePathContentList.lastOrNull()?.text
+                if (filePath.variableList.isEmpty()) {
                     if (text != null && text.length > 32) {
                         return Paths.get(text).name
                     }

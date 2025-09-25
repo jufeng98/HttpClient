@@ -40,24 +40,26 @@ class HttpFilePathCompletionProvider : CompletionProvider<CompletionParameters>(
 
         val virtualFile = PsiUtil.getVirtualFile(psiElement) ?: return
 
-        val variable = findVariable(parent)
-        if (variable != null) {
-            val variableName = variable.variableName ?: return
+        val variables = findVariables(parent)
+        if (!variables.isEmpty()) {
+            variables.forEach {
+                val variableName = it.variableName ?: return@forEach
 
-            val psiFile = PsiUtil.getPsiFile(parentParent.project, virtualFile)
+                val psiFile = PsiUtil.getPsiFile(parentParent.project, virtualFile)
 
-            val psiDirectory = HttpVariableNamePsiReference.tryResolveVariable(
-                variableName.name,
-                variableName.isBuiltin,
-                psiFile,
-                false
-            )
+                val psiDirectory = HttpVariableNamePsiReference.tryResolveVariable(
+                    variableName.name,
+                    variableName.isBuiltin,
+                    psiFile,
+                    false
+                )
 
-            if (psiDirectory !is PsiDirectory) {
-                return
+                if (psiDirectory !is PsiDirectory) {
+                    return@forEach
+                }
+
+                fillRootPaths(psiDirectory, it.text, result)
             }
-
-            fillRootPaths(psiDirectory, variable.text, result)
         } else {
             val root = virtualFile.parent ?: return
 
@@ -131,12 +133,15 @@ class HttpFilePathCompletionProvider : CompletionProvider<CompletionParameters>(
         }, VirtualFileVisitor.SKIP_ROOT)
     }
 
-    private fun findVariable(parent: PsiElement): HttpVariable? {
-        var variable: HttpVariable? = null
+    private fun findVariables(parent: PsiElement): MutableList<HttpVariable> {
+        var variable = mutableListOf<HttpVariable>()
         if (parent is HttpFilePath) {
-            variable = parent.variable
+            variable = parent.variableList
         } else if (parent is HttpDirectionValue) {
-            variable = parent.variable
+            val httpVariable = parent.variable
+            if (httpVariable != null) {
+                variable = mutableListOf(httpVariable)
+            }
         }
 
         return variable

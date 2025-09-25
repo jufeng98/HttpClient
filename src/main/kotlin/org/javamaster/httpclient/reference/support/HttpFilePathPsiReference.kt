@@ -16,13 +16,7 @@ class HttpFilePathPsiReference(httpFilePath: HttpFilePath, textRange: TextRange)
     override fun resolve(): PsiElement? {
         val parentPath = PsiUtil.getVirtualFile(element)?.parent?.path ?: return null
 
-        var path = ""
-        val resolvedPath = HttpUtils.resolvePathOfVariable(element.variable)
-        if (resolvedPath != null) {
-            path += resolvedPath
-        }
-
-        path += element.filePathContent?.text ?: ""
+        var path = HttpUtils.resolveToActualFilePath(element)
 
         return HttpUtils.resolveFilePath(path, parentPath, element.project)
     }
