@@ -155,27 +155,28 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // variable filePathContent | variable | filePathContent
+  // (variable | filePathContent)+
   public static boolean filePath(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "filePath")) return false;
     if (!nextTokenIs(b, "<absolute or relate file path>", FILE_PATH_PART, START_VARIABLE_BRACE)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, FILE_PATH, "<absolute or relate file path>");
     r = filePath_0(b, l + 1);
-    if (!r) r = variable(b, l + 1);
-    if (!r) r = filePathContent(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!filePath_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "filePath", c)) break;
+    }
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
-  // variable filePathContent
+  // variable | filePathContent
   private static boolean filePath_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "filePath_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = variable(b, l + 1);
-    r = r && filePathContent(b, l + 1);
-    exit_section_(b, m, null, r);
+    if (!r) r = filePathContent(b, l + 1);
     return r;
   }
 

@@ -11,7 +11,6 @@ public interface HttpPathAbsolute extends PsiElement {
   @NotNull
   List<HttpVariable> getVariableList();
 
-  @NotNull
-  PsiReference[] getReferences();
+  @NotNull PsiReference @NotNull [] getReferences();
 
 }

@@ -206,7 +206,7 @@ historyBodyFileList ::= historyBodyFile+
 historyBodyFile ::= HISTORY_FILE_SIGN filePath {
     pin = 1
 }
-filePath ::= variable filePathContent | variable | filePathContent {
+filePath ::= (variable | filePathContent)+ {
     methods = [
         getReferences
     ]

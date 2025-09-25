@@ -14,7 +14,6 @@ public interface HttpMultipartField extends PsiElement {
   @NotNull
   HttpRequestMessagesGroup getRequestMessagesGroup();
 
-  @Nullable
-  ContentType getContentType();
+  @Nullable ContentType getContentType();
 
 }

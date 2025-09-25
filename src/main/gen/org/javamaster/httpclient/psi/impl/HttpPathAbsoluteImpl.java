@@ -35,8 +35,7 @@ public class HttpPathAbsoluteImpl extends ASTWrapperPsiElement implements HttpPa
   }
 
   @Override
-  @NotNull
-  public PsiReference[] getReferences() {
+  public @NotNull PsiReference @NotNull [] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
   }
 

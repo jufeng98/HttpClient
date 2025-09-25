@@ -35,8 +35,7 @@ public class HttpQueryParameterKeyImpl extends ASTWrapperPsiElement implements H
   }
 
   @Override
-  @NotNull
-  public PsiReference[] getReferences() {
+  public @NotNull PsiReference @NotNull [] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
   }
 

@@ -41,14 +41,12 @@ public class HttpVariableArgImpl extends ASTWrapperPsiElement implements HttpVar
   }
 
   @Override
-  @NotNull
-  public PsiReference[] getReferences() {
+  public @NotNull PsiReference @NotNull [] getReferences() {
     return HttpPsiImplUtil.getReferences(this);
   }
 
   @Override
-  @NotNull
-  public Object getValue() {
+  public @NotNull Object getValue() {
     return HttpPsiImplUtil.getValue(this);
   }
 

@@ -14,12 +14,10 @@ public interface HttpVariableName extends PsiElement {
   @NotNull
   HttpVariableReference getVariableReference();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
   boolean isBuiltin();
 
-  @NotNull
-  PsiReference[] getReferences();
+  @NotNull PsiReference @NotNull [] getReferences();
 
 }

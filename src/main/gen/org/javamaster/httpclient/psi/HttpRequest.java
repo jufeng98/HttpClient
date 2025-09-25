@@ -33,19 +33,14 @@ public interface HttpRequest extends PsiElement {
   @Nullable
   HttpVersion getVersion();
 
-  @Nullable
-  ContentType getContentType();
+  @Nullable ContentType getContentType();
 
-  @Nullable
-  String getContentTypeBoundary();
+  @Nullable String getContentTypeBoundary();
 
-  @Nullable
-  Integer getContentLength();
+  @Nullable Integer getContentLength();
 
-  @NotNull
-  Version getHttpVersion();
+  @NotNull Version getHttpVersion();
 
-  @NotNull
-  String getHttpHost();
+  @NotNull String getHttpHost();
 
 }
