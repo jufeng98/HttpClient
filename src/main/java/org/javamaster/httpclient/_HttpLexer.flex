@@ -275,6 +275,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 
 <IN_INPUT_FILE_PATH> {
   {FILE_PATH_PART}           { return FILE_PATH_PART; }
+  "{{"                       { nextState = IN_INPUT_FILE_PATH; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
   {EOL_MULTI}                { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
 }
