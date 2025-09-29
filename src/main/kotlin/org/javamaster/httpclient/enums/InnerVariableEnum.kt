@@ -234,15 +234,24 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(httpFileParentPath: String, vararg args: Any): String {
-            if (args.size != 1 || args[0] !is Int) {
+            if (args.isEmpty() || args[0] !is Int) {
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
+            }
+
+            if (args.size > 1 && args[1] !is String) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
             val count = args[0] as Int
+            val pattern = if (args.size > 1) {
+                args[1] as String
+            } else {
+                "yyyy-MM-dd"
+            }
 
             val date = DateUtils.addDays(Date(), count)
 
-            return DateFormatUtils.format(date, "yyyy-MM-dd")
+            return DateFormatUtils.format(date, pattern)
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
