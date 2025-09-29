@@ -282,7 +282,7 @@ object HttpUtils {
 
         val filePath = requestMessagesGroup.inputFile?.filePath ?: return reqStr
 
-        var filePathStr = resolveToActualFilePath(filePath)
+        var filePathStr = variableResolver.resolve(filePath.text)
 
         val path = constructFilePath(filePathStr, variableResolver.httpFileParentPath)
 
@@ -396,7 +396,7 @@ object HttpUtils {
                 reqStr.replace("\n", "\n    ").replace("'", "'\\''")
             }
 
-        val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
+        val path = constructFilePath(variableResolver.resolve(filePath), variableResolver.httpFileParentPath)
 
         val file = File(path)
 
@@ -455,7 +455,7 @@ object HttpUtils {
 
                 val filePath = requestMessagesGroup.inputFile?.filePath?.text
                 if (filePath != null) {
-                    val path = constructFilePath(filePath, variableResolver.httpFileParentPath)
+                    val path = constructFilePath(variableResolver.resolve(filePath), variableResolver.httpFileParentPath)
 
                     val file = File(path)
 
