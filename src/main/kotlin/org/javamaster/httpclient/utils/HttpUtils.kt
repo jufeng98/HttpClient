@@ -455,7 +455,8 @@ object HttpUtils {
 
                 val filePath = requestMessagesGroup.inputFile?.filePath?.text
                 if (filePath != null) {
-                    val path = constructFilePath(variableResolver.resolve(filePath), variableResolver.httpFileParentPath)
+                    val path =
+                        constructFilePath(variableResolver.resolve(filePath), variableResolver.httpFileParentPath)
 
                     val file = File(path)
 
@@ -958,11 +959,18 @@ object HttpUtils {
 
         val annotation = psiMethod.getAnnotation(API_OPERATION_ANNO_NAME)
         if (annotation != null) {
-            val attributeValue = annotation.findAttributeValue("value") as PsiLiteralExpression?
-
-            val desc = attributeValue?.value?.toString()?.trim()
-
-            desc?.let { list.add(it) }
+            val attributeValue = annotation.findAttributeValue("value")
+            if (attributeValue is PsiPolyadicExpression) {
+                attributeValue.operands
+                    .filter { it is PsiLiteralExpression? }
+                    .forEach {
+                        val desc = (it as PsiLiteralExpression?)?.value?.toString()?.trim()
+                        desc?.let { list.add(it) }
+                    }
+            } else if (attributeValue is PsiLiteralExpression?) {
+                val desc = attributeValue?.value?.toString()?.trim()
+                desc?.let { list.add(it) }
+            }
         }
 
         return list.joinToString(" ")
@@ -1293,9 +1301,9 @@ object HttpUtils {
             return null
         }
 
-        val httpRequest = PsiTreeUtil.getParentOfType(messageBody, HttpRequest::class.java)!!
+        val httpRequest = PsiTreeUtil.getParentOfType(messageBody, HttpRequest::class.java) ?: return null
 
-        val references = httpRequest.requestTarget!!.references
+        val references = httpRequest.requestTarget?.references ?: return null
         if (references.isEmpty()) {
             return null
         }
