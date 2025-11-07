@@ -28,7 +28,10 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
     }
 
     override fun updatePresentation(presentation: PresentationData, node: RunDashboardRunConfigurationNode): Boolean {
-        val processHandler = node.descriptor?.processHandler as HttpProcessHandler? ?: return false
+        val processHandler = node.descriptor?.processHandler
+        if (processHandler !is HttpProcessHandler) {
+            return false
+        }
 
         val time = System.currentTimeMillis() - processHandler.finishedTime
         val current = time < 1000 && time > 0
