@@ -1,7 +1,7 @@
 package org.javamaster.test
 
 import org.javamaster.httpclient.parser.HttpAdapter
-import org.javamaster.httpclient.utils.HttpParseUtils
+import org.javamaster.utils.HttpParseUtils
 import org.javamaster.httpclient.utils.StreamUtils
 import org.junit.Test
 import java.nio.charset.StandardCharsets

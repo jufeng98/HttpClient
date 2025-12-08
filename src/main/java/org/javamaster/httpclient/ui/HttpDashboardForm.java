@@ -3,20 +3,12 @@ package org.javamaster.httpclient.ui;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.actionSystem.ActionGroup;
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.ActionToolbar;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteAction;
-import com.intellij.openapi.editor.Caret;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.ScrollType;
-import com.intellij.openapi.editor.ScrollingModel;
+import com.intellij.openapi.editor.*;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
@@ -45,12 +37,11 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.net.http.HttpHeaders;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 public class HttpDashboardForm implements Disposable {
     private final static Map<String, HttpDashboardForm> historyMap = Maps.newHashMap();
@@ -161,14 +152,18 @@ public class HttpDashboardForm implements Disposable {
 
     private VirtualFile saveResponseToFile(HttpInfo httpInfo, String tabName, boolean noLog) {
         try {
-            SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
+            String fileName = resolveFilenameFromHeader(httpInfo.getResHeaders());
 
-            String contentType = httpInfo.getContentType();
+            if (fileName == null) {
+                SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
 
-            //noinspection DataFlowIssue
-            String suffix = SimpleTypeEnum.Companion.getSuffix(simpleTypeEnum, contentType);
+                String contentType = httpInfo.getContentType();
 
-            String fileName = DateFormatUtils.format(new Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix;
+                //noinspection DataFlowIssue
+                String suffix = SimpleTypeEnum.Companion.getSuffix(simpleTypeEnum, contentType);
+
+                fileName = DateFormatUtils.format(new Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix;
+            }
 
             if (noLog) {
                 LightVirtualFile lightVirtualFile = new LightVirtualFile(fileName);
@@ -207,6 +202,34 @@ public class HttpDashboardForm implements Disposable {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String resolveFilenameFromHeader(HttpHeaders resHeaders) {
+        if (resHeaders == null) {
+            return null;
+        }
+
+        Optional<String> optional = resHeaders.firstValue(com.google.common.net.HttpHeaders.CONTENT_DISPOSITION);
+        if (optional.isEmpty()) {
+            return null;
+        }
+
+        String headerValue = optional.get();
+        String[] split = headerValue.split(";");
+
+        optional = Arrays.stream(split)
+                .map(it -> {
+                    String tmp = it.trim();
+                    if (tmp.startsWith("filename")) {
+                        return StringUtil.unquoteString(tmp.split("=")[1]);
+                    }
+
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst();
+
+        return optional.orElse(null);
     }
 
     private void renderResponsePresentation(JComponent resComponent, JComponent presentation, GridConstraints constraintsRes) {

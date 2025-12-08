@@ -557,9 +557,10 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val size = Formats.formatFileSize(response.body().size.toLong())
 
-                        val resHeaderList = convertResponseHeaders(response.headers())
+                        val resHeaders = response.headers()
+                        val resHeaderList = convertResponseHeaders(resHeaders)
 
-                        val httpResInfo = convertResponseBody(response.body(), response.headers())
+                        val httpResInfo = convertResponseBody(response.body(), resHeaders)
 
                         val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
 
@@ -569,7 +570,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                             jsAfterReq,
                             httpResInfo,
                             response.statusCode(),
-                            response.headers().map()
+                            resHeaders.map()
                         )
 
                         if (!evalJsRes.isNullOrEmpty()) {
@@ -600,7 +601,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val httpInfo = HttpInfo(
                             httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
-                            null, contentType
+                            null, contentType, resHeaders
                         )
 
                         dealResponse(httpInfo, parentPath)

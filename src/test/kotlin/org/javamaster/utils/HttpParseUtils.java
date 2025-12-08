@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.utils;
+package org.javamaster.utils;
 
 import com.intellij.lang.Language;
 import com.intellij.lang.LanguageParserDefinitions;

@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.model
 
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import java.net.http.HttpHeaders
 
 /**
  * @author yudong
@@ -11,7 +12,8 @@ data class HttpInfo(
     val type: SimpleTypeEnum?,
     val byteArray: ByteArray?,
     val httpException: Throwable?,
-    var contentType: String? = null
+    var contentType: String? = null,
+    val resHeaders: HttpHeaders? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
