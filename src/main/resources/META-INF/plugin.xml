@@ -68,6 +68,10 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>5.8.6</b></li>
+                <ul>
+                    <li>支持253</li>
+                </ul>
                 <li><b>5.8.3</b></li>
                 <ul>
                     <li>JSON key 输入智能提示 Spring 控制器入参 Bean 字段名</li>
