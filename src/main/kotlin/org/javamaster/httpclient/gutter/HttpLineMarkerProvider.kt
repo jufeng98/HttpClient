@@ -63,7 +63,13 @@ class HttpLineMarkerProvider : LineMarkerProvider {
     }
 
     private fun createDiffIconInfo(element: PsiElement): HttpLineMarkerInfo? {
-        val historyBodyFile = element.parent as HttpHistoryBodyFile
+        val historyBodyFile = element.parent
+        // 不知道什么情况会出现 ClassCastException: class com.intellij.psi.DummyBlockType$DummyBlock cannot be cast to class org.javamaster.httpclient.psi.HttpHistoryBodyFile
+        // 加上这个避免下
+        if (historyBodyFile !is HttpHistoryBodyFile) {
+            return null
+        }
+
         val bodyFileList = historyBodyFile.parent as HttpHistoryBodyFileList
 
         if (historyBodyFile.filePath == null || bodyFileList.historyBodyFileList.size <= 1) return null
