@@ -420,6 +420,11 @@
             <keyboard-shortcut first-keystroke="control alt SLASH" keymap="$default"/>
         </action>
 
+        <action class="org.javamaster.httpclient.action.ShowTimestampAction">
+            <add-to-group group-id="EditorPopupMenu"/>
+            <add-to-group group-id="BasicEditorPopupMenu"/>
+        </action>
+
         <group id="httpToolbarLeftBtnGroup">
             <action class="org.javamaster.httpclient.action.ShowAddHttpPopupAction"/>
             <action class="org.javamaster.httpclient.action.ShowRequestHistoryAction"/>
