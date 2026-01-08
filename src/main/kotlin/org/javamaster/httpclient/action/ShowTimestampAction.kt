@@ -28,9 +28,8 @@ class ShowTimestampAction : AnAction(nls("show.timestamp"), null, null) {
             val format = DateFormatUtils.format(Date(timestamp), "yyyy-MM-dd HH:mm:ss")
             NotifyUtil.notifyInfo(e.project!!, format)
         } catch (ex: Exception) {
-            NotifyUtil.notifyWarn(e.project!!, "error:" + ex.message)
+            NotifyUtil.notifyWarn(e.project!!, "error: " + ex.message)
         }
-
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread {
