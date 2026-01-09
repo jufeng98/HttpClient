@@ -4,6 +4,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.utils.NotifyUtil
@@ -13,11 +14,11 @@ import java.util.Date
  * @author yudong
  */
 @Suppress("ActionPresentationInstantiatedInCtor")
-class ShowTimestampAction : AnAction(nls("show.timestamp"), null, null) {
+class VisualizeTimestampAction : AnAction(nls("show.timestamp"), null, null) {
     override fun update(e: AnActionEvent) {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val selectedText = editor?.selectionModel?.selectedText
-        e.presentation.isEnabledAndVisible = selectedText != null
+        e.presentation.isEnabledAndVisible = selectedText != null && StringUtils.isNumeric(selectedText)
     }
 
     override fun actionPerformed(e: AnActionEvent) {

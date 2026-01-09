@@ -420,7 +420,7 @@
             <keyboard-shortcut first-keystroke="control alt SLASH" keymap="$default"/>
         </action>
 
-        <action class="org.javamaster.httpclient.action.ShowTimestampAction">
+        <action class="org.javamaster.httpclient.action.VisualizeTimestampAction">
             <add-to-group group-id="EditorPopupMenu"/>
             <add-to-group group-id="BasicEditorPopupMenu"/>
         </action>
