@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.action
 
+import com.intellij.codeInsight.hint.HintManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -7,8 +8,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.nls.NlsBundle.nls
-import org.javamaster.httpclient.utils.NotifyUtil
-import java.util.Date
+import java.util.*
 
 /**
  * @author yudong
@@ -24,12 +24,14 @@ class VisualizeTimestampAction : AnAction(nls("show.timestamp"), null, null) {
     override fun actionPerformed(e: AnActionEvent) {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val selectedText = editor?.selectionModel?.selectedText ?: return
+        val hintManager = HintManager.getInstance()
         try {
             val timestamp = selectedText.toLong()
             val format = DateFormatUtils.format(Date(timestamp), "yyyy-MM-dd HH:mm:ss")
-            NotifyUtil.notifyInfo(e.project!!, format)
+
+            hintManager.showInformationHint(editor, format)
         } catch (ex: Exception) {
-            NotifyUtil.notifyWarn(e.project!!, "error: " + ex.message)
+            hintManager.showErrorHint(editor, "error: " + ex.message)
         }
     }
 
