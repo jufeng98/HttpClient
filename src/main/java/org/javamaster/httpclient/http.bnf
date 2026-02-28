@@ -215,7 +215,7 @@ filePath ::= (variable | filePathContent)+ {
 filePathContent ::= FILE_PATH_PART
 
 messageBody ::= MESSAGE_TEXT {
-    mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
+    mixin="org.javamaster.httpclient.inject.HttpMessageBodyLanguageInjectionHost"
 }
 
 multipartMessage ::= (MESSAGE_BOUNDARY multipartField?)+
@@ -230,7 +230,7 @@ responseScript ::= OUT_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
 scriptBody ::= SCRIPT_BODY_PAET {
-  mixin="org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost"
+  mixin="org.javamaster.httpclient.inject.HttpScriptBodyInjectionHost"
   name = "script body"
 }
 

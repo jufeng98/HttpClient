@@ -163,6 +163,11 @@ class DubboRequest(
 
         val commentTabName = "### $tabName$CR_LF"
         httpReqDescList.add(commentTabName)
+
+        if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+            httpReqDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
+        }
+
         httpReqDescList.add("DUBBO $url$CR_LF")
 
         reqHeaderMap.forEach {

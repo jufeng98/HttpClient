@@ -60,7 +60,7 @@ SEGMENT=[a-zA-Z_0-9]+
 QUERY_PART=[^#&=/{\s]+
 FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
-FIELD_NAME=[a-zA-Z0-9\-]+
+FIELD_NAME=[a-zA-Z0-9_\-]+
 FIELD_VALUE=[^\r\n{ ]+
 FILE_PATH_PART=[^\r\n<>{}]+
 MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
