@@ -8,10 +8,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
-import org.javamaster.httpclient.inject.HttpPsiLanguageInjectionHost;
+import org.javamaster.httpclient.inject.HttpMessageBodyLanguageInjectionHost;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpMessageBodyImpl extends HttpPsiLanguageInjectionHost implements HttpMessageBody {
+public class HttpMessageBodyImpl extends HttpMessageBodyLanguageInjectionHost implements HttpMessageBody {
 
   public HttpMessageBodyImpl(@NotNull ASTNode node) {
     super(node);
