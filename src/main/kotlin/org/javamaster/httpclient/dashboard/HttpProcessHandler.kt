@@ -496,6 +496,11 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                     }
 
                     httpResDescList.add("### $tabName$CR_LF")
+
+                    if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+                        httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
+                    }
+
                     httpResDescList.add("DUBBO $url $CR_LF")
                     httpResDescList.add("${HttpHeaders.CONTENT_LENGTH}: ${bodyBytes.size}$CR_LF")
 
@@ -583,6 +588,10 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val commentTabName = "### $tabName$CR_LF"
                         httpResDescList.add(commentTabName)
+
+                        if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+                            httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
+                        }
 
                         httpResDescList.add(methodType.name + " " + response.uri() + " " + versionDesc + CR_LF)
 

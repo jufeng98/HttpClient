@@ -14,25 +14,20 @@ import java.util.*
  * @author yudong
  */
 @Suppress("ActionPresentationInstantiatedInCtor")
-class VisualizeTimestampAction : AnAction(nls("show.timestamp"), null, null) {
+class VisualizeTimestampAction : AnAction(nls("visualize.timestamp"), nls("visualize.timestamp.desc"), null) {
     override fun update(e: AnActionEvent) {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val selectedText = editor?.selectionModel?.selectedText
-        e.presentation.isEnabledAndVisible = selectedText != null && StringUtils.isNumeric(selectedText)
+        e.presentation.isEnabledAndVisible =
+            selectedText != null && selectedText.length == 13 && StringUtils.isNumeric(selectedText)
     }
 
     override fun actionPerformed(e: AnActionEvent) {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val selectedText = editor?.selectionModel?.selectedText ?: return
-        val hintManager = HintManager.getInstance()
-        try {
-            val timestamp = selectedText.toLong()
-            val format = DateFormatUtils.format(Date(timestamp), "yyyy-MM-dd HH:mm:ss")
-
-            hintManager.showInformationHint(editor, format)
-        } catch (ex: Exception) {
-            hintManager.showErrorHint(editor, "error: " + ex.message)
-        }
+        val timestamp = selectedText.toLong()
+        val format = DateFormatUtils.format(Date(timestamp), "yyyy-MM-dd HH:mm:ss")
+        HintManager.getInstance().showInformationHint(editor, format)
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread {

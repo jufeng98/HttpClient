@@ -198,6 +198,10 @@ enum class HttpRequestEnum(val icon: Icon) {
             val commentTabName = "### $tabName$CR_LF"
             httpReqDescList.add(commentTabName)
 
+            if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+                httpReqDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
+            }
+
             httpReqDescList.add(request.method() + " " + request.uri() + " " + getVersionDesc(version) + CR_LF)
 
             request.headers()

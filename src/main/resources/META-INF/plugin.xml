@@ -68,6 +68,12 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>5.8.8</b></li>
+                <ul>
+                    <li>修复请求/响应体注入JSON后对转义字符处理不正确问题</li>
+                    <li>新增可视化时间戳指令/动作</li>
+                    <li>bug修复</li>
+                </ul>
                 <li><b>5.8.6</b></li>
                 <ul>
                     <li>支持253</li>
@@ -352,6 +358,8 @@
                       implementationClass="org.javamaster.httpclient.braceMatcher.HttpBraceMatcher"/>
         <lang.foldingBuilder language="http"
                              implementationClass="org.javamaster.httpclient.folding.HttpFoldingBuilder"/>
+        <lang.foldingBuilder language="JSON"
+                             implementationClass="org.javamaster.httpclient.folding.JsonFoldingBuilder"/>
         <lang.psiStructureViewFactory language="http"
                                       implementationClass="org.javamaster.httpclient.structure.HttpRequestStructureViewFactory"/>
         <defaultLiveTemplates file="liveTemplates/request.xml"/>
