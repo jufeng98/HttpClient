@@ -35,7 +35,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %unicode
 //%debug
 %state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_NAME, IN_DIRECTION_VALUE
-%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE, IN_TRIM_PREFIX_ONLY_SPACE
+%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_MULTILINE_QUERY, IN_BODY_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE, IN_TRIM_PREFIX_ONLY_SPACE
 %xstate IN_PATH, IN_JSON_VALUE
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
@@ -47,6 +47,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 
 EOL=\R
 EOL_MULTI=[ ]*\R+
+EOL_MULTI_SPACE=[ ]*\R+[ ]*
 ONLY_SPACE=[ ]+
 WHITE_SPACE=\s+
 LINE_COMMENT="//"[^\r\n]*
@@ -195,8 +196,27 @@ STRING=('([^'])*'|\"([^\"])*\")
   "{{"                { nextState = IN_QUERY; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {QUERY_PART}        { if(nameFlag) return QUERY_NAME; else return QUERY_VALUE; }
   "#"                 { yybegin(IN_FRAGMENT); return HASH; }
+  {EOL_MULTI_SPACE}   { yybegin(IN_MULTILINE_QUERY); return WHITE_SPACE; }
   {ONLY_SPACE}        { yybegin(IN_VERSION); return WHITE_SPACE; }
   {EOL}               { yybegin(IN_HEADER); return WHITE_SPACE; }
+}
+
+<IN_MULTILINE_QUERY> {
+  "&"                 { nameFlag = true; return AND; }
+  "="                 { nameFlag = false; return EQUALS; }
+  "{{"                { nextState = IN_MULTILINE_QUERY; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
+  {QUERY_PART}        { if(nameFlag) return QUERY_NAME; else return QUERY_VALUE; }
+  {WHITE_SPACE}       { return WHITE_SPACE; }
+  {EOL}               { yybegin(IN_HEADER); return WHITE_SPACE; }
+}
+
+<IN_BODY_QUERY> {
+  "&"                 { nameFlag = true; return AND; }
+  "="                 { nameFlag = false; return EQUALS; }
+  "{{"                { nextState = IN_QUERY; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
+  {QUERY_PART}        { if(nameFlag) return QUERY_NAME; else return QUERY_VALUE; }
+  {WHITE_SPACE}       { return WHITE_SPACE; }
+  {EOL}               { return WHITE_SPACE; }
 }
 
 <IN_FRAGMENT> {
