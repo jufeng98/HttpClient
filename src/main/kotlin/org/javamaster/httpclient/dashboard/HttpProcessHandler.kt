@@ -211,6 +211,11 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         var url = variableResolver.resolve(requestTarget.url)
 
+        val formUrlEncodeReq = request.contentType == ContentType.APPLICATION_FORM_URLENCODED
+        if (formUrlEncodeReq) {
+            url = HttpUtils.handleUrl(url)
+        }
+
         if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
             url = HttpUtils.encodeUrl(url)
         }

@@ -195,6 +195,15 @@ object HttpUtils {
         return map
     }
 
+    fun handleUrl(url: String): String {
+        val split = url.split("?")
+        if (split.size == 1) {
+            return url
+        }
+
+        return split[0] + "?" + handleQueryParam(split[1])
+    }
+
     fun encodeUrl(url: String): String {
         val split = url.split("?")
         if (split.size == 1) {
@@ -202,6 +211,15 @@ object HttpUtils {
         }
 
         return split[0] + "?" + encodeQueryParam(split[1])
+    }
+
+    private fun handleQueryParam(queryParam: String): String {
+        val split = queryParam.split("&")
+
+        return split.joinToString("&") {
+            val list = it.split("=")
+            list[0].trim() + "=" + list[1].trim()
+        }
     }
 
     private fun encodeQueryParam(queryParam: String): String {
@@ -266,14 +284,18 @@ object HttpUtils {
     ): Any? {
         requestMessagesGroup ?: return null
 
-        val shouldEncode = contentType == ContentType.APPLICATION_FORM_URLENCODED
-                && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
+        val formUrlEncodeReq = contentType == ContentType.APPLICATION_FORM_URLENCODED
+        val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
 
         var reqStr: String? = null
 
         val messageBody = requestMessagesGroup.messageBody
         if (messageBody != null) {
             reqStr = variableResolver.resolve(messageBody.text)
+
+            if (formUrlEncodeReq) {
+                reqStr = handleQueryParam(reqStr)
+            }
 
             if (shouldEncode) {
                 reqStr = encodeQueryParam(reqStr)

@@ -22,7 +22,7 @@ class UrlEncodedLazyParseableElementType(debugName: String) : ILazyParseableElem
         val httpAdapter = object : HttpAdapter() {
             override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
                 (this.flex as _HttpLexer).nameFlag = true
-                super.start(buffer, startOffset, endOffset, _HttpLexer.IN_QUERY)
+                super.start(buffer, startOffset, endOffset, _HttpLexer.IN_BODY_QUERY)
             }
         }
 
