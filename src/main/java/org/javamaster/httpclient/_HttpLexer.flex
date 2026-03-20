@@ -47,7 +47,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 
 EOL=\R
 EOL_MULTI=[ ]*\R+
-EOL_MULTI_SPACE=[ ]*\R+[ ]*
+EOL_MULTI_SPACE=[ ]*\R+[ ]+
 ONLY_SPACE=[ ]+
 WHITE_SPACE=\s+
 LINE_COMMENT="//"[^\r\n]*
@@ -206,14 +206,14 @@ STRING=('([^'])*'|\"([^\"])*\")
   "="                 { nameFlag = false; return EQUALS; }
   "{{"                { nextState = IN_MULTILINE_QUERY; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {QUERY_PART}        { if(nameFlag) return QUERY_NAME; else return QUERY_VALUE; }
-  {WHITE_SPACE}       { return WHITE_SPACE; }
-  {EOL}               { yybegin(IN_HEADER); return WHITE_SPACE; }
+  {EOL_MULTI_SPACE}   { return WHITE_SPACE; }
+  {EOL_MULTI}         { yybegin(IN_HEADER); return WHITE_SPACE; }
 }
 
 <IN_BODY_QUERY> {
   "&"                 { nameFlag = true; return AND; }
   "="                 { nameFlag = false; return EQUALS; }
-  "{{"                { nextState = IN_QUERY; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
+  "{{"                { nextState = IN_BODY_QUERY; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {QUERY_PART}        { if(nameFlag) return QUERY_NAME; else return QUERY_VALUE; }
   {WHITE_SPACE}       { return WHITE_SPACE; }
   {EOL}               { return WHITE_SPACE; }
