@@ -17,20 +17,17 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.DocumentUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.intellij.images.editor.impl.ImageEditorImpl;
-import org.javamaster.httpclient.action.dashboard.PreviewFileAction;
-import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
-import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
+import org.javamaster.httpclient.action.dashboard.*;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.key.HttpKey;
 import org.javamaster.httpclient.mock.MockServer;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
-import org.javamaster.httpclient.utils.EditorUtils;
-import org.javamaster.httpclient.utils.HttpUtils;
-import org.javamaster.httpclient.utils.VirtualFileUtils;
+import org.javamaster.httpclient.utils.*;
 import org.javamaster.httpclient.ws.WsRequest;
 import org.jetbrains.annotations.NotNull;
 
@@ -58,6 +55,7 @@ public class HttpDashboardForm implements Disposable {
     @SuppressWarnings("unused")
     private JPanel resPanel;
     private JBSplitter splitter;
+    private JLabel labelLoading;
 
     private final String tabName;
     private final Project project;
@@ -73,7 +71,24 @@ public class HttpDashboardForm implements Disposable {
         historyMap.put(tabName, this);
     }
 
+    public void initLabelLoading(String tabName,String url){
+        splitter.setVisible(false);
+        labelLoading.setVisible(true);
+
+        String str = StringUtils.substringBefore(url, "?");
+        str = str.length() > 60 ? str.substring(0, 60) + "..." : str;
+        labelLoading.setText(tabName + " " + labelLoading.getText() + " " + str);
+    }
+
+    public void resetDashboardForm() {
+        splitter.setVisible(true);
+        labelLoading.setVisible(false);
+    }
+
     public void initHttpResContent(HttpInfo httpInfo, boolean noLog) {
+        splitter.setVisible(true);
+        labelLoading.setVisible(false);
+
         GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
         GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
 
@@ -249,6 +264,9 @@ public class HttpDashboardForm implements Disposable {
     }
 
     public void initWsForm(WsRequest wsRequest) {
+        splitter.setVisible(true);
+        labelLoading.setVisible(false);
+
         reqPanel.remove(reqVerticalToolbarPanel);
         resPanel.remove(resVerticalToolbarPanel);
 
@@ -295,6 +313,7 @@ public class HttpDashboardForm implements Disposable {
 
     public void initMockServerForm(MockServer mockServer) {
         mainPanel.remove(splitter);
+        mainPanel.remove(labelLoading);
         mainPanel.setLayout(new BorderLayout());
 
         Editor editor = WriteAction.computeAndWait(() ->

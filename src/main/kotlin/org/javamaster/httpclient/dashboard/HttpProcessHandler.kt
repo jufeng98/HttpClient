@@ -211,10 +211,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         var url = variableResolver.resolve(requestTarget.url)
 
-        val formUrlEncodeReq = request.contentType == ContentType.APPLICATION_FORM_URLENCODED
-        if (formUrlEncodeReq) {
-            url = HttpUtils.handleUrl(url)
-        }
+        httpDashboardForm.initLabelLoading(tabName, url)
+
+        url = HttpUtils.handleUrl(url)
 
         if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
             url = HttpUtils.encodeUrl(url)
@@ -407,6 +406,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     }
 
     private fun handleException(e: Exception) {
+        httpDashboardForm.resetDashboardForm()
         destroyProcess()
         NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e}</div>")
     }
