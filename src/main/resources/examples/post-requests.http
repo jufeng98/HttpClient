@@ -7,6 +7,16 @@ Content-Type: application/json
   "value": "content"
 }
 
+### mulitline query body
+POST https://ijhttp-examples.jetbrains.com/post
+Content-Type: application/x-www-form-urlencoded
+
+key1 = value1 &
+key2 = value2 &
+key3 = value3 &
+key4 = value4 &
+key5 = value5
+
 ### Request body with builtin methods and builtin variables
 POST https://miao.baidu.com/abdr
 Content-Type: application/json

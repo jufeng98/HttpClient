@@ -16,3 +16,9 @@ Cookie: uid=123456789
 
 ### With builtin variable
 GET https://www.baidu.com?id={{$uuid}}&ts={{$timestamp}}
+
+### path mulitline query
+GET https://www.baidu.com?
+    firstname=John&
+    lastname=Doe&
+    town=Freetown
