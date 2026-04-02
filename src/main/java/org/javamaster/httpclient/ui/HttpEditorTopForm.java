@@ -69,10 +69,8 @@ public class HttpEditorTopForm extends JComponent {
     }
 
     public void initEnvCombo(Set<String> presetEnvSet) {
-        if (presetEnvSet.contains("uat")) {
-            setSelectEnv("uat");
-        } else if (presetEnvSet.contains("test")) {
-            setSelectEnv("test");
+        if (presetEnvSet.contains("dev")) {
+            setSelectEnv("dev");
         }
     }
 
