@@ -34,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.net.URLDecoder;
 import java.net.http.HttpHeaders;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -236,7 +237,8 @@ public class HttpDashboardForm implements Disposable {
                 .map(it -> {
                     String tmp = it.trim();
                     if (tmp.startsWith("filename")) {
-                        return StringUtil.unquoteString(tmp.split("=")[1]);
+                        String name = StringUtil.unquoteString(tmp.split("=")[1]);
+                        return URLDecoder.decode(name, StandardCharsets.UTF_8);
                     }
 
                     return null;

@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "org.javamaster"
-version = "6.0.0"
+version = "6.0.1"
 
 repositories {
     maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
@@ -50,7 +50,7 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "230"
-            untilBuild = "253.*"
+            untilBuild = "261.*"
         }
     }
 }
