@@ -36,7 +36,10 @@ class HttpRenameHandler : RenameHandler {
 
     override fun isAvailableOnDataContext(dataContext: DataContext): Boolean {
         val editor = CommonDataKeys.EDITOR.getData(dataContext) ?: return false
-        val psiFile = PsiUtil.getPsiFile(editor.project!!, editor.virtualFile)
+        val project = editor.project ?: return false
+        val file = editor.virtualFile ?: return false
+
+        val psiFile = PsiUtil.getPsiFile(project, file)
 
         val psiElement = CommonRefactoringUtil.getElementAtCaret(editor, psiFile)
 
