@@ -316,9 +316,12 @@
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpVariableNameManipulator"/>
         <lang.elementManipulator forClass="org.javamaster.httpclient.psi.HttpRequestTarget"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpRequestTargetManipulator"/>
-        <renameHandler implementation="org.javamaster.httpclient.manipulator.HttpRenameHandler"/>
+<!--        <renameHandler implementation="org.javamaster.httpclient.manipulator.HttpRenameHandler"/>-->
         <renamePsiElementProcessor
                 implementation="org.javamaster.httpclient.manipulator.HttpRenamePsiElementProcessor"/>
+        <lang.refactoringSupport
+                language="http"
+                implementationClass="org.javamaster.httpclient.refactor.HttpGlobalVariableNameRefactoringSupportProvider"/>
         <configurationType implementation="org.javamaster.httpclient.runconfig.HttpConfigurationType"/>
         <runDashboardDefaultTypesProvider
                 implementation="org.javamaster.httpclient.dashboard.HttpDashboardDefaultTypesProvider"/>

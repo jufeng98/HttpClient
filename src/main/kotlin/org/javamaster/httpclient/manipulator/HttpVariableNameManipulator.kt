@@ -13,17 +13,11 @@ class HttpVariableNameManipulator : AbstractElementManipulator<HttpVariableName>
     override fun handleContentChange(
         element: HttpVariableName,
         range: TextRange,
-        newContent: String?,
-    ): HttpVariableName? {
-        if (newContent.isNullOrBlank()) {
-            return null
-        }
-
+        newContent: String,
+    ): HttpVariableName {
         val variable = HttpPsiFactory.createVariable(element.project, "GET {{$newContent}}")
-
-        element.parent.replace(variable)
-
-        return variable.variableName
+        val newVariableName = variable.variableName!!
+        return element.replace(newVariableName) as HttpVariableName
     }
 
 }
