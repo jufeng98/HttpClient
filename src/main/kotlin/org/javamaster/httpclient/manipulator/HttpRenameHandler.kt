@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiUtil
 import com.intellij.refactoring.rename.RenameHandler
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.util.CommonRefactoringUtil
+import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpGlobalVariableName
 
 
@@ -37,9 +38,12 @@ class HttpRenameHandler : RenameHandler {
     override fun isAvailableOnDataContext(dataContext: DataContext): Boolean {
         val editor = CommonDataKeys.EDITOR.getData(dataContext) ?: return false
         val project = editor.project ?: return false
-        val file = editor.virtualFile ?: return false
+        val virtualFile = editor.virtualFile ?: return false
 
-        val psiFile = PsiUtil.getPsiFile(project, file)
+        val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+        if (psiFile !is HttpFile) {
+            return false
+        }
 
         val psiElement = CommonRefactoringUtil.getElementAtCaret(editor, psiFile)
 
