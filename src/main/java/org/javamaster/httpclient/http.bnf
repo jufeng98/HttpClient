@@ -48,24 +48,21 @@
 
 httpFile ::= directionComment* globalHandler? globalVariable* requestBlock*
 
-globalVariable::= globalVariableName equalsFlag globalVariableValue? {
+globalVariable::= AT globalVariableName equalsFlag globalVariableValue? {
     pin = 1
 }
 private equalsFlag ::= EQUALS {
     name="="
 }
-globalVariableName ::= AT globalNameFlag {
-    pin = 1
+globalVariableName ::= GLOBAL_NAME {
     methods = [
         getName
         setName
         getReferences
         getNameIdentifier
     ]
-    implements = "com.intellij.psi.PsiNameIdentifierOwner"
-}
-private globalNameFlag ::= GLOBAL_NAME {
     name = "variable name"
+    implements = "com.intellij.psi.PsiNameIdentifierOwner"
 }
 globalVariableValue ::= (variable | globalLiteralValue)+
 globalLiteralValue ::= GLOBAL_VALUE

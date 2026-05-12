@@ -581,7 +581,7 @@ object HttpUtils {
         return globalVariables
             .mapNotNull {
                 val globalVariableName = it.globalVariableName
-                if (globalVariableName.name == variableName) {
+                if (globalVariableName?.name == variableName) {
                     return@mapNotNull globalVariableName
                 } else {
                     return@mapNotNull null
@@ -604,6 +604,7 @@ object HttpUtils {
                         return@mapNotNull null
                     } else {
                         val url = it.directionValue?.text ?: return@mapNotNull null
+                        @Suppress("DEPRECATION")
                         return@mapNotNull PreJsFile(it, URL(url))
                     }
                 }
@@ -1206,7 +1207,7 @@ object HttpUtils {
                 val children = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
 
                 val globalVariable = children
-                    .firstOrNull { it: HttpGlobalVariable -> it.globalVariableName.name == key }
+                    .firstOrNull { it: HttpGlobalVariable -> it.globalVariableName?.name == key }
                     ?: return@Computable false
 
                 if (key != newKey) {

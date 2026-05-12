@@ -229,18 +229,6 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // GLOBAL_NAME
-  static boolean globalNameFlag(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalNameFlag")) return false;
-    if (!nextTokenIs(b, "<variable name>", GLOBAL_NAME)) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, null, "<variable name>");
-    r = consumeToken(b, GLOBAL_NAME);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
   // GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE
   public static boolean globalScript(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalScript")) return false;
@@ -256,39 +244,38 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // globalVariableName equalsFlag globalVariableValue?
+  // AT globalVariableName equalsFlag globalVariableValue?
   public static boolean globalVariable(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariable")) return false;
     if (!nextTokenIs(b, AT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE, null);
-    r = globalVariableName(b, l + 1);
+    r = consumeToken(b, AT);
     p = r; // pin = 1
-    r = r && report_error_(b, equalsFlag(b, l + 1));
-    r = p && globalVariable_2(b, l + 1) && r;
+    r = r && report_error_(b, globalVariableName(b, l + 1));
+    r = p && report_error_(b, equalsFlag(b, l + 1)) && r;
+    r = p && globalVariable_3(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
 
   // globalVariableValue?
-  private static boolean globalVariable_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalVariable_2")) return false;
+  private static boolean globalVariable_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalVariable_3")) return false;
     globalVariableValue(b, l + 1);
     return true;
   }
 
   /* ********************************************************** */
-  // AT globalNameFlag
+  // GLOBAL_NAME
   public static boolean globalVariableName(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "globalVariableName")) return false;
-    if (!nextTokenIs(b, AT)) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_NAME, null);
-    r = consumeToken(b, AT);
-    p = r; // pin = 1
-    r = r && globalNameFlag(b, l + 1);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
+    if (!nextTokenIs(b, "<variable name>", GLOBAL_NAME)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_NAME, "<variable name>");
+    r = consumeToken(b, GLOBAL_NAME);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   /* ********************************************************** */

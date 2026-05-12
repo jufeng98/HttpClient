@@ -33,7 +33,7 @@ class VariableResolver(
         val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
 
         globalVariables.forEach {
-            val name = it.globalVariableName.name
+            val name = it.globalVariableName?.name ?: return@forEach
             val globalVariableValue = it.globalVariableValue ?: return@forEach
 
             val value = globalVariableValue.children.joinToString("") { innerIt ->
@@ -159,7 +159,7 @@ class VariableResolver(
 
         return try {
             variableEnum.exec(httpFileParentPath, *args ?: emptyArray())
-        } catch (e: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             variableEnum.exec(httpFileParentPath, project)
         }
     }

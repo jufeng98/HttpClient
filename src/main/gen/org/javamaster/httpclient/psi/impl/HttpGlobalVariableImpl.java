@@ -28,9 +28,9 @@ public class HttpGlobalVariableImpl extends ASTWrapperPsiElement implements Http
   }
 
   @Override
-  @NotNull
+  @Nullable
   public HttpGlobalVariableName getGlobalVariableName() {
-    return findNotNullChildByClass(HttpGlobalVariableName.class);
+    return findChildByClass(HttpGlobalVariableName.class);
   }
 
   @Override
