@@ -85,13 +85,17 @@ var $random = {
     idNumber: {},
     lorem: {},
     name: {},
-    number: {},
+    app: {},
     options: {},
     phoneNumber: {},
     shakespeare: {},
     superhero: {},
-    team: {},
+    nation: {},
     university: {},
+    internet: {},
+    animal: {},
+    team: {},
+    programmingLanguage: {},
 };
 
 registerFakerFields('com.github.javafaker.Address', 'address');
@@ -114,12 +118,17 @@ registerFakerFields('com.github.javafaker.IdNumber', 'idNumber');
 registerFakerFields('com.github.javafaker.Internet', 'internet');
 registerFakerFields('com.github.javafaker.Lorem', 'lorem');
 registerFakerFields('com.github.javafaker.Name', 'name');
+registerFakerFields('com.github.javafaker.App', 'app');
 registerFakerFields('com.github.javafaker.Number', 'number');
 registerFakerFields('com.github.javafaker.PhoneNumber', 'phoneNumber');
 registerFakerFields('com.github.javafaker.Shakespeare', 'shakespeare');
 registerFakerFields('com.github.javafaker.Superhero', 'superhero');
-registerFakerFields('com.github.javafaker.Team', 'team');
+registerFakerFields('com.github.javafaker.Nation', 'nation');
 registerFakerFields('com.github.javafaker.University', 'university');
+registerFakerFields('com.github.javafaker.Internet', 'internet');
+registerFakerFields('com.github.javafaker.Animal', 'animal');
+registerFakerFields('com.github.javafaker.Team', 'team');
+registerFakerFields('com.github.javafaker.programmingLanguage', 'programmingLanguage');
 
 Object.defineProperty($random, 'email', {
     get() {

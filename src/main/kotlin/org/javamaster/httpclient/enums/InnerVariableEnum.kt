@@ -328,9 +328,153 @@ enum class InnerVariableEnum(val methodName: String) {
             return callFakerMethod(variableName, *args)
         }
     },
+    RANDOM_ANCIENT("\$random.ancient") {
+        override fun typeText(): String {
+            return "生成 ancient"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_BEER("\$random.beer") {
+        override fun typeText(): String {
+            return "生成 beer"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
     RANDOM_BOOL("\$random.bool") {
         override fun typeText(): String {
             return nls("bool.desc")
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_BOOK("\$random.book") {
+        override fun typeText(): String {
+            return "生成 book"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_BUSINESS("\$random.business") {
+        override fun typeText(): String {
+            return "生成 business"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_CHUCK_NORRIS("\$random.chuckNorris") {
+        override fun typeText(): String {
+            return "生成 chuck norris"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_CODE("\$random.code") {
+        override fun typeText(): String {
+            return "生成 code"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_COLOR("\$random.color") {
+        override fun typeText(): String {
+            return "生成 color"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_COMMERCE("\$random.commerce") {
+        override fun typeText(): String {
+            return "生成 commerce"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_COMPANY("\$random.company") {
+        override fun typeText(): String {
+            return nls("company.desc")
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_CRYPTO("\$random.crypto") {
+        override fun typeText(): String {
+            return "生成 crypto"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_DATE_AND_TIME("\$random.dateAndTime") {
+        override fun typeText(): String {
+            return "生成 date and time"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_EDUCATOR("\$random.educator") {
+        override fun typeText(): String {
+            return "生成 educator"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_FINANCE("\$random.finance") {
+        override fun typeText(): String {
+            return "生成 finance"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_HACKER("\$random.hacker") {
+        override fun typeText(): String {
+            return "生成 hacker"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_ID_NUMBER("\$random.idNumber") {
+        override fun typeText(): String {
+            return "生成 id number"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_LOREM("\$random.lorem") {
+        override fun typeText(): String {
+            return "生成 lorem"
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
@@ -343,178 +487,79 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().name().name()
+            return callFakerMethod(variableName, *args)
         }
     },
-    RANDOM_BOOK_TITLE("\$random.book.title") {
-        override fun typeText(): String {
-            return nls("book.desc")
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().book().title()
-        }
-    },
-    RANDOM_APP_NAME("\$random.app.name") {
+    RANDOM_APP("\$random.app") {
         override fun typeText(): String {
             return nls("app.desc")
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().app().name()
+            return callFakerMethod(variableName, *args)
         }
     },
-    RANDOM_COMPANY_NAME("\$random.company.name") {
+    RANDOM_OPTIONS("\$random.options") {
         override fun typeText(): String {
-            return nls("company.desc")
+            return "生成 options"
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().company().name()
+            return callFakerMethod(variableName, *args)
         }
     },
-    RANDOM_HERO_NAME("\$random.hero.name") {
+    RANDOM_PHONE_NUMBER("\$random.phoneNumber") {
+        override fun typeText(): String {
+            return "生成 phone number"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_SHAKESPEARE("\$random.shakespeare") {
+        override fun typeText(): String {
+            return "生成 shakespeare"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
+        }
+    },
+    RANDOM_SUPER_HERO("\$random.superhero") {
         override fun typeText(): String {
             return nls("hero.desc")
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().superhero().name()
+            return callFakerMethod(variableName, *args)
         }
     },
-    RANDOM_NATION_NAME("\$random.nation.name") {
+    RANDOM_NATION("\$random.nation") {
         override fun typeText(): String {
             return nls("nation.desc")
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().nation().capitalCity()
+            return callFakerMethod(variableName, *args)
         }
     },
-    RANDOM_UNIVERSITY_NAME("\$random.university.name") {
+    RANDOM_UNIVERSITY("\$random.university") {
         override fun typeText(): String {
             return nls("university.desc")
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().university().name()
-        }
-    },
-    RANDOM_PHONE_NUMBER("\$random.phoneNumber") {
-        override fun typeText(): String {
-            return "生成电话号码"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().phoneNumber().phoneNumber()
-        }
-    },
-    RANDOM_COLOR("\$random.color") {
-        override fun typeText(): String {
-            return "生成颜色名称"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().color().name()
-        }
-    },
-    RANDOM_EDUCATOR("\$random.educator") {
-        override fun typeText(): String {
-            return "生成教育家课程"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().educator().course()
-        }
-    },
-    RANDOM_HACKER("\$random.hacker") {
-        override fun typeText(): String {
-            return "生成 hacker"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().hacker().noun()
+            return callFakerMethod(variableName, *args)
         }
     },
     RANDOM_INTERNET("\$random.internet") {
         override fun typeText(): String {
-            return "生成 url"
+            return "生成 internet 相关"
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().internet().url()
-        }
-    },
-    RANDOM_EMAIL("\$random.email") {
-        override fun typeText(): String {
-            return "生成 email"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().internet().emailAddress()
-        }
-    },
-    RANDOM_BEER("\$random.beer") {
-        override fun typeText(): String {
-            return "生成 beer"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().beer().name()
-        }
-    },
-    RANDOM_CODE("\$random.code") {
-        override fun typeText(): String {
-            return "生成 code"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().code().asin()
-        }
-    },
-    RANDOM_COMMERCE("\$random.commerce") {
-        override fun typeText(): String {
-            return "生成 commerce"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().commerce().productName()
-        }
-    },
-    RANDOM_CRYPTO("\$random.crypto") {
-        override fun typeText(): String {
-            return "生成 md5"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().crypto().md5()
-        }
-    },
-    RANDOM_FINANCE("\$random.finance") {
-        override fun typeText(): String {
-            return "生成 finance"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().finance().bic()
-        }
-    },
-    RANDOM_ID_NUMBER("\$random.idNumber") {
-        override fun typeText(): String {
-            return "生成 idNumber"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().idNumber().valid()
-        }
-    },
-    RANDOM_LOREM("\$random.lorem") {
-        override fun typeText(): String {
-            return "生成 lorem"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().lorem().word()
+            return callFakerMethod(variableName, *args)
         }
     },
     RANDOM_ANIMAL("\$random.animal") {
@@ -523,7 +568,7 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().animal().name()
+            return callFakerMethod(variableName, *args)
         }
     },
     RANDOM_NUMBER("\$random.number") {
@@ -533,7 +578,7 @@ enum class InnerVariableEnum(val methodName: String) {
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
-                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
+                return RandomStringUtils.faker().number().numberBetween(0, 1000).toString()
             }
 
             val start = args[0] as Int
@@ -546,22 +591,13 @@ enum class InnerVariableEnum(val methodName: String) {
             return ParenthesesInsertHandler.WITH_PARAMETERS
         }
     },
-    RANDOM_SHAKESPEARE("\$random.shakespeare") {
-        override fun typeText(): String {
-            return "生成 shakespeare"
-        }
-
-        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().shakespeare().hamletQuote()
-        }
-    },
     RANDOM_TEAM("\$random.team") {
         override fun typeText(): String {
             return "生成 team"
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().team().name()
+            return callFakerMethod(variableName, *args)
         }
     },
     RANDOM_PROGRAMMING_LANGUAGE("\$random.programmingLanguage") {
@@ -570,7 +606,7 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().programmingLanguage().name()
+            return callFakerMethod(variableName, *args)
         }
     },
     PICK("\$random.pick") {
