@@ -158,7 +158,7 @@ class VariableResolver(
         val variableEnum = InnerVariableEnum.getEnum(variable) ?: return null
 
         return try {
-            variableEnum.exec(httpFileParentPath, *args ?: emptyArray())
+            variableEnum.exec(variable, httpFileParentPath, *args ?: emptyArray())
         } catch (_: UnsupportedOperationException) {
             variableEnum.exec(httpFileParentPath, project)
         }

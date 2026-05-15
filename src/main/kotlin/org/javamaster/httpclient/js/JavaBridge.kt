@@ -184,8 +184,24 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
         GlobalLog.log(NlsBundle.nls("req.header.add", name, str))
     }
 
+    @JsBridge(jsFun = "getClassNoArgDeclareMethodNames(clzName)")
+    fun getClassNoArgDeclareMethodNames(clzName: String): List<String> {
+        val clz = Class.forName(clzName)
+        return clz.declaredMethods
+            .filter { it.parameterCount == 0 }
+            .map { it.name }
+    }
+
+    fun callJava(methodName: String): String {
+        return callJava(methodName, null, null)
+    }
+
+    fun callJava(methodName: String, arg0: Any?): String {
+        return callJava(methodName, arg0, null)
+    }
+
     @JsBridge(jsFun = "callJava(methodName, arg0, arg1)")
-    fun callJava(methodName: String, arg0: Any, arg1: Any): String {
+    fun callJava(methodName: String, arg0: Any?, arg1: Any?): String {
         try {
             val args = mutableListOf<Any>()
 
@@ -202,13 +218,13 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             val variableEnum = InnerVariableEnum.getEnum(methodName)
                 ?: throw IllegalArgumentException(NlsBundle.nls("method.not.exists", methodName))
 
-            return variableEnum.exec("", *args.toTypedArray())
+            return variableEnum.exec(methodName, "", *args.toTypedArray())
         } catch (e: Exception) {
             throw HttpFileException(e.toString(), e)
         }
     }
 
-    private fun convertArg(arg: Any): Any? {
+    private fun convertArg(arg: Any?): Any? {
         if (arg == "undefined") {
             return null
         }

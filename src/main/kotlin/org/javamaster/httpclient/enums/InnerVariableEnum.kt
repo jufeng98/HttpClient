@@ -3,6 +3,7 @@ package org.javamaster.httpclient.enums
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
 import com.intellij.util.system.OS
@@ -32,7 +33,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("alphabetic.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -50,7 +51,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("alphanumeric.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -68,7 +69,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("hexadecimal.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -86,7 +87,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("numeric.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -104,8 +105,8 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("uuid.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
-            return UUID.randomUUID().toString().replace("-", "")
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return UUID.randomUUID().toString()
         }
     },
     RANDOM_INT("\$randomInt") {
@@ -113,7 +114,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("randomInt.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return ThreadLocalRandom.current().nextInt(0, 1000).toString()
         }
     },
@@ -122,9 +123,9 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("integer.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
-                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
+                return ThreadLocalRandom.current().nextInt(0, 1000).toString()
             }
 
             val start = args[0] as Int
@@ -141,9 +142,9 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("float.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
-                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
+                return ThreadLocalRandom.current().nextFloat(0F, 1000F).toString()
             }
 
             val start = args[0] as Int
@@ -160,7 +161,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("timestamp.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return System.currentTimeMillis().toString()
         }
     },
@@ -169,7 +170,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("timestampFull.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 3 || args[0] !is Int || args[1] !is Int || args[2] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -194,7 +195,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("isoTimestamp.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return DateFormatUtils.format(Date(), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", TimeZone.getDefault())
         }
     },
@@ -203,7 +204,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("datetime.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return DateFormatUtils.format(Date(), "yyyy-MM-dd HH:mm:ss", TimeZone.getDefault())
         }
     },
@@ -212,7 +213,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("timestampDate.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -233,7 +234,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("date.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.isEmpty() || args[0] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -263,7 +264,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("imageToBase64.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is String) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -289,8 +290,8 @@ enum class InnerVariableEnum(val methodName: String) {
             return IMAGE_TO_BASE64.typeText()
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
-            return IMAGE_TO_BASE64.exec(httpFileParentPath, *args)
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return IMAGE_TO_BASE64.exec(variableName, httpFileParentPath, *args)
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -302,7 +303,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("readString.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is String) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -318,13 +319,13 @@ enum class InnerVariableEnum(val methodName: String) {
             return ParenthesesInsertHandler.WITH_PARAMETERS
         }
     },
-    RANDOM_ADDRESS("\$random.address.full") {
+    RANDOM_ADDRESS("\$random.address") {
         override fun typeText(): String {
             return nls("address.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().address().fullAddress()
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
         }
     },
     RANDOM_BOOL("\$random.bool") {
@@ -332,8 +333,8 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("bool.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
-            return RandomStringUtils.faker().bool().bool().toString()
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return callFakerMethod(variableName, *args)
         }
     },
     RANDOM_NAME("\$random.name") {
@@ -341,7 +342,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("name.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().name().name()
         }
     },
@@ -350,7 +351,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("book.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().book().title()
         }
     },
@@ -359,7 +360,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("app.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().app().name()
         }
     },
@@ -368,7 +369,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("company.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().company().name()
         }
     },
@@ -377,7 +378,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("hero.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().superhero().name()
         }
     },
@@ -386,7 +387,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("nation.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().nation().capitalCity()
         }
     },
@@ -395,7 +396,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("university.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().university().name()
         }
     },
@@ -404,7 +405,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成电话号码"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().phoneNumber().phoneNumber()
         }
     },
@@ -413,7 +414,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成颜色名称"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().color().name()
         }
     },
@@ -422,7 +423,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成教育家课程"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().educator().course()
         }
     },
@@ -431,7 +432,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 hacker"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().hacker().noun()
         }
     },
@@ -440,7 +441,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 url"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().internet().url()
         }
     },
@@ -449,7 +450,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 email"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().internet().emailAddress()
         }
     },
@@ -458,7 +459,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 beer"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().beer().name()
         }
     },
@@ -467,7 +468,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 code"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().code().asin()
         }
     },
@@ -476,7 +477,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 commerce"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().commerce().productName()
         }
     },
@@ -485,7 +486,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 md5"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().crypto().md5()
         }
     },
@@ -494,7 +495,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 finance"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().finance().bic()
         }
     },
@@ -503,7 +504,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 idNumber"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().idNumber().valid()
         }
     },
@@ -512,7 +513,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 lorem"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().lorem().word()
         }
     },
@@ -521,7 +522,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 animal"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().animal().name()
         }
     },
@@ -530,7 +531,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成范围内数字,用法${methodName}(10, 1000)"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -550,7 +551,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 shakespeare"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().shakespeare().hamletQuote()
         }
     },
@@ -559,7 +560,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 team"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().team().name()
         }
     },
@@ -568,7 +569,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return "生成 programmingLanguage"
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             return RandomStringUtils.faker().programmingLanguage().name()
         }
     },
@@ -577,7 +578,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("pick.desc", methodName, methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.isEmpty()) {
                 throw IllegalArgumentException("$methodName must to past arguments.${typeText()}")
             }
@@ -594,7 +595,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("repeat.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 2 || args[0] !is String || args[1] !is Int) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -614,7 +615,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("eval.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is String) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -637,7 +638,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("exec.desc", methodName)
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             if (args.size != 1 || args[0] !is String) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
@@ -648,6 +649,7 @@ enum class InnerVariableEnum(val methodName: String) {
                 args[0] as String
             }
 
+            @Suppress("DEPRECATION")
             val process = Runtime.getRuntime().exec(command)
             process.waitFor(3, TimeUnit.SECONDS)
 
@@ -669,7 +671,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("mvnTarget.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             throw UnsupportedOperationException()
         }
 
@@ -688,8 +690,8 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("projectRoot.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
-            throw UnsupportedOperationException()
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return ProjectUtil.getActiveProject()?.basePath ?: ""
         }
 
         override fun exec(httpFileParentPath: String, project: Project): String? {
@@ -701,7 +703,7 @@ enum class InnerVariableEnum(val methodName: String) {
             return nls("historyFolder.desc")
         }
 
-        override fun exec(httpFileParentPath: String, vararg args: Any): String {
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
             throw UnsupportedOperationException()
         }
 
@@ -715,7 +717,7 @@ enum class InnerVariableEnum(val methodName: String) {
 
     abstract fun typeText(): String
 
-    abstract fun exec(httpFileParentPath: String, vararg args: Any): String
+    abstract fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String
 
     open fun exec(httpFileParentPath: String, project: Project): String? {
         return null
@@ -726,15 +728,6 @@ enum class InnerVariableEnum(val methodName: String) {
     }
 
     companion object {
-        private val map by lazy {
-            val map = mutableMapOf<String, InnerVariableEnum>()
-            InnerVariableEnum.entries
-                .forEach {
-                    map[it.methodName] = it
-                }
-            map
-        }
-
         fun isFolderEnum(innerVariableEnum: InnerVariableEnum?): Boolean {
             innerVariableEnum ?: return false
             return innerVariableEnum == HISTORY_FOLDER
@@ -743,7 +736,37 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         fun getEnum(variable: String): InnerVariableEnum? {
-            return map[variable]
+            return InnerVariableEnum.entries
+                .firstOrNull {
+                    variable.startsWith(it.methodName)
+                }
+        }
+
+        private fun callFakerMethod(variableName: String, vararg args: Any): String {
+            val split = variableName.split(".")
+            val methodName = split[1]
+
+            val faker = RandomStringUtils.faker()
+
+            val method = faker.javaClass.getDeclaredMethod(methodName)
+            method.isAccessible = true
+            val targetObj = method.invoke(faker)
+
+            if (split.size == 3) {
+                val declaredMethod = targetObj.javaClass.getDeclaredMethod(split[2])
+                declaredMethod.isAccessible = true
+                return "" + declaredMethod.invoke(targetObj)
+            }
+
+            if (args.size != 1 || args[0] !is String) {
+                val declaredMethod = targetObj.javaClass.declaredMethods[0]
+                declaredMethod.isAccessible = true
+                return "" + declaredMethod.invoke(targetObj)
+            }
+
+            val declaredMethod = targetObj.javaClass.getDeclaredMethod(args[0] as String)
+            declaredMethod.isAccessible = true
+            return "" + declaredMethod.invoke(targetObj)
         }
     }
 }

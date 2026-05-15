@@ -216,7 +216,7 @@ class EnvFileService(val project: Project) {
                 // Support environment files that reference built-in variables
                 val innerVariableEnum = InnerVariableEnum.getEnum(name)
 
-                val result = innerVariableEnum?.exec(httpFileParentPath, *args ?: emptyArray()) ?: matchStr
+                val result = innerVariableEnum?.exec(name, httpFileParentPath, *args ?: emptyArray()) ?: matchStr
 
                 escapeRegexp(result)
             }
