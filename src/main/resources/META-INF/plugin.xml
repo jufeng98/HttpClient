@@ -68,6 +68,12 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>6.6.0</b></li>
+                <ul>
+                    <li>请求的全局、前置以及后置 js 处理器新增智能提示内置的 js 变量及函数功能</li>
+                    <li>完善Faker功能</li>
+                    <li>bug修复</li>
+                </ul>
                 <li><b>6.0.0</b></li>
                 <ul>
                     <li>路径的查询参数支持多行写法</li>
