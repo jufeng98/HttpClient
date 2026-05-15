@@ -18,6 +18,15 @@ object JsFacade {
         "client.global.set",
     )
 
+    fun referenceToJsVariable(element: PsiElement): Boolean {
+        val isJsVariable = JavaScript.referenceToJsVariable(element)
+        if (isJsVariable != null) {
+            return isJsVariable
+        }
+
+        return WebCalm.referenceToJsVariable(element)
+    }
+
     fun resolveJsVariable(
         variableName: String,
         project: Project,

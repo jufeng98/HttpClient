@@ -22,6 +22,10 @@ object WebCalm {
         return@lazy plugin == null
     }
 
+    fun referenceToJsVariable(element: PsiElement): Boolean {
+        return element is JavaScriptArgument
+    }
+
     fun resolveJsVariable(
         variableName: String,
         project: Project,

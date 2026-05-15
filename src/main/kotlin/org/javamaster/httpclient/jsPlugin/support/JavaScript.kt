@@ -3,10 +3,15 @@ package org.javamaster.httpclient.jsPlugin.support
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.lang.injection.InjectedLanguageManager
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.NotNullLazyValue
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.impl.LightFilePointer
+import com.intellij.openapi.vfs.pointers.VirtualFilePointer
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -14,10 +19,16 @@ import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTreeUtil.findChildrenOfType
 import com.intellij.psi.util.PsiTreeUtil.getChildOfType
+import org.javamaster.httpclient.handler.JSElementResolveScopeProviderInvocationHandler
 import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.psi.HttpScriptBody
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import java.util.*
+
 
 object JavaScript {
+
     private val pluginClassLoader by lazy {
         val plugin = findPlugin() ?: return@lazy null
         plugin.pluginClassLoader
@@ -36,6 +47,25 @@ object JavaScript {
         loadClass("com.intellij.lang.javascript.psi.JSLiteralExpression", pluginClassLoader!!)
     }
 
+    @Suppress("UNCHECKED_CAST")
+    val coreJsStubLib by lazy {
+        var method = findMethod(
+            "com.intellij.lang.javascript.library.JSCorePredefinedLibrariesProvider",
+            "getJavaScriptCorePredefinedLibraryFiles"
+        )
+        val files1 = method.invoke(null) as Set<VirtualFile>
+
+        method = findMethod(
+            "com.intellij.lang.javascript.library.JSCorePredefinedLibrariesProvider",
+            "getES6CorePredefinedLibraryFiles"
+        )
+        val files2 = method.invoke(null) as Set<VirtualFile>
+
+        val files = mutableSetOf<VirtualFile>()
+        files.addAll(files1)
+        files.addAll(files2)
+        files
+    }
 
     val jsLanguage by lazy {
         val plugin = findPlugin() ?: return@lazy null
@@ -49,6 +79,14 @@ object JavaScript {
         val languageFileType = field.get(null) as LanguageFileType
 
         languageFileType.language
+    }
+
+    fun referenceToJsVariable(element: PsiElement): Boolean? {
+        if (pluginClassLoader == null) {
+            return null
+        }
+
+        return clzJSLiteralExpression.isAssignableFrom(element.javaClass)
     }
 
     fun resolveJsVariable(
@@ -149,6 +187,140 @@ object JavaScript {
         caretModel.moveToOffset(caretModel.offset - 2)
 
         return newExpressionStatement
+    }
+
+    fun installTsLibrary(project: Project) {
+        val virtualFilePointers = createTsVirtualFilePointers()
+
+        var declaredMethod = findMethod(
+            "com.intellij.webcore.libraries.ScriptingLibraryModel",
+            "createPredefinedLibrary",
+            String::class.java,
+            Array<VirtualFilePointer>::class.java,
+            Boolean::class.javaPrimitiveType
+        )
+        val scriptingLibraryModel =
+            declaredMethod.invoke(null, "HttpRequest PrePost Js Handler", virtualFilePointers, false)
+
+        declaredMethod = findMethod(
+            "com.intellij.lang.javascript.library.JSPredefinedLibraryManager",
+            "getPredefinedLibraryManager",
+            Project::class.java
+        )
+        val jsPredefinedLibraryManager = declaredMethod.invoke(null, project)
+
+        declaredMethod = findMethod("com.intellij.lang.javascript.library.JSPredefinedLibraryManager", "getData")
+        val jsPredefinedLibrariesData = declaredMethod.invoke(jsPredefinedLibraryManager)
+
+        modifyJsPredefinedLibrariesData(jsPredefinedLibrariesData, scriptingLibraryModel, virtualFilePointers)
+
+        declaredMethod = findMethod(
+            "com.intellij.lang.javascript.library.JSPredefinedLibraryManager",
+            "getLibraryModels"
+        )
+
+        val myJSElementResolveScopeProvider = Proxy.newProxyInstance(
+            pluginClassLoader,
+            arrayOf(pluginClassLoader!!.loadClass("com.intellij.lang.javascript.psi.resolve.JSElementResolveScopeProvider")),
+            JSElementResolveScopeProviderInvocationHandler()
+        )
+
+        addExtension("JavaScript.elementScopeProvider", myJSElementResolveScopeProvider)
+    }
+
+    private fun findMethod(className: String, methodName: String, vararg parameterTypes: Class<*>?): Method {
+        var clz = pluginClassLoader!!.loadClass(className)
+        var declaredMethod = clz.getDeclaredMethod(methodName, *parameterTypes)
+        declaredMethod.isAccessible = true
+        return declaredMethod
+    }
+
+    fun addExtension(key: String, extensionObj: Any) {
+        val application = ApplicationManager.getApplication()
+        val extensionArea = application.extensionArea
+        val extensionPoint = extensionArea.getExtensionPoint<Any>(key)
+        @Suppress("DEPRECATION")
+        extensionPoint.registerExtension(extensionObj)
+    }
+
+    fun createTsVirtualFilePointers(): Array<LightFilePointer> {
+        return arrayOf(
+            HttpRequestHandlerApiDefinitionFilesHolder.commonLibraryFilePointer,
+            HttpRequestHandlerApiDefinitionFilesHolder.dynamicVariablesFilePointer,
+            HttpRequestHandlerApiDefinitionFilesHolder.cryptoLibraryFilePointer,
+            HttpRequestHandlerApiDefinitionFilesHolder.responseLibraryFilePointer,
+            HttpRequestHandlerApiDefinitionFilesHolder.preRequestLibraryFilePointer
+        )
+    }
+
+    fun modifyJsPredefinedLibrariesData(
+        jsPredefinedLibrariesData: Any,
+        scriptingLibraryModel: Any,
+        virtualFilePointers: Array<LightFilePointer>,
+    ) {
+        val virtualFiles = virtualFilePointers.map { it.file!! }.toSet()
+
+        var declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myLibraryModels")
+        declaredField.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val models = declaredField.get(jsPredefinedLibrariesData) as Set<Any>
+
+        val modelsNew = mutableSetOf<Any>()
+        modelsNew.addAll(models)
+        modelsNew.add(scriptingLibraryModel)
+
+        declaredField.set(jsPredefinedLibrariesData, modelsNew)
+
+        declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myRequiredLibraryFilesForResolve")
+        declaredField.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val myRequiredLibraryFilesForResolve = declaredField.get(jsPredefinedLibrariesData) as Set<VirtualFile>
+
+        val myRequiredLibraryFilesForResolveNew = mutableSetOf<VirtualFile>()
+        myRequiredLibraryFilesForResolveNew.addAll(myRequiredLibraryFilesForResolve)
+        myRequiredLibraryFilesForResolveNew.addAll(virtualFiles)
+
+        declaredField.set(jsPredefinedLibrariesData, myRequiredLibraryFilesForResolveNew)
+
+        declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myRequiredLibraryFilesForResolveES5")
+        declaredField.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val myRequiredLibraryFilesForResolveES5 = declaredField.get(jsPredefinedLibrariesData) as Set<VirtualFile>
+
+        val myRequiredLibraryFilesForResolveES5New = mutableSetOf<VirtualFile>()
+        myRequiredLibraryFilesForResolveES5New.addAll(myRequiredLibraryFilesForResolveES5)
+        myRequiredLibraryFilesForResolveES5New.addAll(virtualFiles)
+
+        declaredField.set(jsPredefinedLibrariesData, myRequiredLibraryFilesForResolveES5New)
+
+        declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myLibraryFilesForResolve")
+        declaredField.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val myLibraryFilesForResolve =
+            declaredField.get(jsPredefinedLibrariesData) as NotNullLazyValue<Set<VirtualFile>>
+
+        val myLibraryFilesForResolveNew = NotNullLazyValue.lazy<MutableSet<VirtualFile>> {
+            val result = mutableSetOf<VirtualFile>()
+            result.addAll(myLibraryFilesForResolve.get())
+            result.addAll(virtualFiles)
+            Collections.unmodifiableSet<VirtualFile>(result)
+        }
+
+        declaredField.set(jsPredefinedLibrariesData, myLibraryFilesForResolveNew)
+
+        declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myLibraryFiles")
+        declaredField.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val myLibraryFiles =
+            declaredField.get(jsPredefinedLibrariesData) as NotNullLazyValue<Set<VirtualFile>>
+        val myLibraryFilesNew = NotNullLazyValue.lazy<MutableSet<VirtualFile>> {
+            val result = mutableSetOf<VirtualFile>()
+            result.addAll(myLibraryFiles.get())
+            result.addAll(virtualFiles)
+            Collections.unmodifiableSet<VirtualFile>(result)
+        }
+
+        declaredField.set(jsPredefinedLibrariesData, myLibraryFilesNew)
     }
 
     fun isAvailable(): Boolean {

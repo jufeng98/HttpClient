@@ -17,6 +17,7 @@ import com.intellij.util.application
 import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.env.EnvFileService.Companion.getService
+import org.javamaster.httpclient.jsPlugin.support.JavaScript
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.NotifyUtil
 
@@ -38,6 +39,15 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
         }
 
         project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this)
+
+        if (JavaScript.isAvailable()) {
+            try {
+                JavaScript.installTsLibrary(project)
+            } catch (t: Throwable) {
+                System.err.println("安装ts库错误")
+                t.printStackTrace()
+            }
+        }
     }
 
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
@@ -95,7 +105,7 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
                     return@finishOnUiThread
                 }
 
-                val httpEditorTopForm = HttpEditorTopForm(file, module,fileEditor)
+                val httpEditorTopForm = HttpEditorTopForm(file, module, fileEditor)
 
                 httpEditorTopForm.initEnvCombo(it)
 
