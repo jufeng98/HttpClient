@@ -318,17 +318,11 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             js += """
                     response.status = ${statusCode};
                     response.headers = $headers;
-                    response.headers.all = function() {
-                        return headersAll(this);
-                    };
-                    response.headers.findByName = function(name) {
-                        return headersFindByName(this, name);
-                    };
                     response.headers.valueOf = function(name) {
-                        return headersFindByName(this, name);
+                        return headersFindFirstValueByName(this, name);
                     };
                     response.headers.valuesOf = function(name) {
-                        return headersFindListByName(this, name) || [];
+                        return headersFindValuesByName(this, name);
                     };
                     response.contentType = resolveContentType(response.headers);
                 """.trimIndent()

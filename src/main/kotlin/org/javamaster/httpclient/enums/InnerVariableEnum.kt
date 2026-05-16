@@ -782,9 +782,10 @@ enum class InnerVariableEnum(val methodName: String) {
 
         fun getEnum(variable: String): InnerVariableEnum? {
             return InnerVariableEnum.entries
-                .firstOrNull {
+                .filter {
                     variable.startsWith(it.methodName)
                 }
+                .maxByOrNull { it.methodName.length }
         }
 
         private fun callFakerMethod(variableName: String, vararg args: Any): String {

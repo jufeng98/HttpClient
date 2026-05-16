@@ -61,7 +61,11 @@ var console = {
         const strList = [];
         const length = arguments.length;
         for (var i = 0; i < length; i++) {
-            strList.push(`${arguments[i]}`)
+            try {
+                strList.push(JSON.stringify(arguments[i]));
+            } catch (e) {
+                strList.push(`${arguments[i]}`);
+            }
         }
         globalLog.log(strList.join(" "));
     },
@@ -69,6 +73,7 @@ var console = {
 
 function headersAll(headers) {
     return Object.keys(headers)
+        .filter(key => typeof headers[key] !== 'function')
         .map(key => {
             return {
                 name: key,
@@ -78,34 +83,40 @@ function headersAll(headers) {
 }
 
 function headersFindByName(headers, name) {
-    const values = headersFindListByName(headers, name);
-    if (values === null || values.length === 0) {
+    const requestHeaders = headersFindListByName(headers, name);
+    if (requestHeaders.length === 0) {
         return null;
     }
 
-    return values[0];
+    return requestHeaders[0];
+}
+
+function headersFindValuesByName(headers, name) {
+    const requestHeader = headersFindByName(headers, name);
+    if (requestHeader == null) {
+        return [];
+    }
+
+    return requestHeader.values;
+}
+
+function headersFindFirstValueByName(headers, name) {
+    const headerValues = headersFindValuesByName(headers, name);
+    if (headerValues.length === 0) {
+        return null;
+    }
+
+    return headerValues[0];
 }
 
 function headersFindListByName(headers, name) {
-    if (!name) {
-        return headersAll(headers, name);
-    }
-
-    const list = headersAll(headers).filter(it => it.name.toLowerCase() === name.toLowerCase());
-    if (list.length === 0) {
-        return null;
-    }
-
-    return list[0].values;
+    return headersAll(headers)
+        .filter(it => it.name.toLowerCase() === name.toLowerCase());
 }
 
 function resolveContentType(headers) {
-    const value = headersFindByName(headers, 'Content-Type');
-    if (!value) {
-        return null;
-    }
-
-    const split = value.split(';')
+    const value = headersFindFirstValueByName(headers, 'Content-Type');
+    const split = value.split(';');
     return {
         mimeType: (split[0] || '').trim(),
         charset: (split[1] || '').trim()

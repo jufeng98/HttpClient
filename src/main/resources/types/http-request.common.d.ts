@@ -114,7 +114,7 @@ interface RequestHeaders {
     all(): [RequestHeader]
 
     /**
-     * 按名称搜索请求头，如果没有这样的请求头，则返回null。
+     * 按名称搜索第一个请求头，如果没有这样的请求头，则返回null。
      * @param name 请求头名称
      */
     findByName(name: string): RequestHeader | null
@@ -150,7 +150,11 @@ interface RequestHeader {
     /**
      * 请求头名称
      */
-    name: string
+    name: string;
+    /**
+     * 请求头值列表
+     */
+    values: [string]
 }
 
 /**

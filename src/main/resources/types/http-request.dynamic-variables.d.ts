@@ -241,6 +241,11 @@ declare const $timestamp: string;
 declare const $uuid: string;
 
 /**
+ * 示例值: 2023-08-23 14:35:32
+ */
+declare const $datetime: string;
+
+/**
  * 生成 Unix 时间戳, 用法: $timestampFull(0, 15, 30), 第一个参数 0 表示今天, 1表示明天以此类推, 第二个参数 15 表示 15点, 第三个参数 30 表示 30分, 示例值: 1644214400000
  */
 declare function $timestampFull(day: number, hour: number, sec: number): string;
@@ -255,9 +260,23 @@ declare function $timestampDate(day: number): string;
  */
 declare function $date(day: number, pattern: string | undefined): string;
 
-declare function $imageToBase64(path: string): string;
-
+/**
+ * 按 UTF-8 格式读取文件文本内容并转换为 base64 返回
+ */
 declare function $fileToBase64(path: string): string;
 
+/**
+ * 同 $fileToBase64 方法
+ */
+declare function $imageToBase64(path: string): string;
+
+/**
+ * 按 UTF-8 格式读取文件文本内容并返回
+ */
 declare function $readString(path: string): string;
+
+/**
+ * 转换 base64 后保存到 path文件
+ */
+declare function base64ToFile(base64: string, path: string): void;
 

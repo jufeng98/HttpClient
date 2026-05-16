@@ -118,7 +118,7 @@ registerFakerFields('com.github.javafaker.University', 'university');
 registerFakerFields('com.github.javafaker.Internet', 'internet');
 registerFakerFields('com.github.javafaker.Animal', 'animal');
 registerFakerFields('com.github.javafaker.Team', 'team');
-registerFakerFields('com.github.javafaker.programmingLanguage', 'programmingLanguage');
+registerFakerFields('com.github.javafaker.ProgrammingLanguage', 'programmingLanguage');
 
 Object.defineProperty($random, 'email', {
     get() {
