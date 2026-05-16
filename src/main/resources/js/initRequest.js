@@ -34,21 +34,11 @@ var request = {
     }
 };
 
-Object.defineProperty(this, '$isoTimestamp', {
-    get() {
-        return javaBridge.callJava('$isoTimestamp');
-    },
-    enumerable: true,
-    configurable: true
-});
-
-Object.defineProperty(this, '$projectRoot', {
-    get() {
-        return javaBridge.callJava('$projectRoot');
-    },
-    enumerable: true,
-    configurable: true
-});
+defileProperty('$historyFolder');
+defileProperty('$isoTimestamp');
+defileProperty('$projectRoot');
+defileProperty('$historyFolder');
+defileProperty('$mvnTarget');
 
 var $random = {
     alphabetic(length) {
@@ -146,6 +136,35 @@ Object.defineProperty($random, 'uuid', {
     configurable: true
 });
 
+defileProperty('$randomInt')
+defileProperty('$timestamp')
+defileProperty('$uuid')
+defileProperty('$datetime')
+
+function $timestampFull(day, hour, sec) {
+    return javaBridge.callJava('$timestampFull', day, hour, sec);
+}
+
+function $timestampDate(day) {
+    return javaBridge.callJava('$timestampDate', day);
+}
+
+function $date(day, pattern) {
+    return javaBridge.callJava('$date', day, pattern);
+}
+
+function $imageToBase64(path) {
+    return javaBridge.callJava('$imageToBase64', path);
+}
+
+function $fileToBase64(path) {
+    return javaBridge.callJava('$fileToBase64', path);
+}
+
+function $readString(path) {
+    return javaBridge.callJava('$readString', path);
+}
+
 var Window = {
     btoa: function btoa(bytes) {
         return javaBridge.btoa(bytes);
@@ -166,6 +185,16 @@ function registerFakerFields(clzName, suffix) {
                 configurable: true
             });
         });
+}
+
+function defileProperty(name) {
+    Object.defineProperty(this, name, {
+        get() {
+            return javaBridge.callJava(name);
+        },
+        enumerable: true,
+        configurable: true
+    });
 }
 
 function hasRequestVariableKey(key) {

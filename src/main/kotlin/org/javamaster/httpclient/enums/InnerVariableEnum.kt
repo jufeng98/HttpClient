@@ -229,6 +229,15 @@ enum class InnerVariableEnum(val methodName: String) {
             return ParenthesesInsertHandler.WITH_PARAMETERS
         }
     },
+    MY_UUID("\$uuid") {
+        override fun typeText(): String {
+            return "生成 uuid"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return UUID.randomUUID().toString()
+        }
+    },
     DATE("\$date") {
         override fun typeText(): String {
             return nls("date.desc", methodName)
@@ -708,7 +717,7 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            throw UnsupportedOperationException()
+            return exec("", ProjectUtil.getActiveProject() ?: return "") ?: return ""
         }
 
         override fun exec(httpFileParentPath: String, project: Project): String? {
@@ -740,7 +749,7 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            throw UnsupportedOperationException()
+            return exec("", ProjectUtil.getActiveProject() ?: return "") ?: return ""
         }
 
         override fun exec(httpFileParentPath: String, project: Project): String? {

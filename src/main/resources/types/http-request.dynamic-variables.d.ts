@@ -20,6 +20,10 @@ declare const $projectRoot: string;
  */
 declare const $random: RandomVariables
 
+interface FakerCommon {
+    [key: string]: string;
+}
+
 interface FakerAddress {
     [key: string]: string;
 }
@@ -191,7 +195,7 @@ interface RandomVariables {
 
     address: FakerAddress;
     ancient: FakerAncient;
-    beer : FakerBeer;
+    beer: FakerBeer;
     bool: FakerBool;
     book: FakerBook;
     business: FakerBusiness;
@@ -206,17 +210,21 @@ interface RandomVariables {
     finance: FakerFinance
     hacker: FakerHacker
     idNumber: FakerIdNumber
-    internet: FakerInternet
     lorem: FakerLorem
     name: FakerName
-    number: FakerNumber
+    app: FakerCommon
     options: FakerOptions
     phoneNumber: FakerPhoneNumber
     shakespeare: FakerShakespeare
     superhero: FakerSuperhero
-    team: FakerTeam
+    nation: FakerCommon
     university: FakerUniversity
+    internet: FakerInternet
+    animal: FakerCommon
+    team: FakerTeam
+    programmingLanguage: FakerTeam
 }
+
 /**
  * <div class="content">This dynamic variable generates a random integer between 0 and 1000</div><table class="sections"><tr><td class="section" valign="top"><p>Sample value:</p></td><td valign="top"><b>123</b></td></tr></table>
  */
@@ -231,4 +239,25 @@ declare const $timestamp: string;
  * <div class="content">This dynamic variable generates a new UUID-v4</div><table class="sections"><tr><td class="section" valign="top"><p>Sample value:</p></td><td valign="top"><b>e9e87c05-82eb-4522-bc47-f0fcfdde4cab</b></td></tr></table>
  */
 declare const $uuid: string;
+
+/**
+ * 生成 Unix 时间戳, 用法: $timestampFull(0, 15, 30), 第一个参数 0 表示今天, 1表示明天以此类推, 第二个参数 15 表示 15点, 第三个参数 30 表示 30分, 示例值: 1644214400000
+ */
+declare function $timestampFull(day: number, hour: number, sec: number): string;
+
+/**
+ * 生成 Unix 日期时间戳, 用法: $timestampDate(0), 0 表示今天, 1 表示明天以此类推, 示例值: 1644214400000
+ */
+declare function $timestampDate(day: number): string;
+
+/**
+ * 生成格式化日期, 用法: $date(0, ''yyyy-MM-dd''), 第一个参数 0 表示今天, 1 表示明天以此类推; 第二个参数可选(默认yyyy-MM-dd). 示例值: 2025-02-02
+ */
+declare function $date(day: number, pattern: string | undefined): string;
+
+declare function $imageToBase64(path: string): string;
+
+declare function $fileToBase64(path: string): string;
+
+declare function $readString(path: string): string;
 
