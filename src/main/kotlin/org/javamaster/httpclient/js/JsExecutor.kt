@@ -3,6 +3,7 @@ package org.javamaster.httpclient.js
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
+import org.apache.commons.lang3.StringUtils
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.enums.SimpleTypeEnum
@@ -66,6 +67,9 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     var xPath: XPath? = null
 
     fun initJsRequestObj(
+        url: String,
+        rawUrl: String,
+        rawBody: String?,
         reqInfo: HttpReqInfo,
         method: HttpRequestEnum,
         reqHeaderMap: LinkedMultiValueMap<String, String>,
@@ -80,17 +84,31 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
         val jsBody = HttpUtils.convertReqBody(reqInfo.reqBody)
 
-        var js = if (jsBody is String) {
+        var js = """
+                request.url = {
+                    getRaw: () => {
+                        return `${rawUrl}`;
+                    },
+                    tryGetSubstituted: () => {
+                        return `${url}`;
+                    }                    
+                };             
+            """.trimIndent()
+
+        js += if (jsBody is String) {
             """
                 request.body = {
                     string: () => {
                         return $jsBody;
                     },
+                    getRaw: () => {
+                        return `${rawBody}`;
+                    },
                     tryGetSubstituted: () => {
                         return $jsBody;
                     },
                     bytes: () => {
-                        return javaBridge.convertBodyToByteArray($jsBody)
+                        return javaBridge.convertBodyToByteArray($jsBody);
                     }
                 };
             """.trimIndent()
@@ -101,6 +119,9 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 request.body = {
                     string: () => {
                         return javaBridge.getBodyString();
+                    },
+                    getRaw: () => {
+                        return `${rawBody}`;
                     },
                     tryGetSubstituted: () => {
                         return javaBridge.getBodyString();
@@ -119,20 +140,22 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             request.environment.get = function(name) {
                 return this[name] !== undefined ? this[name] : null;
             };
-            
-            request.headers = $headers;
             request.globalVariables = $globalVariables;
+            request.globalVariables.get = function(name) {
+                return this[name] !== undefined ? this[name] : null;
+            };            
+            request.headers = $headers;
             request.headers.all = function() {
                 return headersAll(this);
             };
+            request.headers.findByName = function(name) {
+                return headersFindByName(this, name);
+            };            
             request.headers.set = function(name, value) {
                 javaBridge.setHeader(name, value);
             };
             request.headers.add = function(name, value) {
                 javaBridge.addHeader(name, value);
-            };
-            request.headers.findByName = function(name) {
-                return headersFindByName(this, name);
             };
         """.trimIndent()
 
@@ -235,6 +258,8 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     }
 
     fun evalJsAfterRequest(
+        url: String,
+        reqBody: Any?,
         jsScript: HttpScriptBody?,
         httpResInfo: HttpResInfo,
         statusCode: Int,
@@ -248,6 +273,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             GlobalLog.setTabName(tabName)
 
             val headers = gson.toJson(headerMap)
+            val jsBody = HttpUtils.convertReqBody(reqBody)
 
             var js: String
             val typeEnum = httpResInfo.simpleTypeEnum
@@ -334,7 +360,18 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val rowNum = document.getLineNumber(jsScript.textOffset) + 1
 
             try {
-                evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject)
+                var scriptTxt = """
+                    request.url = function() {
+                        return `${url}`;
+                    };
+                    request.body = function() {
+                        return ${jsBody};
+                    };
+                """.trimIndent()
+                val lines = StringUtils.countMatches(scriptTxt, "\n")
+                scriptTxt += jsScript.text
+
+                evalJs(scriptTxt, (rowNum - lines).coerceAtLeast(0), virtualFile.name, reqScriptableObject)
             } catch (e: Exception) {
                 GlobalLog.log("$e")
             }
@@ -499,8 +536,10 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         var JsGlobalVariableMap: Map<String, String>? = null
 
         fun setGlobalVariable(key: String, value: String) {
-            context.evaluateString(global, "client.global.dataHolder['$key'] = '$value';", "dummy.js",
-                1, null)
+            context.evaluateString(
+                global, "client.global.dataHolder['$key'] = '$value';", "dummy.js",
+                1, null
+            )
         }
     }
 }

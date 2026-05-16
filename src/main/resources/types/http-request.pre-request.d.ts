@@ -55,6 +55,16 @@ interface RequestBody {
      * 尝试替换body中的已知变量并返回结果。所有已知的{{var}}将被它们的值替换。未知｛｛var｝｝将保持不变。
      */
     tryGetSubstituted(): string;
+
+    /**
+     * 同 tryGetSubstituted 方法
+     */
+    string(): string;
+
+    /**
+     * 将 tryGetSubstituted 返回的内容转换为字节数组
+     */
+    bytes(): ArrayBuffer;
 }
 
 /**
@@ -70,6 +80,21 @@ interface RequestUrl {
      * 尝试替换URL中的已知变量并返回结果。所有已知的{{var}}将被它们的值替换。未知｛｛var｝｝将保持不变。
      */
     tryGetSubstituted(): string;
+}
+
+/**
+ * 用于访问当前请求头的对象。
+ */
+interface RequestHeaders {
+    /**
+     * 设置请求头
+     */
+    set(name: string, value: string): void;
+
+    /**
+     * 请求头追加值
+     */
+    add(name: string, value: string): void;
 }
 
 interface RequestHeader {

@@ -90,6 +90,11 @@ interface HttpClientRequest {
     variables: RequestVariables
 
     /**
+     * 全局变量
+     */
+    globalVariables: RequestVariables,
+
+    /**
      * 当前请求的请求头
      */
     headers: RequestHeaders

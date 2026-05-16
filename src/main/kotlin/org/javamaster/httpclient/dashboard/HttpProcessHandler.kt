@@ -192,11 +192,25 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     }
 
     private fun startHandleRequest(reqInfo: HttpReqInfo) {
+        val rawUrl = requestTarget.url
+        var url = variableResolver.resolve(rawUrl)
+
+        httpDashboardForm.initLabelLoading(tabName, url)
+
+        url = HttpUtils.handleUrl(url)
+
+        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
+            url = HttpUtils.encodeUrl(url)
+        }
+
         val httpHeaderFields = request.header?.headerFieldList
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
         jsExecutor.initJsRequestObj(
+            url,
+            rawUrl,
+            requestBlock.request.body?.text,
             reqInfo,
             methodType,
             reqHeaderMap,
@@ -208,16 +222,6 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
-
-        var url = variableResolver.resolve(requestTarget.url)
-
-        httpDashboardForm.initLabelLoading(tabName, url)
-
-        url = HttpUtils.handleUrl(url)
-
-        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
-            url = HttpUtils.encodeUrl(url)
-        }
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
@@ -312,11 +316,21 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     }
 
     private fun convertToCurlReal(raw: Boolean, consumer: Consumer<String>, reqInfo: HttpReqInfo) {
+        val rawUrl = requestTarget.url
+        var url = variableResolver.resolve(rawUrl)
+
+        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
+            url = HttpUtils.encodeUrl(url)
+        }
+
         val httpHeaderFields = request.header?.headerFieldList
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
 
         jsExecutor.initJsRequestObj(
+            url,
+            rawUrl,
+            requestBlock.request.body?.text,
             reqInfo,
             methodType,
             reqHeaderMap,
@@ -326,12 +340,6 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         val resList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
         println("js执行结果:${resList}")
-
-        var url = variableResolver.resolve(requestTarget.url)
-
-        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
-            url = HttpUtils.encodeUrl(url)
-        }
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
@@ -488,6 +496,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                     )
 
                     val evalJsRes = jsExecutor.evalJsAfterRequest(
+                        url,
+                        reqBody,
                         jsAfterReq,
                         httpResInfo,
                         200,
@@ -577,6 +587,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                         val httpResDescList = mutableListOf("// $comment$CR_LF")
 
                         val evalJsRes = jsExecutor.evalJsAfterRequest(
+                            url,
+                            reqBody,
                             jsAfterReq,
                             httpResInfo,
                             response.statusCode(),

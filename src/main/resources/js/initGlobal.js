@@ -7,7 +7,16 @@ var client = {
         const strList = [];
         const length = arguments.length;
         for (var i = 0; i < length; i++) {
-            strList.push(`${arguments[i]}`)
+            const arg = arguments[i];
+            if ( typeof arg === 'object') {
+                try {
+                    strList.push(JSON.stringify(arg));
+                } catch (e) {
+                    strList.push(`${arg}`);
+                }
+            } else {
+                strList.push(`${arg}`);
+            }
         }
         globalLog.log(strList.join(" "));
     },
@@ -42,13 +51,13 @@ var client = {
             globalLog.log(key + ` ${GLOBAL_SET} ` + desc);
         },
     },
-    test: function (successMsg, assertCallback) {
+    test: function (testName, assertCallback) {
         assertCallback();
-        globalLog.log(successMsg);
+        globalLog.log(testName);
     },
-    assert: function (success, failMsg) {
-        if (!success) {
-            throw new Error(failMsg);
+    assert: function (condition, message) {
+        if (!condition) {
+            throw new Error(message);
         }
     },
     exit: function () {
@@ -61,10 +70,15 @@ var console = {
         const strList = [];
         const length = arguments.length;
         for (var i = 0; i < length; i++) {
-            try {
-                strList.push(JSON.stringify(arguments[i]));
-            } catch (e) {
-                strList.push(`${arguments[i]}`);
+            const arg = arguments[i];
+            if (typeof arg === 'object') {
+                try {
+                    strList.push(JSON.stringify(arg));
+                } catch (e) {
+                    strList.push(`${arg}`);
+                }
+            } else {
+                strList.push(`${arg}`);
             }
         }
         globalLog.log(strList.join(" "));
@@ -75,10 +89,20 @@ function headersAll(headers) {
     return Object.keys(headers)
         .filter(key => typeof headers[key] !== 'function')
         .map(key => {
-            return {
+            const requestHeader = {
                 name: key,
                 values: headers[key]
+            };
+            requestHeader.getRawValue = function () {
+                return headers[key][0] + "";
             }
+            requestHeader.tryGetSubstitutedValue = function () {
+                return headers[key][0] + "";
+            }
+            requestHeader.value = function () {
+                return headers[key][0] + "";
+            }
+            return requestHeader
         })
 }
 
@@ -172,6 +196,18 @@ URLSearchParams.prototype.set = function (key, value) {
 
 URLSearchParams.prototype.delete = function (key) {
     delete this.params[key];
+};
+
+URLSearchParams.prototype.keys = function () {
+    return Object.keys(this.params);
+};
+
+URLSearchParams.prototype.values = function () {
+    return Object.values(this.params);
+};
+
+URLSearchParams.prototype.entries = function () {
+    return Object.entries(this.params);
 };
 
 URLSearchParams.prototype.toString = function () {
