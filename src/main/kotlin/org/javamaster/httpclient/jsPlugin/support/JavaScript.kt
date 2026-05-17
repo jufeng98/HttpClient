@@ -214,11 +214,6 @@ object JavaScript {
 
         modifyJsPredefinedLibrariesData(jsPredefinedLibrariesData, scriptingLibraryModel, virtualFilePointers)
 
-        declaredMethod = findMethod(
-            "com.intellij.lang.javascript.library.JSPredefinedLibraryManager",
-            "getLibraryModels"
-        )
-
         val myJSElementResolveScopeProvider = Proxy.newProxyInstance(
             pluginClassLoader,
             arrayOf(pluginClassLoader!!.loadClass("com.intellij.lang.javascript.psi.resolve.JSElementResolveScopeProvider")),

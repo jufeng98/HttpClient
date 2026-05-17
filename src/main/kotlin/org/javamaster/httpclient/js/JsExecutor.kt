@@ -10,6 +10,7 @@ import org.javamaster.httpclient.crypto.CryptoSupport
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
+import org.javamaster.httpclient.js.support.URLSearchParams
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.HttpResInfo
@@ -43,6 +44,13 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     init {
         val crypto = Context.javaToJS(CryptoSupport, global)
         ScriptableObject.putProperty(global, "crypto", crypto)
+
+        val paramsClass = URLSearchParams::class.java
+        ScriptableObject.putProperty(
+            global,
+            paramsClass.simpleName,
+            context.getWrapFactory().wrapJavaClass(context, global, paramsClass)
+        )
 
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global

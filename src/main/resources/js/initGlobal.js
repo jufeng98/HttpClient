@@ -1,25 +1,32 @@
 // noinspection JSUnusedGlobalSymbols,ES6ConvertVarToLetConst,JSUnresolvedReference
 // noinspection ES6ConvertVarToLetConst
 
-// Note that the file cannot access javaBridge objects due to the scope issues
-var client = {
-    log: function (args) {
+var console = {
+    log: function () {
         const strList = [];
-        const length = arguments.length;
-        for (var i = 0; i < length; i++) {
-            const arg = arguments[i];
-            if ( typeof arg === 'object') {
+        for (var i = 0; i < arguments.length; i++) {
+            if (typeof arguments[i] === 'object') {
                 try {
-                    strList.push(JSON.stringify(arg));
+                    const str = JSON.stringify(arguments[i]);
+                    if (str.startsWith('{') || str.startsWith('[')) {
+                        strList.push(str);
+                    } else {
+                        strList.push(arguments[i]);
+                    }
                 } catch (e) {
-                    strList.push(`${arg}`);
+                    strList.push(arguments[i]);
                 }
             } else {
-                strList.push(`${arg}`);
+                strList.push(arguments[i]);
             }
         }
-        globalLog.log(strList.join(" "));
+        globalLog.log(strList.join(' '));
     },
+}
+
+// Note that the file cannot access javaBridge objects due to the scope issues
+var client = {
+    log: console.log,
     global: {
         dataHolder: {},
         isEmpty: function () {
@@ -64,26 +71,6 @@ var client = {
         throw new Error("Exit");
     }
 };
-
-var console = {
-    log: function (args) {
-        const strList = [];
-        const length = arguments.length;
-        for (var i = 0; i < length; i++) {
-            const arg = arguments[i];
-            if (typeof arg === 'object') {
-                try {
-                    strList.push(JSON.stringify(arg));
-                } catch (e) {
-                    strList.push(`${arg}`);
-                }
-            } else {
-                strList.push(`${arg}`);
-            }
-        }
-        globalLog.log(strList.join(" "));
-    },
-}
 
 function headersAll(headers) {
     return Object.keys(headers)
@@ -154,68 +141,3 @@ function hasGlobalVariableKey(key) {
 function getGlobalVariable(key) {
     return client.global.get(key);
 }
-
-function URLSearchParams(queryParams) {
-    this.params = parseQueryParams(queryParams);
-
-    Object.defineProperty(this, 'size', {
-        get() {
-            return Object.keys(this.params).length;
-        }
-    });
-
-    function parseQueryParams(queryParams) {
-        if (queryParams === null || queryParams === undefined || queryParams === '') {
-            return {};
-        }
-
-        return queryParams.split('&')
-            .reduce((params, pair) => {
-                const [key, value] = pair.split('=');
-                params[decodeURIComponent(key)] = decodeURIComponent(value || '');
-                return params;
-            }, {});
-    }
-}
-
-URLSearchParams.prototype.append = function (key, value) {
-    this.params[key] = value;
-};
-
-URLSearchParams.prototype.has = function (key) {
-    return this.params[key] !== undefined;
-};
-
-URLSearchParams.prototype.get = function (key) {
-    return this.params[key];
-};
-
-URLSearchParams.prototype.set = function (key, value) {
-    this.params[key] = value;
-};
-
-URLSearchParams.prototype.delete = function (key) {
-    delete this.params[key];
-};
-
-URLSearchParams.prototype.keys = function () {
-    return Object.keys(this.params);
-};
-
-URLSearchParams.prototype.values = function () {
-    return Object.values(this.params);
-};
-
-URLSearchParams.prototype.entries = function () {
-    return Object.entries(this.params);
-};
-
-URLSearchParams.prototype.toString = function () {
-    const strList = [];
-    const keys = Object.keys(this.params);
-    for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        strList.push(encodeURIComponent(key) + "=" + encodeURIComponent(this.params[key]));
-    }
-    return strList.join("&");
-};
