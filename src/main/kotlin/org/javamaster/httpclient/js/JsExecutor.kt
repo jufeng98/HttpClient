@@ -409,10 +409,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         var JsGlobalVariableMap: Map<String, String>? = null
 
         fun setGlobalVariable(key: String, value: String) {
-            context.evaluateString(
-                global, "client.global.dataHolder['$key'] = '$value';", "dummy.js",
-                1, null
-            )
+            GlobalVariables.set(key, value)
         }
     }
 }
