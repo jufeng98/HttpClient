@@ -3,14 +3,13 @@ package org.javamaster.httpclient.js
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
-import org.apache.commons.lang3.StringUtils
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.annos.JsBridge
 import org.javamaster.httpclient.crypto.CryptoSupport
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
-import org.javamaster.httpclient.js.support.URLSearchParams
+import org.javamaster.httpclient.js.support.*
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.HttpResInfo
@@ -23,13 +22,11 @@ import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.mozilla.javascript.*
-import org.w3c.dom.Document
 import org.xml.sax.InputSource
 import java.io.FileNotFoundException
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.xpath.XPath
 import javax.xml.xpath.XPathFactory
 
 /**
@@ -42,16 +39,6 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     private val originalJavaBridge: JavaBridge
 
     init {
-        val crypto = Context.javaToJS(CryptoSupport, global)
-        ScriptableObject.putProperty(global, "crypto", crypto)
-
-        val paramsClass = URLSearchParams::class.java
-        ScriptableObject.putProperty(
-            global,
-            paramsClass.simpleName,
-            context.getWrapFactory().wrapJavaClass(context, global, paramsClass)
-        )
-
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global
 
@@ -73,11 +60,6 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         reqScriptableObject = scriptableObject
     }
 
-    var bodyArray: ByteArray? = null
-    var jsonStr: String? = null
-    var xmlDoc: Document? = null
-    var xPath: XPath? = null
-
     fun initJsRequestObj(
         url: String,
         rawUrl: String,
@@ -89,89 +71,20 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         fileScopeVariableMap: LinkedHashMap<String, String>,
     ) {
         val environment = reqInfo.environment
-
-        val headers = gson.toJson(reqHeaderMap)
-
-        val globalVariables = gson.toJson(fileScopeVariableMap)
+        environment["selectedEnv"] = selectedEnv ?: ""
 
         val jsBody = HttpUtils.convertReqBody(reqInfo.reqBody)
 
-        var js = """
-                request.url = {
-                    getRaw: () => {
-                        return `${rawUrl}`;
-                    },
-                    tryGetSubstituted: () => {
-                        return `${url}`;
-                    }                    
-                };             
-            """.trimIndent()
+        val request = HttpClientRequest(
+            environment,
+            RequestUrl(url, rawUrl),
+            RequestBody(jsBody, rawBody),
+            method.name,
+            fileScopeVariableMap,
+            RequestHeaders(reqHeaderMap),
+        )
 
-        js += if (jsBody is String) {
-            """
-                request.body = {
-                    string: () => {
-                        return $jsBody;
-                    },
-                    getRaw: () => {
-                        return `${rawBody}`;
-                    },
-                    tryGetSubstituted: () => {
-                        return $jsBody;
-                    },
-                    bytes: () => {
-                        return javaBridge.convertBodyToByteArray($jsBody);
-                    }
-                };
-            """.trimIndent()
-        } else {
-            bodyArray = jsBody as ByteArray
-
-            """
-                request.body = {
-                    string: () => {
-                        return javaBridge.getBodyString();
-                    },
-                    getRaw: () => {
-                        return `${rawBody}`;
-                    },
-                    tryGetSubstituted: () => {
-                        return javaBridge.getBodyString();
-                    },
-                    bytes: () => {
-                        return javaBridge.getBodyArray();
-                    }
-                };
-            """.trimIndent()
-        }
-
-        js += """
-            request.method = '${method.name}';
-            request.environment = $environment;
-            request.environment.selectedEnv = '$selectedEnv';
-            request.environment.get = function(name) {
-                return this[name] !== undefined ? this[name] : null;
-            };
-            request.globalVariables = $globalVariables;
-            request.globalVariables.get = function(name) {
-                return this[name] !== undefined ? this[name] : null;
-            };            
-            request.headers = $headers;
-            request.headers.all = function() {
-                return headersAll(this);
-            };
-            request.headers.findByName = function(name) {
-                return headersFindByName(this, name);
-            };            
-            request.headers.set = function(name, value) {
-                javaBridge.setHeader(name, value);
-            };
-            request.headers.add = function(name, value) {
-                javaBridge.addHeader(name, value);
-            };
-        """.trimIndent()
-
-        context.evaluateString(reqScriptableObject, js, "initRequestBody.js", 1, null)
+        ScriptableObject.putProperty(reqScriptableObject, "request", request)
     }
 
     fun evalJsBeforeRequest(preJsFiles: List<PreJsFile>, jsListBeforeReq: List<HttpScriptBody>): List<String> {
@@ -284,27 +197,16 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         try {
             GlobalLog.setTabName(tabName)
 
-            val headers = gson.toJson(headerMap)
             val jsBody = HttpUtils.convertReqBody(reqBody)
 
-            var js: String
+            val body: Any
             val typeEnum = httpResInfo.simpleTypeEnum
             when (typeEnum) {
                 SimpleTypeEnum.JSON -> {
-                    jsonStr = httpResInfo.bodyStr!!
+                    body = NativeObject()
 
-                    js = """
-                          // noinspection JSUnresolvedReference
-                          // noinspection JSUnresolvedReference
-                          var response = {
-                            body: $jsonStr
-                          };
-                          response.body.jsonPath = {
-                            evaluate: function(expression) {
-                                return javaBridge.evaluateJsonPath(expression);
-                            }
-                          };
-                        """.trimIndent()
+                    val bodyMap = gson.fromJson(httpResInfo.bodyStr!!, Map::class.java)
+                    body.putAll(bodyMap)
                 }
 
                 SimpleTypeEnum.XML -> {
@@ -312,83 +214,37 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
                     val documentBuilder = documentBuilderFactory.newDocumentBuilder()
 
-                    xmlDoc = documentBuilder.parse(InputSource(StringReader(xmlStr)))
-                    xPath = xPathFactory.newXPath()
-
-                    js = """   
-                          // noinspection JSUnresolvedReference
-                          // noinspection JSUnresolvedReference
-                          var response = {
-                            body: javaBridge.getXmlDoc()
-                          };
-                          response.body.xpath = {
-                            evaluate: function(expression) {
-                                return javaBridge.evaluateXPath(expression);
-                            }
-                          };
-                        """.trimIndent()
+                    body = documentBuilder.parse(InputSource(StringReader(xmlStr)))
                 }
 
                 SimpleTypeEnum.TEXT -> {
-                    val bodyText = HttpUtils.convertToJsString(httpResInfo.bodyStr!!)
-
-                    js = """
-                          // noinspection JSUnusedLocalSymbols
-                          var response = {
-                            body: $bodyText
-                          };
-                        """.trimIndent()
+                    body = httpResInfo.bodyStr!!
                 }
 
                 else -> {
-                    bodyArray = httpResInfo.bodyBytes
-
-                    js = """
-                          // noinspection JSUnusedLocalSymbols
-                          // noinspection JSUnresolvedReference
-                          var response = {
-                            body: javaBridge.getBodyArray()
-                          };
-                        """.trimIndent()
+                    body = httpResInfo.bodyBytes
                 }
             }
 
-            js += """
-                    response.status = ${statusCode};
-                    response.headers = $headers;
-                    response.headers.valueOf = function(name) {
-                        return headersFindFirstValueByName(this, name);
-                    };
-                    response.headers.valuesOf = function(name) {
-                        return headersFindValuesByName(this, name);
-                    };
-                    response.contentType = resolveContentType(response.headers);
-                """.trimIndent()
+            val response = HttpClientResponse(
+                statusCode,
+                ResponseHeaders(headerMap),
+                body
+            )
 
-            context.evaluateString(reqScriptableObject, js, "initResponseBody.js", 1, null)
+            ScriptableObject.putProperty(reqScriptableObject, "request", HttpClientRequestRes(url, jsBody))
+
+            ScriptableObject.putProperty(reqScriptableObject, "response", response)
 
             val virtualFile = jsScript.containingFile.virtualFile
             val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
             val rowNum = document.getLineNumber(jsScript.textOffset) + 1
 
             try {
-                var scriptTxt = """
-                    request.url = function() {
-                        return `${url}`;
-                    };
-                    request.body = function() {
-                        return ${jsBody};
-                    };
-                """.trimIndent()
-                val lines = StringUtils.countMatches(scriptTxt, "\n")
-                scriptTxt += jsScript.text
-
-                evalJs(scriptTxt, (rowNum - lines).coerceAtLeast(0), virtualFile.name, reqScriptableObject)
+                evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject)
             } catch (e: Exception) {
                 GlobalLog.log("$e")
             }
-
-            context.evaluateString(reqScriptableObject, "delete response;", "dummy.js", 1, null)
 
             return GlobalLog.getAndClearLogs()
         } catch (e: Exception) {
@@ -455,30 +311,20 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     }
 
     fun getJsGlobalVariable(key: String): String? {
-        val hasKey = ScriptableObject.callMethod(reqScriptableObject, "hasGlobalVariableKey", arrayOf(key)) as Boolean
-        if (!hasKey) {
-            return null
-        }
-
-        val res = ScriptableObject.callMethod(reqScriptableObject, "getGlobalVariable", arrayOf(key)) ?: return "null"
-
-        return res.toString()
+        return GlobalVariables.get(key)?.toString()
     }
 
     fun getJsGlobalVariables(): Map<String, String> {
-        val dataHolder = context.evaluateString(
-            reqScriptableObject, "client.global.dataHolder", "dummy.js",
-            1, null
-        ) as NativeObject
-
         val map = mutableMapOf<String, String>()
-        dataHolder.entries.forEach {
-            map[it.key.toString()] = if (it.value != null) {
-                it.value.toString()
-            } else {
-                "null"
+
+        GlobalVariables.dataHolder
+            .forEach {
+                map[it.key.toString()] = if (it.value != null) {
+                    it.value.toString()
+                } else {
+                    "null"
+                }
             }
-        }
 
         return map
     }
@@ -494,8 +340,6 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val global: ScriptableObject = context.initStandardObjects()
 
             global.defineProperty("CONTENT_TRUNCATED", nls("content.truncated"), ScriptableObject.READONLY)
-            global.defineProperty("GLOBAL_SET", nls("value.global.set"), ScriptableObject.READONLY)
-            global.defineProperty("REQUEST_SET", nls("value.req.set"), ScriptableObject.READONLY)
 
             // 改为使用 Java 实现 Crypto 相关
             // var url = Companion::class.java.classLoader.getResource("js/crypto-js.js")!!
@@ -506,6 +350,22 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
             val globalLog = Context.javaToJS(GlobalLog, global)
             ScriptableObject.putProperty(global, "globalLog", globalLog)
+
+            val console = Context.javaToJS(Console, global)
+            ScriptableObject.putProperty(global, "console", console)
+
+            val crypto = Context.javaToJS(CryptoSupport, global)
+            ScriptableObject.putProperty(global, "crypto", crypto)
+
+            val paramsClass = URLSearchParams::class.java
+            ScriptableObject.putProperty(
+                global,
+                paramsClass.simpleName,
+                context.getWrapFactory().wrapJavaClass(context, global, paramsClass)
+            )
+
+            val client = Context.javaToJS(HttpRequest, global)
+            ScriptableObject.putProperty(global, "client", client)
 
             val url = Companion::class.java.classLoader.getResource("js/initGlobal.js")!!
             val jsStr = url.readText(StandardCharsets.UTF_8)

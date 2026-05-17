@@ -42,10 +42,9 @@ import org.javamaster.httpclient.utils.HttpUtils.FAILED
 import org.javamaster.httpclient.utils.HttpUtils.SUCCESS
 import org.javamaster.httpclient.utils.HttpUtils.WEB_BOUNDARY
 import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
-import org.javamaster.httpclient.utils.HttpUtils.convertResponseHeaders
 import org.javamaster.httpclient.utils.HttpUtils.convertResponseBody
+import org.javamaster.httpclient.utils.HttpUtils.convertResponseHeaders
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
-import org.javamaster.httpclient.utils.HttpUtils.gson
 import org.javamaster.httpclient.utils.HttpUtils.handleOrdinaryContentCurl
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.VirtualFileUtils
@@ -179,7 +178,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                 val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
-                val environment = gson.toJson(getEnvMap(project, false))
+                val environment = getEnvMap(project, false)
 
                 HttpReqInfo(reqBody, environment, preJsFiles)
             }
@@ -303,7 +302,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                 val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
-                val environment = gson.toJson(getEnvMap(project, false))
+                val environment = getEnvMap(project, false)
 
                 HttpReqInfo(reqBody, environment, preJsFiles)
             }

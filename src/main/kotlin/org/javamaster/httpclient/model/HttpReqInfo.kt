@@ -5,4 +5,4 @@ package org.javamaster.httpclient.model
  *
  * @author yudong
  */
-data class HttpReqInfo(val reqBody: Any?, val environment: String, val preJsFiles: List<PreJsFile>)
+data class HttpReqInfo(val reqBody: Any?, val environment: MutableMap<String, String>, val preJsFiles: List<PreJsFile>)

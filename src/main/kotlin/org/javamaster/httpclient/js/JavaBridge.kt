@@ -11,8 +11,6 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.VirtualFileUtils
-import org.mozilla.javascript.Context
-import org.mozilla.javascript.NativeJavaObject
 import org.mozilla.javascript.ScriptableObject
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -51,51 +49,6 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
 
         return VirtualFileUtils.readNewestContent(file)
     }
-
-    @JsBridge(jsFun = "getBodyArray()")
-    fun getBodyArray(): Any {
-        return Context.javaToJS(jsExecutor.bodyArray!!, jsExecutor.reqScriptableObject)
-    }
-
-    @JsBridge(jsFun = "getBodyString()")
-    fun getBodyString(): String {
-        return String(jsExecutor.bodyArray!!, StandardCharsets.UTF_8)
-    }
-
-    @JsBridge(jsFun = "convertBodyToByteArray(str)")
-    fun convertBodyToByteArray(str: String): Any? {
-        if (str == "null") {
-            return null
-        }
-
-        return Context.javaToJS(str.toByteArray(StandardCharsets.UTF_8), jsExecutor.reqScriptableObject)
-    }
-
-    @JsBridge(jsFun = "getXmlDoc()")
-    fun getXmlDoc(): Any {
-        val resObj = Context.javaToJS(jsExecutor.xmlDoc!!, jsExecutor.reqScriptableObject) as NativeJavaObject
-        resObj.prototype = JsExecutor.context.initStandardObjects()
-        return resObj
-    }
-
-    @JsBridge(jsFun = "evaluateXPath(expression)")
-    fun evaluateXPath(expression: String): Any? {
-        try {
-            return jsExecutor.xPath!!.evaluate(expression, jsExecutor.xmlDoc!!)
-        } catch (e: Exception) {
-            throw HttpFileException(e.toString(), e)
-        }
-    }
-
-    @JsBridge(jsFun = "evaluateJsonPath(expression)")
-    fun evaluateJsonPath(expression: String): Any? {
-        try {
-            return JsonPath.read(jsExecutor.jsonStr, expression)
-        } catch (e: Exception) {
-            throw HttpFileException(e.toString(), e)
-        }
-    }
-
 
     @JsBridge(jsFun = "xpath(obj, expression)")
     fun xpath(obj: Any, expression: String): Any? {

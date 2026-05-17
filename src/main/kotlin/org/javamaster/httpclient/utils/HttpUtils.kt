@@ -78,6 +78,12 @@ object HttpUtils {
         .registerTypeAdapter(Date::class.java, DateTypeAdapter)
         .create()
 
+    val gsonNotPretty: Gson = GsonBuilder()
+        .serializeNulls()
+        .disableHtmlEscaping()
+        .registerTypeAdapter(Date::class.java, DateTypeAdapter)
+        .create()
+
     const val REQUEST_BODY_ANNO_NAME = "org.springframework.web.bind.annotation.RequestBody"
     const val API_OPERATION_ANNO_NAME = "io.swagger.annotations.ApiOperation"
     const val API_MODEL_PROPERTY_ANNO_NAME = "io.swagger.annotations.ApiModelProperty"
@@ -1027,13 +1033,13 @@ object HttpUtils {
         return "`" + str.replace("\\", "\\\\").replace("`", "\\`") + "`"
     }
 
-    fun convertReqBody(reqBody: Any?): Any {
+    fun convertReqBody(reqBody: Any?): Any? {
         if (reqBody == null) {
-            return "null"
+            return null
         }
 
         if (reqBody is String) {
-            return convertToJsString(reqBody)
+            return reqBody
         }
 
         return when (reqBody) {
