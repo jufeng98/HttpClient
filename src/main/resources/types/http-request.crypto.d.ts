@@ -139,5 +139,5 @@ interface HmacInitializer {
      * @param base64Secret HMAC secret
      * @param urlSafe By default, false
      */
-    withBase64Secret(base64Secret: string, urlSafe?: string): DigestBuilder;
+    withBase64Secret(base64Secret: string, urlSafe?: boolean): DigestBuilder;
 }

@@ -23,8 +23,8 @@
 
     const secret = "RHDcnjfmkES"
     const signSource = secret + request.body.string() + secret;
-    // Use builtin CryptoJS object 使用内置的 CryptoJS 对象
-    const sign = CryptoJS.MD5(signSource)
+    // Use builtin crypto object 使用内置的 crypto 对象
+    const sign = crypto.md5().updateWithText(signSource).digest().toHex();
     request.variables.set('sign', sign);
     console.log("sign:", sign);
 

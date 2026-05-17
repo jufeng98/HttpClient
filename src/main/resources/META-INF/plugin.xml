@@ -493,7 +493,6 @@
             <action class="org.javamaster.httpclient.action.example.DubboExampleAction"/>
             <action class="org.javamaster.httpclient.action.example.MockServerExampleAction"/>
             <separator/>
-            <action class="org.javamaster.httpclient.action.example.CryptoJsExampleAction"/>
         </group>
 
         <group id="httpDashboardVerticalGroup">
