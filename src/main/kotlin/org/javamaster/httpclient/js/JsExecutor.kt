@@ -6,6 +6,7 @@ import com.intellij.psi.PsiFile
 import org.apache.commons.lang3.StringUtils
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.annos.JsBridge
+import org.javamaster.httpclient.crypto.CryptoSupport
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
@@ -40,6 +41,9 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     private val originalJavaBridge: JavaBridge
 
     init {
+        val crypto = Context.javaToJS(CryptoSupport, global)
+        ScriptableObject.putProperty(global, "crypto", crypto)
+
         val scriptableObject = context.initStandardObjects()
         scriptableObject.prototype = global
 
@@ -485,17 +489,18 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             global.defineProperty("GLOBAL_SET", nls("value.global.set"), ScriptableObject.READONLY)
             global.defineProperty("REQUEST_SET", nls("value.req.set"), ScriptableObject.READONLY)
 
-            var url = Companion::class.java.classLoader.getResource("js/crypto-js.js")!!
-            var jsStr = url.readText(StandardCharsets.UTF_8)
-            context.evaluateString(global, jsStr, "crypto-js.js", 1, null)
+            // 改为使用 Java 实现 Crypto 相关
+            // var url = Companion::class.java.classLoader.getResource("js/crypto-js.js")!!
+            // var jsStr = url.readText(StandardCharsets.UTF_8)
+            // context.evaluateString(global, jsStr, "crypto-js.js", 1, null)
             // Register CryptoJS object
-            global.prototype.put("CryptoJS", global, global.get("CryptoJS"))
+            // global.prototype.put("CryptoJS", global, global.get("CryptoJS"))
 
             val globalLog = Context.javaToJS(GlobalLog, global)
             ScriptableObject.putProperty(global, "globalLog", globalLog)
 
-            url = Companion::class.java.classLoader.getResource("js/initGlobal.js")!!
-            jsStr = url.readText(StandardCharsets.UTF_8)
+            val url = Companion::class.java.classLoader.getResource("js/initGlobal.js")!!
+            val jsStr = url.readText(StandardCharsets.UTF_8)
             context.evaluateString(global, jsStr, "initGlobal.js", 1, null)
 
             JsHelper.alreadyInit()
