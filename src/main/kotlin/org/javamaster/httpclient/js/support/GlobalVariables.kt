@@ -1,7 +1,6 @@
 package org.javamaster.httpclient.js.support
 
 import com.google.common.collect.Maps
-import org.javamaster.httpclient.js.GlobalLog
 import org.javamaster.httpclient.nls.NlsBundle.nls
 
 @Suppress("unused")

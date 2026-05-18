@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.js
+package org.javamaster.httpclient.js.support
 
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.utils.HttpUtils
@@ -15,6 +15,8 @@ object GlobalLog {
     }
 
     fun log(msg: String?) {
+        tabName ?: return
+
         logsMap.add(tabName!!, msg ?: "null")
     }
 
