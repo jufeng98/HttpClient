@@ -70,8 +70,10 @@
             <ul>
                 <li><b>6.6.0</b></li>
                 <ul>
-                    <li>请求的全局、前置以及后置 js 处理器新增智能提示内置的 js 变量及函数功能</li>
-                    <li>完善Faker功能</li>
+                    <li>请求的全局、前置以及后置 js 处理器新增智能提示内置的 js 预定义变量及函数功能</li>
+                    <li>Crypto 改为纯 Java 实现,提高执行效率</li>
+                    <li>js处理器中的预定义变量(如request等)改为纯 Java 实现,提高执行效率</li>
+                    <li>完善 Faker</li>
                     <li>bug修复</li>
                 </ul>
                 <li><b>6.0.0</b></li>
