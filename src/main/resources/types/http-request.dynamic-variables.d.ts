@@ -1,6 +1,7 @@
 // noinspection JSUnusedGlobalSymbols
 
 declare const $env: EnvVariables
+declare const $property: EnvVariables
 
 interface EnvVariables {
     [key: string]: string;
@@ -14,6 +15,8 @@ declare const $historyFolder: string;
 declare const $isoTimestamp: string;
 
 declare const $projectRoot: string;
+
+declare const $mvnTarget: string;
 
 /**
  * <a href="https://javadoc.io/doc/com.github.javafaker/javafaker/latest/com/github/javafaker/package-summary.html">Faker API</a>
@@ -215,6 +218,7 @@ interface RandomVariables {
     app: FakerCommon
     options: FakerOptions
     phoneNumber: FakerPhoneNumber
+    number: FakerCommon
     shakespeare: FakerShakespeare
     superhero: FakerSuperhero
     nation: FakerCommon
@@ -259,6 +263,11 @@ declare function $timestampDate(day: number): string;
  * 生成格式化日期, 用法: $date(0, ''yyyy-MM-dd''), 第一个参数 0 表示今天, 1 表示明天以此类推; 第二个参数可选(默认yyyy-MM-dd). 示例值: 2025-02-02
  */
 declare function $date(day: number, pattern: string | undefined): string;
+
+/**
+ * 引入 js 文件
+ */
+declare function require(path: string): string;
 
 /**
  * 按 UTF-8 格式读取文件文本内容并转换为 base64 返回

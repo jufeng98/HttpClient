@@ -5,7 +5,7 @@
  */
 declare const response: HttpResponse;
 
-interface HttpClient {
+interface HttpRequest {
     test(testName: string, func: Function): void;
 
     assert(condition: boolean, message?: string): void;
