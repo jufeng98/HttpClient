@@ -19,6 +19,8 @@ import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.runconfig.HttpRunProfileState
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.utils.ConfigUtils
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.NotifyUtil
 import java.nio.file.InvalidPathException
@@ -64,13 +66,13 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
             return
         }
 
-        httpMethod.putUserData(HttpUtils.gutterIconLoadingKey, loadingRemover)
+        httpMethod.putUserData(HttpConsts.gutterIconLoadingKey, loadingRemover)
 
         val httpExecutor = ExecutorRegistry.getInstance().getExecutorById(HTTP_EXECUTOR_ID)!!
 
         val selectedEnv = HttpEditorTopForm.getSelectedEnv(httpMethod.project)
 
-        val runnerAndConfigurationSettings = HttpUtils.saveConfiguration(tabName, project, selectedEnv, httpMethod)
+        val runnerAndConfigurationSettings = ConfigUtils.saveConfiguration(tabName, project, selectedEnv, httpMethod)
 
         val environment = ExecutionEnvironment(httpExecutor, this, runnerAndConfigurationSettings, project)
 

@@ -18,6 +18,7 @@ import com.intellij.util.application
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.dashboard.support.JsTgz
 import org.javamaster.httpclient.dubbo.DubboHandler
 import org.javamaster.httpclient.dubbo.support.DubboJars
@@ -36,18 +37,16 @@ import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.*
+import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
+import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
+import org.javamaster.httpclient.consts.HttpConsts.Companion.WEB_BOUNDARY
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
-import org.javamaster.httpclient.utils.HttpUtils.FAILED
-import org.javamaster.httpclient.utils.HttpUtils.SUCCESS
-import org.javamaster.httpclient.utils.HttpUtils.WEB_BOUNDARY
 import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
 import org.javamaster.httpclient.utils.HttpUtils.convertResponseBody
 import org.javamaster.httpclient.utils.HttpUtils.convertResponseHeaders
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.HttpUtils.handleOrdinaryContentCurl
-import org.javamaster.httpclient.utils.NotifyUtil
-import org.javamaster.httpclient.utils.VirtualFileUtils
 import org.javamaster.httpclient.ws.WsRequest
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -76,7 +75,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     private val parentPath = httpFile.virtualFile.parent.path
     private val jsExecutor = JsExecutor(project, httpFile, tabName)
     private val variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv, project)
-    private val loadingRemover = httpMethod.getUserData(HttpUtils.gutterIconLoadingKey)
+    private val loadingRemover = httpMethod.getUserData(HttpConsts.gutterIconLoadingKey)
     private val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
     private val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
     private val requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
@@ -85,11 +84,11 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
     private val preJsFiles = HttpUtils.getPreJsFiles(httpFile, false)
 
-    private val jsListBeforeReq = HttpUtils.getAllPreJsScripts(httpFile, requestBlock)
+    private val jsListBeforeReq = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock)
 
     private val jsAfterReq = getJsScript(responseHandler)
 
-    private val paramMap = HttpUtils.getReqDirectionCommentParamMap(requestBlock)
+    private val paramMap = MyPsiUtils.getReqDirectionCommentParamMap(requestBlock)
 
     private val httpDashboardForm by lazy {
         HttpDashboardForm(tabName, project)
@@ -196,11 +195,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         httpDashboardForm.initLabelLoading(tabName, url)
 
-        url = HttpUtils.handleUrl(url)
-
-        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
-            url = HttpUtils.encodeUrl(url)
-        }
+        url = ReqUtils.handleUrl(url)
 
         val httpHeaderFields = request.header?.headerFieldList
 
@@ -219,12 +214,16 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         val beforeJsResList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
 
+        url = variableResolver.resolve(url)
+
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(beforeJsResList)
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
-        reqHeaderMap.putAll(jsExecutor.getHeaderMap())
+        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
+            url = ReqUtils.encodeUrl(url)
+        }
 
         val reqBody = reqInfo.reqBody
 
@@ -318,10 +317,6 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         val rawUrl = requestTarget.url
         var url = variableResolver.resolve(rawUrl)
 
-        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
-            url = HttpUtils.encodeUrl(url)
-        }
-
         val httpHeaderFields = request.header?.headerFieldList
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)
@@ -342,7 +337,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
-        reqHeaderMap.putAll(jsExecutor.getHeaderMap())
+        if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
+            url = ReqUtils.encodeUrl(url)
+        }
 
         val list = mutableListOf<String>()
 
@@ -600,7 +597,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                             httpResDescList.add("*/$CR_LF")
                         }
 
-                        val versionDesc = HttpUtils.getVersionDesc(response.version())
+                        val versionDesc = MyPsiUtils.getVersionDesc(response.version())
 
                         val commentTabName = "### $tabName$CR_LF"
                         httpResDescList.add(commentTabName)
@@ -758,7 +755,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             SUCCESS
         }
 
-        httpMethod.putUserData(HttpUtils.requestFinishedKey, code)
+        httpMethod.putUserData(HttpConsts.requestFinishedKey, code)
 
         RunFileHandler.resetInterrupt()
 

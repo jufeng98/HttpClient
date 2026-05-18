@@ -5,11 +5,11 @@ import com.intellij.openapi.util.text.Formats
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.utils.HttpUtils
-import org.javamaster.httpclient.utils.HttpUtils.CONNECT_TIMEOUT
+import org.javamaster.httpclient.consts.HttpConsts.Companion.CONNECT_TIMEOUT
+import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
-import org.javamaster.httpclient.utils.HttpUtils.READ_TIMEOUT
-import org.javamaster.httpclient.utils.HttpUtils.getVersionDesc
+import org.javamaster.httpclient.utils.MyPsiUtils.Companion.getVersionDesc
+import org.javamaster.httpclient.utils.ReqUtils
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpClient.Version
@@ -182,7 +182,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         paramMap: Map<String, String>,
     ): CompletableFuture<HttpResponse<ByteArray>> {
         try {
-            val pair = HttpUtils.convertToReqBodyPublisher(reqBody)
+            val pair = ReqUtils.convertToReqBodyPublisher(reqBody)
 
             val bodyPublisher = pair.first
             val multipartLength = pair.second
@@ -224,7 +224,7 @@ enum class HttpRequestEnum(val icon: Icon) {
 
             httpReqDescList.add(CR_LF)
 
-            val descList = HttpUtils.getReqBodyDesc(reqBody)
+            val descList = ReqUtils.getReqBodyDesc(reqBody)
 
             httpReqDescList.addAll(descList)
 

@@ -74,8 +74,8 @@ enum class InnerVariableEnum(val methodName: String) {
                 throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
             }
 
-            val max = args[0] as Int
-            return ThreadLocalRandom.current().nextInt(max).toString(16).uppercase()
+            val length = args[0] as Int
+            return RandomStringUtils.random(length, "0123456789ABCDEF")
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -400,6 +400,15 @@ enum class InnerVariableEnum(val methodName: String) {
             return callFakerMethod(variableName, *args)
         }
     },
+    RANDOM_EMAIL("\$random.email") {
+        override fun typeText(): String {
+            return "生成 email"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            return RandomStringUtils.faker().internet().emailAddress()
+        }
+    },
     RANDOM_COLOR("\$random.color") {
         override fun typeText(): String {
             return "生成 color"
@@ -442,7 +451,7 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return callFakerMethod(variableName, *args)
+            return callFakerMethod(variableName.replace("dateAndTime", "date"), *args)
         }
     },
     RANDOM_EDUCATOR("\$random.educator") {

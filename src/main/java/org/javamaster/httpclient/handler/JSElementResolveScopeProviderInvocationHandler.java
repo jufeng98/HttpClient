@@ -47,23 +47,22 @@ public class JSElementResolveScopeProviderInvocationHandler implements Invocatio
         HttpRequestHandlerApiDefinitionFilesHolder filesHolder = HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE;
 
         List<VirtualFile> vFiles;
-        if (insideResponseHandler(element)) {
-            vFiles = getLibraryFiles(
-                    filesHolder.getCommonLibraryFilePointer(),
-                    filesHolder.getResponseLibraryFilePointer(),
-                    filesHolder.getDynamicVariablesFilePointer()
-            );
+        if (insideResponseHandler(injectionHost)) {
+            vFiles = getLibraryFiles(filesHolder.getResponseLibraryFilePointer());
 
         } else {
-            vFiles = getLibraryFiles(
-                    filesHolder.getCommonLibraryFilePointer(),
-                    filesHolder.getCryptoLibraryFilePointer(),
-                    filesHolder.getPreRequestLibraryFilePointer(),
-                    filesHolder.getDynamicVariablesFilePointer()
-            );
+            vFiles = getLibraryFiles(filesHolder.getPreRequestLibraryFilePointer());
         }
 
         virtualFiles.addAll(vFiles);
+
+        List<VirtualFile> commonLibs = getLibraryFiles(
+                filesHolder.getCommonLibraryFilePointer(),
+                filesHolder.getCryptoLibraryFilePointer(),
+                filesHolder.getDynamicVariablesFilePointer()
+        );
+
+        virtualFiles.addAll(commonLibs);
 
         virtualFiles.addAll(JavaScript.INSTANCE.getCoreJsStubLib());
 
