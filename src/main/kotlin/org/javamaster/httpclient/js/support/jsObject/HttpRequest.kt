@@ -13,8 +13,8 @@ import org.mozilla.javascript.Function
 object HttpRequest {
     val global: GlobalVariables = GlobalVariables
 
-    fun log(vararg arguments: Any?) {
-        Console.log(*arguments)
+    fun log(first: Any?, vararg arguments: Any?) {
+        Console.log(first, *arguments)
     }
 
     fun test(testName: String, callback: Function) {

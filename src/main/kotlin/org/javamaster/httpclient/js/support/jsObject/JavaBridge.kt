@@ -2,14 +2,13 @@ package org.javamaster.httpclient.js.support.jsObject
 
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.exception.HttpFileException
-import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.nls.NlsBundle
 
 /**
  * @author yudong
  */
 @Suppress("unused")
-class JavaBridge(private val jsExecutor: JsExecutor) {
+class JavaBridge() {
 
     fun getClassNoArgDeclareMethodNames(clzName: String): List<String> {
         val clz = Class.forName(clzName)
@@ -54,6 +53,7 @@ class JavaBridge(private val jsExecutor: JsExecutor) {
             if (arg == "undefined") {
                 return null
             }
+
             if (arg is Double) {
                 return arg.toInt()
             }

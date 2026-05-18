@@ -43,10 +43,6 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     init {
         reqScriptableObject.prototype = global
 
-        JsHandlerPredefineRequestVariables.defineJavaBridge(reqScriptableObject, this)
-
-        JsHandlerPredefineRequestVariables.defineRandom(reqScriptableObject)
-
         JsHandlerPredefineRequestVariables.defineConsole(reqScriptableObject)
 
         JsHandlerPredefineRequestFunctions.defineDateFunc(reqScriptableObject, this)
@@ -211,13 +207,20 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                     body = JsonParser(context, global).parseValue(httpResInfo.bodyStr!!)
                 }
 
+                SimpleTypeEnum.HTML -> {
+                    body = httpResInfo.bodyStr!!
+                }
+
                 SimpleTypeEnum.XML -> {
-                    val xmlStr = httpResInfo.bodyStr!!
                     val documentBuilder = documentBuilderFactory.newDocumentBuilder()
-                    body = documentBuilder.parse(InputSource(StringReader(xmlStr)))
+                    body = documentBuilder.parse(InputSource(StringReader(httpResInfo.bodyStr!!)))
                 }
 
                 SimpleTypeEnum.TEXT -> {
+                    body = httpResInfo.bodyStr!!
+                }
+
+                SimpleTypeEnum.TXT -> {
                     body = httpResInfo.bodyStr!!
                 }
 
@@ -312,7 +315,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
         GlobalVariables.dataHolder
             .forEach {
-                map[it.key.toString()] = if (it.value != null) {
+                map[it.key] = if (it.value != null) {
                     it.value.toString()
                 } else {
                     "null"
@@ -339,6 +342,10 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             JsHandlerPredefineGlobalVariables.defineURLSearchParams(globalTmp, contextTmp)
 
             JsHandlerPredefineGlobalVariables.defineClient(globalTmp)
+
+            JsHandlerPredefineGlobalVariables.defineJavaBridge(globalTmp)
+
+            JsHandlerPredefineGlobalVariables.defineRandom(globalTmp, contextTmp)
 
             JsHandlerPredefineGlobalFunctions.defineXpathFunc(globalTmp)
 
