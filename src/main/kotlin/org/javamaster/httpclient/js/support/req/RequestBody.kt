@@ -1,7 +1,10 @@
-package org.javamaster.httpclient.js.support
+package org.javamaster.httpclient.js.support.req
 
 import java.nio.charset.StandardCharsets
 
+/**
+ * @author yudong
+ */
 @Suppress("unused")
 class RequestBody(
     private val jsBody: Any?,

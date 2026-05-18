@@ -1,5 +1,8 @@
-package org.javamaster.httpclient.js.support
+package org.javamaster.httpclient.js.support.req
 
+/**
+ * @author yudong
+ */
 @Suppress("unused")
 class RequestHeader(val name: String, val values: List<String>) {
 

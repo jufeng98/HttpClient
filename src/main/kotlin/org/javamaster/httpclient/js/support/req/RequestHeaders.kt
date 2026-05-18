@@ -1,7 +1,12 @@
-package org.javamaster.httpclient.js.support
+package org.javamaster.httpclient.js.support.req
 
+import org.javamaster.httpclient.js.support.GlobalLog
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.nls.NlsBundle
 
+/**
+ * @author yudong
+ */
 @Suppress("unused")
 class RequestHeaders(private val headers: LinkedMultiValueMap<String, String>) {
 
@@ -17,10 +22,14 @@ class RequestHeaders(private val headers: LinkedMultiValueMap<String, String>) {
 
     fun set(name: String, value: String) {
         headers.set(name, value)
+
+        GlobalLog.log(NlsBundle.nls("req.header.set", name, value))
     }
 
     fun add(name: String, value: String) {
         headers.add(name, value)
+
+        GlobalLog.log(NlsBundle.nls("req.header.add", name, value))
     }
 
 }
