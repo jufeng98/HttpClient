@@ -1,147 +1,52 @@
 package org.javamaster.httpclient.utils
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
-import com.google.gson.JsonSyntaxException
 import com.intellij.execution.RunManager
-import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.ide.impl.ProjectUtil
-import com.intellij.json.JsonElementTypes
-import com.intellij.json.psi.*
-import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.json.psi.JsonProperty
+import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Computable
-import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
-import com.intellij.psi.impl.source.PsiClassReferenceType
-import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
-import com.intellij.refactoring.rename.RenameProcessor
-import com.intellij.util.SmartList
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
-import org.intellij.markdown.html.urlEncode
-import org.javamaster.httpclient.HttpIcons
-import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.adapter.DateTypeAdapter
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvEleLiteral
-import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvJsonProperty
-import org.javamaster.httpclient.factory.HttpPsiFactory.createGlobalVariable
-import org.javamaster.httpclient.factory.JsonPsiFactory.createBoolProperty
-import org.javamaster.httpclient.factory.JsonPsiFactory.createNumberProperty
-import org.javamaster.httpclient.factory.JsonPsiFactory.createStringProperty
-import org.javamaster.httpclient.js.JsExecutor.Companion.setGlobalVariable
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
-import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.resolve.VariableResolver
-import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VARIABLE_SIGN_END
+import org.javamaster.httpclient.utils.JsonUtils.formatJson
+import org.javamaster.httpclient.utils.ReqUtils.Companion.encodeQueryParam
+import org.javamaster.httpclient.utils.ReqUtils.Companion.handleQueryParam
 import java.io.File
 import java.net.URI
 import java.net.URL
-import java.net.http.HttpClient
 import java.net.http.HttpHeaders
-import java.net.http.HttpRequest.BodyPublishers
 import java.nio.charset.StandardCharsets
 import java.util.*
-import javax.swing.Icon
 import kotlin.jvm.optionals.getOrElse
 
 /**
  * @author yudong
  */
 object HttpUtils {
-    val gson: Gson = GsonBuilder()
-        .setPrettyPrinting()
-        .serializeNulls()
-        .disableHtmlEscaping()
-        .registerTypeAdapter(Date::class.java, DateTypeAdapter)
-        .create()
-
-    val gsonNotPretty: Gson = GsonBuilder()
-        .serializeNulls()
-        .disableHtmlEscaping()
-        .registerTypeAdapter(Date::class.java, DateTypeAdapter)
-        .create()
-
-    const val REQUEST_BODY_ANNO_NAME = "org.springframework.web.bind.annotation.RequestBody"
-    const val API_OPERATION_ANNO_NAME = "io.swagger.annotations.ApiOperation"
-    const val API_MODEL_PROPERTY_ANNO_NAME = "io.swagger.annotations.ApiModelProperty"
     const val CR_LF = "\r\n"
-
-    const val READ_TIMEOUT = 3600L
-    const val CONNECT_TIMEOUT = 30L
-    const val TIMEOUT = 10_000
-
-    const val RES_SIZE_LIMIT = (1.5 * 1024 * 1024).toInt()
-
-    const val HTTP_TYPE_ID = "intellijHttpClient"
-    const val WEB_BOUNDARY = "boundary"
-
-    private const val VARIABLE_SIGN_END = "}}"
-
-    val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
-    val requestFinishedKey: Key<Int> = Key.create("REQUEST_FINISHED_KEY")
-
-    const val SUCCESS = 0
-    const val FAILED = 1
-
-    fun saveConfiguration(
-        tabName: String,
-        project: Project,
-        selectedEnv: String?,
-        httpMethod: HttpMethod,
-    ): RunnerAndConfigurationSettings {
-        val runManager = RunManager.getInstance(project)
-
-        var configurationSettings = runManager.allSettings
-            .firstOrNull {
-                it.configuration is HttpRunConfiguration && it.configuration.name == tabName
-            }
-
-        val configNotExists = configurationSettings == null
-
-        val httpRunConfiguration: HttpRunConfiguration
-        if (configNotExists) {
-            configurationSettings = runManager.createConfiguration(tabName, HttpConfigurationType::class.java)
-            httpRunConfiguration = configurationSettings.configuration as HttpRunConfiguration
-        } else {
-            httpRunConfiguration = configurationSettings!!.configuration as HttpRunConfiguration
-        }
-
-        configurationSettings.isActivateToolWindowBeforeRun = false
-
-        httpRunConfiguration.env = selectedEnv ?: ""
-        httpRunConfiguration.httpFilePath = httpMethod.containingFile.virtualFile.path
-
-        if (configNotExists) {
-            runManager.addConfiguration(configurationSettings)
-        }
-
-        runManager.selectedConfiguration = configurationSettings
-
-        return configurationSettings
-    }
 
     fun getTabName(httpMethod: HttpMethod): String {
         val requestBlock = PsiTreeUtil.getParentOfType(httpMethod, HttpRequestBlock::class.java)!!
@@ -199,42 +104,6 @@ object HttpUtils {
             }
 
         return map
-    }
-
-    fun handleUrl(url: String): String {
-        val split = url.split("?")
-        if (split.size == 1) {
-            return url
-        }
-
-        return split[0] + "?" + handleQueryParam(split[1])
-    }
-
-    fun encodeUrl(url: String): String {
-        val split = url.split("?")
-        if (split.size == 1) {
-            return url
-        }
-
-        return split[0] + "?" + encodeQueryParam(split[1])
-    }
-
-    private fun handleQueryParam(queryParam: String): String {
-        val split = queryParam.split("&")
-
-        return split.joinToString("&") {
-            val list = it.split("=")
-            list[0].trim() + "=" + list[1].trim()
-        }
-    }
-
-    private fun encodeQueryParam(queryParam: String): String {
-        val split = queryParam.split("&")
-
-        return split.joinToString("&") {
-            val list = it.split("=")
-            urlEncode(list[0]) + "=" + urlEncode(list[1])
-        }
     }
 
     fun convertToReqBody(
@@ -563,37 +432,12 @@ object HttpUtils {
         return HttpResInfo(simpleTypeEnum, bodyBytes, bodyStr, contentType)
     }
 
-    private fun formatJson(jsonStr: String): String {
-        try {
-            val jsonElement = gson.fromJson(jsonStr, JsonElement::class.java)
-
-            return gson.toJson(jsonElement)
-        } catch (_: JsonSyntaxException) {
-            return jsonStr
-        }
-    }
-
     fun getJsScript(httpResponseHandler: HttpResponseHandler?): HttpScriptBody? {
         if (httpResponseHandler == null) {
             return null
         }
 
         return httpResponseHandler.responseScript.scriptBody
-    }
-
-    fun resolveFileGlobalVariable(variableName: String, httpFile: PsiFile): PsiElement? {
-        val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
-
-        return globalVariables
-            .mapNotNull {
-                val globalVariableName = it.globalVariableName
-                if (globalVariableName?.name == variableName) {
-                    return@mapNotNull globalVariableName
-                } else {
-                    return@mapNotNull null
-                }
-            }
-            .firstOrNull()
     }
 
     fun getPreJsFiles(httpFile: HttpFile, excludeRequire: Boolean): List<PreJsFile> {
@@ -668,53 +512,6 @@ object HttpUtils {
         }
 
         return constructFilePath(path, parentPath)
-    }
-
-    fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<HttpScriptBody> {
-        val scripts = mutableListOf<HttpScriptBody>()
-
-        val globalScript = getGlobalJsScript(httpFile)
-        if (globalScript != null) {
-            scripts.add(globalScript)
-        }
-
-        val preJsScript = getPreJsScript(httpRequestBlock)
-        if (preJsScript != null) {
-            scripts.add(preJsScript)
-        }
-
-        return scripts
-    }
-
-    fun getAllPostJsScripts(httpFile: PsiFile): List<HttpScriptBody> {
-        val handlers = PsiTreeUtil.findChildrenOfType(httpFile, HttpResponseHandler::class.java)
-
-        return handlers
-            .mapNotNull {
-                getJsScript(it)
-            }
-    }
-
-    fun getReqDirectionCommentParamMap(httpRequestBlock: HttpRequestBlock): Map<String, String> {
-        val map = mutableMapOf<String, String>()
-
-        httpRequestBlock.directionCommentList
-            .forEach {
-                val name = it.directionName?.text ?: return@forEach
-                map[name] = it.directionValue?.text ?: ""
-            }
-
-        return map
-    }
-
-    private fun getGlobalJsScript(httpFile: PsiFile): HttpScriptBody? {
-        val globalHandler = PsiTreeUtil.getChildOfType(httpFile, HttpGlobalHandler::class.java) ?: return null
-        return globalHandler.globalScript.scriptBody
-    }
-
-    private fun getPreJsScript(httpRequestBlock: HttpRequestBlock): HttpScriptBody? {
-        val preRequestHandler = httpRequestBlock.preRequestHandler ?: return null
-        return preRequestHandler.preRequestScript.scriptBody
     }
 
     fun getOriginalFile(requestTarget: HttpRequestTarget): VirtualFile? {
@@ -879,31 +676,6 @@ object HttpUtils {
         return name.substring(1, name.length - 1)
     }
 
-    fun resolveTargetParam(psiMethod: PsiMethod): PsiParameter? {
-        val superPsiMethods = psiMethod.findSuperMethods(false)
-        val psiParameters = psiMethod.parameterList.parameters
-        var psiParameter: PsiParameter? = null
-
-        for ((index, psiParam) in psiParameters.withIndex()) {
-            var hasAnno = psiParam.hasAnnotation(REQUEST_BODY_ANNO_NAME)
-            if (hasAnno) {
-                psiParameter = psiParam
-                break
-            }
-
-            for (superPsiMethod in superPsiMethods) {
-                val superPsiParam = superPsiMethod.parameterList.parameters[index]
-                hasAnno = superPsiParam.hasAnnotation(REQUEST_BODY_ANNO_NAME)
-                if (hasAnno) {
-                    psiParameter = psiParam
-                    break
-                }
-            }
-        }
-
-        return psiParameter
-    }
-
     fun resolveTargetField(
         paramPsiCls: PsiClass,
         jsonPropertyNameLevels: LinkedList<String>,
@@ -975,332 +747,6 @@ object HttpUtils {
         return html
     }
 
-    fun getMethodDesc(psiMethod: PsiMethod): String {
-        val list = mutableListOf<String>()
-
-        val docComment = psiMethod.docComment
-        if (docComment != null) {
-            val comment = getNextSiblingByType(docComment.firstChild, JavaDocTokenType.DOC_COMMENT_DATA, false)
-                ?.text?.trim()
-
-            comment?.let { list.add(it) }
-        }
-
-        val annotation = psiMethod.getAnnotation(API_OPERATION_ANNO_NAME)
-        if (annotation != null) {
-            val attributeValue = annotation.findAttributeValue("value")
-            if (attributeValue is PsiPolyadicExpression) {
-                attributeValue.operands
-                    .filter { it is PsiLiteralExpression? }
-                    .forEach {
-                        val desc = (it as PsiLiteralExpression?)?.value?.toString()?.trim()
-                        desc?.let { list.add(it) }
-                    }
-            } else if (attributeValue is PsiLiteralExpression?) {
-                val desc = attributeValue?.value?.toString()?.trim()
-                desc?.let { list.add(it) }
-            }
-        }
-
-        return list.joinToString(" ")
-    }
-
-
-    fun getPsiFieldDesc(psiField: PsiField): String {
-        val list = SmartList<String>()
-
-        val docComment = psiField.docComment
-        if (docComment != null) {
-            val comment = getNextSiblingByType(docComment.firstChild, JavaDocTokenType.DOC_COMMENT_DATA, false)
-                ?.text?.trim()
-
-            comment?.let { list.add(it) }
-        }
-
-        val annotation = psiField.getAnnotation(API_MODEL_PROPERTY_ANNO_NAME)
-        if (annotation != null) {
-            val attributeValue = annotation.findAttributeValue("value") as PsiLiteralExpression?
-
-            val desc = attributeValue?.value?.toString()?.trim()
-
-            desc?.let { list.add(it) }
-        }
-
-        return list.joinToString(" ")
-    }
-
-    fun convertToJsString(str: String): String {
-        return "`" + str.replace("\\", "\\\\").replace("`", "\\`") + "`"
-    }
-
-    fun convertReqBody(reqBody: Any?): Any? {
-        if (reqBody == null) {
-            return null
-        }
-
-        if (reqBody is String) {
-            return reqBody
-        }
-
-        return when (reqBody) {
-            is Pair<*, *> -> {
-                @Suppress("UNCHECKED_CAST")
-                val pair = reqBody as Pair<ByteArray, String>
-
-                pair.first
-            }
-
-            is MutableList<*> -> {
-                @Suppress("UNCHECKED_CAST")
-                val list = reqBody as MutableList<Pair<ByteArray, String>>
-
-                list.map { it.first }.reduce { a, b -> a + b }
-            }
-
-            else -> {
-                throw IllegalArgumentException(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
-            }
-        }
-
-    }
-
-    fun convertToReqBodyPublisher(reqBody: Any?): Pair<java.net.http.HttpRequest.BodyPublisher, Long> {
-        if (reqBody == null) {
-            return Pair(BodyPublishers.noBody(), 0L)
-        }
-
-        var multipartLength = 0L
-        val bodyPublisher: java.net.http.HttpRequest.BodyPublisher
-
-        when (reqBody) {
-            is String -> {
-                bodyPublisher = BodyPublishers.ofString(reqBody)
-            }
-
-            is Pair<*, *> -> {
-                @Suppress("UNCHECKED_CAST")
-                val pair = reqBody as Pair<ByteArray, String>
-
-                bodyPublisher = BodyPublishers.ofByteArray(pair.first)
-            }
-
-            is List<*> -> {
-                @Suppress("UNCHECKED_CAST")
-                val list = reqBody as MutableList<Pair<ByteArray, String>>
-
-                val byteArrays = list.map { it.first }
-
-                bodyPublisher = BodyPublishers.ofByteArrays(byteArrays)
-
-                multipartLength = byteArrays.sumOf { it.size.toLong() }
-            }
-
-            else -> {
-                System.err.println(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
-
-                bodyPublisher = BodyPublishers.noBody()
-            }
-        }
-
-        return Pair(bodyPublisher, multipartLength)
-    }
-
-    fun getReqBodyDesc(reqBody: Any?): MutableList<String> {
-        val maxSizeLimit = 50000
-        val descList = mutableListOf<String>()
-
-        when (reqBody) {
-            is String -> {
-                if (reqBody.length > maxSizeLimit) {
-                    descList.add(
-                        reqBody.substring(0, maxSizeLimit) + "$CR_LF......(${NlsBundle.nls("content.truncated")})"
-                    )
-                } else {
-                    descList.add(reqBody)
-                }
-            }
-
-            is Pair<*, *> -> {
-                @Suppress("UNCHECKED_CAST")
-                val pair = reqBody as Pair<ByteArray, String>
-
-                descList.add(pair.second)
-            }
-
-            is List<*> -> {
-                @Suppress("UNCHECKED_CAST")
-                val list = reqBody as MutableList<Pair<ByteArray, String>>
-
-                list.forEach {
-                    val desc = it.second
-
-                    val bodyDesc = if (desc.length > maxSizeLimit) {
-                        desc + "$CR_LF......(${NlsBundle.nls("content.truncated")})$CR_LF"
-                    } else {
-                        desc
-                    }
-
-                    descList.add(bodyDesc)
-                }
-            }
-        }
-
-        return descList
-    }
-
-    fun getVersionDesc(version: HttpClient.Version): String {
-        return if (version == HttpClient.Version.HTTP_1_1) {
-            "HTTP/1.1"
-        } else {
-            "HTTP/2"
-        }
-    }
-
-    fun pickMethodIcon(method: String): Icon {
-        try {
-            val methodType = HttpRequestEnum.getInstance(method)
-
-            return methodType.icon
-        } catch (_: UnsupportedOperationException) {
-            return HttpIcons.FILE
-        }
-    }
-
-    fun createGlobalVariableAndInsert(variableName: String, variableValue: String, project: Project): PsiElement? {
-        val textEditor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
-        val httpFile = PsiUtil.getPsiFile(project, textEditor.virtualFile) as HttpFile
-
-        val newGlobalVariable = createGlobalVariable(variableName, variableValue, project)
-
-        val directionComments = httpFile.getDirectionComments()
-        val globalHandler = httpFile.getGlobalHandler()
-
-        val elementCopy = if (directionComments.isNotEmpty()) {
-            httpFile.addAfter(newGlobalVariable, directionComments.last().nextSibling)
-        } else if (globalHandler != null) {
-            httpFile.addAfter(newGlobalVariable, globalHandler)
-        } else {
-            httpFile.addBefore(newGlobalVariable, httpFile.firstChild)
-        }
-
-        val whitespace = newGlobalVariable.nextSibling
-        elementCopy.add(whitespace)
-
-        val cr = whitespace.nextSibling
-        if (cr != null) {
-            elementCopy.add(cr)
-        }
-
-        return elementCopy
-    }
-
-    fun modifyFileGlobalVariable(
-        key: String,
-        newKey: String,
-        newValue: String,
-        add: Boolean,
-        project: Project,
-    ): Boolean {
-        return WriteCommandAction.runWriteCommandAction(project, Computable {
-            if (add) {
-                val variable = createGlobalVariableAndInsert(newKey, newValue, project)
-
-                variable != null
-            } else {
-                val textEditor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@Computable false
-
-                val httpFile = PsiUtil.getPsiFile(project, textEditor.virtualFile) as HttpFile
-                val children = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
-
-                val globalVariable = children
-                    .firstOrNull { it: HttpGlobalVariable -> it.globalVariableName?.name == key }
-                    ?: return@Computable false
-
-                if (key != newKey) {
-                    val renameProcessor = RenameProcessor(
-                        project, globalVariable, newKey,
-                        GlobalSearchScope.projectScope(project), false, true
-                    )
-                    renameProcessor.run()
-                }
-
-                val newGlobalVariable = createGlobalVariable(newKey, newValue, project)
-
-                globalVariable.replace(newGlobalVariable)
-            }
-
-            true
-        })
-    }
-
-    fun modifyJsVariable(newKey: String, newValue: String) {
-        setGlobalVariable(newKey, newValue)
-    }
-
-    fun modifyEnvVariable(
-        key: String,
-        newKey: String,
-        newValue: String,
-        add: Boolean,
-        project: Project,
-    ): Boolean {
-        val triple = HttpEditorTopForm.getTriple(project) ?: return false
-
-        val selectedEnv = triple.first
-        val httpFileParentPath = triple.second.parent.path
-
-        if (add) {
-            val jsonProperty = getEnvJsonProperty(selectedEnv, httpFileParentPath, project) ?: return false
-
-            val jsonValue = jsonProperty.value as? JsonObject ?: return false
-
-            WriteCommandAction.runWriteCommandAction(project) {
-                val newProperty = createStringProperty(project, newKey, newValue)
-                val newComma = getNextSiblingByType(newProperty, JsonElementTypes.COMMA, false)
-                val propertyList = jsonValue.propertyList
-
-                if (propertyList.isEmpty()) {
-                    jsonValue.addAfter(newProperty, jsonValue.firstChild)
-                } else {
-                    val psiElement = jsonValue.addAfter(newComma!!, propertyList[propertyList.size - 1])
-                    jsonValue.addAfter(newProperty, psiElement)
-                }
-            }
-        } else {
-            val jsonLiteral = getEnvEleLiteral(key, selectedEnv, httpFileParentPath, project) ?: return false
-
-            val jsonProperty = jsonLiteral.parent
-
-            if (key != newKey) {
-                val renameProcessor = RenameProcessor(
-                    project, jsonProperty, newKey,
-                    GlobalSearchScope.projectScope(project), false, true
-                )
-                renameProcessor.run()
-            }
-
-            WriteCommandAction.runWriteCommandAction(project) {
-                val newProperty = when (jsonLiteral) {
-                    is JsonNumberLiteral -> {
-                        createNumberProperty(project, newKey, newValue)
-                    }
-
-                    is JsonBooleanLiteral -> {
-                        createBoolProperty(project, newKey, newValue)
-                    }
-
-                    else -> {
-                        createStringProperty(project, newKey, newValue)
-                    }
-                }
-
-                jsonProperty.replace(newProperty)
-            }
-        }
-
-        return true
-    }
-
     fun getActiveValidProject(): Project? {
         val project = ProjectUtil.getActiveProject() ?: return null
         if (!project.isInitialized) {
@@ -1312,87 +758,6 @@ object HttpUtils {
         }
 
         return project
-    }
-
-    fun getUrlControllerMethod(jsonString: JsonStringLiteral): PsiMethod? {
-        val project = jsonString.project
-
-        if (!jsonString.isPropertyName) {
-            return null
-        }
-
-        return getUrlControllerMethod(jsonString, project)
-    }
-
-    fun getUrlControllerMethod(psiElement: PsiElement, project: Project): PsiMethod? {
-        val messageBody = InjectedLanguageManager.getInstance(project).getInjectionHost(psiElement)
-        if (messageBody !is HttpMessageBody) {
-            return null
-        }
-
-        val httpRequest = PsiTreeUtil.getParentOfType(messageBody, HttpRequest::class.java) ?: return null
-
-        val references = httpRequest.requestTarget?.references ?: return null
-        if (references.isEmpty()) {
-            return null
-        }
-
-        return references[0].resolve() as PsiMethod?
-    }
-
-    fun getUrlControllerMethodParamType(psiElement: PsiElement, controllerMethod: PsiMethod): PsiType? {
-        val virtualFile = PsiUtil.getVirtualFile(psiElement)
-
-        return if (virtualFile?.name?.endsWith("res.http") == true) {
-            controllerMethod.returnType
-        } else {
-            resolveTargetParam(controllerMethod)?.type
-        }
-    }
-
-    fun resolveUrlControllerTargetPsiClass(psiElement: PsiElement): PsiClass? {
-        val jsonProperty = PsiTreeUtil.getParentOfType(psiElement, JsonProperty::class.java)
-        val parentJsonProperty = PsiTreeUtil.getParentOfType(jsonProperty, JsonProperty::class.java)
-
-        val noParentProperty = parentJsonProperty == null
-
-        val jsonString = if (noParentProperty) {
-            psiElement
-        } else {
-            PsiTreeUtil.getChildOfType(parentJsonProperty, JsonStringLiteral::class.java)!!
-        }
-
-        val controllerMethod = getUrlControllerMethod(jsonString, jsonString.project) ?: return null
-
-        val paramPsiType = getUrlControllerMethodParamType(jsonString, controllerMethod)
-
-        val paramPsiCls = PsiTypeUtils.resolvePsiType(paramPsiType) ?: return null
-
-        if (noParentProperty) {
-            return paramPsiCls
-        }
-
-        val classGenericParameters = (paramPsiType as PsiClassReferenceType).parameters
-
-        val jsonPropertyNameLevels = collectJsonPropertyNameLevels(jsonString as JsonStringLiteral)
-
-        val targetField = resolveTargetField(paramPsiCls, jsonPropertyNameLevels, classGenericParameters) ?: return null
-
-        val psiType = targetField.type
-
-        val psiClass = PsiTypeUtils.resolvePsiType(psiType)
-
-        val isCollection = InheritanceUtil.isInheritor(psiClass, "java.util.Collection")
-        return if (isCollection) {
-            val parameters = (psiType as PsiClassReferenceType).parameters
-            if (parameters.size > 0) {
-                PsiTypeUtils.resolvePsiType(parameters[0])
-            } else {
-                null
-            }
-        } else {
-            psiClass
-        }
     }
 
 }
