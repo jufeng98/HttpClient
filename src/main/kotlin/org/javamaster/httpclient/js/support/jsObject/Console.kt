@@ -1,12 +1,15 @@
-package org.javamaster.httpclient.js.support
+package org.javamaster.httpclient.js.support.jsObject
 
-import org.javamaster.httpclient.js.GlobalLog
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.js.support.GlobalLog
+import org.javamaster.httpclient.utils.JsonUtils.gsonNotPretty
 import org.mozilla.javascript.NativeArray
 import org.mozilla.javascript.NativeJavaMethod
 import org.mozilla.javascript.NativeObject
 import org.mozilla.javascript.Scriptable
 
+/**
+ * @author yudong
+ */
 @Suppress("unused")
 object Console {
 
@@ -18,7 +21,7 @@ object Console {
 
             if (it is Scriptable) {
                 if (it is NativeArray) {
-                    "(${it.size}) " + HttpUtils.gsonNotPretty.toJson(it)
+                    "(${it.size}) " + gsonNotPretty.toJson(it)
                 } else if (it is NativeObject) {
                     it.className + " {" + it.entries.joinToString(", ") {
                         "" + it.key + ": " +
@@ -28,7 +31,7 @@ object Console {
                                     it.value
                     } + "}"
                 } else {
-                    HttpUtils.gsonNotPretty.toJson(it)
+                    gsonNotPretty.toJson(it)
                 }
             } else {
                 "" + it
