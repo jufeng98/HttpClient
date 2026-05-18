@@ -5,13 +5,14 @@ import com.intellij.execution.configurations.SimpleConfigurationType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.NotNullLazyValue
 import org.javamaster.httpclient.HttpIcons
+import org.javamaster.httpclient.consts.HttpConsts.Companion.HTTP_TYPE_ID
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * @author yudong
  */
 class HttpConfigurationFactory : SimpleConfigurationType(
-    HttpUtils.HTTP_TYPE_ID,
+    HTTP_TYPE_ID,
     "HttpClient",
     "Use to send request",
     NotNullLazyValue.createConstantValue(HttpIcons.FILE)

@@ -8,7 +8,7 @@ import com.intellij.ide.projectView.PresentationData
 import com.intellij.psi.PsiElement
 import com.intellij.ui.SimpleTextAttributes
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.HttpUtils.getTargetHttpMethod
 
 /**
@@ -49,7 +49,7 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
 
         val status = processHandler.httpStatus ?: return false
 
-        val icon = HttpUtils.pickMethodIcon(processHandler.httpMethod.text)
+        val icon = MyPsiUtils.pickMethodIcon(processHandler.httpMethod.text)
 
         presentation.setIcon(icon)
 

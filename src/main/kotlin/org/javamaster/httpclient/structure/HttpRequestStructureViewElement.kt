@@ -20,7 +20,7 @@ import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.HttpUtils.getTabName
 import javax.swing.Icon
 
@@ -139,7 +139,7 @@ class HttpRequestStructureViewElement private constructor(
             val method = request.method
             tabName = getTabName(method)
 
-            val icon = HttpUtils.pickMethodIcon(method.text)
+            val icon = MyPsiUtils.pickMethodIcon(method.text)
 
             children.add(
                 create(request, tabName, location.toString(), icon, StringUtil.isNotEmpty(originalHost))

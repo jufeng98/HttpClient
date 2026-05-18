@@ -6,7 +6,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.reference.support.JsonKeyControllerMethodFieldPsiReference
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 
 /**
  * @author yudong
@@ -16,7 +16,7 @@ class JsonKeyControllerMethodFieldPsiReferenceProvider : PsiReferenceProvider() 
     override fun getReferencesByElement(element: PsiElement, context: ProcessingContext): Array<PsiReference> {
         val jsonString = element as JsonStringLiteral
 
-        val controllerMethod = HttpUtils.getUrlControllerMethod(jsonString) ?: return emptyArray()
+        val controllerMethod = MyPsiUtils.getUrlControllerMethod(jsonString) ?: return emptyArray()
 
         val textRange = jsonString.textRange
         val range = textRange.shiftLeft(textRange.startOffset)

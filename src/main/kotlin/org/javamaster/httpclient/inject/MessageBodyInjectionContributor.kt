@@ -17,7 +17,7 @@ import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.utils.InjectionUtils
 
 /**
@@ -57,7 +57,7 @@ class MessageBodyInjectionContributor : MultiHostInjector {
 
         val text = host.text
         val length = text.length
-        if (length > HttpUtils.RES_SIZE_LIMIT) {
+        if (length > RES_SIZE_LIMIT) {
             // 大文本不再注入语言，防止 IDEA 卡顿
             return
         }

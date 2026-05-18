@@ -25,9 +25,9 @@ import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.scan.support.Request
-import org.javamaster.httpclient.utils.HttpUtils
-import org.javamaster.httpclient.utils.HttpUtils.REQUEST_BODY_ANNO_NAME
-import org.javamaster.httpclient.utils.HttpUtils.gson
+import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_BODY_ANNO_NAME
+import org.javamaster.httpclient.utils.JsonUtils.gson
+import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.PsiTypeUtils
 
 /**
@@ -79,7 +79,7 @@ class HttpInlayActionHandler : InlayActionHandler {
 
     private fun createRequest(project: Project, request: Request) {
         val psiMethod = request.psiElement!!
-        val methodDesc = HttpUtils.getMethodDesc(psiMethod)
+        val methodDesc = MyPsiUtils.getMethodDesc(psiMethod)
         val httpMethod = request.method
         val lightVirtualFile = LightVirtualFile("TemporaryHttpFile.http")
 

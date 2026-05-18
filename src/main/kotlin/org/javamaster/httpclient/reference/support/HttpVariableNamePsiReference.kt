@@ -15,7 +15,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.completion.support.SlashEndInsertHandler
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.js.JsHelper
+import org.javamaster.httpclient.js.support.GlobalVariables
 import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpFilePath
@@ -24,7 +24,9 @@ import org.javamaster.httpclient.psi.HttpVariableName
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.utils.EnvUtils
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 import java.nio.file.Paths
 import javax.swing.Icon
 
@@ -121,7 +123,7 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                 return null
             }
 
-            val fileGlobalVariable = HttpUtils.resolveFileGlobalVariable(variableName, httpFile)
+            val fileGlobalVariable = EnvUtils.resolveFileGlobalVariable(variableName, httpFile)
             if (fileGlobalVariable != null) {
                 return fileGlobalVariable
             }
@@ -140,9 +142,9 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                 return jsonProperty
             }
 
-            val value = JsHelper.getJsGlobalVariable(variableName)
+            var value = GlobalVariables.dataHolder[variableName]
             if (value != null) {
-                return JsGlobalVariableValueFakePsiElement(element, variableName, value)
+                return JsGlobalVariableValueFakePsiElement(element, variableName, value.toString())
             }
 
             return null
@@ -158,7 +160,7 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
             val requestBlock = PsiTreeUtil.getParentOfType(element, HttpRequestBlock::class.java) ?: return null
 
             if (searchInPreJs) {
-                val scriptBodyList = HttpUtils.getAllPreJsScripts(httpFile, requestBlock).reversed()
+                val scriptBodyList = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock).reversed()
 
                 val jsVariable = JsFacade.resolveJsVariable(variableName, project, scriptBodyList)
                 if (jsVariable != null) {
@@ -173,7 +175,7 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                 }
             }
 
-            val scriptBodyList = HttpUtils.getAllPostJsScripts(httpFile)
+            val scriptBodyList = MyPsiUtils.getAllPostJsScripts(httpFile)
 
             return JsFacade.resolveJsVariable(variableName, project, scriptBodyList)
         }

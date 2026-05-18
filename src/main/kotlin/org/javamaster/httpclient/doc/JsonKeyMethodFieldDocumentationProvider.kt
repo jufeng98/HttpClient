@@ -8,7 +8,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiFile
-import org.javamaster.httpclient.utils.HttpUtils.API_MODEL_PROPERTY_ANNO_NAME
+import org.javamaster.httpclient.consts.HttpConsts.Companion.API_MODEL_PROPERTY_ANNO_NAME
 import org.javamaster.httpclient.utils.HttpUtils.generateAnno
 
 /**

@@ -14,7 +14,7 @@ import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequestBlock
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 import java.util.*
 
 /**
@@ -32,7 +32,7 @@ class JsonFoldingBuilder : FoldingBuilder, DumbAware {
         }
 
         val requestBlock = PsiTreeUtil.getParentOfType(injectionHost, HttpRequestBlock::class.java)!!
-        val paramMap = HttpUtils.getReqDirectionCommentParamMap(requestBlock)
+        val paramMap = MyPsiUtils.getReqDirectionCommentParamMap(requestBlock)
 
         if (!paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
             return FoldingDescriptor.EMPTY_ARRAY

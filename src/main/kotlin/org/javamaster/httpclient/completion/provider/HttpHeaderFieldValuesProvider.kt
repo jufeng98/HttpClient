@@ -10,7 +10,7 @@ import org.javamaster.httpclient.completion.support.HttpHeadersDictionary.header
 import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.utils.DubboUtils
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 
 /**
  * @author yudong
@@ -62,7 +62,7 @@ class HttpHeaderFieldValuesProvider : CompletionProvider<CompletionParameters>()
 
             interfacePsiClass.methods
                 .forEach {
-                    val desc = HttpUtils.getMethodDesc(it)
+                    val desc = MyPsiUtils.getMethodDesc(it)
                     val builder = LookupElementBuilder.create(it.name).withBoldness(true)
                         .withPsiElement(it).withTailText(it.parameterList.text)
                         .withTypeText(it.returnTypeElement?.text + " " + desc)

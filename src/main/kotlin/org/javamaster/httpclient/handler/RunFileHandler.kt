@@ -15,8 +15,8 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.ui.HttpEditorTopForm
-import org.javamaster.httpclient.utils.HttpUtils
-import org.javamaster.httpclient.utils.HttpUtils.FAILED
+import org.javamaster.httpclient.consts.HttpConsts
+import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
 import org.javamaster.httpclient.utils.NotifyUtil
 import java.util.concurrent.TimeUnit
 
@@ -53,7 +53,7 @@ object RunFileHandler {
 
         application.executeOnPooledThread {
             for (it in httpMethods) {
-                it.putUserData(HttpUtils.requestFinishedKey, null)
+                it.putUserData(HttpConsts.requestFinishedKey, null)
 
                 runInEdt {
                     if (!it.isValid) {
@@ -69,10 +69,10 @@ object RunFileHandler {
                     httpProgramRunner.executeFromGutter(it, null)
                 }
 
-                var code = it.getUserData(HttpUtils.requestFinishedKey)
+                var code = it.getUserData(HttpConsts.requestFinishedKey)
                 while (code == null && !interruptFlag) {
                     Thread.sleep(600)
-                    code = it.getUserData(HttpUtils.requestFinishedKey)
+                    code = it.getUserData(HttpConsts.requestFinishedKey)
                 }
 
                 if (interruptFlag) {

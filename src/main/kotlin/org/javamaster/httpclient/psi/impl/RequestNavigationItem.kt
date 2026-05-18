@@ -4,7 +4,7 @@ import com.intellij.navigation.ItemPresentation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.scan.support.Request
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 import javax.swing.Icon
 
 /**
@@ -54,7 +54,7 @@ class RequestNavigationItem(val request: Request) :
         override fun getPresentableText(): String {
             val psiMethod = request.psiElement!!
 
-            var str = HttpUtils.getMethodDesc(psiMethod)
+            var str = MyPsiUtils.getMethodDesc(psiMethod)
 
             str = if (str.isNotEmpty()) {
                 "($str)"

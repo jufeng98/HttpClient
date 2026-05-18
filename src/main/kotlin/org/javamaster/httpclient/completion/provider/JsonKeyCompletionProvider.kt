@@ -8,8 +8,8 @@ import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.utils.DubboUtils.fillTargetDubboMethodParams
 import org.javamaster.httpclient.utils.DubboUtils.getTargetPsiFieldClass
-import org.javamaster.httpclient.utils.HttpUtils
-import org.javamaster.httpclient.utils.HttpUtils.resolveUrlControllerTargetPsiClass
+import org.javamaster.httpclient.utils.MyPsiUtils
+import org.javamaster.httpclient.utils.MyPsiUtils.Companion.resolveUrlControllerTargetPsiClass
 import org.javamaster.httpclient.utils.PsiTypeUtils
 
 /**
@@ -52,7 +52,7 @@ class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
                     return@forEach
                 }
 
-                val typeText = it.type.presentableText + " " + HttpUtils.getPsiFieldDesc(it)
+                val typeText = it.type.presentableText + " " + MyPsiUtils.getPsiFieldDesc(it)
 
                 val builder = LookupElementBuilder
                     .create(it)
