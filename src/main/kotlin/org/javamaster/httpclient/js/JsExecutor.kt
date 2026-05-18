@@ -4,30 +4,32 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.annos.JsBridge
-import org.javamaster.httpclient.crypto.CryptoSupport
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.js.support.*
+import org.javamaster.httpclient.js.support.req.HttpClientRequest
+import org.javamaster.httpclient.js.support.req.RequestBody
+import org.javamaster.httpclient.js.support.req.RequestHeaders
+import org.javamaster.httpclient.js.support.req.RequestUrl
+import org.javamaster.httpclient.js.support.req.RequestVariables
+import org.javamaster.httpclient.js.support.res.HttpClientRequestRes
+import org.javamaster.httpclient.js.support.res.HttpClientResponse
+import org.javamaster.httpclient.js.support.res.ResponseHeaders
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpScriptBody
-import org.javamaster.httpclient.resolve.VariableResolver.Companion.ENV_PREFIX
-import org.javamaster.httpclient.resolve.VariableResolver.Companion.PROPERTY_PREFIX
-import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
-import org.javamaster.httpclient.utils.HttpUtils.gson
+import org.javamaster.httpclient.utils.ReqUtils
 import org.mozilla.javascript.*
+import org.mozilla.javascript.json.JsonParser
 import org.xml.sax.InputSource
 import java.io.FileNotFoundException
 import java.io.StringReader
-import java.nio.charset.StandardCharsets
 import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.xpath.XPathFactory
 
 /**
  * Execute the previous and post request js scripts (always executed in the EDT thread)
@@ -35,29 +37,31 @@ import javax.xml.xpath.XPathFactory
  * @author yudong
  */
 class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: String) {
-    val reqScriptableObject: ScriptableObject
-    private val originalJavaBridge: JavaBridge
+    val reqScriptableObject: ScriptableObject = context.initStandardObjects()
+    private var request: HttpClientRequest? = null
 
     init {
-        val scriptableObject = context.initStandardObjects()
-        scriptableObject.prototype = global
+        reqScriptableObject.prototype = global
 
-        // Register js bridge object javaBridge
-        originalJavaBridge = JavaBridge(this)
-        val javaBridge = Context.javaToJS(originalJavaBridge, scriptableObject)
-        ScriptableObject.putProperty(scriptableObject, "javaBridge", javaBridge)
+        JsHandlerPredefineRequestVariables.defineJavaBridge(reqScriptableObject, this)
 
-        context.evaluateString(scriptableObject, javaBridgeJsStr, "javaBridge.js", 1, null)
+        JsHandlerPredefineRequestVariables.defineRandom(reqScriptableObject)
 
-        context.evaluateString(scriptableObject, initRequestJsStr, "initRequest.js", 1, null)
+        JsHandlerPredefineRequestVariables.defineConsole(reqScriptableObject)
 
-        val jsonJs = """
-            $PROPERTY_PREFIX = ${gson.toJson(System.getProperties())};
-            $ENV_PREFIX = ${gson.toJson(System.getenv())};
-        """.trimIndent()
-        context.evaluateString(scriptableObject, jsonJs, "initPropertiesAndEnv.js", 1, null)
+        JsHandlerPredefineRequestFunctions.defineDateFunc(reqScriptableObject, this)
 
-        reqScriptableObject = scriptableObject
+        JsHandlerPredefineRequestFunctions.defineTimestampDateFunc(reqScriptableObject, this)
+
+        JsHandlerPredefineRequestFunctions.defineTimestampFullFunc(reqScriptableObject, this)
+
+        JsHandlerPredefineRequestFunctions.defineBase64ToFileFunc(reqScriptableObject, this)
+
+        JsHandlerPredefineRequestFunctions.defineFileToBase64Func(reqScriptableObject, this)
+
+        JsHandlerPredefineRequestFunctions.defineReadStringFunc(reqScriptableObject, this)
+
+        JsHandlerPredefineRequestFunctions.defineRequireFunc(reqScriptableObject, this)
     }
 
     fun initJsRequestObj(
@@ -73,13 +77,14 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         val environment = reqInfo.environment
         environment["selectedEnv"] = selectedEnv ?: ""
 
-        val jsBody = HttpUtils.convertReqBody(reqInfo.reqBody)
+        val jsBody = ReqUtils.convertReqBody(reqInfo.reqBody)
 
-        val request = HttpClientRequest(
+        request = HttpClientRequest(
             environment,
             RequestUrl(url, rawUrl),
             RequestBody(jsBody, rawBody),
             method.name,
+            RequestVariables(),
             fileScopeVariableMap,
             RequestHeaders(reqHeaderMap),
         )
@@ -197,23 +202,18 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         try {
             GlobalLog.setTabName(tabName)
 
-            val jsBody = HttpUtils.convertReqBody(reqBody)
+            val jsBody = ReqUtils.convertReqBody(reqBody)
 
             val body: Any
             val typeEnum = httpResInfo.simpleTypeEnum
             when (typeEnum) {
                 SimpleTypeEnum.JSON -> {
-                    body = NativeObject()
-
-                    val bodyMap = gson.fromJson(httpResInfo.bodyStr!!, Map::class.java)
-                    body.putAll(bodyMap)
+                    body = JsonParser(context, global).parseValue(httpResInfo.bodyStr!!)
                 }
 
                 SimpleTypeEnum.XML -> {
                     val xmlStr = httpResInfo.bodyStr!!
-
                     val documentBuilder = documentBuilderFactory.newDocumentBuilder()
-
                     body = documentBuilder.parse(InputSource(StringReader(xmlStr)))
                 }
 
@@ -257,8 +257,6 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     private fun evalJs(jsStr: String, rowNum: Int, fileName: String, scriptableObject: ScriptableObject) {
         try {
             context.evaluateString(scriptableObject, jsStr, fileName, rowNum, null)
-
-            JsGlobalVariableMap = getJsGlobalVariables()
         } catch (e: WrappedException) {
             System.err.println("WrappedException")
             e.printStackTrace()
@@ -297,16 +295,11 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     }
 
     fun getRequestVariable(key: String): String? {
-        if (!ScriptableObject.hasProperty(reqScriptableObject, "request")) {
+        val res = request?.variables?.get(key)
+        if (res == null) {
             return null
         }
 
-        val hasKey = ScriptableObject.callMethod(reqScriptableObject, "hasRequestVariableKey", arrayOf(key)) as Boolean
-        if (!hasKey) {
-            return null
-        }
-
-        val res = ScriptableObject.callMethod(reqScriptableObject, "getRequestVariable", arrayOf(key)) ?: return "null"
         return res.toString()
     }
 
@@ -329,87 +322,38 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         return map
     }
 
-    fun getHeaderMap(): LinkedMultiValueMap<String, String> {
-        return originalJavaBridge.headerMap
-    }
-
     companion object {
         private val libraryLoadedMap = mutableMapOf<String, ScriptableObject>()
         private val pair by lazy {
-            val context: Context = Context.enter()
-            val global: ScriptableObject = context.initStandardObjects()
+            val contextTmp = Context.enter()
+            val globalTmp = contextTmp.initStandardObjects()
 
-            global.defineProperty("CONTENT_TRUNCATED", nls("content.truncated"), ScriptableObject.READONLY)
+            JsHandlerPredefineGlobalVariables.defineWindow(globalTmp)
 
-            // 改为使用 Java 实现 Crypto 相关
-            // var url = Companion::class.java.classLoader.getResource("js/crypto-js.js")!!
-            // var jsStr = url.readText(StandardCharsets.UTF_8)
-            // context.evaluateString(global, jsStr, "crypto-js.js", 1, null)
-            // Register CryptoJS object
-            // global.prototype.put("CryptoJS", global, global.get("CryptoJS"))
+            JsHandlerPredefineGlobalVariables.defineSystemProperty(globalTmp, contextTmp)
 
-            val globalLog = Context.javaToJS(GlobalLog, global)
-            ScriptableObject.putProperty(global, "globalLog", globalLog)
+            JsHandlerPredefineGlobalVariables.defineSystemEnv(globalTmp, contextTmp)
 
-            val console = Context.javaToJS(Console, global)
-            ScriptableObject.putProperty(global, "console", console)
+            JsHandlerPredefineGlobalVariables.defineCrypto(globalTmp)
 
-            val crypto = Context.javaToJS(CryptoSupport, global)
-            ScriptableObject.putProperty(global, "crypto", crypto)
+            JsHandlerPredefineGlobalVariables.defineURLSearchParams(globalTmp, contextTmp)
 
-            val paramsClass = URLSearchParams::class.java
-            ScriptableObject.putProperty(
-                global,
-                paramsClass.simpleName,
-                context.getWrapFactory().wrapJavaClass(context, global, paramsClass)
-            )
+            JsHandlerPredefineGlobalVariables.defineClient(globalTmp)
 
-            val client = Context.javaToJS(HttpRequest, global)
-            ScriptableObject.putProperty(global, "client", client)
+            JsHandlerPredefineGlobalFunctions.defineXpathFunc(globalTmp)
 
-            val url = Companion::class.java.classLoader.getResource("js/initGlobal.js")!!
-            val jsStr = url.readText(StandardCharsets.UTF_8)
-            context.evaluateString(global, jsStr, "initGlobal.js", 1, null)
+            JsHandlerPredefineGlobalFunctions.defineJsonPathFunc(globalTmp)
 
-            JsHelper.alreadyInit()
-
-            Pair(context, global)
+            Pair(contextTmp, globalTmp)
         }
         val context: Context = pair.first
         val global: ScriptableObject = pair.second
-
-        private val javaBridgeJsStr by lazy {
-            JavaBridge::class.java.declaredMethods
-                .joinToString(CR_LF) {
-                    val jsBridge = it.getAnnotation(JsBridge::class.java) ?: return@joinToString ""
-                    """
-                        function ${jsBridge.jsFun} {
-                            return javaBridge.${jsBridge.jsFun};                    
-                        }
-                    """.trimIndent()
-                }
-        }
-
-        private val initRequestJsStr by lazy {
-            val url = Companion::class.java.classLoader.getResource("js/initRequest.js")!!
-            url.readText(StandardCharsets.UTF_8)
-        }
 
         @Suppress("HttpUrlsUsage")
         private val documentBuilderFactory by lazy {
             val factory = DocumentBuilderFactory.newInstance()
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
             factory
-        }
-
-        val xPathFactory: XPathFactory by lazy {
-            XPathFactory.newInstance()
-        }
-
-        var JsGlobalVariableMap: Map<String, String>? = null
-
-        fun setGlobalVariable(key: String, value: String) {
-            GlobalVariables.set(key, value)
         }
     }
 }
