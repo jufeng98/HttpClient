@@ -17,22 +17,20 @@ import kotlin.Pair;
 import kotlin.Triple;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.js.JsExecutor;
+import org.javamaster.httpclient.js.support.GlobalVariables;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.resolve.VariableResolver;
-import org.javamaster.httpclient.utils.HttpUtils;
+import org.javamaster.httpclient.utils.EnvUtils;
 import org.javamaster.httpclient.utils.NotifyUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 import static org.javamaster.httpclient.resolve.VariableResolver.ENV_PREFIX;
 import static org.javamaster.httpclient.resolve.VariableResolver.PROPERTY_PREFIX;
@@ -167,7 +165,7 @@ public class ViewVariableForm extends DialogWrapper {
                 try {
                     switch (type) {
                         case TYPE_GLOBAL:
-                            boolean success = HttpUtils.INSTANCE.modifyFileGlobalVariable(key, newKey, newValue, add, project);
+                            boolean success = EnvUtils.Companion.modifyFileGlobalVariable(key, newKey, newValue, add, project);
 
                             if (success) {
                                 PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
@@ -175,13 +173,13 @@ public class ViewVariableForm extends DialogWrapper {
 
                             break;
                         case TYPE_JS:
-                            HttpUtils.INSTANCE.modifyJsVariable(newKey, newValue);
+                            GlobalVariables.INSTANCE.set(newKey, newValue);
 
                             PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
 
                             break;
                         case TYPE_ENV:
-                            boolean success1 = HttpUtils.INSTANCE.modifyEnvVariable(key, newKey, newValue, add, project);
+                            boolean success1 = EnvUtils.Companion.modifyEnvVariable(key, newKey, newValue, add, project);
 
                             if (success1) {
                                 PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);

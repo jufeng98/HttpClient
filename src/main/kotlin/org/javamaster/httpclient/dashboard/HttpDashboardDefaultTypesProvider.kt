@@ -3,12 +3,12 @@ package org.javamaster.httpclient.dashboard
 import com.intellij.execution.dashboard.RunDashboardDefaultTypesProvider
 import com.intellij.openapi.project.Project
 import com.intellij.util.SmartList
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.consts.HttpConsts.Companion.HTTP_TYPE_ID
 
 class HttpDashboardDefaultTypesProvider : RunDashboardDefaultTypesProvider {
 
     override fun getDefaultTypeIds(project: Project): MutableCollection<String> {
-        return SmartList(HttpUtils.HTTP_TYPE_ID)
+        return SmartList(HTTP_TYPE_ID)
     }
 
 }

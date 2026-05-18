@@ -13,8 +13,9 @@ import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import org.javamaster.httpclient.utils.JsonUtils.gson
 import org.javamaster.httpclient.utils.PsiTypeUtils
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
@@ -54,7 +55,7 @@ class DubboRequest(
         values[0]
     }
     private val reqBodyMap: LinkedHashMap<*, *>? = if (reqBodyStr != null) {
-        HttpUtils.gson.fromJson(reqBodyStr as String, LinkedHashMap::class.java)
+        gson.fromJson(reqBodyStr as String, LinkedHashMap::class.java)
     } else {
         null
     }
@@ -201,7 +202,7 @@ class DubboRequest(
                 }
                 val consumeTimes = System.currentTimeMillis() - start
 
-                val resJsonStr = HttpUtils.gson.toJson(result)
+                val resJsonStr = gson.toJson(result)
 
                 val byteArray = resJsonStr.toByteArray(StandardCharsets.UTF_8)
 
@@ -217,7 +218,7 @@ class DubboRequest(
         reference.isGeneric = true
         reference.application = application
         reference.setInterface(targetInterfaceName)
-        val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toInt() ?: HttpUtils.TIMEOUT
+        val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toInt() ?: TIMEOUT
         reference.timeout = timeout
         reference.retries = 1
         reference.isCheck = false

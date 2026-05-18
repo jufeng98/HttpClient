@@ -11,7 +11,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.EnvUtils
 
 /**
  * @author yudong
@@ -31,7 +31,7 @@ class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickF
             return
         }
 
-        val elementCopy = HttpUtils.createGlobalVariableAndInsert(variableName, "", project) ?: return
+        val elementCopy = EnvUtils.createGlobalVariableAndInsert(variableName, "", project) ?: return
 
         (elementCopy.lastChild as Navigatable).navigate(true)
         val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
