@@ -22,7 +22,7 @@
     request.headers.add('Set-Cookie', request.environment.get("token2"));
 
     const secret = "RHDcnjfmkES"
-    const signSource = secret + request.body.string() + secret;
+    const signSource = secret + request.body.tryGetSubstituted() + secret;
     // Use builtin crypto object 使用内置的 crypto 对象
     const sign = crypto.md5().updateWithText(signSource).digest().toHex();
     request.variables.set('sign', sign);
@@ -71,10 +71,7 @@ GET https://miao.baidu.com/abdr
 > {%
     client.test("Request executed successfully", () => {
         client.assert(response.status === 200, "Response status is not 200");
-        client.log('content-type:' + response.headers['content-type'])
-
-        const res = response.body.jsonPath.evaluate("$.code");
-        console.log(res);
+        client.log('content-type:' + response.contentType.mimeType)
 
         const result = jsonPath(response.body, "$.code");
         console.log(result);
@@ -95,7 +92,7 @@ GET https://miao.baidu.com/abdr
 
 > {%
     client.test("Content-Type is application/json", () => {
-        const mimeType = response.headers.contentType.mimeType;
+        const mimeType = response.contentType.mimeType;
         client.assert(mimeType === "application/json", `Expected Content-Type is application/json, but actual is  ${mimeType}`);
     })
 %}
@@ -106,9 +103,6 @@ GET https://examples.http-client.intellij.net/xml
 > {%
     const slide = response.body.getElementsByTagName("slide").item(0).textContent
     client.log("textContent:", slide)
-
-    const title = response.body.xpath.evaluate("/slideshow/slide/title")
-    console.log("xPath title:", title)
 
     const result = xpath(response.body, "/slideshow/slide/title")
     console.log("xPath result:", result)
