@@ -34,7 +34,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %type IElementType
 %unicode
 //%debug
-%state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_NAME, IN_DIRECTION_VALUE
+%state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_NAME, IN_DIRECTION_VALUE, IN_RUN, IN_IMPORT
 %state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_MULTILINE_QUERY, IN_BODY_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE, IN_TRIM_PREFIX_ONLY_SPACE
 %xstate IN_PATH, IN_JSON_VALUE
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
@@ -53,14 +53,16 @@ WHITE_SPACE=\s+
 LINE_COMMENT="//"[^\r\n]*
 BLOCK_COMMENT="/*" !([^]* "*/" [^]*) ("*/")?
 REQUEST_COMMENT=###.*
-REQUEST_METHOD=[A-Z_]+
+REQUEST_METHOD=[A-Za-z_]+
+RUN=run[ ]*
+IMPORT=import[ ]*
 SCHEMA_PART=https|wss|http|ws|dubbo
 HOST_VALUE=[a-zA-Z0-9\-.]+
 PORT_SEGMENT=[0-9]+
 SEGMENT=[a-zA-Z_0-9]+
 QUERY_PART=[^#&=/{\s]+
 FRAGMENT_PART=[^\s]+
-HTTP_VERSION=HTTP\/[0-9]+\.[0-9]+
+HTTP_VERSION=HTTP\/[0-9]+\.?[0-9]*
 FIELD_NAME=[a-zA-Z0-9_\-]+
 FIELD_VALUE=[^\r\n{ ]+
 FILE_PATH_PART=[^\r\n<>{}]+
@@ -80,7 +82,19 @@ STRING=('([^'])*'|\"([^\"])*\")
   "< {%"{EOL_MULTI}           { yybegin(IN_PRE_SCRIPT); return IN_START_SCRIPT_BRACE; }
   "@"                         { yybegin(IN_GLOBAL_VARIABLE); return AT; }
   {REQUEST_METHOD}            { yybegin(IN_FIRST_LINE); return REQUEST_METHOD; }
+  {RUN}                       { yybegin(IN_RUN); return RUN; }
+  {IMPORT}                    { yybegin(IN_IMPORT); return IMPORT; }
   {WHITE_SPACE}               { return WHITE_SPACE; }
+}
+
+<IN_RUN> {
+  {FILE_PATH_PART}           { return FILE_PATH_PART; }
+  {WHITE_SPACE}              { yybegin(YYINITIAL); return WHITE_SPACE; }
+}
+
+<IN_IMPORT> {
+  {FILE_PATH_PART}           { return FILE_PATH_PART; }
+  {WHITE_SPACE}              { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 
 <IN_GLOBAL_SCRIPT> {
