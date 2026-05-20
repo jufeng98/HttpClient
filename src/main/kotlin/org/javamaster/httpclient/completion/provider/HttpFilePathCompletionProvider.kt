@@ -11,13 +11,13 @@ import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.ProcessingContext
+import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.completion.support.SlashInsertHandler
 import org.javamaster.httpclient.enums.ParamEnum
-import org.javamaster.httpclient.psi.HttpDirectionComment
-import org.javamaster.httpclient.psi.HttpDirectionValue
-import org.javamaster.httpclient.psi.HttpFilePath
-import org.javamaster.httpclient.psi.HttpVariable
+import org.javamaster.httpclient.parser.HttpFile
+import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.reference.support.HttpVariableNamePsiReference
+import org.javamaster.httpclient.utils.MyPsiUtils
 import java.io.File
 
 /**
@@ -31,14 +31,33 @@ class HttpFilePathCompletionProvider : CompletionProvider<CompletionParameters>(
         result: CompletionResultSet,
     ) {
         val psiElement = parameters.position
-        val parent = psiElement.parent.parent
-        val parentParent = parent.parent
+        val parent = psiElement.parent?.parent ?: return
+        val parentParent = parent.parent ?: return
 
-        if (parentParent is HttpDirectionComment && !ParamEnum.isFilePathParam(parentParent.directionName?.text)) {
+        if (parentParent is HttpDirectionComment && ParamEnum.isFilePathParam(parentParent.directionName?.text)) {
+            fillFilePaths(parent, parentParent, result)
             return
         }
 
-        val virtualFile = PsiUtil.getVirtualFile(psiElement) ?: return
+        if (parentParent is HttpGlobalImport) {
+            fillFilePaths(parent, parentParent, result)
+            return
+        }
+
+        if (parentParent is HttpRunCommand) {
+            fillFilePaths(parent, parentParent, result)
+            fillHttpFileRequests(parentParent, result)
+            return
+        }
+
+    }
+
+    private fun fillFilePaths(
+        parent: PsiElement,
+        parentParent: PsiElement,
+        result: CompletionResultSet,
+    ) {
+        val virtualFile = PsiUtil.getVirtualFile(parentParent) ?: return
 
         val variables = findVariables(parent)
         if (!variables.isEmpty()) {
@@ -68,6 +87,26 @@ class HttpFilePathCompletionProvider : CompletionProvider<CompletionParameters>(
             }
 
             fillRootPaths(root, result)
+        }
+    }
+
+    private fun fillHttpFileRequests(
+        parentParent: PsiElement,
+        result: CompletionResultSet,
+    ) {
+        val virtualFile = PsiUtil.getVirtualFile(parentParent) ?: return
+
+        if (virtualFile.fileType != HttpFileType.INSTANCE) return
+
+        val httpFile = PsiUtil.getPsiFile(parentParent.project, virtualFile) as HttpFile
+
+        val pairs = MyPsiUtils.getImportFileHttpRequests(httpFile)
+
+        pairs.forEach {
+            var comment = it.first.text
+            val method = it.second.text
+            val tabName = comment.substring(3).trim()
+            result.addElement(LookupElementBuilder.create("#$method $tabName"))
         }
     }
 
