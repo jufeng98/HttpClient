@@ -15,8 +15,12 @@ import com.intellij.psi.*
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.apache.http.HttpHeaders.CONTENT_TYPE
+import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VARIABLE_SIGN_END
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService
@@ -29,8 +33,6 @@ import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.ui.HttpEditorTopForm
-import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
-import org.javamaster.httpclient.consts.HttpConsts.Companion.VARIABLE_SIGN_END
 import org.javamaster.httpclient.utils.JsonUtils.formatJson
 import org.javamaster.httpclient.utils.ReqUtils.Companion.encodeQueryParam
 import org.javamaster.httpclient.utils.ReqUtils.Companion.handleQueryParam
@@ -53,7 +55,7 @@ object HttpUtils {
         val comment = requestBlock.comment
         if (comment != null) {
             val text = comment.text
-            val tabName = text.substring(3, text.length).trim()
+            val tabName = text.substring(3).trim()
             if (tabName.isNotEmpty()) {
                 return tabName
             }
@@ -611,6 +613,23 @@ object HttpUtils {
         return virtualFile?.nameWithoutExtension?.endsWith("history") == true
     }
 
+    fun isRunTabName(path: String): Boolean {
+        return path.startsWith("#")
+    }
+
+    fun getTargetTabName(name: String): String? {
+        if (!name.startsWith("#")) {
+            return null
+        }
+
+        val idx = name.indexOf(" ")
+        if (idx == -1) {
+            return null
+        }
+
+        return name.substring(idx).trim()
+    }
+
     fun getTargetHttpMethod(httpFilePath: String, runConfigName: String, project: Project): HttpMethod? {
         val virtualFile = VfsUtil.findFileByIoFile(File(httpFilePath), false) ?: return null
 
@@ -758,6 +777,30 @@ object HttpUtils {
         }
 
         return project
+    }
+
+    fun shouldRedirect(httpStatus: Int?, paramMap: Map<String, String>): Boolean {
+        httpStatus ?: return false
+
+        if (httpStatus != HttpStatus.SC_MOVED_TEMPORARILY && httpStatus != HttpStatus.SC_MOVED_PERMANENTLY) {
+            return false
+        }
+
+        return paramMap.contains(ParamEnum.AUTO_REDIRECT.param)
+    }
+
+    fun resolveLocationUrl(url: String, headers: HttpHeaders): String {
+        val location = headers.firstValue(com.google.common.net.HttpHeaders.LOCATION).get()
+        if (location.startsWith("http")) {
+            return location
+        }
+
+        val httpUrl = url.toHttpUrl()
+        val scheme = httpUrl.scheme
+        val host = httpUrl.host
+        val port = httpUrl.port
+        val portStr = if (port == 443 || port == 80) "" else ":$port"
+        return "$scheme://$host$portStr$location"
     }
 
 }

@@ -19,6 +19,9 @@ import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.consts.HttpConsts
+import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
+import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
+import org.javamaster.httpclient.consts.HttpConsts.Companion.WEB_BOUNDARY
 import org.javamaster.httpclient.dashboard.support.JsTgz
 import org.javamaster.httpclient.dubbo.DubboHandler
 import org.javamaster.httpclient.dubbo.support.DubboJars
@@ -38,9 +41,6 @@ import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.*
-import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
-import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
-import org.javamaster.httpclient.consts.HttpConsts.Companion.WEB_BOUNDARY
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
 import org.javamaster.httpclient.utils.HttpUtils.convertResponseBody
@@ -97,6 +97,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
     private var serverSocket: ServerSocket? = null
+    private var redirectTimes = 0
 
     var hasError = false
 
@@ -179,7 +180,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                 val environment = getEnvMap(project, false)
 
-                HttpReqInfo(reqBody, environment, preJsFiles)
+                val domainCookieMap = CookieUtils.getValidFileCookieMap(project)
+
+                HttpReqInfo(reqBody, environment, preJsFiles, domainCookieMap)
             }
             .finishOnUiThread {
                 startHandleRequest(it!!)
@@ -190,6 +193,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     }
 
     private fun startHandleRequest(reqInfo: HttpReqInfo) {
+        val request = requestBlock.request ?: return
         val rawUrl = requestTarget.url
         var url = variableResolver.resolve(rawUrl)
 
@@ -204,7 +208,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         jsExecutor.initJsRequestObj(
             url,
             rawUrl,
-            requestBlock.request.body?.text,
+            request.body?.text,
             reqInfo,
             methodType,
             reqHeaderMap,
@@ -228,13 +232,21 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         val reqBody = reqInfo.reqBody
 
         when (methodType) {
-            HttpRequestEnum.WEBSOCKET -> handleWs(url, reqHeaderMap)
+            HttpRequestEnum.WEBSOCKET -> {
+                CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.domainCookieMap)
+
+                handleWs(url, reqHeaderMap)
+            }
 
             HttpRequestEnum.DUBBO -> handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
 
             HttpRequestEnum.MOCK_SERVER -> handleMockServer()
 
-            else -> handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
+            else -> {
+                CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.domainCookieMap)
+
+                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
+            }
         }
     }
 
@@ -303,7 +315,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                 val environment = getEnvMap(project, false)
 
-                HttpReqInfo(reqBody, environment, preJsFiles)
+                val domainCookieMap = CookieUtils.getValidFileCookieMap(project)
+
+                HttpReqInfo(reqBody, environment, preJsFiles, domainCookieMap)
             }
             .finishOnUiThread {
                 convertToCurlReal(raw, consumer, it!!)
@@ -314,6 +328,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     }
 
     private fun convertToCurlReal(raw: Boolean, consumer: Consumer<String>, reqInfo: HttpReqInfo) {
+        val request = requestBlock.request ?: return
         val rawUrl = requestTarget.url
         var url = variableResolver.resolve(rawUrl)
 
@@ -324,7 +339,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         jsExecutor.initJsRequestObj(
             url,
             rawUrl,
-            requestBlock.request.body?.text,
+            request.body?.text,
             reqInfo,
             methodType,
             reqHeaderMap,
@@ -497,7 +512,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                         jsAfterReq,
                         httpResInfo,
                         200,
-                        mutableMapOf()
+                        mutableMapOf(),
+                        listOf()
                     )
 
                     if (!evalJsRes.isNullOrEmpty()) {
@@ -552,17 +568,31 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     ) {
         val start = System.currentTimeMillis()
 
-        val future = methodType.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
+        val methodTypeTmp = if (redirectTimes > 0) HttpRequestEnum.GET else methodType
+
+        val future = methodTypeTmp.execute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         future.whenCompleteAsync { response, throwable ->
-
             costTimes = System.currentTimeMillis() - start
+            httpStatus = response?.statusCode()
+
+            if (HttpUtils.shouldRedirect(httpStatus, paramMap)) {
+                redirectTimes++
+                if (redirectTimes > 6) {
+                    return@whenCompleteAsync
+                }
+
+                val locationUrl = HttpUtils.resolveLocationUrl(url, response.headers())
+                runInEdt {
+                    httpReqDescList.add("$CR_LF// ${nls("redirect.times.req", redirectTimes)}$CR_LF")
+                    handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList)
+                }
+                return@whenCompleteAsync
+            }
 
             runInEdt {
                 application.runWriteAction {
                     try {
-                        httpStatus = response?.statusCode()
-
                         if (throwable != null) {
                             val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
@@ -573,6 +603,16 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val size = Formats.formatFileSize(response.body().size.toLong())
 
+                        val cookies = CookieUtils.parseAll(url, response.headers())
+
+                        var cookieSaveDesc = ""
+                        if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
+                            val desc = CookieUtils.saveCookiesToFile(cookies, project)
+                            if (desc.isNotEmpty()) {
+                                cookieSaveDesc = ", $desc"
+                            }
+                        }
+
                         val resHeaders = response.headers()
                         val resHeaderList = convertResponseHeaders(resHeaders)
 
@@ -580,7 +620,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
 
-                        val httpResDescList = mutableListOf("// $comment$CR_LF")
+                        val httpResDescList = mutableListOf("// $comment $cookieSaveDesc$CR_LF")
 
                         val evalJsRes = jsExecutor.evalJsAfterRequest(
                             url,
@@ -588,7 +628,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                             jsAfterReq,
                             httpResInfo,
                             response.statusCode(),
-                            resHeaders.map()
+                            resHeaders.map(),
+                            cookies
                         )
 
                         if (!evalJsRes.isNullOrEmpty()) {
