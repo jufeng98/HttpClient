@@ -366,7 +366,7 @@ enum class InnerVariableEnum(val methodName: String) {
     },
     RANDOM_BOOK("\$random.book") {
         override fun typeText(): String {
-            return "生成 book"
+            return nls("book.desc")
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {

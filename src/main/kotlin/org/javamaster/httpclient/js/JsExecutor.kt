@@ -8,11 +8,8 @@ import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.js.support.*
-import org.javamaster.httpclient.js.support.req.HttpClientRequest
-import org.javamaster.httpclient.js.support.req.RequestBody
-import org.javamaster.httpclient.js.support.req.RequestHeaders
-import org.javamaster.httpclient.js.support.req.RequestUrl
-import org.javamaster.httpclient.js.support.req.RequestVariables
+import org.javamaster.httpclient.js.support.jsObject.Cookie
+import org.javamaster.httpclient.js.support.req.*
 import org.javamaster.httpclient.js.support.res.HttpClientRequestRes
 import org.javamaster.httpclient.js.support.res.HttpClientResponse
 import org.javamaster.httpclient.js.support.res.ResponseHeaders
@@ -190,6 +187,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         httpResInfo: HttpResInfo,
         statusCode: Int,
         headerMap: MutableMap<String, MutableList<String>>,
+        cookies: List<Cookie>,
     ): String? {
         if (jsScript == null) {
             return null
@@ -232,7 +230,8 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val response = HttpClientResponse(
                 statusCode,
                 ResponseHeaders(headerMap),
-                body
+                body,
+                cookies
             )
 
             ScriptableObject.putProperty(reqScriptableObject, "request", HttpClientRequestRes(url, jsBody))

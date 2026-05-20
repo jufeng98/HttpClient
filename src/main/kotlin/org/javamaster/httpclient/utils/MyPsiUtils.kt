@@ -4,22 +4,26 @@ import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.SmartList
+import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.psi.*
-import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_MODEL_PROPERTY_ANNO_NAME
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_OPERATION_ANNO_NAME
 import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_BODY_ANNO_NAME
+import org.javamaster.httpclient.parser.HttpFile
+import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.utils.HttpUtils.collectJsonPropertyNameLevels
 import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.HttpUtils.resolveTargetField
+import java.io.File
 import java.net.http.HttpClient
 import javax.swing.Icon
 
@@ -29,6 +33,43 @@ import javax.swing.Icon
 class MyPsiUtils {
 
     companion object {
+
+        fun getImportFileHttpRequests(httpFile: HttpFile): List<Pair<HttpComment, HttpMethod>> {
+            val project = httpFile.project
+            val parentPath = httpFile.virtualFile.parent.path
+            val globalImports = httpFile.getGlobalImports()
+            return globalImports
+                .mapNotNull {
+                    val path = it.filePath?.text ?: return@mapNotNull null
+                    val importHttpFilePath = HttpUtils.constructFilePath(path, parentPath)
+
+                    getHttpRequests(importHttpFilePath, project)
+                }
+                .flatten()
+        }
+
+        private fun getHttpRequests(httpFilePath: String, project: Project): List<Pair<HttpComment, HttpMethod>> {
+            val file = File(httpFilePath)
+            if (file.extension != HttpFileType.DEFAULT_EXTENSION) {
+                return listOf()
+            }
+
+            val importVirtualFile = VirtualFileManager.getInstance().findFileByNioPath(file.toPath())
+            if (importVirtualFile == null) {
+                return listOf()
+            }
+
+            val httpFile = PsiUtil.getPsiFile(project, importVirtualFile) as HttpFile
+            val requestBlocks =
+                PsiTreeUtil.getChildrenOfTypeAsList(httpFile, HttpRequestBlock::class.java)
+            return requestBlocks.mapNotNull { requestBlock ->
+                var comment = requestBlock.comment ?: return@mapNotNull null
+
+                val method = requestBlock.request?.method ?: return@mapNotNull null
+
+                Pair(comment, method)
+            }
+        }
 
         fun getAllPreJsScripts(httpFile: PsiFile, httpRequestBlock: HttpRequestBlock): List<HttpScriptBody> {
             val scripts = mutableListOf<HttpScriptBody>()

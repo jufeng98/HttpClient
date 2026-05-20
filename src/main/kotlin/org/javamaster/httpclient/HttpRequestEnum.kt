@@ -2,11 +2,11 @@ package org.javamaster.httpclient
 
 import com.google.common.net.HttpHeaders
 import com.intellij.openapi.util.text.Formats
+import org.javamaster.httpclient.consts.HttpConsts.Companion.CONNECT_TIMEOUT
+import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.consts.HttpConsts.Companion.CONNECT_TIMEOUT
-import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.MyPsiUtils.Companion.getVersionDesc
 import org.javamaster.httpclient.utils.ReqUtils
@@ -195,19 +195,22 @@ enum class HttpRequestEnum(val icon: Icon) {
                 .connectTimeout(Duration.ofSeconds(connectTimeout))
                 .build()
 
-            val commentTabName = "### $tabName$CR_LF"
-            httpReqDescList.add(commentTabName)
+            var insertIdx = 1
+            httpReqDescList.add("### $tabName$CR_LF")
 
             if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+                insertIdx++
                 httpReqDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
             }
 
+            insertIdx++
             httpReqDescList.add(request.method() + " " + request.uri() + " " + getVersionDesc(version) + CR_LF)
 
             request.headers()
                 .map()
                 .forEach { entry ->
                     entry.value.forEach {
+                        insertIdx++
                         httpReqDescList.add(entry.key + ": " + it + CR_LF)
                     }
                 }
@@ -216,11 +219,12 @@ enum class HttpRequestEnum(val icon: Icon) {
 
             val contentLength = if (tmpLength == -1L) multipartLength else tmpLength
 
+            insertIdx++
             httpReqDescList.add("${HttpHeaders.CONTENT_LENGTH}: $contentLength$CR_LF")
 
             val size = Formats.formatFileSize(contentLength)
 
-            httpReqDescList.add(0, "// ${NlsBundle.nls("req.size", size)}$CR_LF")
+            httpReqDescList.add(httpReqDescList.size - insertIdx, "// ${NlsBundle.nls("req.size", size)}$CR_LF")
 
             httpReqDescList.add(CR_LF)
 

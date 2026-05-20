@@ -40,7 +40,7 @@ class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIco
     override fun actionPerformed(e: AnActionEvent) {
         val requestBlock = findRequestBlock(e) ?: return
 
-        val request = requestBlock.request
+        val request = requestBlock.request ?: return
         val project = e.project!!
 
         val method = request.method.text

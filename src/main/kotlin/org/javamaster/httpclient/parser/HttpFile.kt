@@ -6,10 +6,7 @@ import com.intellij.psi.FileViewProvider
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.HttpLanguage
-import org.javamaster.httpclient.psi.HttpDirectionComment
-import org.javamaster.httpclient.psi.HttpGlobalHandler
-import org.javamaster.httpclient.psi.HttpGlobalVariable
-import org.javamaster.httpclient.psi.HttpRequestBlock
+import org.javamaster.httpclient.psi.*
 
 /**
  * @author yudong
@@ -33,6 +30,10 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
 
     fun getDirectionComments(): List<HttpDirectionComment> {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpDirectionComment::class.java)
+    }
+
+    fun getGlobalImports(): List<HttpGlobalImport> {
+        return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpGlobalImport::class.java)
     }
 
     override fun toString(): String {

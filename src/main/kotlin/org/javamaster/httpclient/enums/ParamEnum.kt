@@ -11,7 +11,9 @@ import org.javamaster.httpclient.nls.NlsBundle
 enum class ParamEnum(val param: String, val desc: String) {
     VISUALIZE_TIMESTAMP("visualize-timestamp", NlsBundle.nls("visualize.timestamp.desc")),
     AUTO_ENCODING("auto-encoding", NlsBundle.nls("auto.encoding.desc")),
+    AUTO_REDIRECT("auto-redirect", NlsBundle.nls("auto.redirect.desc")),
     NO_LOG("no-log", NlsBundle.nls("no.log.desc")),
+    NO_COOKIE_JAR("no-cookie-jar", NlsBundle.nls("no.cookie.desc")),
     CONNECT_TIMEOUT_NAME("connectTimeout", NlsBundle.nls("connect.timeout.desc")),
     READ_TIMEOUT_NAME("readTimeout", NlsBundle.nls("read.timeout.desc")),
     TIMEOUT_NAME("timeout", NlsBundle.nls("timeout.desc")),
@@ -53,8 +55,10 @@ enum class ParamEnum(val param: String, val desc: String) {
                 RESPONSE_STATUS,
                 STATIC_FOLDER,
                 AUTO_ENCODING,
+                AUTO_REDIRECT,
                 VISUALIZE_TIMESTAMP,
-                NO_LOG
+                NO_LOG,
+                NO_COOKIE_JAR,
             )
         }
 

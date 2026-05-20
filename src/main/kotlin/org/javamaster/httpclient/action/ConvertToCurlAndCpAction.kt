@@ -59,7 +59,7 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
         }
 
         fun convertToCurlAnCy(requestBlock: HttpRequestBlock, project: Project, editor: Editor) {
-            val method = requestBlock.request.method.text
+            val method = requestBlock.request?.method?.text ?: return
             if (method == HttpRequestEnum.WEBSOCKET.name
                 || method == HttpRequestEnum.DUBBO.name
             ) {

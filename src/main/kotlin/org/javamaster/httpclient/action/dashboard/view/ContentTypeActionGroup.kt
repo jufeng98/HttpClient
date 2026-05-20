@@ -49,7 +49,7 @@ class ContentTypeActionGroup(private val editor: Editor) {
             return null
         }
 
-        val contentType = psiFile.getRequestBlocks()[0].request.contentType ?: return null
+        val contentType = psiFile.getRequestBlocks()[0].request?.contentType ?: return null
 
         if (!allowContentTypes.contains(contentType)) {
             return null

@@ -90,7 +90,7 @@ class FoldHeadersAction(private val editor: Editor, private val req: Boolean) :
                 return
             }
 
-            val header = requestBlocks[0].request.header ?: return
+            val header = requestBlocks[0].request?.header ?: return
 
             val foldingModel = editor.foldingModel
 

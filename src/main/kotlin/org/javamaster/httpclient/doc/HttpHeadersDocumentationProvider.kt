@@ -51,7 +51,7 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
         }
 
         val file = createDummyFile(project, "GET http://127.0.0.1\n$name : ")
-        val newRequest = file.getRequestBlocks()[0].request
+        val newRequest = file.getRequestBlocks()[0].request ?: return null
 
         return newRequest.header!!.headerFieldList[0]
     }

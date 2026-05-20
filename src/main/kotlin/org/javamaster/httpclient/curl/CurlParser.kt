@@ -289,7 +289,7 @@ class CurlParser(private val curl: String) {
         }
 
         fun toCurlString(requestBlock: HttpRequestBlock, project: Project, raw: Boolean, consumer: Consumer<String>) {
-            val request = requestBlock.request
+            val request = requestBlock.request ?: return
 
             val editorTopForm = HttpEditorTopForm.getSelectedEditorTopForm(project)
 

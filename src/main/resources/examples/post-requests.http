@@ -1,3 +1,8 @@
+import requests-with-authorization.http
+
+###
+run #with Authorization
+
 ### with json param
 POST https://miao.baidu.com/abdr
 Content-Type: application/json
