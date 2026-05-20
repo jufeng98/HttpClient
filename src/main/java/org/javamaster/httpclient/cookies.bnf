@@ -1,0 +1,36 @@
+{
+  parserClass="org.javamaster.httpclient.parser.CookieParser"
+  parserUtilClass="org.javamaster.httpclient.parser.CookieParserUtil"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Cookie"
+  psiImplClassSuffix="Impl"
+  psiPackage="org.javamaster.httpclient.psi"
+  psiImplPackage="org.javamaster.httpclient.psi.impl"
+
+  elementTypeHolderClass="org.javamaster.httpclient.psi.CookieTypes"
+  elementTypeClass="org.javamaster.httpclient.psi.CookieElementType"
+  tokenTypeClass="org.javamaster.httpclient.psi.CookieTokenType"
+  psiImplUtilClass="org.javamaster.httpclient.psi.impl.CookiePsiImplUtil"
+
+  tokens=[
+    LINE_COMMENT='regexp:#.*'
+    SEPARATOR='SEPARATOR'
+    NEW_LINE='NEW_LINE'
+    COOKIE_TOKEN='COOKIE_TOKEN'
+    COOKIE_NAME='COOKIE_NAME'
+    COOKIE_VALUE='COOKIE_VALUE'
+    COOKIE_DATE='COOKIE_DATE'
+  ]
+}
+
+cookieFile ::= cookieRecord*
+private cookieRecord ::= NEW_LINE* record NEW_LINE*
+
+record ::= domain SEPARATOR path SEPARATOR name_ck SEPARATOR value SEPARATOR date
+domain ::= COOKIE_TOKEN
+path ::= COOKIE_TOKEN
+name_ck ::= COOKIE_NAME
+value ::= COOKIE_VALUE
+date ::= COOKIE_DATE
