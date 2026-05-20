@@ -3,20 +3,20 @@ package org.javamaster.httpclient.handler
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
+import org.javamaster.httpclient.consts.HttpConsts
+import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
 import org.javamaster.httpclient.dashboard.HttpProgramRunner
 import org.javamaster.httpclient.dashboard.HttpProgramRunner.Companion.HTTP_RUNNER_ID
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMethod
-import org.javamaster.httpclient.ui.HttpEditorTopForm
-import org.javamaster.httpclient.consts.HttpConsts
-import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
 import org.javamaster.httpclient.utils.NotifyUtil
 import java.util.concurrent.TimeUnit
 
@@ -39,11 +39,11 @@ object RunFileHandler {
         interruptFlag = true
     }
 
-    fun runRequests(project: Project, topForm: HttpEditorTopForm, finishCallback: Runnable) {
+    fun runRequests(project: Project, file: VirtualFile, finishCallback: Runnable) {
         this.finishCallback = finishCallback
         interruptFlag = false
 
-        val httpFile = PsiUtil.getPsiFile(project, topForm.file) as HttpFile
+        val httpFile = PsiUtil.getPsiFile(project, file) as HttpFile
         val httpMethods = PsiTreeUtil.findChildrenOfType(httpFile, HttpMethod::class.java)
 
         val toolWindowManager = ToolWindowManager.getInstance(project)

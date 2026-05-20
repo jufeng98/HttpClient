@@ -11,11 +11,9 @@ import com.intellij.util.Function
 import org.javamaster.httpclient.gutter.support.HttpDiffGutterIconNavigationHandler
 import org.javamaster.httpclient.gutter.support.HttpGutterIconNavigationHandler
 import org.javamaster.httpclient.gutter.support.HttpLineMarkerInfo
+import org.javamaster.httpclient.gutter.support.HttpRunGutterIconNavigationHandler
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.psi.HttpHistoryBodyFile
-import org.javamaster.httpclient.psi.HttpHistoryBodyFileList
-import org.javamaster.httpclient.psi.HttpMethod
-import org.javamaster.httpclient.psi.HttpTypes
+import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.utils.HttpUtils
 import java.util.function.Supplier
 
@@ -25,10 +23,13 @@ import java.util.function.Supplier
 class HttpLineMarkerProvider : LineMarkerProvider {
     private val tooltipProvider by lazy { Function { _: PsiElement -> NlsBundle.nls("send.request") } }
     private val accessibleNameProvider by lazy { Supplier { NlsBundle.nls("send.request") } }
-    private val tip by lazy { NlsBundle.nls("compare.with") + "..." }
 
+    private val tip by lazy { NlsBundle.nls("compare.with") + "..." }
     private val tooltipCompareProvider by lazy { Function { _: PsiElement -> tip } }
     private val accessibleNameCompareProvider by lazy { Supplier { tip } }
+
+    private val tooltipRunProvider by lazy { Function { _: PsiElement -> "Run" } }
+    private val accessibleNameRunProvider by lazy { Supplier { "Run" } }
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<PsiElement>? {
         val elementType = element.elementType
@@ -39,6 +40,10 @@ class HttpLineMarkerProvider : LineMarkerProvider {
 
         if (elementType == HttpTypes.HISTORY_FILE_SIGN) {
             return createDiffIconInfo(element)
+        }
+
+        if (elementType == HttpTypes.RUN) {
+            return createRunCommandIconInfo(element)
         }
 
         return null
@@ -64,7 +69,8 @@ class HttpLineMarkerProvider : LineMarkerProvider {
 
     private fun createDiffIconInfo(element: PsiElement): HttpLineMarkerInfo? {
         val historyBodyFile = element.parent
-        // 不知道什么情况会出现 ClassCastException: class com.intellij.psi.DummyBlockType$DummyBlock cannot be cast to class org.javamaster.httpclient.psi.HttpHistoryBodyFile
+        // 不知道什么情况会出现 ClassCastException: class com.intellij.psi.DummyBlockType$DummyBlock
+        // cannot be cast to class org.javamaster.httpclient.psi.HttpHistoryBodyFile
         // 加上这个避免下
         if (historyBodyFile !is HttpHistoryBodyFile) {
             return null
@@ -78,6 +84,24 @@ class HttpLineMarkerProvider : LineMarkerProvider {
             element, element.textRange, AllIcons.Actions.Diff,
             tooltipCompareProvider, HttpDiffGutterIconNavigationHandler,
             GutterIconRenderer.Alignment.CENTER, accessibleNameCompareProvider
+        )
+    }
+
+    private fun createRunCommandIconInfo(element: PsiElement): HttpLineMarkerInfo? {
+        val parent = element.parent
+        if (parent !is HttpRunCommand) {
+            return null
+        }
+
+        val virtualFile = PsiUtil.getVirtualFile(element)
+        if (HttpUtils.isFileInIdeaDir(virtualFile)) {
+            return null
+        }
+
+        return HttpLineMarkerInfo(
+            element, element.textRange, AllIcons.Actions.Execute,
+            tooltipRunProvider, HttpRunGutterIconNavigationHandler,
+            GutterIconRenderer.Alignment.CENTER, accessibleNameRunProvider
         )
     }
 
