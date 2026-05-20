@@ -10,14 +10,20 @@ plugins {
 }
 
 group = "org.javamaster"
-version = "6.6.0"
+version = "7.0.0"
 
 repositories {
     maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
-    mavenLocal()
     mavenCentral()
     intellijPlatform {
         defaultRepositories()
+    }
+}
+
+allprojects {
+    repositories {
+        maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
+        mavenCentral()
     }
 }
 

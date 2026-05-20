@@ -68,11 +68,13 @@
     <change-notes>
         <![CDATA[
             <ul>
-                <li><b>6.6.0</b></li>
+                <li><b>7.0.0</b></li>
                 <ul>
-                    <li>请求的全局、前置以及后置 js 处理器新增智能提示内置的 js 预定义变量及函数功能</li>
-                    <li>Crypto 改为纯 Java 实现,提高执行效率</li>
-                    <li>js处理器中的预定义变量(如request等)改为纯 Java 实现,提高执行效率</li>
+                    <li>js处理器中新增智能提示内置的 js 预定义变量及函数功能</li>
+                    <li>js处理器中的预定义变量(如 request、crypto 等)改为纯 Java 实现，提高执行效率</li>
+                    <li>新增 import 指令，用于引入外部 http 文件</li>
+                    <li>新增 run，用于执行外部 http 文件的请求</li>
+                    <li>新增处理 Cookie 功能，支持保存到本地并随着后续请求发送</li>
                     <li>完善 Faker</li>
                     <li>bug修复</li>
                 </ul>
@@ -301,12 +303,25 @@
                 fieldName="INSTANCE"
                 language="http"
                 extensions="http"/>
+        <fileType
+                name="COOKIE"
+                implementationClass="org.javamaster.httpclient.CookieFileType"
+                fieldName="INSTANCE"
+                language="cookies"
+                extensions="cookies"/>
         <lang.parserDefinition
                 language="http"
                 implementationClass="org.javamaster.httpclient.parser.HttpParserDefinition"/>
+        <lang.parserDefinition
+                language="cookies"
+                implementationClass="org.javamaster.httpclient.parser.CookieParserDefinition"/>
         <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.factory.HttpASTFactory"/>
+        <lang.ast.factory language="http" implementationClass="org.javamaster.httpclient.factory.CookieASTFactory"/>
         <editorHighlighterProvider filetype="HTTP"
                                    implementationClass="org.javamaster.httpclient.highlighting.HttpHighlighterProvider"/>
+        <lang.syntaxHighlighterFactory
+                language="cookies"
+                implementationClass="org.javamaster.httpclient.highlighting.CookieSyntaxHighlighterFactory"/>
         <fileBasedIndex implementation="org.javamaster.httpclient.index.HttpEnvironmentIndex"/>
         <multiHostInjector
                 implementation="org.javamaster.httpclient.inject.MessageBodyInjectionContributor"/>
@@ -324,7 +339,7 @@
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpVariableNameManipulator"/>
         <lang.elementManipulator forClass="org.javamaster.httpclient.psi.HttpRequestTarget"
                                  implementationClass="org.javamaster.httpclient.manipulator.HttpRequestTargetManipulator"/>
-<!--        <renameHandler implementation="org.javamaster.httpclient.manipulator.HttpRenameHandler"/>-->
+        <!--        <renameHandler implementation="org.javamaster.httpclient.manipulator.HttpRenameHandler"/>-->
         <renamePsiElementProcessor
                 implementation="org.javamaster.httpclient.manipulator.HttpRenamePsiElementProcessor"/>
         <lang.refactoringSupport
@@ -337,9 +352,9 @@
                                 id="httpRunDashboardCustomizer"/>
         <executor implementation="org.javamaster.httpclient.dashboard.HttpExecutor" order="first" id="httpExecutor"/>
         <programRunner implementation="org.javamaster.httpclient.dashboard.HttpProgramRunner"/>
-<!--        <highlightErrorFilter implementation="org.javamaster.httpclient.suppress.MyHighlightErrorFilter"/>-->
-<!--        <lang.inspectionSuppressor language="JSON"-->
-<!--                                   implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>-->
+        <!--        <highlightErrorFilter implementation="org.javamaster.httpclient.suppress.MyHighlightErrorFilter"/>-->
+        <!--        <lang.inspectionSuppressor language="JSON"-->
+        <!--                                   implementationClass="org.javamaster.httpclient.suppress.JsonInspectionSuppressor"/>-->
         <annotator language="JSON"
                    implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
         <annotator language="TEXT"
@@ -360,8 +375,8 @@
                          shortName="MyTextInspection" enabledByDefault="true" level="WARNING"
                          implementationClass="org.javamaster.httpclient.inspection.MyTextInspection"
                          key="inspection.http.display.name" bundle="messages.HttpClientBundle"/>
-<!--        <psi.referenceContributor language="JSON"-->
-<!--                                  implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>-->
+        <!--        <psi.referenceContributor language="JSON"-->
+        <!--                                  implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>-->
         <psi.referenceContributor language="JSON"
                                   implementation="org.javamaster.httpclient.reference.JsonKeyDubboServiceMethodFieldPsiReferenceContributor"/>
         <lang.documentationProvider language="JSON"
