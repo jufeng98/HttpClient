@@ -29,6 +29,18 @@ class HttpMethodsProvider : CompletionProvider<CompletionParameters>() {
                 )
             )
         }
+
+        result.addElement(
+            LookupElementBuilder.create("import")
+                .withTypeText("引入 http 文件", true)
+                .withInsertHandler(AddSpaceInsertHandler.INSTANCE)
+        )
+
+        result.addElement(
+            LookupElementBuilder.create("run")
+                .withTypeText("运行文件或其他文件的请求", true)
+                .withInsertHandler(AddSpaceInsertHandler.INSTANCE)
+        )
     }
 
     private fun isRequestStart(parameters: CompletionParameters): Boolean {
