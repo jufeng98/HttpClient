@@ -18,6 +18,7 @@ public interface HttpTypes {
   IElementType FILE_PATH_CONTENT = new HttpElementType("FILE_PATH_CONTENT");
   IElementType FRAGMENT = new HttpElementType("FRAGMENT");
   IElementType GLOBAL_HANDLER = new HttpElementType("GLOBAL_HANDLER");
+  IElementType GLOBAL_IMPORT = new HttpElementType("GLOBAL_IMPORT");
   IElementType GLOBAL_LITERAL_VALUE = new HttpElementType("GLOBAL_LITERAL_VALUE");
   IElementType GLOBAL_SCRIPT = new HttpElementType("GLOBAL_SCRIPT");
   IElementType GLOBAL_VARIABLE = new HttpElementType("GLOBAL_VARIABLE");
@@ -51,6 +52,7 @@ public interface HttpTypes {
   IElementType REQUEST_TARGET = new HttpElementType("REQUEST_TARGET");
   IElementType RESPONSE_HANDLER = new HttpElementType("RESPONSE_HANDLER");
   IElementType RESPONSE_SCRIPT = new HttpElementType("RESPONSE_SCRIPT");
+  IElementType RUN_COMMAND = new HttpElementType("RUN_COMMAND");
   IElementType SCHEMA = new HttpElementType("SCHEMA");
   IElementType SCRIPT_BODY = new HttpElementType("SCRIPT_BODY");
   IElementType VARIABLE = new HttpElementType("VARIABLE");
@@ -85,6 +87,7 @@ public interface HttpTypes {
   IElementType HOST_VALUE = new HttpTokenType("HOST_VALUE");
   IElementType HTTP_VERSION = new HttpTokenType("HTTP_VERSION");
   IElementType IDENTIFIER = new HttpTokenType("IDENTIFIER");
+  IElementType IMPORT = new HttpTokenType("IMPORT");
   IElementType INPUT_FILE_SIGN = new HttpTokenType("< ");
   IElementType IN_START_SCRIPT_BRACE = new HttpTokenType("< {%");
   IElementType LEFT_BRACKET = new HttpTokenType("(");
@@ -101,6 +104,7 @@ public interface HttpTypes {
   IElementType REQUEST_COMMENT = new HttpTokenType("REQUEST_COMMENT");
   IElementType REQUEST_METHOD = new HttpTokenType("REQUEST_METHOD");
   IElementType RIGHT_BRACKET = new HttpTokenType(")");
+  IElementType RUN = new HttpTokenType("RUN");
   IElementType SCHEMA_PART = new HttpTokenType("SCHEMA_PART");
   IElementType SCHEMA_SEPARATE = new HttpTokenType("://");
   IElementType SCRIPT_BODY_PAET = new HttpTokenType("SCRIPT_BODY_PAET");
@@ -142,6 +146,9 @@ public interface HttpTypes {
       }
       else if (type == GLOBAL_HANDLER) {
         return new HttpGlobalHandlerImpl(node);
+      }
+      else if (type == GLOBAL_IMPORT) {
+        return new HttpGlobalImportImpl(node);
       }
       else if (type == GLOBAL_LITERAL_VALUE) {
         return new HttpGlobalLiteralValueImpl(node);
@@ -241,6 +248,9 @@ public interface HttpTypes {
       }
       else if (type == RESPONSE_SCRIPT) {
         return new HttpResponseScriptImpl(node);
+      }
+      else if (type == RUN_COMMAND) {
+        return new HttpRunCommandImpl(node);
       }
       else if (type == SCHEMA) {
         return new HttpSchemaImpl(node);

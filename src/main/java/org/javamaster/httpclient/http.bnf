@@ -46,8 +46,11 @@
   ]
 }
 
-httpFile ::= directionComment* globalHandler? globalVariable* requestBlock*
+httpFile ::= (directionComment | globalImport)* globalHandler? globalVariable* requestBlock*
 
+globalImport ::= IMPORT filePath {
+    pin = 1
+}
 globalVariable::= AT globalVariableName equalsFlag globalVariableValue? {
     pin = 1
 }
@@ -70,8 +73,11 @@ globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-requestBlock ::= comment? directionComment* preRequestHandler? request {
+requestBlock ::= comment? (directionComment* preRequestHandler? request | runCommand) {
     recoverWhile = requestBlockRecover
+}
+runCommand ::= RUN filePath {
+    pin = 1
 }
 private requestBlockRecover ::= !(REQUEST_COMMENT)
 comment ::= REQUEST_COMMENT
