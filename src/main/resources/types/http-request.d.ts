@@ -53,6 +53,10 @@ interface HttpResponse {
      */
     headers: ResponseHeaders;
 
+    cookies: [Cookie];
+
+    cookiesByName(name: string): [Cookie];
+
     /**
      * 响应状态, 例如 200, 404, 等等.
      */
@@ -112,4 +116,12 @@ interface RequestHeader {
      * 请求头的值
      */
     value(): string
+}
+
+interface Cookie {
+    domain: string;
+    path: string;
+    name: string;
+    value: string;
+    expiresAt: number;
 }

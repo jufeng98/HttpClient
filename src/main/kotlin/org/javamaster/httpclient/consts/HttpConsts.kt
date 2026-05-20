@@ -26,6 +26,9 @@ class HttpConsts {
 
         val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
         val requestFinishedKey: Key<Int> = Key.create("REQUEST_FINISHED_KEY")
+
+        const val COOKIE_FILE_NAME = "http-client.cookies"
+        const val JS_DATE_PATTERN = "EEE, dd-MMM-yyyy HH:mm:ss 'GMT'"
     }
 
 }
