@@ -33,9 +33,9 @@ class EnvUtils {
     companion object {
 
         fun resolveFileGlobalVariable(variableName: String, httpFile: PsiFile): PsiElement? {
-            val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
+            val fileVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
 
-            return globalVariables
+            return fileVariables
                 .mapNotNull {
                     val globalVariableName = it.globalVariableName
                     if (globalVariableName?.name == variableName) {

@@ -17,7 +17,7 @@ import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getJsonLiteralValue
-import org.javamaster.httpclient.js.support.GlobalVariables
+import org.javamaster.httpclient.js.support.JsGlobalVariablesHolder
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
@@ -184,7 +184,7 @@ class HttpDocumentationProvider : DocumentationProvider {
             )
         }
 
-        var value = GlobalVariables.dataHolder[name]
+        var value = JsGlobalVariablesHolder.dataHolder[name]
         if (value != null) {
             return getDocumentation(name, NlsBundle.nls("value") + " $value")
         }

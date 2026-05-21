@@ -31,9 +31,9 @@ class VariableResolver(
     fun getFileGlobalVariables(): LinkedHashMap<String, String> {
         val map = LinkedHashMap<String, String>()
 
-        val globalVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
+        val fileVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
 
-        globalVariables.forEach {
+        fileVariables.forEach {
             val name = it.globalVariableName?.name ?: return@forEach
             val globalVariableValue = it.globalVariableValue ?: return@forEach
 
@@ -160,10 +160,10 @@ class VariableResolver(
     }
 
     fun getJsGlobalVariables(): LinkedHashMap<String, String> {
-        val globalVariables = jsExecutor?.getJsGlobalVariables() ?: return linkedMapOf()
+        val jsGlobalVariables = jsExecutor?.getJsGlobalVariables() ?: return linkedMapOf()
 
         val map = linkedMapOf<String, String>()
-        map.putAll(globalVariables)
+        map.putAll(jsGlobalVariables)
 
         return map
     }

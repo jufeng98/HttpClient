@@ -5,7 +5,7 @@ import org.javamaster.httpclient.js.support.jsObject.Console
 import org.javamaster.httpclient.nls.NlsBundle.nls
 
 @Suppress("unused")
-object GlobalVariables {
+object JsGlobalVariablesHolder {
     val dataHolder: MutableMap<String, Any?> = Maps.newConcurrentMap()
 
     fun isEmpty(): Boolean {

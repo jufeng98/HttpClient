@@ -15,7 +15,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.completion.support.SlashEndInsertHandler
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
-import org.javamaster.httpclient.js.support.GlobalVariables
+import org.javamaster.httpclient.js.support.JsGlobalVariablesHolder
 import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpFilePath
@@ -142,7 +142,7 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                 return jsonProperty
             }
 
-            var value = GlobalVariables.dataHolder[variableName]
+            var value = JsGlobalVariablesHolder.dataHolder[variableName]
             if (value != null) {
                 return JsGlobalVariableValueFakePsiElement(element, variableName, value.toString())
             }

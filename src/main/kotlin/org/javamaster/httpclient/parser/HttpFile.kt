@@ -20,7 +20,7 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
         return PsiTreeUtil.getChildOfType(this, HttpGlobalHandler::class.java)
     }
 
-    fun getGlobalVariables(): List<HttpGlobalVariable> {
+    fun getFileVariables(): List<HttpGlobalVariable> {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpGlobalVariable::class.java)
     }
 

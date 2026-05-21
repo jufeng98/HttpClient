@@ -42,8 +42,8 @@ class HttpRequestStructureViewElement private constructor(
                 children.add(create(globalHandler, NlsBundle.nls("global.handler"), AllIcons.Actions.Play_first))
             }
 
-            val globalVariables = element.getGlobalVariables()
-            globalVariables.forEach {
+            val fileVariables = element.getFileVariables()
+            fileVariables.forEach {
                 children.add(
                     create(
                         it,

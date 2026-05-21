@@ -5,7 +5,7 @@ import org.javamaster.httpclient.js.support.req.HttpClientRequest
 import org.mozilla.javascript.ScriptableObject
 
 @Suppress("unused")
-object GetVariables {
+object CommonVariables {
 
     fun get(key: String): Any? {
         val jsExecutor = JsExecutor.threadLocal.get()!!
@@ -16,7 +16,7 @@ object GetVariables {
         }
 
         val request = ScriptableObject.getProperty(jsExecutor.reqScriptableObject, "requestRaw") as HttpClientRequest
-        value = request.globalVariables[key]
+        value = request.fileVariables[key]
         if (value != null) {
             return value
         }

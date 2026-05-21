@@ -17,7 +17,7 @@ import kotlin.Pair;
 import kotlin.Triple;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.js.JsExecutor;
-import org.javamaster.httpclient.js.support.GlobalVariables;
+import org.javamaster.httpclient.js.support.JsGlobalVariablesHolder;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.resolve.VariableResolver;
 import org.javamaster.httpclient.utils.EnvUtils;
@@ -173,7 +173,7 @@ public class ViewVariableForm extends DialogWrapper {
 
                             break;
                         case TYPE_JS:
-                            GlobalVariables.INSTANCE.set(newKey, newValue);
+                            JsGlobalVariablesHolder.INSTANCE.set(newKey, newValue);
 
                             PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
 
@@ -217,8 +217,8 @@ public class ViewVariableForm extends DialogWrapper {
         LinkedHashMap<String, String> fileGlobalVariables = variableResolver.getFileGlobalVariables();
         resList.add(new Triple<>(NlsBundle.INSTANCE.nls("file.global.desc"), fileGlobalVariables, TYPE_GLOBAL));
 
-        Map<String, String> variableMap = variableResolver.getJsGlobalVariables();
-        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("js.variable.desc"), variableMap, TYPE_JS));
+        Map<String, String> jsGlovalVariableMap = variableResolver.getJsGlobalVariables();
+        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("js.variable.desc"), jsGlovalVariableMap, TYPE_JS));
 
         Map<String, String> envMap = EnvFileService.Companion.getEnvMap(project, false);
         resList.add(new Triple<>(NlsBundle.INSTANCE.nls("environment.variable.desc"), envMap, TYPE_ENV));

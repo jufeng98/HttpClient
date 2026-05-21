@@ -2,9 +2,9 @@ package org.javamaster.httpclient.js.support.jsObject
 
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.js.JsExecutor
-import org.javamaster.httpclient.js.support.GetVariables
+import org.javamaster.httpclient.js.support.CommonVariables
 import org.javamaster.httpclient.js.support.GlobalLog
-import org.javamaster.httpclient.js.support.GlobalVariables
+import org.javamaster.httpclient.js.support.JsGlobalVariablesHolder
 import org.mozilla.javascript.Function
 
 /**
@@ -12,8 +12,8 @@ import org.mozilla.javascript.Function
  */
 @Suppress("unused")
 object HttpRequest {
-    val global: GlobalVariables = GlobalVariables
-    val variables: GetVariables = GetVariables
+    val global: JsGlobalVariablesHolder = JsGlobalVariablesHolder
+    val variables: CommonVariables = CommonVariables
 
     fun log(first: Any?) {
         Console.log(first)

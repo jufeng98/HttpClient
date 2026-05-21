@@ -37,7 +37,7 @@ interface HttpRequest {
      */
     global: Variables;
 
-    variables: GetVariables;
+    variables: CommonVariables;
 
     /**
      * 打印“args”数组，然后终止该行。如果“args”的元素不是“string”，则函数将其转换为字符串。
@@ -77,7 +77,7 @@ interface Variables {
     clearAll(): void;
 }
 
-interface GetVariables {
+interface CommonVariables {
     /**
      * 返回变量“varName”的值。
      */
@@ -99,9 +99,9 @@ interface HttpClientRequest {
     variables: RequestVariables
 
     /**
-     * 全局变量
+     * 文件内变量
      */
-    globalVariables: RequestVariables,
+    fileVariables: RequestVariables,
 
     /**
      * 当前请求的请求头

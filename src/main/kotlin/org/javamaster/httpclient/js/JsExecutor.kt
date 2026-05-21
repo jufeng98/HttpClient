@@ -308,13 +308,13 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     }
 
     fun getJsGlobalVariable(key: String): Any? {
-        return GlobalVariables.get(key)
+        return JsGlobalVariablesHolder.get(key)
     }
 
     fun getJsGlobalVariables(): Map<String, String> {
         val map = mutableMapOf<String, String>()
 
-        GlobalVariables.dataHolder
+        JsGlobalVariablesHolder.dataHolder
             .forEach {
                 map[it.key] = if (it.value != null) {
                     it.value.toString()
