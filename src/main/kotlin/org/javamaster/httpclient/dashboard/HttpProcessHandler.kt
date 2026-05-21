@@ -229,7 +229,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             url = ReqUtils.encodeUrl(url)
         }
 
-        val reqBody = reqInfo.reqBody
+        val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver)
 
         when (methodType) {
             HttpRequestEnum.WEBSOCKET -> {
@@ -349,6 +349,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         val resList = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
         println("js执行结果:${resList}")
+
+        url = variableResolver.resolve(url)
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 

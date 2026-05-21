@@ -83,6 +83,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         )
 
         ScriptableObject.putProperty(reqScriptableObject, "request", request)
+        ScriptableObject.putProperty(reqScriptableObject, "requestRaw", request)
     }
 
     fun evalJsBeforeRequest(preJsFiles: List<PreJsFile>, jsListBeforeReq: List<HttpScriptBody>): List<String> {
@@ -92,6 +93,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
         try {
             GlobalLog.setTabName(tabName)
+            threadLocal.set(this)
 
             val resList = mutableListOf("/*$CR_LF${nls("pre.desc")}:$CR_LF")
 
@@ -129,6 +131,8 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             GlobalLog.clearLogs()
 
             throw e
+        } finally {
+            threadLocal.remove()
         }
     }
 
@@ -195,6 +199,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
         try {
             GlobalLog.setTabName(tabName)
+            threadLocal.set(this)
 
             val jsBody = ReqUtils.convertReqBody(reqBody)
 
@@ -253,6 +258,8 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             GlobalLog.clearLogs()
 
             throw e
+        } finally {
+            threadLocal.remove()
         }
     }
 
@@ -325,6 +332,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     }
 
     companion object {
+        var threadLocal = ThreadLocal<JsExecutor>()
         private val libraryLoadedMap = mutableMapOf<String, ScriptableObject>()
         private val pair by lazy {
             val contextTmp = Context.enter()

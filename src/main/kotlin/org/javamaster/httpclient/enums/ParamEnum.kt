@@ -3,6 +3,9 @@ package org.javamaster.httpclient.enums
 import com.intellij.codeInsight.completion.AddSpaceInsertHandler
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.lookup.LookupElement
+import org.javamaster.httpclient.completion.support.Number2InsertHandler
+import org.javamaster.httpclient.completion.support.Number3InsertHandler
+import org.javamaster.httpclient.completion.support.NumberInsertHandler
 import org.javamaster.httpclient.nls.NlsBundle
 
 /**
@@ -14,17 +17,45 @@ enum class ParamEnum(val param: String, val desc: String) {
     AUTO_REDIRECT("auto-redirect", NlsBundle.nls("auto.redirect.desc")),
     NO_LOG("no-log", NlsBundle.nls("no.log.desc")),
     NO_COOKIE_JAR("no-cookie-jar", NlsBundle.nls("no.cookie.desc")),
-    CONNECT_TIMEOUT_NAME("connectTimeout", NlsBundle.nls("connect.timeout.desc")),
-    READ_TIMEOUT_NAME("readTimeout", NlsBundle.nls("read.timeout.desc")),
-    TIMEOUT_NAME("timeout", NlsBundle.nls("timeout.desc")),
-    REQUIRE("require", NlsBundle.nls("require.desc")),
-    IMPORT("import", NlsBundle.nls("import.desc")),
-    RESPONSE_STATUS("responseStatus", NlsBundle.nls("response.status.desc")),
-    STATIC_FOLDER("staticFolder", NlsBundle.nls("static.folder.desc")),
+    CONNECT_TIMEOUT_NAME("connectTimeout", NlsBundle.nls("connect.timeout.desc")) {
+        override fun insertHandler(): InsertHandler<LookupElement> {
+            return NumberInsertHandler
+        }
+    },
+    READ_TIMEOUT_NAME("readTimeout", NlsBundle.nls("read.timeout.desc")) {
+        override fun insertHandler(): InsertHandler<LookupElement> {
+            return NumberInsertHandler
+        }
+    },
+    TIMEOUT_NAME("timeout", NlsBundle.nls("timeout.desc")) {
+        override fun insertHandler(): InsertHandler<LookupElement> {
+            return Number3InsertHandler
+        }
+    },
+    REQUIRE("require", NlsBundle.nls("require.desc")) {
+        override fun insertHandler(): InsertHandler<LookupElement> {
+            return AddSpaceInsertHandler.INSTANCE
+        }
+    },
+    IMPORT("import", NlsBundle.nls("import.desc")) {
+        override fun insertHandler(): InsertHandler<LookupElement> {
+            return AddSpaceInsertHandler.INSTANCE
+        }
+    },
+    RESPONSE_STATUS("responseStatus", NlsBundle.nls("response.status.desc")) {
+        override fun insertHandler(): InsertHandler<LookupElement> {
+            return Number2InsertHandler
+        }
+    },
+    STATIC_FOLDER("staticFolder", NlsBundle.nls("static.folder.desc")) {
+        override fun insertHandler(): InsertHandler<LookupElement> {
+            return AddSpaceInsertHandler.INSTANCE
+        }
+    },
     ;
 
-    open fun insertHandler(): InsertHandler<LookupElement> {
-        return AddSpaceInsertHandler.INSTANCE
+    open fun insertHandler(): InsertHandler<LookupElement>? {
+        return null
     }
 
     companion object {

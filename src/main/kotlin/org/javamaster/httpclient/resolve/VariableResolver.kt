@@ -6,6 +6,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.js.support.jsObject.Console
 import org.javamaster.httpclient.psi.HttpGlobalLiteralValue
 import org.javamaster.httpclient.psi.HttpGlobalVariable
 import org.javamaster.httpclient.psi.HttpVariable
@@ -92,7 +93,7 @@ class VariableResolver(
 
     private fun resolveVariable(
         variable: String?,
-        fileMap: Map<String, String>,
+        fileScopeVariableMap: Map<String, String>,
         builtin: Boolean,
         args: Array<Any>?,
     ): String? {
@@ -118,15 +119,27 @@ class VariableResolver(
                 }
             }
 
+            if (variable == "\$toString") {
+                val arg = args!![0] as String
+                var value = jsExecutor?.getRequestVariable(arg)
+                if (value != null) {
+                    return Console.convertParam(value)
+                }
+                value = jsExecutor?.getJsGlobalVariable(arg)
+                if (value != null) {
+                    return Console.convertParam(value)
+                }
+            }
+
             return null
         }
 
-        var innerVariable = fileMap[variable]
+        var innerVariable = jsExecutor?.getRequestVariable(variable)
         if (innerVariable != null) {
             return innerVariable
         }
 
-        innerVariable = jsExecutor?.getRequestVariable(variable)
+        innerVariable = fileScopeVariableMap[variable]
         if (innerVariable != null) {
             return innerVariable
         }
@@ -170,8 +183,8 @@ class VariableResolver(
         const val ENV_PREFIX = "\$env"
 
         fun escapeRegexp(result: String): String {
-            return result.replace("\\", "\\\\")
-                .replace("\$", "\\$")
+            @Suppress("CanUnescapeDollarLiteral")
+            return result.replace("\\", "\\\\").replace("\$", "\\$")
         }
 
         fun resolveInnerVariable(str: String, parentPath: String, project: Project): String {

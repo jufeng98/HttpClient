@@ -23,7 +23,7 @@ class TextVariableNamePsiReference(
         val name = variableName.name
         val builtin = variableName.isBuiltin
 
-        return HttpVariableNamePsiReference.tryResolveVariable(name, builtin, psiElement, false)
+        return HttpVariableNamePsiReference.tryResolveVariable(name, builtin, psiElement, true)
     }
 
     override fun getVariants(): Array<Any> {

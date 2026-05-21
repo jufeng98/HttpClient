@@ -2,6 +2,7 @@ package org.javamaster.httpclient.utils
 
 import org.intellij.markdown.html.urlEncode
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import java.net.http.HttpRequest.BodyPublishers
 
@@ -81,6 +82,18 @@ class ReqUtils {
                     throw IllegalArgumentException(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
                 }
             }
+        }
+
+        fun resolveReqBodyAgain(reqBody: Any?, resolver: VariableResolver): Any? {
+            if (reqBody == null) {
+                return null
+            }
+
+            if (reqBody is String) {
+                return resolver.resolve(reqBody)
+            }
+
+            return reqBody
         }
 
         fun getReqBodyDesc(reqBody: Any?): MutableList<String> {
