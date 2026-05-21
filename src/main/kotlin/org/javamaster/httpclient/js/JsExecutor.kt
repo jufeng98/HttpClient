@@ -303,17 +303,12 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         }
     }
 
-    fun getRequestVariable(key: String): String? {
-        val res = request?.variables?.get(key)
-        if (res == null) {
-            return null
-        }
-
-        return res.toString()
+    fun getRequestVariable(key: String): Any? {
+        return request?.variables?.get(key)
     }
 
-    fun getJsGlobalVariable(key: String): String? {
-        return GlobalVariables.get(key)?.toString()
+    fun getJsGlobalVariable(key: String): Any? {
+        return GlobalVariables.get(key)
     }
 
     fun getJsGlobalVariables(): Map<String, String> {

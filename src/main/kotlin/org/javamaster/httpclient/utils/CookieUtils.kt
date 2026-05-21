@@ -66,8 +66,8 @@ object CookieUtils {
         }
     }
 
-    fun getValidFileCookieMap(project: Project): Map<String, List<Cookie>> {
-        val cookieFile = createCookiesFileIfNotExists(project) ?: return mapOf()
+    fun getValidFileCookieMap(project: Project, refresh: Boolean): Map<String, List<Cookie>> {
+        val cookieFile = createCookiesFileIfNotExists(project, refresh) ?: return mapOf()
 
         val currentTimeMillis = System.currentTimeMillis()
         return cookieFile.getRecords()
@@ -89,7 +89,7 @@ object CookieUtils {
             .groupBy { it.domain }
     }
 
-    fun createCookiesFileIfNotExists(project: Project): CookieFile? {
+    fun createCookiesFileIfNotExists(project: Project, refresh: Boolean): CookieFile? {
         val historyFolder = InnerVariableEnum.HISTORY_FOLDER.exec("", project) ?: return null
 
         val historyDir = File(historyFolder)
@@ -103,13 +103,13 @@ object CookieUtils {
             Files.writeString(file, "# domain\tpath\tname\tvalue\tdate")
         }
 
-        val cookieVirtualFile = VfsUtil.findFileByIoFile(cookiesFile, true) ?: return null
+        val cookieVirtualFile = VfsUtil.findFileByIoFile(cookiesFile, refresh) ?: return null
 
         return PsiUtil.getPsiFile(project, cookieVirtualFile) as CookieFile
     }
 
     fun saveCookiesToFile(resCookies: List<Cookie>, project: Project): String {
-        val cookiePsiFile = createCookiesFileIfNotExists(project) ?: return ""
+        val cookiePsiFile = createCookiesFileIfNotExists(project, true) ?: return ""
 
         val cookies = resCookies.filter { it.expiresAt > 0 }
 

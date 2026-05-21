@@ -100,6 +100,19 @@ class VariableResolver(
         if (variable == null) return null
 
         if (builtin) {
+            if (variable == InnerVariableEnum.TO_JSON_STR.methodName) {
+                val arg = args!![0] as String
+                var value = jsExecutor?.getRequestVariable(arg)
+                if (value != null) {
+                    return Console.convertParamToValidJson(arg, value)
+                }
+
+                value = jsExecutor?.getJsGlobalVariable(arg)
+                if (value != null) {
+                    return Console.convertParamToValidJson(arg, value)
+                }
+            }
+
             var innerVariable = resolveInnerVariable(variable, args)
             if (innerVariable != null) {
                 return innerVariable
@@ -119,24 +132,12 @@ class VariableResolver(
                 }
             }
 
-            if (variable == "\$toString") {
-                val arg = args!![0] as String
-                var value = jsExecutor?.getRequestVariable(arg)
-                if (value != null) {
-                    return Console.convertParam(value)
-                }
-                value = jsExecutor?.getJsGlobalVariable(arg)
-                if (value != null) {
-                    return Console.convertParam(value)
-                }
-            }
-
             return null
         }
 
         var innerVariable = jsExecutor?.getRequestVariable(variable)
         if (innerVariable != null) {
-            return innerVariable
+            return innerVariable.toString()
         }
 
         innerVariable = fileScopeVariableMap[variable]
@@ -146,7 +147,7 @@ class VariableResolver(
 
         innerVariable = jsExecutor?.getJsGlobalVariable(variable)
         if (innerVariable != null) {
-            return innerVariable
+            return innerVariable.toString()
         }
 
         val envFileService = EnvFileService.getService(project)

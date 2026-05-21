@@ -664,6 +664,20 @@ enum class InnerVariableEnum(val methodName: String) {
             return ParenthesesInsertHandler.WITH_PARAMETERS
         }
     },
+    TO_JSON_STR("\$toJsonStr") {
+        override fun typeText(): String {
+            this.methodName
+            return "将对象序列化为JSON,用法:${methodName}('name'),name为js全局或请求变量名"
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+           throw UnsupportedOperationException()
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
     EVAL("\$eval") {
         override fun typeText(): String {
             return nls("eval.desc", methodName)

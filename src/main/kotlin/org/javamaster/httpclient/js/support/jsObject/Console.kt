@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.js.support.jsObject
 
+import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.js.support.GlobalLog
 import org.javamaster.httpclient.utils.JsonUtils.gsonNotPretty
 import org.mozilla.javascript.NativeArray
@@ -32,7 +33,7 @@ object Console {
 
         try {
             return if (param is NativeArray) {
-                gsonNotPretty.toJson(param)
+                "(${param.size}) " + gsonNotPretty.toJson(param)
             } else if (param is NativeObject) {
                 param.className + " {" + param.entries.joinToString(", ") {
                     "" + it.key + ": " +
@@ -51,4 +52,22 @@ object Console {
         }
     }
 
+    fun convertParamToValidJson(variable: String, param: Any?): String? {
+        if (param == null) {
+            return "null"
+        }
+
+        try {
+            return if (param is NativeArray || param is NativeObject) {
+                gsonNotPretty.toJson(param)
+            } else {
+                throw JsFileException("toJsonStr函数的变量入参 $variable 的值 $param 为不受支持的类型: ${param.javaClass.simpleName}", null)
+            }
+        } catch (e: JsFileException) {
+            throw e
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return param.toString()
+        }
+    }
 }

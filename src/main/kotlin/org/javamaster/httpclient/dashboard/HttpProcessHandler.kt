@@ -180,7 +180,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                 val environment = getEnvMap(project, false)
 
-                val domainCookieMap = CookieUtils.getValidFileCookieMap(project)
+                val domainCookieMap = CookieUtils.getValidFileCookieMap(project, false)
 
                 HttpReqInfo(reqBody, environment, preJsFiles, domainCookieMap)
             }
@@ -315,7 +315,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                 val environment = getEnvMap(project, false)
 
-                val domainCookieMap = CookieUtils.getValidFileCookieMap(project)
+                val domainCookieMap = CookieUtils.getValidFileCookieMap(project, false)
 
                 HttpReqInfo(reqBody, environment, preJsFiles, domainCookieMap)
             }
