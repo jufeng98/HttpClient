@@ -2,6 +2,7 @@ package org.javamaster.httpclient.js.support.jsObject
 
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.js.support.GetVariables
 import org.javamaster.httpclient.js.support.GlobalLog
 import org.javamaster.httpclient.js.support.GlobalVariables
 import org.mozilla.javascript.Function
@@ -12,9 +13,18 @@ import org.mozilla.javascript.Function
 @Suppress("unused")
 object HttpRequest {
     val global: GlobalVariables = GlobalVariables
+    val variables: GetVariables = GetVariables
 
-    fun log(first: Any?, vararg arguments: Any?) {
-        Console.log(first, *arguments)
+    fun log(first: Any?) {
+        Console.log(first)
+    }
+
+    fun log(first: Any?, sec: Any?) {
+        Console.log(first, sec)
+    }
+
+    fun log(first: Any?, sec: Any?, third: Any?, vararg arguments: Any?) {
+        Console.log(first, sec, third, arguments)
     }
 
     fun test(testName: String, callback: Function) {
@@ -31,4 +41,9 @@ object HttpRequest {
     fun exit() {
         throw HttpFileException("Exit", null)
     }
+
+    override fun toString(): String {
+        return "HttpRequest(global=$global, variables=$variables)"
+    }
+
 }
