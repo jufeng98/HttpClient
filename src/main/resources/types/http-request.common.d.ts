@@ -113,9 +113,9 @@ interface HttpClientRequest {
      */
     method: string
 
-    iteration(): number
+    // iteration(): number
 
-    templateValue(expressionNumber: number): string | boolean | number
+    // templateValue(expressionNumber: number): string | boolean | number
 }
 
 /**
