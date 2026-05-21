@@ -32,4 +32,8 @@ class RequestHeaders(private val headers: LinkedMultiValueMap<String, String>) {
         GlobalLog.log(NlsBundle.nls("req.header.add", name, value))
     }
 
+    override fun toString(): String {
+        return "RequestHeaders(headers=$headers)"
+    }
+
 }

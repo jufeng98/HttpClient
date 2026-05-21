@@ -37,6 +37,8 @@ interface HttpRequest {
      */
     global: Variables;
 
+    variables: GetVariables;
+
     /**
      * 打印“args”数组，然后终止该行。如果“args”的元素不是“string”，则函数将其转换为字符串。
      * 此外，它还将JS对象和数组作为其“JSON.stringify”表示形式打印出来。
@@ -73,6 +75,13 @@ interface Variables {
      * 清除所有变量.
      */
     clearAll(): void;
+}
+
+interface GetVariables {
+    /**
+     * 返回变量“varName”的值。
+     */
+    get(varName: string): any;
 }
 
 /**

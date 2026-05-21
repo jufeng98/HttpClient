@@ -24,4 +24,8 @@ class ResponseHeaders(private val headers: MutableMap<String, MutableList<String
         return list
     }
 
+    override fun toString(): String {
+        return "ResponseHeaders(headers=$headers)"
+    }
+
 }

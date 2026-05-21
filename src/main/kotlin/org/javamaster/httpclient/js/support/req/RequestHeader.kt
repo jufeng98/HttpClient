@@ -18,4 +18,8 @@ class RequestHeader(val name: String, val values: List<String>) {
         return values[0]
     }
 
+    override fun toString(): String {
+        return "RequestHeader(name='$name', values=$values)"
+    }
+
 }

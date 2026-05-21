@@ -27,4 +27,8 @@ class HttpClientResponse(
         return cookies.filter { it.name == name }
     }
 
+    override fun toString(): String {
+        return "HttpClientResponse(status=$status, headers=$headers, body=$body, cookies=$cookies, contentType=$contentType)"
+    }
+
 }

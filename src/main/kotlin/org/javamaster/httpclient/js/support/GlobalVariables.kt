@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.js.support
 
 import com.google.common.collect.Maps
+import org.javamaster.httpclient.js.support.jsObject.Console
 import org.javamaster.httpclient.nls.NlsBundle.nls
 
 @Suppress("unused")
@@ -18,7 +19,7 @@ object GlobalVariables {
     fun set(key: String, value: Any?) {
         var desc: String
         if (value != null) {
-            val str = "" + value
+            val str = Console.convertParam(value)
             desc = if (str.length > 300) {
                 str.substring(0, 300) + "...(${nls("content.truncated")})"
             } else {
@@ -37,6 +38,10 @@ object GlobalVariables {
 
     fun clearAll() {
         dataHolder.clear()
+    }
+
+    override fun toString(): String {
+        return "GlobalVariables(dataHolder=$dataHolder)"
     }
 
 }

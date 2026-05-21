@@ -2,6 +2,7 @@ package org.javamaster.httpclient.js.support.req
 
 import com.google.common.collect.Maps
 import org.javamaster.httpclient.js.support.GlobalLog
+import org.javamaster.httpclient.js.support.jsObject.Console
 import org.javamaster.httpclient.nls.NlsBundle
 
 /**
@@ -22,7 +23,7 @@ class RequestVariables {
     fun set(key: String, value: Any?) {
         var desc: String
         if (value != null) {
-            val str = "" + value
+            val str = Console.convertParam(value)
             desc = if (str.length > 300) {
                 str.substring(0, 300) + "...(${NlsBundle.nls("content.truncated")})"
             } else {
@@ -41,6 +42,10 @@ class RequestVariables {
 
     fun clearAll() {
         dataHolder.clear()
+    }
+
+    override fun toString(): String {
+        return "RequestVariables(dataHolder=$dataHolder)"
     }
 
 }

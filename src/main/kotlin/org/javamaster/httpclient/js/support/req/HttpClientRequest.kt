@@ -12,4 +12,8 @@ class HttpClientRequest(
     val variables: RequestVariables,
     val globalVariables: MutableMap<String, String>,
     val headers: RequestHeaders,
-)
+) {
+    override fun toString(): String {
+        return "HttpClientRequest(environment=$environment, url=$url, body=$body, method='$method', variables=$variables, globalVariables=$globalVariables, headers=$headers)"
+    }
+}

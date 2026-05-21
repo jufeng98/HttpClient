@@ -26,4 +26,7 @@ object Window {
         }
     }
 
+    override fun toString(): String {
+        return javaClass.simpleName
+    }
 }

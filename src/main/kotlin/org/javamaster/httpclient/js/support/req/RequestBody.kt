@@ -43,4 +43,8 @@ class RequestBody(
             jsBody as ByteArray
         }
     }
+
+    override fun toString(): String {
+        return "RequestBody(jsBody=$jsBody, rawBody=$rawBody)"
+    }
 }

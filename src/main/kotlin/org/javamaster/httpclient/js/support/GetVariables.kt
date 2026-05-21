@@ -1,0 +1,40 @@
+package org.javamaster.httpclient.js.support
+
+import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.js.support.req.HttpClientRequest
+import org.mozilla.javascript.ScriptableObject
+
+@Suppress("unused")
+object GetVariables {
+
+    fun get(key: String): Any? {
+        val jsExecutor = JsExecutor.threadLocal.get()!!
+
+        var value = jsExecutor.getRequestVariable(key)
+        if (value != null) {
+            return value
+        }
+
+        val request = ScriptableObject.getProperty(jsExecutor.reqScriptableObject, "requestRaw") as HttpClientRequest
+        value = request.globalVariables[key]
+        if (value != null) {
+            return value
+        }
+
+        value = jsExecutor.getJsGlobalVariable(key)
+        if (value != null) {
+            return value
+        }
+
+        value = request.environment[key]
+        if (value != null) {
+            return value
+        }
+
+        return null
+    }
+
+    override fun toString(): String {
+        return javaClass.simpleName
+    }
+}
