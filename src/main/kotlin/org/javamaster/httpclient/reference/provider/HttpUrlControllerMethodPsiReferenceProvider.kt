@@ -7,6 +7,7 @@ import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.psi.HttpRequestTarget
 import org.javamaster.httpclient.reference.support.HttpUrlControllerMethodPsiReference
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 
 /**
  * @author yudong
@@ -20,7 +21,7 @@ class HttpUrlControllerMethodPsiReferenceProvider : PsiReferenceProvider() {
 
         val path = virtualFile.parent?.path ?: return PsiReference.EMPTY_ARRAY
 
-        val pair = HttpUtils.getSearchTxtInfo(httpRequestTarget, path) ?: return PsiReference.EMPTY_ARRAY
+        val pair = MyPsiUtils.getSearchTxtInfo(httpRequestTarget, path) ?: return PsiReference.EMPTY_ARRAY
 
         val searchTxt = pair.first
         val textRange = pair.second

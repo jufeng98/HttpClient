@@ -4,6 +4,7 @@ import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
@@ -17,13 +18,16 @@ import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_MODEL_PROPERTY_ANNO_NAME
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_OPERATION_ANNO_NAME
 import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_BODY_ANNO_NAME
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VARIABLE_SIGN_END
+import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils.collectJsonPropertyNameLevels
-import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.HttpUtils.resolveTargetField
 import java.io.File
+import java.net.URI
 import java.net.http.HttpClient
 import javax.swing.Icon
 
@@ -94,6 +98,77 @@ class MyPsiUtils {
                 .mapNotNull {
                     getJsScript(it)
                 }
+        }
+
+        fun getJsScript(httpResponseHandler: HttpResponseHandler?): HttpScriptBody? {
+            if (httpResponseHandler == null) {
+                return null
+            }
+
+            return httpResponseHandler.responseScript.scriptBody
+        }
+
+        fun getSearchTxtInfo(requestTarget: HttpRequestTarget, httpFileParentPath: String): Pair<String, TextRange>? {
+            val project = requestTarget.project
+
+            val url = requestTarget.text
+
+            val start: Int
+            val bracketIdx = url.indexOf(VARIABLE_SIGN_END)
+            start = if (bracketIdx != -1) {
+                bracketIdx + 2
+            } else {
+                val envFileService = EnvFileService.getService(project)
+                val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
+
+                val contextPath = envFileService.getEnvValue("contextPath", selectedEnv, httpFileParentPath)
+                val contextPathTrim = envFileService.getEnvValue("contextPathTrim", selectedEnv, httpFileParentPath)
+
+                val tmpIdx: Int
+                val uri: URI
+                try {
+                    uri = URI(url)
+                    tmpIdx = if (contextPath != null) {
+                        url.indexOf(contextPath)
+                    } else if (contextPathTrim != null) {
+                        url.indexOf(contextPathTrim) + contextPathTrim.length
+                    } else {
+                        url.indexOf(uri.path)
+                    }
+                } catch (_: Exception) {
+                    return null
+                }
+                tmpIdx
+            }
+
+            if (start == -1) {
+                return null
+            }
+
+            val idx = url.lastIndexOf("?")
+            val end = if (idx == -1) {
+                url.length
+            } else {
+                idx
+            }
+
+            if (end < start) {
+                return null
+            }
+
+            val textRange = TextRange(start, end)
+            val searchTxt = url.substring(start, end)
+            return Pair(searchTxt, textRange)
+        }
+
+        fun generateAnno(annotation: PsiAnnotation): String {
+            val html = """
+            <div class='definition'>
+                <span style="color:#808000;">@</span><a href="psi_element://${annotation.qualifiedName}"><span style="color:#808000;">${annotation.nameReferenceElement?.text}</span></a><span>${annotation.parameterList.text}</span>
+            </div>
+        """.trimIndent()
+
+            return html
         }
 
         private fun getGlobalJsScript(httpFile: PsiFile): HttpScriptBody? {

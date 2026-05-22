@@ -7,7 +7,6 @@ import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -15,34 +14,23 @@ import com.intellij.psi.*
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.apache.http.HttpHeaders.CONTENT_TYPE
-import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
-import org.javamaster.httpclient.consts.HttpConsts.Companion.VARIABLE_SIGN_END
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
-import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.map.LinkedMultiValueMap
-import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
-import org.javamaster.httpclient.ui.HttpEditorTopForm
-import org.javamaster.httpclient.utils.JsonUtils.formatJson
 import org.javamaster.httpclient.utils.ReqUtils.Companion.encodeQueryParam
 import org.javamaster.httpclient.utils.ReqUtils.Companion.handleQueryParam
 import java.io.File
-import java.net.URI
 import java.net.URL
-import java.net.http.HttpHeaders
 import java.nio.charset.StandardCharsets
 import java.util.*
-import kotlin.jvm.optionals.getOrElse
 
 /**
  * @author yudong
@@ -387,61 +375,6 @@ object HttpUtils {
         }
     }
 
-    fun convertResponseHeaders(headers: HttpHeaders): MutableList<String> {
-        val headerDescList = mutableListOf<String>()
-
-        headers.map()
-            .forEach { (t, u) ->
-                u.forEach {
-                    headerDescList.add("$t: $it$CR_LF")
-                }
-            }
-
-        headerDescList.add(CR_LF)
-
-        return headerDescList
-    }
-
-    fun convertResponseBody(resBody: ByteArray, resHeaders: HttpHeaders): HttpResInfo {
-        var bodyBytes = resBody
-        val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { ContentType.TEXT_PLAIN.mimeType }
-
-        val simpleTypeEnum = SimpleTypeEnum.convertContentType(contentType)
-
-        val bodyStr = if (simpleTypeEnum.binary) {
-            null
-        } else {
-            val str = String(bodyBytes, StandardCharsets.UTF_8)
-
-            if (simpleTypeEnum == SimpleTypeEnum.JSON) {
-                if (bodyBytes.size > RES_SIZE_LIMIT) {
-                    str
-                } else {
-                    val prettyStr = formatJson(str)
-                    if (prettyStr.length > RES_SIZE_LIMIT) {
-                        str
-                    } else {
-                        bodyBytes = prettyStr.toByteArray(StandardCharsets.UTF_8)
-
-                        prettyStr
-                    }
-                }
-            } else {
-                str
-            }
-        }
-
-        return HttpResInfo(simpleTypeEnum, bodyBytes, bodyStr, contentType)
-    }
-
-    fun getJsScript(httpResponseHandler: HttpResponseHandler?): HttpScriptBody? {
-        if (httpResponseHandler == null) {
-            return null
-        }
-
-        return httpResponseHandler.responseScript.scriptBody
-    }
-
     fun getPreJsFiles(httpFile: HttpFile, excludeRequire: Boolean): List<PreJsFile> {
         val directionComments = httpFile.getDirectionComments()
 
@@ -550,59 +483,6 @@ object HttpUtils {
         val virtualFile = getOriginalFile(requestTarget) ?: return null
 
         return ModuleUtilCore.findModuleForFile(virtualFile, project)
-    }
-
-    fun getSearchTxtInfo(requestTarget: HttpRequestTarget, httpFileParentPath: String): Pair<String, TextRange>? {
-        val project = requestTarget.project
-
-        val url = requestTarget.text
-
-        val start: Int
-        val bracketIdx = url.indexOf(VARIABLE_SIGN_END)
-        start = if (bracketIdx != -1) {
-            bracketIdx + 2
-        } else {
-            val envFileService = EnvFileService.getService(project)
-            val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
-
-            val contextPath = envFileService.getEnvValue("contextPath", selectedEnv, httpFileParentPath)
-            val contextPathTrim = envFileService.getEnvValue("contextPathTrim", selectedEnv, httpFileParentPath)
-
-            val tmpIdx: Int
-            val uri: URI
-            try {
-                uri = URI(url)
-                tmpIdx = if (contextPath != null) {
-                    url.indexOf(contextPath)
-                } else if (contextPathTrim != null) {
-                    url.indexOf(contextPathTrim) + contextPathTrim.length
-                } else {
-                    url.indexOf(uri.path)
-                }
-            } catch (_: Exception) {
-                return null
-            }
-            tmpIdx
-        }
-
-        if (start == -1) {
-            return null
-        }
-
-        val idx = url.lastIndexOf("?")
-        val end = if (idx == -1) {
-            url.length
-        } else {
-            idx
-        }
-
-        if (end < start) {
-            return null
-        }
-
-        val textRange = TextRange(start, end)
-        val searchTxt = url.substring(start, end)
-        return Pair(searchTxt, textRange)
     }
 
     fun isFileInIdeaDir(virtualFile: VirtualFile?): Boolean {
@@ -756,16 +636,6 @@ object HttpUtils {
         return psiField
     }
 
-    fun generateAnno(annotation: PsiAnnotation): String {
-        val html = """
-            <div class='definition'>
-                <span style="color:#808000;">@</span><a href="psi_element://${annotation.qualifiedName}"><span style="color:#808000;">${annotation.nameReferenceElement?.text}</span></a><span>${annotation.parameterList.text}</span>
-            </div>
-        """.trimIndent()
-
-        return html
-    }
-
     fun getActiveValidProject(): Project? {
         val project = ProjectUtil.getActiveProject() ?: return null
         if (!project.isInitialized) {
@@ -777,30 +647,6 @@ object HttpUtils {
         }
 
         return project
-    }
-
-    fun shouldRedirect(httpStatus: Int?, paramMap: Map<String, String>): Boolean {
-        httpStatus ?: return false
-
-        if (httpStatus != HttpStatus.SC_MOVED_TEMPORARILY && httpStatus != HttpStatus.SC_MOVED_PERMANENTLY) {
-            return false
-        }
-
-        return paramMap.contains(ParamEnum.AUTO_REDIRECT.param)
-    }
-
-    fun resolveLocationUrl(url: String, headers: HttpHeaders): String {
-        val location = headers.firstValue(com.google.common.net.HttpHeaders.LOCATION).get()
-        if (location.startsWith("http")) {
-            return location
-        }
-
-        val httpUrl = url.toHttpUrl()
-        val scheme = httpUrl.scheme
-        val host = httpUrl.host
-        val port = httpUrl.port
-        val portStr = if (port == 443 || port == 80) "" else ":$port"
-        return "$scheme://$host$portStr$location"
     }
 
 }

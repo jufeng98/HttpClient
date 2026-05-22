@@ -9,7 +9,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_OPERATION_ANNO_NAME
-import org.javamaster.httpclient.utils.HttpUtils.generateAnno
+import org.javamaster.httpclient.utils.MyPsiUtils
 
 /**
  * show SpringMVC Controller method information when hover in url
@@ -45,7 +45,7 @@ class HttpUrlControllerMethodDocumentationProvider : DocumentationProvider {
 
         val annotation = psiMethod.getAnnotation(API_OPERATION_ANNO_NAME)
         return if (annotation != null) {
-            val generateAnno = generateAnno(annotation)
+            val generateAnno = MyPsiUtils.generateAnno(annotation)
             str + generateAnno
         } else {
             str

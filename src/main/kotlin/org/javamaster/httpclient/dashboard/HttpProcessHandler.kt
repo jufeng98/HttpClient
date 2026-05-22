@@ -44,9 +44,6 @@ import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.*
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
-import org.javamaster.httpclient.utils.HttpUtils.convertResponseBody
-import org.javamaster.httpclient.utils.HttpUtils.convertResponseHeaders
-import org.javamaster.httpclient.utils.HttpUtils.getJsScript
 import org.javamaster.httpclient.utils.HttpUtils.handleOrdinaryContentCurl
 import org.javamaster.httpclient.ws.WsRequest
 import java.io.ByteArrayInputStream
@@ -87,7 +84,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
     private val jsListBeforeReq = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock)
 
-    private val jsAfterReq = getJsScript(responseHandler)
+    private val jsAfterReq = MyPsiUtils.getJsScript(responseHandler)
 
     private val paramMap = MyPsiUtils.getReqDirectionCommentParamMap(requestBlock)
 
@@ -583,13 +580,13 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             costTimes = System.currentTimeMillis() - start
             httpStatus = response?.statusCode()
 
-            if (HttpUtils.shouldRedirect(httpStatus, paramMap)) {
+            if (ResUtils.shouldRedirect(httpStatus, paramMap)) {
                 redirectTimes++
                 if (redirectTimes > 6) {
                     return@whenCompleteAsync
                 }
 
-                val locationUrl = HttpUtils.resolveLocationUrl(url, response.headers())
+                val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
                 runInEdt {
                     httpReqDescList.add("$CR_LF// ${nls("redirect.times.req", redirectTimes)}$CR_LF")
                     handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList)
@@ -621,9 +618,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                         }
 
                         val resHeaders = response.headers()
-                        val resHeaderList = convertResponseHeaders(resHeaders)
+                        val resHeaderList = ResUtils.convertResponseHeaders(resHeaders)
 
-                        val httpResInfo = convertResponseBody(response.body(), resHeaders)
+                        val httpResInfo = ResUtils.convertResponseBody(response.body(), resHeaders)
 
                         val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
 

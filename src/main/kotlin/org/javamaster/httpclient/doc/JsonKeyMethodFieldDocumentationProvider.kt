@@ -9,7 +9,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_MODEL_PROPERTY_ANNO_NAME
-import org.javamaster.httpclient.utils.HttpUtils.generateAnno
+import org.javamaster.httpclient.utils.MyPsiUtils
 
 /**
  * show SpringMVC Controller or Dubbo Service method param field information when hover in json key
@@ -45,7 +45,7 @@ class JsonKeyMethodFieldDocumentationProvider : DocumentationProvider {
 
         val annotation = psiField.getAnnotation(API_MODEL_PROPERTY_ANNO_NAME)
         return if (annotation != null) {
-            val generateAnno = generateAnno(annotation)
+            val generateAnno = MyPsiUtils.generateAnno(annotation)
             str + generateAnno
         } else {
             str
