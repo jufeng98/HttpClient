@@ -11,24 +11,20 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiUtil;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextField;
-import com.intellij.ui.popup.PopupFactoryImpl;
 import com.intellij.ui.table.JBTable;
-import kotlin.Pair;
 import kotlin.Triple;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.js.JsExecutor;
-import org.javamaster.httpclient.js.support.JsGlobalVariablesHolder;
+import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder;
+import org.javamaster.httpclient.listener.VariableFormBtnClickListener;
+import org.javamaster.httpclient.map.LinkedMultiValueMap;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.resolve.VariableResolver;
-import org.javamaster.httpclient.utils.EnvUtils;
-import org.javamaster.httpclient.utils.NotifyUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
@@ -39,10 +35,17 @@ public class ViewVariableForm extends DialogWrapper {
     private final Project project;
     private JPanel contentPane;
     private JBTable table;
-    private static final int TYPE_GLOBAL = 1;
-    private static final int TYPE_JS = 2;
-    private static final int TYPE_ENV = 3;
-    private static final int TYPE_SYS = 4;
+
+    private static final JBColor addColor = new JBColor(new Color(64, 158, 255), new Color(64, 158, 255));
+    private static final JBColor editColor = new JBColor(new Color(230, 162, 60), new Color(230, 162, 60));
+    private static final JBColor delColor = new JBColor(new Color(232, 47, 47), new Color(232, 47, 47));
+    private static final JLabel emptyLabel = new JLabel("");
+
+    public static final int TYPE_FILE_VARIABLE = 1;
+    public static final int TYPE_JS_GLOBAL_VARIABLE = 2;
+    public static final int TYPE_ENV_VARIABLE = 3;
+    public static final int TYPE_SYS = 4;
+    public static final int TYPE_HEADER = 5;
 
     public ViewVariableForm(Project project) {
         super(project);
@@ -57,7 +60,7 @@ public class ViewVariableForm extends DialogWrapper {
         init();
     }
 
-    private void initTable() {
+    public void initTable() {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setCellSelectionEnabled(true);
 
@@ -70,7 +73,7 @@ public class ViewVariableForm extends DialogWrapper {
         DefaultTableModel model = new DefaultTableModel(rowData, new String[]{"key", "value", "operation"}) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false;
+                return column == 2;
             }
         };
 
@@ -80,11 +83,7 @@ public class ViewVariableForm extends DialogWrapper {
 
         table.setDefaultRenderer(Object.class, (table, value, isSelected, hasFocus,
                                                 row, column) -> {
-            if (value instanceof JLabel) {
-                return (Component) value;
-            }
-
-            if (value instanceof JButton) {
+            if (value instanceof Component) {
                 return (Component) value;
             }
 
@@ -105,99 +104,17 @@ public class ViewVariableForm extends DialogWrapper {
 
             return textField;
         });
-        TableColumnModel columnModel = table.getColumnModel();
 
+        TableColumnModel columnModel = table.getColumnModel();
         columnModel.getColumn(0).setPreferredWidth(280);
         columnModel.getColumn(1).setPreferredWidth(720);
 
         TableColumn operationColumn = columnModel.getColumn(2);
-        operationColumn.setPreferredWidth(80);
-
-        table.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseClicked(MouseEvent event) {
-                int row = table.rowAtPoint(event.getPoint());
-                int col = table.columnAtPoint(event.getPoint());
-                if (row < 0 || col != 2) {
-                    return;
-                }
-
-                int type = (int) rowData[row][3];
-                if (type == -1) {
-                    return;
-                }
-
-
-                Object keyObj = rowData[row][0];
-
-                String key;
-                String value;
-                String title;
-                boolean add;
-                if (keyObj instanceof String) {
-                    key = (String) keyObj;
-                    value = (String) rowData[row][1];
-                    title = "Edit";
-                    add = false;
-                } else {
-                    key = "";
-                    value = "";
-                    title = "Add";
-                    add = true;
-                }
-
-                PropertyForm propertyForm = new PropertyForm(project, title, key, value, type == TYPE_JS, add);
-                boolean b = propertyForm.showAndGet();
-                if (!b) {
-                    return;
-                }
-
-                Pair<String, String> pair = propertyForm.getFormData();
-                String newKey = pair.getFirst();
-                String newValue = pair.getSecond();
-
-                if (!add) {
-                    rowData[row][0] = newKey;
-                    rowData[row][1] = newValue;
-                }
-
-                try {
-                    switch (type) {
-                        case TYPE_GLOBAL:
-                            boolean success = EnvUtils.Companion.modifyFileGlobalVariable(key, newKey, newValue, add, project);
-
-                            if (success) {
-                                PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
-                            }
-
-                            break;
-                        case TYPE_JS:
-                            JsGlobalVariablesHolder.INSTANCE.set(newKey, newValue);
-
-                            PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
-
-                            break;
-                        case TYPE_ENV:
-                            boolean success1 = EnvUtils.Companion.modifyEnvVariable(key, newKey, newValue, add, project);
-
-                            if (success1) {
-                                PopupFactoryImpl.getInstance().createMessage("Success!").showCenteredInCurrentWindow(project);
-                            }
-
-                            break;
-                        default:
-                    }
-
-                    initTable();
-                } catch (Exception e) {
-                    //noinspection CallToPrintStackTrace
-                    e.printStackTrace();
-                    NotifyUtil.INSTANCE.notifyWarn(project, e.getMessage());
-                }
-            }
-
-        });
+        operationColumn.setMinWidth(200);
+        operationColumn.setMaxWidth(200);
+        operationColumn.setPreferredWidth(200);
+        operationColumn.setCellRenderer((table, value, isSelected, hasFocus, row, column) -> (Component) rowData[row][2]);
+        operationColumn.setCellEditor(new OperationCellEditor(rowData));
     }
 
     private List<Triple<String, Map<String, String>, Integer>> collectVariableMapList() {
@@ -215,13 +132,18 @@ public class ViewVariableForm extends DialogWrapper {
         VariableResolver variableResolver = new VariableResolver(jsExecutor, httpFile, selectedEnv, project);
 
         LinkedHashMap<String, String> fileGlobalVariables = variableResolver.getFileGlobalVariables();
-        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("file.global.desc"), fileGlobalVariables, TYPE_GLOBAL));
+        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("file.global.desc"), fileGlobalVariables, TYPE_FILE_VARIABLE));
 
-        Map<String, String> jsGlovalVariableMap = variableResolver.getJsGlobalVariables();
-        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("js.variable.desc"), jsGlovalVariableMap, TYPE_JS));
+        Map<String, String> jsGlovalVariableMap = JsGlobalVariablesHolder.INSTANCE.getJsGlobalVariables();
+        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("js.variable.desc"), jsGlovalVariableMap, TYPE_JS_GLOBAL_VARIABLE));
 
         Map<String, String> envMap = EnvFileService.Companion.getEnvMap(project, false);
-        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("environment.variable.desc"), envMap, TYPE_ENV));
+        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("environment.variable.desc"), envMap, TYPE_ENV_VARIABLE));
+
+        @SuppressWarnings("rawtypes")
+        Map globalHeaders = JsGlobalVariablesHolder.INSTANCE.getHeaders().getDataHolder();
+        //noinspection rawtypes,unchecked
+        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("global.headers.desc"), globalHeaders, TYPE_HEADER));
 
         Map<String, String> propMap = Maps.newLinkedHashMap();
         System.getProperties().forEach((key, value) -> propMap.put(PROPERTY_PREFIX + "." + key, value + ""));
@@ -242,20 +164,19 @@ public class ViewVariableForm extends DialogWrapper {
             if (map.isEmpty()) {
                 rows++;
             } else {
-                rows += map.size();
+                if (map instanceof LinkedMultiValueMap) {
+                    //noinspection rawtypes
+                    rows += ((LinkedMultiValueMap) map).valueSize();
+                } else {
+                    rows += map.size();
+                }
             }
         }
         return rows;
     }
 
     private Object[][] createRowData(List<Triple<String, Map<String, String>, Integer>> resList, int rows) {
-        JButton btnAdd = new JButton(NlsBundle.INSTANCE.nls("add"));
-        btnAdd.setForeground(new JBColor(new Color(64, 158, 255), new Color(64, 158, 255)));
-
-        JButton btnEdit = new JButton(NlsBundle.INSTANCE.nls("edit"));
-        btnEdit.setForeground(new JBColor(new Color(230, 162, 60), new Color(230, 162, 60)));
-
-        String repeat = "-".repeat(160);
+        String repeat = "-".repeat(142);
         Object[][] rowData = new Object[rows][4];
         int i = 0;
         for (Triple<String, Map<String, String>, Integer> triple : resList) {
@@ -268,46 +189,94 @@ public class ViewVariableForm extends DialogWrapper {
             rowData[i][0] = label;
             rowData[i][1] = repeat;
 
-            boolean match = type == TYPE_GLOBAL || type == TYPE_JS || type == TYPE_ENV;
+            boolean match = type == TYPE_FILE_VARIABLE || type == TYPE_JS_GLOBAL_VARIABLE || type == TYPE_ENV_VARIABLE || type == TYPE_HEADER;
             if (match) {
-                rowData[i][2] = btnAdd;
+                rowData[i][2] = createPanelAdd(i, rowData, project);
                 rowData[i][3] = type;
             } else {
-                rowData[i][2] = "";
+                rowData[i][2] = emptyLabel;
                 rowData[i][3] = -1;
             }
 
             i++;
 
-            Map<String, String> map = triple.getSecond();
+            @SuppressWarnings("rawtypes")
+            Map map = triple.getSecond();
             if (map.isEmpty()) {
                 rowData[i][0] = NlsBundle.INSTANCE.nls("no.data.available");
                 rowData[i][1] = "";
-                rowData[i][2] = "";
+                rowData[i][2] = emptyLabel;
                 rowData[i][3] = -1;
                 i++;
             } else {
-                for (Map.Entry<String, String> entry : map.entrySet()) {
-                    String key = entry.getKey();
-                    String value = entry.getValue();
+                for (Object obj : map.entrySet()) {
+                    @SuppressWarnings("rawtypes")
+                    Map.Entry entry = (Map.Entry) obj;
+                    String key = (String) entry.getKey();
+                    Object value = entry.getValue();
 
-                    rowData[i][0] = key;
-                    rowData[i][1] = value;
+                    if (value instanceof String) {
+                        rowData[i][0] = key;
+                        rowData[i][1] = value;
 
-                    if (match) {
-                        rowData[i][2] = btnEdit;
-                        rowData[i][3] = type;
+                        if (match) {
+                            rowData[i][2] = createPanelOther(i, rowData, project);
+                            rowData[i][3] = type;
+                        } else {
+                            rowData[i][2] = emptyLabel;
+                            rowData[i][3] = -1;
+                        }
+
+                        i++;
+                    } else if (value instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<String> headerValues = (List<String>) value;
+                        for (String headerValue : headerValues) {
+                            rowData[i][0] = key;
+                            rowData[i][1] = headerValue;
+
+                            if (match) {
+                                rowData[i][2] = createPanelOther(i, rowData, project);
+                                rowData[i][3] = type;
+                            } else {
+                                rowData[i][2] = emptyLabel;
+                                rowData[i][3] = -1;
+                            }
+
+                            i++;
+                        }
                     } else {
-                        rowData[i][2] = "";
-                        rowData[i][3] = -1;
+                        throw new UnsupportedOperationException();
                     }
-
-                    i++;
                 }
             }
         }
 
         return rowData;
+    }
+
+    public JPanel createPanelAdd(int row, Object[][] rowData, Project project) {
+        JButton btnAdd = new JButton(NlsBundle.INSTANCE.nls("add"));
+        btnAdd.setForeground(addColor);
+        btnAdd.addActionListener(new VariableFormBtnClickListener(this, row, false, true, rowData, project));
+        JPanel panel = new JPanel(new FlowLayout());
+        panel.add(btnAdd);
+        return panel;
+    }
+
+    private JPanel createPanelOther(int row, Object[][] rowData, Project project) {
+        JButton btnEdit = new JButton(NlsBundle.INSTANCE.nls("edit"));
+        btnEdit.setForeground(editColor);
+        btnEdit.addActionListener(new VariableFormBtnClickListener(this, row, false, false, rowData, project));
+
+        JButton btnDel = new JButton(NlsBundle.INSTANCE.nls("del"));
+        btnDel.setForeground(delColor);
+        btnDel.addActionListener(new VariableFormBtnClickListener(this, row, true, false, rowData, project));
+
+        JPanel panel = new JPanel(new FlowLayout());
+        panel.add(btnEdit);
+        panel.add(btnDel);
+        return panel;
     }
 
     protected Action @NotNull [] createActions() {
@@ -317,5 +286,30 @@ public class ViewVariableForm extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         return contentPane;
+    }
+
+    private static class OperationCellEditor extends AbstractCellEditor implements TableCellEditor {
+        private final Object[][] rowData;
+
+        public OperationCellEditor(Object[][] rowData) {
+            this.rowData = rowData;
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                                                     boolean isSelected, int row, int column) {
+            return (Component) rowData[row][2];
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return "";
+        }
+
+        @Override
+        public boolean stopCellEditing() {
+            fireEditingStopped();
+            return true;
+        }
     }
 }
