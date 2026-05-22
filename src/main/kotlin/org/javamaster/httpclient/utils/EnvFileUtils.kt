@@ -20,7 +20,7 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 /**
  * @author yudong
  */
-class EnvUtils {
+class EnvFileUtils {
 
     companion object {
 

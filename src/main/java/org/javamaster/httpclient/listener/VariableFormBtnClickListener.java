@@ -8,7 +8,7 @@ import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder;
 import org.javamaster.httpclient.parser.HttpFile;
 import org.javamaster.httpclient.ui.PropertyForm;
 import org.javamaster.httpclient.ui.ViewVariableForm;
-import org.javamaster.httpclient.utils.EnvUtils;
+import org.javamaster.httpclient.utils.EnvFileUtils;
 import org.javamaster.httpclient.utils.NotifyUtil;
 
 import java.awt.event.ActionEvent;
@@ -96,7 +96,7 @@ public class VariableFormBtnClickListener implements ActionListener {
         return switch (type) {
             case ViewVariableForm.TYPE_FILE_VARIABLE -> HttpFile.Companion.delFileVariable(key, project);
             case ViewVariableForm.TYPE_JS_GLOBAL_VARIABLE -> JsGlobalVariablesHolder.INSTANCE.clear(key);
-            case ViewVariableForm.TYPE_ENV_VARIABLE -> EnvUtils.Companion.delEnvVariable(key, project);
+            case ViewVariableForm.TYPE_ENV_VARIABLE -> EnvFileUtils.Companion.delEnvVariable(key, project);
             case ViewVariableForm.TYPE_HEADER -> JsGlobalVariablesHolder.INSTANCE.getHeaders().delete(key, value);
             default -> false;
         };
@@ -106,7 +106,7 @@ public class VariableFormBtnClickListener implements ActionListener {
         return switch (type) {
             case ViewVariableForm.TYPE_FILE_VARIABLE -> HttpFile.Companion.addFileVariable(newKey, newValue, project);
             case ViewVariableForm.TYPE_JS_GLOBAL_VARIABLE -> JsGlobalVariablesHolder.INSTANCE.set(newKey, newValue);
-            case ViewVariableForm.TYPE_ENV_VARIABLE -> EnvUtils.Companion.addEnvVariable(newKey, newValue, project);
+            case ViewVariableForm.TYPE_ENV_VARIABLE -> EnvFileUtils.Companion.addEnvVariable(newKey, newValue, project);
             case ViewVariableForm.TYPE_HEADER -> JsGlobalVariablesHolder.INSTANCE.getHeaders().add(newKey, newValue);
             default -> false;
         };
@@ -119,7 +119,7 @@ public class VariableFormBtnClickListener implements ActionListener {
             case ViewVariableForm.TYPE_JS_GLOBAL_VARIABLE ->
                     JsGlobalVariablesHolder.INSTANCE.modify(key, newKey, newValue);
             case ViewVariableForm.TYPE_ENV_VARIABLE ->
-                    EnvUtils.Companion.modifyEnvVariable(key, newKey, newValue, project);
+                    EnvFileUtils.Companion.modifyEnvVariable(key, newKey, newValue, project);
             case ViewVariableForm.TYPE_HEADER ->
                     JsGlobalVariablesHolder.INSTANCE.getHeaders().modify(key, newKey, value, newValue);
             default -> false;
