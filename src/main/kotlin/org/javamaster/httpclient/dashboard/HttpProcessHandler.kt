@@ -30,6 +30,7 @@ import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.mock.MockServer
 import org.javamaster.httpclient.model.HttpInfo
@@ -235,6 +236,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             HttpRequestEnum.WEBSOCKET -> {
                 CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.domainCookieMap)
 
+                reqHeaderMap.addAll(GlobalHeaders.dataHolder)
+
                 handleWs(url, reqHeaderMap)
             }
 
@@ -244,6 +247,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
             else -> {
                 CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.domainCookieMap)
+
+                reqHeaderMap.addAll(GlobalHeaders.dataHolder)
 
                 handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
             }
