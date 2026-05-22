@@ -307,25 +307,6 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         return request?.variables?.get(key)
     }
 
-    fun getJsGlobalVariable(key: String): Any? {
-        return JsGlobalVariablesHolder.get(key)
-    }
-
-    fun getJsGlobalVariables(): Map<String, String> {
-        val map = mutableMapOf<String, String>()
-
-        JsGlobalVariablesHolder.dataHolder
-            .forEach {
-                map[it.key] = if (it.value != null) {
-                    it.value.toString()
-                } else {
-                    "null"
-                }
-            }
-
-        return map
-    }
-
     companion object {
         var threadLocal = ThreadLocal<JsExecutor>()
         private val libraryLoadedMap = mutableMapOf<String, ScriptableObject>()

@@ -44,7 +44,7 @@ object CookieUtils {
             reqHeaderMap.add(com.google.common.net.HttpHeaders.COOKIE, cookieValueStr)
         } else {
             val reqCookieStr = reqCookies[0]
-            reqHeaderMap.put(com.google.common.net.HttpHeaders.COOKIE, listOf<String>("$reqCookieStr; $cookieValueStr"))
+            reqHeaderMap.put(com.google.common.net.HttpHeaders.COOKIE, mutableListOf("$reqCookieStr; $cookieValueStr"))
         }
     }
 

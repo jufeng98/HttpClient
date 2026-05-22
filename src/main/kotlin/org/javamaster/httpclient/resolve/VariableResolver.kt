@@ -6,6 +6,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder
 import org.javamaster.httpclient.js.support.jsObject.Console
 import org.javamaster.httpclient.psi.HttpGlobalLiteralValue
 import org.javamaster.httpclient.psi.HttpGlobalVariable
@@ -104,12 +105,12 @@ class VariableResolver(
                 val arg = args!![0] as String
                 var value = jsExecutor?.getRequestVariable(arg)
                 if (value != null) {
-                    return Console.convertParamToValidJson(arg, value)
+                    return Console.convertParamToValidJson(value)
                 }
 
-                value = jsExecutor?.getJsGlobalVariable(arg)
+                value = JsGlobalVariablesHolder.get(arg)
                 if (value != null) {
-                    return Console.convertParamToValidJson(arg, value)
+                    return Console.convertParamToValidJson(value)
                 }
             }
 
@@ -145,7 +146,7 @@ class VariableResolver(
             return innerVariable
         }
 
-        innerVariable = jsExecutor?.getJsGlobalVariable(variable)
+        innerVariable = JsGlobalVariablesHolder.get(variable)
         if (innerVariable != null) {
             return innerVariable.toString()
         }
@@ -157,15 +158,6 @@ class VariableResolver(
         }
 
         return null
-    }
-
-    fun getJsGlobalVariables(): LinkedHashMap<String, String> {
-        val jsGlobalVariables = jsExecutor?.getJsGlobalVariables() ?: return linkedMapOf()
-
-        val map = linkedMapOf<String, String>()
-        map.putAll(jsGlobalVariables)
-
-        return map
     }
 
     private fun resolveInnerVariable(variable: String, args: Array<Any>?): String? {

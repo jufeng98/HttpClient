@@ -35,7 +35,7 @@ interface HttpRequest {
      * Authorization: Bearer {{token}}
      * </pre>
      */
-    global: Variables;
+    global: GlobalVariables;
 
     variables: CommonVariables;
 
@@ -49,7 +49,7 @@ interface HttpRequest {
 /**
  * 存储变量，可用于定义、取消定义或检索变量。
  */
-interface Variables {
+interface GlobalVariables {
     /**
      * 保存名为“varName”的变量，并将其值设置为“varValue”。
      */
@@ -75,6 +75,11 @@ interface Variables {
      * 清除所有变量.
      */
     clearAll(): void;
+
+    /**
+     * 全局请求头信息
+     */
+    headers: GlobalHeaders;
 }
 
 interface CommonVariables {
@@ -132,6 +137,32 @@ interface RequestHeaders {
      * @param name 请求头名称
      */
     findByName(name: string): RequestHeader | null
+}
+
+/**
+ * 用于访问全局请求头的对象。
+ */
+interface GlobalHeaders {
+    /**
+     * 包含所有全局请求头的数组
+     */
+    all(): [RequestHeader]
+
+    /**
+     * 按名称搜索第一个全局请求头，如果没有这样的请求头，则返回null。
+     * @param name 请求头名称
+     */
+    findByName(name: string): RequestHeader | null;
+
+    /**
+     * 设置全局请求头
+     */
+    set(name: string, value: string): void;
+
+    /**
+     * 全局请求头追加值
+     */
+    add(name: string, value: string): void;
 }
 
 /**

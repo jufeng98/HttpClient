@@ -6,12 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Simple implementation of {@link MultiValueMap} that wraps a {@link LinkedHashMap},
@@ -124,6 +119,12 @@ public class LinkedMultiValueMap<K, V> implements MultiValueMap<K, V>, Serializa
         return targetMap.size();
     }
 
+    public int valueSize() {
+        return targetMap.values().stream()
+                .mapToInt(List::size)
+                .sum();
+    }
+
     @Override
     public boolean isEmpty() {
         return targetMap.isEmpty();
@@ -193,6 +194,7 @@ public class LinkedMultiValueMap<K, V> implements MultiValueMap<K, V>, Serializa
      * @see #clone()
      * @since 4.2
      */
+    @SuppressWarnings("unused")
     public LinkedMultiValueMap<K, V> deepCopy() {
         LinkedMultiValueMap<K, V> copy = new LinkedMultiValueMap<>(targetMap.size());
         targetMap.forEach((key, value) -> copy.put(key, new LinkedList<>(value)));
@@ -212,6 +214,7 @@ public class LinkedMultiValueMap<K, V> implements MultiValueMap<K, V>, Serializa
      * @since 4.2
      */
     @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public LinkedMultiValueMap<K, V> clone() {
         return new LinkedMultiValueMap<>(this);
     }

@@ -2,9 +2,7 @@ package org.javamaster.httpclient.js.support.jsObject
 
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.js.JsExecutor
-import org.javamaster.httpclient.js.support.CommonVariables
 import org.javamaster.httpclient.js.support.GlobalLog
-import org.javamaster.httpclient.js.support.JsGlobalVariablesHolder
 import org.mozilla.javascript.Function
 
 /**

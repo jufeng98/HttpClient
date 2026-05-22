@@ -25,7 +25,7 @@ object HttpPsiFactory {
         return PsiTreeUtil.findChildOfType(psiFile, HttpVariable::class.java)!!
     }
 
-    fun createGlobalVariable(variableName: String, variableValue: String, project: Project): HttpGlobalVariable {
+    fun createFileVariable(variableName: String, variableValue: String, project: Project): HttpGlobalVariable {
         val txt = "@$variableName = $variableValue\n"
 
         val psiFileFactory = PsiFileFactory.getInstance(project)
