@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.js.support
+package org.javamaster.httpclient.js.support.jsObject
 
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.req.HttpClientRequest
@@ -8,7 +8,7 @@ import org.mozilla.javascript.ScriptableObject
 object CommonVariables {
 
     fun get(key: String): Any? {
-        val jsExecutor = JsExecutor.threadLocal.get()!!
+        val jsExecutor = JsExecutor.Companion.threadLocal.get()!!
 
         var value = jsExecutor.getRequestVariable(key)
         if (value != null) {
@@ -21,7 +21,7 @@ object CommonVariables {
             return value
         }
 
-        value = jsExecutor.getJsGlobalVariable(key)
+        value = JsGlobalVariablesHolder.get(key)
         if (value != null) {
             return value
         }
