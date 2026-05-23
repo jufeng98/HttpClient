@@ -7,6 +7,7 @@ import org.javamaster.httpclient.jsPlugin.support.JavaScript
 import org.javamaster.httpclient.jsPlugin.support.WebCalm
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.psi.HttpScriptBody
+import ris58h.webcalm.javascript.psi.JavaScriptCallExpression
 
 /**
  * @author yudong
@@ -77,6 +78,14 @@ object JsFacade {
         }
 
         return null
+    }
+
+    fun getJsCallExpressionClz(): Class<out PsiElement> {
+        return if (JavaScript.isAvailable()) {
+            JavaScript.clzJSCallExpression
+        } else {
+            JavaScriptCallExpression::class.java
+        }
     }
 
     fun isAvailable(): Boolean {

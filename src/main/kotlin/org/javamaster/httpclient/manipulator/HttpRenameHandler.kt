@@ -17,8 +17,14 @@ import org.javamaster.httpclient.jsPlugin.JsFacade
  */
 class HttpRenameHandler : RenameHandler {
 
-    override fun invoke(project: Project, editor: Editor?, file: PsiFile?, dataContext: DataContext?) {
-        // TODO
+    override fun invoke(project: Project, editor: Editor?, file: PsiFile?, dataContext: DataContext) {
+        val offset = editor?.caretModel?.currentCaret?.offset ?: return
+
+        val psiElement = file?.findElementAt(offset) ?: return
+
+        val elementToRename = PsiElementRenameHandler.getElement(dataContext) ?: return
+
+        InjectedJsRenameDialog(project, elementToRename, psiElement.parent, editor).show()
     }
 
     override fun invoke(project: Project, elements: Array<out PsiElement>, dataContext: DataContext?) {

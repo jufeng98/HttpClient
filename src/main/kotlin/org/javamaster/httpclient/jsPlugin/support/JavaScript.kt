@@ -34,7 +34,7 @@ object JavaScript {
         plugin.pluginClassLoader
     }
 
-    private val clzJSCallExpression by lazy {
+    val clzJSCallExpression by lazy {
         loadClass("com.intellij.lang.javascript.psi.JSCallExpression", pluginClassLoader!!)
     }
     private val clzJSReferenceExpression by lazy {
@@ -43,7 +43,7 @@ object JavaScript {
     private val clzJSArgumentList by lazy {
         loadClass("com.intellij.lang.javascript.psi.JSArgumentList", pluginClassLoader!!)
     }
-    private val clzJSLiteralExpression by lazy {
+    val clzJSLiteralExpression by lazy {
         loadClass("com.intellij.lang.javascript.psi.JSLiteralExpression", pluginClassLoader!!)
     }
 
