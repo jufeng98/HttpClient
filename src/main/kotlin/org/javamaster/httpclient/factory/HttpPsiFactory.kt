@@ -6,8 +6,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpGlobalVariable
-import org.javamaster.httpclient.psi.HttpGlobalVariableName
+import org.javamaster.httpclient.psi.HttpFileVariable
+import org.javamaster.httpclient.psi.HttpFileVariableName
 import org.javamaster.httpclient.psi.HttpVariable
 
 /**
@@ -15,9 +15,9 @@ import org.javamaster.httpclient.psi.HttpVariable
  */
 object HttpPsiFactory {
 
-    fun createGlobalVariableName(project: Project, content: String): HttpGlobalVariableName {
+    fun createGlobalVariableName(project: Project, content: String): HttpFileVariableName {
         val psiFile = createDummyFile(project, content)
-        return PsiTreeUtil.findChildOfType(psiFile, HttpGlobalVariableName::class.java)!!
+        return PsiTreeUtil.findChildOfType(psiFile, HttpFileVariableName::class.java)!!
     }
 
     fun createVariable(project: Project, content: String): HttpVariable {
@@ -25,13 +25,13 @@ object HttpPsiFactory {
         return PsiTreeUtil.findChildOfType(psiFile, HttpVariable::class.java)!!
     }
 
-    fun createFileVariable(variableName: String, variableValue: String, project: Project): HttpGlobalVariable {
+    fun createFileVariable(variableName: String, variableValue: String, project: Project): HttpFileVariable {
         val txt = "@$variableName = $variableValue\n"
 
         val psiFileFactory = PsiFileFactory.getInstance(project)
 
         val tmpFile = psiFileFactory.createFileFromText("dummy.http", HttpLanguage.INSTANCE, txt) as HttpFile
-        return PsiTreeUtil.findChildOfType(tmpFile, HttpGlobalVariable::class.java)!!
+        return PsiTreeUtil.findChildOfType(tmpFile, HttpFileVariable::class.java)!!
     }
 
     fun createDummyFile(project: Project, content: String): HttpFile {

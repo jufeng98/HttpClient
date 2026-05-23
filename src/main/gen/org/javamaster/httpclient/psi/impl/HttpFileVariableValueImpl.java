@@ -10,16 +10,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
-import com.intellij.psi.PsiReference;
 
-public class HttpGlobalVariableNameImpl extends ASTWrapperPsiElement implements HttpGlobalVariableName {
+public class HttpFileVariableValueImpl extends ASTWrapperPsiElement implements HttpFileVariableValue {
 
-  public HttpGlobalVariableNameImpl(@NotNull ASTNode node) {
+  public HttpFileVariableValueImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitGlobalVariableName(this);
+    visitor.visitFileVariableValue(this);
   }
 
   @Override
@@ -29,23 +28,15 @@ public class HttpGlobalVariableNameImpl extends ASTWrapperPsiElement implements 
   }
 
   @Override
-  public @NotNull String getName() {
-    return HttpPsiImplUtil.getName(this);
+  @NotNull
+  public List<HttpGlobalLiteralValue> getGlobalLiteralValueList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpGlobalLiteralValue.class);
   }
 
   @Override
-  public @NotNull PsiElement setName(@NotNull String name) {
-    return HttpPsiImplUtil.setName(this, name);
-  }
-
-  @Override
-  public @NotNull PsiReference @NotNull [] getReferences() {
-    return HttpPsiImplUtil.getReferences(this);
-  }
-
-  @Override
-  public @NotNull PsiElement getNameIdentifier() {
-    return HttpPsiImplUtil.getNameIdentifier(this);
+  @NotNull
+  public List<HttpVariable> getVariableList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpVariable.class);
   }
 
 }

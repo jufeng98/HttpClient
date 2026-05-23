@@ -41,24 +41,24 @@ object HttpPsiImplUtil {
     }
 
     @JvmStatic
-    fun getName(variableName: HttpGlobalVariableName): String {
+    fun getName(variableName: HttpFileVariableName): String {
         return getNextSiblingByType(variableName.firstChild, HttpTypes.GLOBAL_NAME, false)?.text ?: ""
     }
 
     @JvmStatic
-    fun setName(variableName: HttpGlobalVariableName, name: String): PsiElement {
+    fun setName(variableName: HttpFileVariableName, name: String): PsiElement {
         val globalVariableName = HttpPsiFactory.createGlobalVariableName(variableName.project, "@$name =")
         return variableName.replace(globalVariableName)
     }
 
     @JvmStatic
-    fun getNameIdentifier(variableName: HttpGlobalVariableName): PsiElement {
+    fun getNameIdentifier(variableName: HttpFileVariableName): PsiElement {
         val firstChild = variableName.firstChild
         return getNextSiblingByType(firstChild, HttpTypes.GLOBAL_NAME, false) ?: firstChild
     }
 
     @JvmStatic
-    fun getReferences(variableName: HttpGlobalVariableName): Array<PsiReference> {
+    fun getReferences(variableName: HttpFileVariableName): Array<PsiReference> {
         return ReferenceProvidersRegistry.getReferencesFromProviders(variableName)
     }
 

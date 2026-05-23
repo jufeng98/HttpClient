@@ -58,8 +58,8 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
   public static final int IN_VARIABLE = 66;
   public static final int IN_DYNAMIC_VARIABLE = 68;
   public static final int IN_DYNAMIC_VARIABLE_ARGS = 70;
-  public static final int IN_GLOBAL_VARIABLE = 72;
-  public static final int IN_GLOBAL_VARIABLE_VALUE = 74;
+  public static final int IN_FILE_VARIABLE = 72;
+  public static final int IN_FILE_VARIABLE_VALUE = 74;
 
   /**
    * ZZ_LEXSTATE[l] is the state in the DFA for the lexical state l
@@ -893,7 +893,7 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
           // fall through
           case 89: break;
           case 3:
-            { yybegin(IN_GLOBAL_VARIABLE); return AT;
+            { yybegin(IN_FILE_VARIABLE); return AT;
             }
           // fall through
           case 90: break;
@@ -1088,7 +1088,7 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
           // fall through
           case 128: break;
           case 42:
-            { nextState = IN_GLOBAL_VARIABLE_VALUE; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return EQUALS;
+            { nextState = IN_FILE_VARIABLE_VALUE; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return EQUALS;
             }
           // fall through
           case 129: break;
@@ -1198,7 +1198,7 @@ public class _HttpLexer implements com.intellij.lexer.FlexLexer {
           // fall through
           case 150: break;
           case 64:
-            { nextState = IN_GLOBAL_VARIABLE_VALUE; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE;
+            { nextState = IN_FILE_VARIABLE_VALUE; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE;
             }
           // fall through
           case 151: break;

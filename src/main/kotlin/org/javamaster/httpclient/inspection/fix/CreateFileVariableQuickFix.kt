@@ -18,7 +18,7 @@ import org.javamaster.httpclient.parser.HttpFile
 class CreateFileVariableQuickFix(private val variableName: String) : LocalQuickFix, PriorityAction {
 
     override fun getFamilyName(): String {
-        return NlsBundle.nls("unsolved.global.variable")
+        return NlsBundle.nls("unsolved.file.variable")
     }
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {

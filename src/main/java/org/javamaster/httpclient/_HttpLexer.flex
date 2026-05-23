@@ -40,7 +40,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
 %state IN_INPUT_FILE_PATH, IN_OUTPUT_FILE, IN_OUTPUT_FILE_PATH, IN_VERSION, IN_HISTORY_BODY_FILE_PART
-%state IN_MULTIPART, IN_VARIABLE, IN_DYNAMIC_VARIABLE, IN_DYNAMIC_VARIABLE_ARGS, IN_GLOBAL_VARIABLE, IN_GLOBAL_VARIABLE_VALUE
+%state IN_MULTIPART, IN_VARIABLE, IN_DYNAMIC_VARIABLE, IN_DYNAMIC_VARIABLE_ARGS, IN_FILE_VARIABLE, IN_FILE_VARIABLE_VALUE
 %eof{
   return;
 %eof}
@@ -68,7 +68,7 @@ FIELD_VALUE=[^\r\n{ ]+
 FILE_PATH_PART=[^\r\n<>{}]+
 MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
 VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
-GLOBAL_VARIABLE_NAME=[^\r\n={} ]+
+FILE_VARIABLE_NAME=[^\r\n={} ]+
 DIRECTION_NAME_PART=[^\r\n ]+
 DIRECTION_VALUE_PART=[^\r\n{]+
 NUMBER=-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]*)?
@@ -80,7 +80,7 @@ STRING=('([^'])*'|\"([^\"])*\")
   "# @"                       { yybegin(IN_DIRECTION_NAME); return DIRECTION_COMMENT_START; }
   "<! {%"{EOL_MULTI}          { yybegin(IN_GLOBAL_SCRIPT); return GLOBAL_START_SCRIPT_BRACE; }
   "< {%"{EOL_MULTI}           { yybegin(IN_PRE_SCRIPT); return IN_START_SCRIPT_BRACE; }
-  "@"                         { yybegin(IN_GLOBAL_VARIABLE); return AT; }
+  "@"                         { yybegin(IN_FILE_VARIABLE); return AT; }
   {REQUEST_METHOD}            { yybegin(IN_FIRST_LINE); return REQUEST_METHOD; }
   {RUN}                       { yybegin(IN_RUN); return RUN; }
   {IMPORT}                    { yybegin(IN_IMPORT); return IMPORT; }
@@ -109,16 +109,16 @@ STRING=('([^'])*'|\"([^\"])*\")
   {WHITE_SPACE}                { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 
-<IN_GLOBAL_VARIABLE> {
-  {GLOBAL_VARIABLE_NAME}        { return GLOBAL_NAME; }
-  "="                           { nextState = IN_GLOBAL_VARIABLE_VALUE; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return EQUALS; }
+<IN_FILE_VARIABLE> {
+  {FILE_VARIABLE_NAME}        { return GLOBAL_NAME; }
+  "="                           { nextState = IN_FILE_VARIABLE_VALUE; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return EQUALS; }
   {ONLY_SPACE}                  { return WHITE_SPACE; }
   {EOL_MULTI}                   { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 
-<IN_GLOBAL_VARIABLE_VALUE> {
+<IN_FILE_VARIABLE_VALUE> {
   [^\r\n{]+                     { return GLOBAL_VALUE; }
-  "{{"                          { nextState = IN_GLOBAL_VARIABLE_VALUE; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
+  "{{"                          { nextState = IN_FILE_VARIABLE_VALUE; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {EOL}                         { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 

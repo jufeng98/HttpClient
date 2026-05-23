@@ -2,7 +2,7 @@ package org.javamaster.httpclient.manipulator
 
 import com.intellij.psi.PsiElement
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
-import org.javamaster.httpclient.psi.HttpGlobalVariableName
+import org.javamaster.httpclient.psi.HttpFileVariableName
 
 /**
  * @author yudong
@@ -10,7 +10,7 @@ import org.javamaster.httpclient.psi.HttpGlobalVariableName
 class HttpRenamePsiElementProcessor : RenamePsiElementProcessor() {
 
     override fun canProcessElement(element: PsiElement): Boolean {
-        return element is HttpGlobalVariableName
+        return element is HttpFileVariableName
     }
 
 }

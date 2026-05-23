@@ -9,7 +9,7 @@ import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder
 import org.javamaster.httpclient.js.support.jsObject.Console
 import org.javamaster.httpclient.psi.HttpGlobalLiteralValue
-import org.javamaster.httpclient.psi.HttpGlobalVariable
+import org.javamaster.httpclient.psi.HttpFileVariable
 import org.javamaster.httpclient.psi.HttpVariable
 import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import java.util.regex.Pattern
@@ -32,11 +32,11 @@ class VariableResolver(
     fun getFileGlobalVariables(): LinkedHashMap<String, String> {
         val map = LinkedHashMap<String, String>()
 
-        val fileVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
+        val fileVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpFileVariable::class.java)
 
         fileVariables.forEach {
-            val name = it.globalVariableName?.name ?: return@forEach
-            val globalVariableValue = it.globalVariableValue ?: return@forEach
+            val name = it.fileVariableName?.name ?: return@forEach
+            val globalVariableValue = it.fileVariableValue ?: return@forEach
 
             val value = globalVariableValue.children.joinToString("") { innerIt ->
                 when (innerIt) {

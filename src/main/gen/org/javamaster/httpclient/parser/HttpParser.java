@@ -193,6 +193,67 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // AT fileVariableName equalsFlag fileVariableValue?
+  public static boolean fileVariable(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "fileVariable")) return false;
+    if (!nextTokenIs(b, AT)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, FILE_VARIABLE, null);
+    r = consumeToken(b, AT);
+    p = r; // pin = 1
+    r = r && report_error_(b, fileVariableName(b, l + 1));
+    r = p && report_error_(b, equalsFlag(b, l + 1)) && r;
+    r = p && fileVariable_3(b, l + 1) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // fileVariableValue?
+  private static boolean fileVariable_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "fileVariable_3")) return false;
+    fileVariableValue(b, l + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
+  // GLOBAL_NAME
+  public static boolean fileVariableName(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "fileVariableName")) return false;
+    if (!nextTokenIs(b, "<variable name>", GLOBAL_NAME)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, FILE_VARIABLE_NAME, "<variable name>");
+    r = consumeToken(b, GLOBAL_NAME);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (variable | globalLiteralValue)+
+  public static boolean fileVariableValue(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "fileVariableValue")) return false;
+    if (!nextTokenIs(b, "<file variable value>", GLOBAL_VALUE, START_VARIABLE_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, FILE_VARIABLE_VALUE, "<file variable value>");
+    r = fileVariableValue_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!fileVariableValue_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "fileVariableValue", c)) break;
+    }
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // variable | globalLiteralValue
+  private static boolean fileVariableValue_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "fileVariableValue_0")) return false;
+    boolean r;
+    r = variable(b, l + 1);
+    if (!r) r = globalLiteralValue(b, l + 1);
+    return r;
+  }
+
+  /* ********************************************************** */
   // FRAGMENT_PART
   public static boolean fragment(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fragment")) return false;
@@ -255,67 +316,6 @@ public class HttpParser implements PsiParser, LightPsiParser {
     r = p && consumeToken(b, END_SCRIPT_BRACE) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
-  }
-
-  /* ********************************************************** */
-  // AT globalVariableName equalsFlag globalVariableValue?
-  public static boolean globalVariable(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalVariable")) return false;
-    if (!nextTokenIs(b, AT)) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE, null);
-    r = consumeToken(b, AT);
-    p = r; // pin = 1
-    r = r && report_error_(b, globalVariableName(b, l + 1));
-    r = p && report_error_(b, equalsFlag(b, l + 1)) && r;
-    r = p && globalVariable_3(b, l + 1) && r;
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
-  }
-
-  // globalVariableValue?
-  private static boolean globalVariable_3(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalVariable_3")) return false;
-    globalVariableValue(b, l + 1);
-    return true;
-  }
-
-  /* ********************************************************** */
-  // GLOBAL_NAME
-  public static boolean globalVariableName(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalVariableName")) return false;
-    if (!nextTokenIs(b, "<variable name>", GLOBAL_NAME)) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_NAME, "<variable name>");
-    r = consumeToken(b, GLOBAL_NAME);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // (variable | globalLiteralValue)+
-  public static boolean globalVariableValue(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalVariableValue")) return false;
-    if (!nextTokenIs(b, "<global variable value>", GLOBAL_VALUE, START_VARIABLE_BRACE)) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, GLOBAL_VARIABLE_VALUE, "<global variable value>");
-    r = globalVariableValue_0(b, l + 1);
-    while (r) {
-      int c = current_position_(b);
-      if (!globalVariableValue_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "globalVariableValue", c)) break;
-    }
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // variable | globalLiteralValue
-  private static boolean globalVariableValue_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "globalVariableValue_0")) return false;
-    boolean r;
-    r = variable(b, l + 1);
-    if (!r) r = globalLiteralValue(b, l + 1);
-    return r;
   }
 
   /* ********************************************************** */
@@ -466,7 +466,7 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (directionComment | globalImport)* globalHandler? globalVariable* requestBlock*
+  // (directionComment | globalImport)* globalHandler? fileVariable* requestBlock*
   static boolean httpFile(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "httpFile")) return false;
     boolean r;
@@ -506,12 +506,12 @@ public class HttpParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // globalVariable*
+  // fileVariable*
   private static boolean httpFile_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "httpFile_2")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!globalVariable(b, l + 1)) break;
+      if (!fileVariable(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "httpFile_2", c)) break;
     }
     return true;

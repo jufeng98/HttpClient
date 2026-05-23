@@ -59,14 +59,14 @@ class HttpDocumentationProvider : DocumentationProvider {
             return getHttpDoc(name, element.project, psiFile)
         }
 
-        if (element is HttpGlobalVariableName) {
+        if (element is HttpFileVariableName) {
             val name = element.name
-            val parent = element.parent as HttpGlobalVariable
-            val globalVariableValue = parent.globalVariableValue
+            val parent = element.parent as HttpFileVariable
+            val fileVariableValue = parent.fileVariableValue
 
             return getDocumentation(
                 name,
-                NlsBundle.nls("value") + " " + (globalVariableValue?.text)
+                NlsBundle.nls("value") + " " + (fileVariableValue?.text)
             )
         }
 

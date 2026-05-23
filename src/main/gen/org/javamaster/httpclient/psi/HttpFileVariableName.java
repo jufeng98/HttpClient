@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiReference;
 
-public interface HttpGlobalVariableName extends PsiNameIdentifierOwner {
+public interface HttpFileVariableName extends PsiNameIdentifierOwner {
 
   @NotNull String getName();
 

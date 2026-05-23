@@ -16,14 +16,14 @@ public interface HttpTypes {
   IElementType DIRECTION_VALUE_CONTENT = new HttpElementType("DIRECTION_VALUE_CONTENT");
   IElementType FILE_PATH = new HttpElementType("FILE_PATH");
   IElementType FILE_PATH_CONTENT = new HttpElementType("FILE_PATH_CONTENT");
+  IElementType FILE_VARIABLE = new HttpElementType("FILE_VARIABLE");
+  IElementType FILE_VARIABLE_NAME = new HttpElementType("FILE_VARIABLE_NAME");
+  IElementType FILE_VARIABLE_VALUE = new HttpElementType("FILE_VARIABLE_VALUE");
   IElementType FRAGMENT = new HttpElementType("FRAGMENT");
   IElementType GLOBAL_HANDLER = new HttpElementType("GLOBAL_HANDLER");
   IElementType GLOBAL_IMPORT = new HttpElementType("GLOBAL_IMPORT");
   IElementType GLOBAL_LITERAL_VALUE = new HttpElementType("GLOBAL_LITERAL_VALUE");
   IElementType GLOBAL_SCRIPT = new HttpElementType("GLOBAL_SCRIPT");
-  IElementType GLOBAL_VARIABLE = new HttpElementType("GLOBAL_VARIABLE");
-  IElementType GLOBAL_VARIABLE_NAME = new HttpElementType("GLOBAL_VARIABLE_NAME");
-  IElementType GLOBAL_VARIABLE_VALUE = new HttpElementType("GLOBAL_VARIABLE_VALUE");
   IElementType HEADER = new HttpElementType("HEADER");
   IElementType HEADER_FIELD = new HttpElementType("HEADER_FIELD");
   IElementType HEADER_FIELD_NAME = new HttpElementType("HEADER_FIELD_NAME");
@@ -141,6 +141,15 @@ public interface HttpTypes {
       else if (type == FILE_PATH_CONTENT) {
         return new HttpFilePathContentImpl(node);
       }
+      else if (type == FILE_VARIABLE) {
+        return new HttpFileVariableImpl(node);
+      }
+      else if (type == FILE_VARIABLE_NAME) {
+        return new HttpFileVariableNameImpl(node);
+      }
+      else if (type == FILE_VARIABLE_VALUE) {
+        return new HttpFileVariableValueImpl(node);
+      }
       else if (type == FRAGMENT) {
         return new HttpFragmentImpl(node);
       }
@@ -155,15 +164,6 @@ public interface HttpTypes {
       }
       else if (type == GLOBAL_SCRIPT) {
         return new HttpGlobalScriptImpl(node);
-      }
-      else if (type == GLOBAL_VARIABLE) {
-        return new HttpGlobalVariableImpl(node);
-      }
-      else if (type == GLOBAL_VARIABLE_NAME) {
-        return new HttpGlobalVariableNameImpl(node);
-      }
-      else if (type == GLOBAL_VARIABLE_VALUE) {
-        return new HttpGlobalVariableValueImpl(node);
       }
       else if (type == HEADER) {
         return new HttpHeaderImpl(node);

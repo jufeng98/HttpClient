@@ -5,12 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface HttpGlobalVariable extends PsiElement {
+public interface HttpFileVariable extends PsiElement {
 
   @Nullable
-  HttpGlobalVariableName getGlobalVariableName();
+  HttpFileVariableName getFileVariableName();
 
   @Nullable
-  HttpGlobalVariableValue getGlobalVariableValue();
+  HttpFileVariableValue getFileVariableValue();
 
 }

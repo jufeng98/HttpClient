@@ -5,7 +5,7 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.psi.HttpGlobalVariableName
+import org.javamaster.httpclient.psi.HttpFileVariableName
 import org.javamaster.httpclient.psi.HttpVariableName
 
 /**
@@ -28,8 +28,8 @@ class HttpFindUsagesProvider : FindUsagesProvider {
             } else {
                 NlsBundle.nls("variable")
             }
-        } else if (element is HttpGlobalVariableName) {
-            NlsBundle.nls("global.variable")
+        } else if (element is HttpFileVariableName) {
+            NlsBundle.nls("file.variable")
         } else {
             ""
         }
@@ -41,7 +41,7 @@ class HttpFindUsagesProvider : FindUsagesProvider {
                 StringUtil.notNullize(element.text)
             }
 
-            is HttpGlobalVariableName -> {
+            is HttpFileVariableName -> {
                 StringUtil.notNullize(element.text)
             }
 
@@ -57,7 +57,7 @@ class HttpFindUsagesProvider : FindUsagesProvider {
                 StringUtil.notNullize(element.text)
             }
 
-            is HttpGlobalVariableName -> {
+            is HttpFileVariableName -> {
                 element.name
             }
 

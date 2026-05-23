@@ -46,18 +46,18 @@
   ]
 }
 
-httpFile ::= (directionComment | globalImport)* globalHandler? globalVariable* requestBlock*
+httpFile ::= (directionComment | globalImport)* globalHandler? fileVariable* requestBlock*
 
 globalImport ::= IMPORT filePath {
     pin = 1
 }
-globalVariable::= AT globalVariableName equalsFlag globalVariableValue? {
+fileVariable::= AT fileVariableName equalsFlag fileVariableValue? {
     pin = 1
 }
 private equalsFlag ::= EQUALS {
     name="="
 }
-globalVariableName ::= GLOBAL_NAME {
+fileVariableName ::= GLOBAL_NAME {
     methods = [
         getName
         setName
@@ -67,7 +67,7 @@ globalVariableName ::= GLOBAL_NAME {
     name = "variable name"
     implements = "com.intellij.psi.PsiNameIdentifierOwner"
 }
-globalVariableValue ::= (variable | globalLiteralValue)+
+fileVariableValue ::= (variable | globalLiteralValue)+
 globalLiteralValue ::= GLOBAL_VALUE
 globalHandler ::= globalScript
 globalScript ::= GLOBAL_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {

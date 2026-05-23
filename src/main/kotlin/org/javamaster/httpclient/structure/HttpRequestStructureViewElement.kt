@@ -47,7 +47,7 @@ class HttpRequestStructureViewElement private constructor(
                 children.add(
                     create(
                         it,
-                        NlsBundle.nls("global.variable"),
+                        NlsBundle.nls("file.variable"),
                         it.text,
                         AllIcons.General.InlineVariables,
                         true

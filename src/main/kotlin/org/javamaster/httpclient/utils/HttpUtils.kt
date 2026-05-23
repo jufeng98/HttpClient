@@ -419,9 +419,9 @@ object HttpUtils {
             return psiElement.virtualFile.path
         }
 
-        if (psiElement is HttpGlobalVariableName) {
-            val globalVariable = psiElement.parent as HttpGlobalVariable
-            return globalVariable.globalVariableValue?.text
+        if (psiElement is HttpFileVariableName) {
+            val fileVariable = psiElement.parent as HttpFileVariable
+            return fileVariable.fileVariableValue?.text
         }
 
         return null

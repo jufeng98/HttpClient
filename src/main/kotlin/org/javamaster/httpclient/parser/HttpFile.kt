@@ -30,8 +30,8 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
         return PsiTreeUtil.getChildOfType(this, HttpGlobalHandler::class.java)
     }
 
-    fun getFileVariables(): List<HttpGlobalVariable> {
-        return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpGlobalVariable::class.java)
+    fun getFileVariables(): List<HttpFileVariable> {
+        return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpFileVariable::class.java)
     }
 
     fun getRequestBlocks(): List<HttpRequestBlock> {
@@ -47,15 +47,15 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
     }
 
     fun modifyFileVariable(key: String, newKey: String, newValue: String): PsiElement? {
-        val children = PsiTreeUtil.findChildrenOfType(this, HttpGlobalVariable::class.java)
+        val children = PsiTreeUtil.findChildrenOfType(this, HttpFileVariable::class.java)
 
         val fileVariable = children
-            .firstOrNull { it: HttpGlobalVariable -> it.globalVariableName?.name == key }
+            .firstOrNull { it: HttpFileVariable -> it.fileVariableName?.name == key }
             ?: return null
 
         if (key != newKey) {
             val renameProcessor = RenameProcessor(
-                project, fileVariable.globalVariableName!!, newKey,
+                project, fileVariable.fileVariableName!!, newKey,
                 GlobalSearchScope.projectScope(project), false, false
             )
             renameProcessor.run()
@@ -72,10 +72,10 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
 
     fun delFileVariable(key: String): Boolean {
         return WriteCommandAction.runWriteCommandAction(project, Computable {
-            val children = PsiTreeUtil.findChildrenOfType(this, HttpGlobalVariable::class.java)
+            val children = PsiTreeUtil.findChildrenOfType(this, HttpFileVariable::class.java)
 
             val fileVariable = children
-                .firstOrNull { it: HttpGlobalVariable -> it.globalVariableName?.name == key }
+                .firstOrNull { it: HttpFileVariable -> it.fileVariableName?.name == key }
                 ?: return@Computable false
 
             fileVariable.delete()
@@ -118,11 +118,11 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
     companion object {
 
         fun resolveFileGlobalVariable(variableName: String, httpFile: PsiFile): PsiElement? {
-            val fileVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpGlobalVariable::class.java)
+            val fileVariables = PsiTreeUtil.findChildrenOfType(httpFile, HttpFileVariable::class.java)
 
             return fileVariables
                 .mapNotNull {
-                    val globalVariableName = it.globalVariableName
+                    val globalVariableName = it.fileVariableName
                     if (globalVariableName?.name == variableName) {
                         return@mapNotNull globalVariableName
                     } else {

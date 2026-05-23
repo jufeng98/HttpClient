@@ -40,6 +40,18 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitFileVariable(@NotNull HttpFileVariable o) {
+    visitPsiElement(o);
+  }
+
+  public void visitFileVariableName(@NotNull HttpFileVariableName o) {
+    visitPsiNameIdentifierOwner(o);
+  }
+
+  public void visitFileVariableValue(@NotNull HttpFileVariableValue o) {
+    visitPsiElement(o);
+  }
+
   public void visitFragment(@NotNull HttpFragment o) {
     visitPsiElement(o);
   }
@@ -57,18 +69,6 @@ public class HttpVisitor extends PsiElementVisitor {
   }
 
   public void visitGlobalScript(@NotNull HttpGlobalScript o) {
-    visitPsiElement(o);
-  }
-
-  public void visitGlobalVariable(@NotNull HttpGlobalVariable o) {
-    visitPsiElement(o);
-  }
-
-  public void visitGlobalVariableName(@NotNull HttpGlobalVariableName o) {
-    visitPsiNameIdentifierOwner(o);
-  }
-
-  public void visitGlobalVariableValue(@NotNull HttpGlobalVariableValue o) {
     visitPsiElement(o);
   }
 

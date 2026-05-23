@@ -11,14 +11,14 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpGlobalVariableImpl extends ASTWrapperPsiElement implements HttpGlobalVariable {
+public class HttpFileVariableImpl extends ASTWrapperPsiElement implements HttpFileVariable {
 
-  public HttpGlobalVariableImpl(@NotNull ASTNode node) {
+  public HttpFileVariableImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitGlobalVariable(this);
+    visitor.visitFileVariable(this);
   }
 
   @Override
@@ -29,14 +29,14 @@ public class HttpGlobalVariableImpl extends ASTWrapperPsiElement implements Http
 
   @Override
   @Nullable
-  public HttpGlobalVariableName getGlobalVariableName() {
-    return findChildByClass(HttpGlobalVariableName.class);
+  public HttpFileVariableName getFileVariableName() {
+    return findChildByClass(HttpFileVariableName.class);
   }
 
   @Override
   @Nullable
-  public HttpGlobalVariableValue getGlobalVariableValue() {
-    return findChildByClass(HttpGlobalVariableValue.class);
+  public HttpFileVariableValue getFileVariableValue() {
+    return findChildByClass(HttpFileVariableValue.class);
   }
 
 }
