@@ -12,7 +12,7 @@ import com.intellij.psi.util.PsiUtil
 import com.intellij.util.SmartList
 import com.intellij.util.containers.ContainerUtil
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.action.dashboard.view.ContentTypeActionGroup
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpPsiUtils
@@ -30,7 +30,7 @@ class MessageBodyInjectionContributor : MultiHostInjector {
         val host = context as PsiLanguageInjectionHost
 
         if (virtualFile != null) {
-            val contentType = virtualFile.getUserData(ContentTypeActionGroup.httpDashboardContentTypeKey)
+            val contentType = virtualFile.getUserData(HttpConsts.httpDashboardContentTypeKey)
             if (contentType != null) {
                 tryInject(contentType, host, registrar)
                 return

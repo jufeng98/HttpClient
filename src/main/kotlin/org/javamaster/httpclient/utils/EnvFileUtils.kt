@@ -6,16 +6,22 @@ import com.intellij.json.psi.JsonNumberLiteral
 import com.intellij.json.psi.JsonObject
 import com.intellij.json.psi.JsonProperty
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.rename.RenameProcessor
+import org.javamaster.httpclient.env.EnvFileService
+import org.javamaster.httpclient.env.EnvFileService.Companion.createEnvFile
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvEleLiteral
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvJsonProperty
 import org.javamaster.httpclient.factory.JsonPsiFactory.createBoolProperty
 import org.javamaster.httpclient.factory.JsonPsiFactory.createNumberProperty
 import org.javamaster.httpclient.factory.JsonPsiFactory.createStringProperty
+import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.utils.NotifyUtil.notifyInfo
+import org.javamaster.httpclient.utils.NotifyUtil.notifyWarn
 
 /**
  * @author yudong
@@ -23,6 +29,38 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 class EnvFileUtils {
 
     companion object {
+
+        fun createAndReInitEnvCompo(isPrivate: Boolean) {
+            val project = HttpUtils.getActiveValidProject() ?: return
+
+            val envFileName = if (isPrivate) EnvFileService.PRIVATE_ENV_FILE_NAME else EnvFileService.ENV_FILE_NAME
+
+            val envFile = createEnvFile(envFileName, isPrivate, project)
+            if (envFile == null) {
+                notifyWarn(project, envFileName + " " + nls("file.exists"))
+                return
+            }
+
+            val fileEditorManager = FileEditorManager.getInstance(project)
+            fileEditorManager.openFile(envFile, true)
+
+            notifyInfo(project, nls("file.created") + " " + envFileName)
+
+            try {
+                val allEditors = fileEditorManager.allEditors
+                for (editor in allEditors) {
+                    val httpEditorTopForm = editor.getUserData(HttpEditorTopForm.KEY) ?: continue
+
+                    val set = LinkedHashSet<String>()
+                    set.add("dev")
+                    set.add("uat")
+                    set.add("pro")
+                    httpEditorTopForm.initEnvCombo(set)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
 
         fun addEnvVariable(newKey: String, newValue: String, project: Project): Boolean {
             val triple = HttpEditorTopForm.getTriple(project) ?: return false

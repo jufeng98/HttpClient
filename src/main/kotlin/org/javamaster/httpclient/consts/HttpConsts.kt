@@ -1,6 +1,9 @@
 package org.javamaster.httpclient.consts
 
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.Key
+import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.enums.SimpleTypeEnum
 
 /**
  * @author yudong
@@ -26,6 +29,12 @@ class HttpConsts {
 
         val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
         val requestFinishedKey: Key<Int> = Key.create("REQUEST_FINISHED_KEY")
+        val httpDashboardContentTypeKey = Key.create<ContentType>("org.javamaster.dashboard.httpDashboardContentType")
+        val httpDashboardFoldHeaderKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardFoldHeader")
+        val httpDashboardToolbarKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardToolbar")
+        val httpDashboardResTypeKey = Key.create<SimpleTypeEnum?>("org.javamaster.dashboard.httpDashboardResType")
+        val httpDashboardReqEditorKey = Key.create<Editor>("org.javamaster.dashboard.httpDashboardReqEditor")
+        val httpDashboardResEditorKey = Key.create<Editor>("org.javamaster.dashboard.httpDashboardResEditor")
 
         const val COOKIE_FILE_NAME = "http-client.cookies"
         const val JS_DATE_PATTERN = "EEE, dd-MMM-yyyy HH:mm:ss 'GMT'"

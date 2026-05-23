@@ -4,21 +4,21 @@ import com.google.common.collect.Lists;
 import com.intellij.lang.injection.InjectedLanguageManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.impl.LightFilePointer;
 import com.intellij.openapi.vfs.pointers.VirtualFilePointer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiLanguageInjectionHost;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
-import one.util.streamex.StreamEx;
 import org.javamaster.httpclient.jsPlugin.support.HttpRequestHandlerApiDefinitionFilesHolder;
 import org.javamaster.httpclient.jsPlugin.support.JavaScript;
 import org.javamaster.httpclient.psi.HttpResponseScript;
 import org.javamaster.httpclient.psi.HttpScriptBody;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -42,19 +42,18 @@ public class JSElementResolveScopeProviderInvocationHandler implements Invocatio
             return null;
         }
 
-        List<VirtualFile> virtualFiles = Lists.newArrayList();
-
         HttpRequestHandlerApiDefinitionFilesHolder filesHolder = HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE;
 
-        List<VirtualFile> vFiles;
+        LightFilePointer filePointer;
         if (insideResponseHandler(injectionHost)) {
-            vFiles = getLibraryFiles(filesHolder.getResponseLibraryFilePointer());
+            filePointer = filesHolder.getResponseLibraryFilePointer();
 
         } else {
-            vFiles = getLibraryFiles(filesHolder.getPreRequestLibraryFilePointer());
+            filePointer = filesHolder.getPreRequestLibraryFilePointer();
         }
 
-        virtualFiles.addAll(vFiles);
+        List<VirtualFile> virtualFiles = Lists.newArrayList();
+        virtualFiles.add(filePointer.getFile());
 
         List<VirtualFile> commonLibs = getLibraryFiles(
                 filesHolder.getCommonLibraryFilePointer(),
@@ -70,10 +69,10 @@ public class JSElementResolveScopeProviderInvocationHandler implements Invocatio
     }
 
     private static List<VirtualFile> getLibraryFiles(VirtualFilePointer... filePointers) {
-        return StreamEx.of(filePointers).map(VirtualFilePointer::getFile).nonNull().toList();
+        return Arrays.stream(filePointers).map(VirtualFilePointer::getFile).toList();
     }
 
-    private static boolean insideResponseHandler(@NotNull PsiElement element) {
+    private static boolean insideResponseHandler(PsiElement element) {
         return PsiTreeUtil.getParentOfType(element, HttpResponseScript.class) != null;
     }
 

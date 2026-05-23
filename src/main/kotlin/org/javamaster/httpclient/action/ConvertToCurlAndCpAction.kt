@@ -24,6 +24,7 @@ import java.awt.datatransfer.StringSelection
  */
 @Suppress("ActionPresentationInstantiatedInCtor")
 class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIcons.General.InlineCopy) {
+
     override fun update(e: AnActionEvent) {
         val requestBlock = findRequestBlock(e)
 

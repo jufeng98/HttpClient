@@ -7,6 +7,7 @@ import com.intellij.openapi.ui.getUserData
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpIcons
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpBody
 import org.javamaster.httpclient.psi.HttpOutputFile
@@ -36,7 +37,7 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY)
 
             NotifyUtil.notifyInfo(project, "Copy request body success!")
         } else {
-            val simpleTypeEnum = component.getUserData(httpDashboardResTypeKey) ?: return
+            val simpleTypeEnum = component.getUserData(HttpConsts.httpDashboardResTypeKey) ?: return
 
             if (simpleTypeEnum.binary) {
                 val outputFile = PsiTreeUtil.findChildOfType(httpFile, HttpOutputFile::class.java)!!

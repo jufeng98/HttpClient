@@ -11,7 +11,7 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.containers.toArray
-import org.javamaster.httpclient.action.dashboard.view.FoldHeadersAction
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpOutputFile
@@ -102,7 +102,7 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         val psiFile = PsiUtil.getPsiFile(project, virtualFile)
         val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return true
 
-        val foldFlag = document.getUserData(FoldHeadersAction.httpDashboardFoldHeaderKey) ?: return true
+        val foldFlag = document.getUserData(HttpConsts.httpDashboardFoldHeaderKey) ?: return true
 
         return foldFlag
     }

@@ -5,9 +5,9 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.RawText
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
-import org.javamaster.httpclient.action.addHttp.ImportCurlAction.Companion.toHttpRequest
 import org.javamaster.httpclient.curl.CurlParser
 import org.javamaster.httpclient.parser.HttpFile
+import org.javamaster.httpclient.utils.CurlUtils
 import org.javamaster.httpclient.utils.CurlUtils.isCurlString
 
 
@@ -45,7 +45,7 @@ class CurlCopyPastePreProcessor : CopyPastePreProcessor {
 
             val request = curlParser.parseToCurlRequest()
 
-            return toHttpRequest(request, text)
+            return CurlUtils.toHttpRequest(request, text)
         } catch (e: Exception) {
             e.printStackTrace()
         }

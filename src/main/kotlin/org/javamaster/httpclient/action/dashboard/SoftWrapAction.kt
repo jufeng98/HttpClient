@@ -8,6 +8,7 @@ import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ui.getUserData
 import com.intellij.ui.JBColor
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import java.awt.Dimension
 import javax.swing.JComponent
@@ -21,7 +22,7 @@ class SoftWrapAction(private val editor: Editor) :
     override fun createCustomComponent(presentation: Presentation, place: String): JComponent {
         val actionButton = ActionButton(this, presentation, place, Dimension(20, 20))
 
-        val req = editor.component.getUserData(httpDashboardToolbarKey)!!
+        val req = editor.component.getUserData(HttpConsts.httpDashboardToolbarKey)!!
 
         val useSoftWrap = if (req) {
             reqUseSoftWrap

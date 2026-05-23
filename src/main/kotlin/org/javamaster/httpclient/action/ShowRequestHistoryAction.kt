@@ -24,6 +24,7 @@ import java.io.File
  */
 @Suppress("ActionPresentationInstantiatedInCtor")
 class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIcons.HISTORY) {
+
     override fun update(e: AnActionEvent) {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
 

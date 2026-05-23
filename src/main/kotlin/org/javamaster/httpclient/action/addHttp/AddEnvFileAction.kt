@@ -2,6 +2,7 @@ package org.javamaster.httpclient.action.addHttp
 
 import com.intellij.openapi.actionSystem.AnActionEvent
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.utils.EnvFileUtils
 
 /**
  * @author yudong
@@ -10,7 +11,7 @@ import org.javamaster.httpclient.nls.NlsBundle
 class AddEnvFileAction : AddAction(NlsBundle.nls("create.env.json.file")) {
 
     override fun actionPerformed(e: AnActionEvent) {
-        createAndReInitEnvCompo(false)
+        EnvFileUtils.createAndReInitEnvCompo(false)
     }
 
 }

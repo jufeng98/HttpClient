@@ -5,8 +5,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ui.getUserData
-import com.intellij.openapi.util.Key
-import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.consts.HttpConsts
 import javax.swing.Icon
 import javax.swing.JComponent
 
@@ -18,26 +17,19 @@ abstract class DashboardBaseAction(text: String, icon: Icon?) : AnAction(text, n
     fun getHttpEditor(e: AnActionEvent): Editor {
         val component = PlatformCoreDataKeys.CONTEXT_COMPONENT.getData(e.dataContext)!! as JComponent
 
-        val req = component.getUserData(httpDashboardToolbarKey)!!
+        val req = component.getUserData(HttpConsts.httpDashboardToolbarKey)!!
 
         return if (req) {
-            component.getUserData(httpDashboardReqEditorKey)!!
+            component.getUserData(HttpConsts.httpDashboardReqEditorKey)!!
         } else {
-            component.getUserData(httpDashboardResEditorKey)!!
+            component.getUserData(HttpConsts.httpDashboardResEditorKey)!!
         }
     }
 
     fun isReq(e: AnActionEvent): Boolean {
         val component = PlatformCoreDataKeys.CONTEXT_COMPONENT.getData(e.dataContext)!! as JComponent
 
-        return component.getUserData(httpDashboardToolbarKey)!!
+        return component.getUserData(HttpConsts.httpDashboardToolbarKey)!!
     }
 
-    companion object {
-        val httpDashboardToolbarKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardToolbar")
-        val httpDashboardResTypeKey = Key.create<SimpleTypeEnum?>("org.javamaster.dashboard.httpDashboardResType")
-
-        val httpDashboardReqEditorKey = Key.create<Editor>("org.javamaster.dashboard.httpDashboardReqEditor")
-        val httpDashboardResEditorKey = Key.create<Editor>("org.javamaster.dashboard.httpDashboardResEditor")
-    }
 }

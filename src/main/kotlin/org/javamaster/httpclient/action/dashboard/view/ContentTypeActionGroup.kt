@@ -7,11 +7,11 @@ import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.actionSystem.ex.CustomComponentAction
 import com.intellij.openapi.actionSystem.impl.ActionButtonWithText
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.util.FileContentUtilCore
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpIcons
+import org.javamaster.httpclient.consts.HttpConsts.Companion.httpDashboardContentTypeKey
 import org.javamaster.httpclient.parser.HttpFile
 import java.awt.Dimension
 import javax.swing.JComponent
@@ -123,8 +123,4 @@ class ContentTypeActionGroup(private val editor: Editor) {
     private inner class XmlAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "XML")
 
     private inner class HtmlAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "HTML")
-
-    companion object {
-        val httpDashboardContentTypeKey = Key.create<ContentType>("org.javamaster.dashboard.httpDashboardContentType")
-    }
 }
