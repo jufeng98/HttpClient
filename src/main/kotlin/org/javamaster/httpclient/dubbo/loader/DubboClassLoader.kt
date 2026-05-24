@@ -21,13 +21,13 @@ class DubboClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(u
             c = if (needParentLoad.contains(name)) {
                 try {
                     parent.loadClass(name)
-                } catch (e: ClassNotFoundException) {
+                } catch (_: ClassNotFoundException) {
                     findClass(name)
                 }
             } else {
                 try {
                     findClass(name)
-                } catch (e: ClassNotFoundException) {
+                } catch (_: ClassNotFoundException) {
                     parent.loadClass(name)
                 }
             }

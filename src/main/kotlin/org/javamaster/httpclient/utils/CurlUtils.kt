@@ -84,7 +84,7 @@ object CurlUtils {
         sb.append("\n\n")
         sb.append("### curl request\n")
         sb.append("/*\n")
-        sb.append(CurlUtils.createCurlStringComment(curlStr))
+        sb.append(createCurlStringComment(curlStr))
         sb.append("*/\n")
         sb.append(curlRequest.httpMethod!!)
         sb.append(" ")

@@ -11,6 +11,7 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.containers.toArray
 import org.apache.commons.lang3.time.DateFormatUtils
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequestBlock
@@ -44,7 +45,7 @@ class JsonFoldingBuilder : FoldingBuilder, DumbAware {
     }
 
     override fun getPlaceholderText(node: ASTNode): String {
-        return DateFormatUtils.format(Date(node.text.toLong()), "yyyy-MM-dd HH:mm:ss")
+        return DateFormatUtils.format(Date(node.text.toLong()), HttpConsts.JAVA_DATE_PATTERN)
     }
 
     override fun isCollapsedByDefault(node: ASTNode): Boolean {

@@ -32,12 +32,12 @@ object HttpRequest {
 
     fun assert(condition: Boolean, message: String) {
         if (!condition) {
-            throw HttpFileException(message, null)
+            throw HttpFileException(message)
         }
     }
 
     fun exit() {
-        throw HttpFileException("Exit", null)
+        throw HttpFileException("Exit")
     }
 
     override fun toString(): String {

@@ -7,6 +7,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import java.util.*
 
@@ -28,7 +29,7 @@ class VisualizeTimestampAction : AnAction(nls("visualize.timestamp"), nls("visua
         val selectedText = editor?.selectionModel?.selectedText ?: return
 
         val timestamp = selectedText.toLong()
-        val format = DateFormatUtils.format(Date(timestamp), "yyyy-MM-dd HH:mm:ss")
+        val format = DateFormatUtils.format(Date(timestamp), HttpConsts.JAVA_DATE_PATTERN)
         HintManager.getInstance().showInformationHint(editor, format)
     }
 

@@ -11,6 +11,7 @@ import io.ktor.http.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.time.DateUtils
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
@@ -205,7 +206,7 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return DateFormatUtils.format(Date(), "yyyy-MM-dd HH:mm:ss", TimeZone.getDefault())
+            return DateFormatUtils.format(Date(), HttpConsts.JAVA_DATE_PATTERN, TimeZone.getDefault())
         }
     },
     TIMESTAMP_DATE("\$timestampDate") {
