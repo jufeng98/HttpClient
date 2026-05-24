@@ -10,12 +10,12 @@ import org.javamaster.httpclient.psi.HttpTypes
 /**
  * @author yudong
  */
-class HttpHandlerBlock(node: ASTNode, val mySettings: CodeStyleSettings) : HttpRequestBaseBlock(node) {
+class HttpScriptBlock(node: ASTNode, val mySettings: CodeStyleSettings) : HttpRequestBaseBlock(node) {
 
     override fun createBlock(node: ASTNode): Block {
         val type = node.elementType
-        return if (type === HttpTypes.GLOBAL_SCRIPT || type === HttpTypes.PRE_REQUEST_SCRIPT || type === HttpTypes.RESPONSE_SCRIPT) {
-            HttpScriptBlock(node, mySettings)
+        return if (type === HttpTypes.SCRIPT_BODY) {
+            HttpScriptBodyBlock(node, mySettings)
         } else {
             super.createBlock(node)
         }

@@ -7,6 +7,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
 import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.formatter.support.HttpHandlerBlock
 import org.javamaster.httpclient.formatter.support.HttpRequestBaseBlock
 import org.javamaster.httpclient.formatter.support.HttpRequestBlockBlock
 import org.javamaster.httpclient.psi.HttpResponseHandler
@@ -23,6 +24,8 @@ class HttpRequestFileBlock(fileNode: ASTNode, private val mySettings: CodeStyleS
     override fun createBlock(node: ASTNode): Block {
         return if (node.elementType === HttpTypes.REQUEST_BLOCK) {
             HttpRequestBlockBlock(node, settings)
+        } else if (node.elementType == HttpTypes.GLOBAL_HANDLER) {
+            HttpHandlerBlock(node, settings)
         } else {
             super.createBlock(node)
         }

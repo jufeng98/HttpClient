@@ -19,7 +19,7 @@ class HttpRequestBlockBlock(
 
     override fun createBlock(node: ASTNode): Block {
         return if (node.elementType == HttpTypes.PRE_REQUEST_HANDLER) {
-            HttpHandlerBlock(node)
+            HttpHandlerBlock(node, mySettings)
         } else if (node.elementType === HttpTypes.REQUEST) {
             HttpRequestBlock(node, settings)
         } else {

@@ -75,6 +75,7 @@
                     <li>新增 import 指令，用于引入外部 http 文件</li>
                     <li>新增 run，用于执行外部 http 文件的请求</li>
                     <li>js处理器中新增智能提示内置的 js 预定义变量及函数功能(只适用于旗舰版)</li>
+                    <li>完善格式化功能，支持注入的JSON和JS的格式化</li>
                     <li>完善 Faker</li>
                     <li>bug修复</li>
                 </ul>

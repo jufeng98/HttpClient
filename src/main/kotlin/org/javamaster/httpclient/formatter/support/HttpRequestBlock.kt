@@ -24,7 +24,7 @@ class HttpRequestBlock(
         } else if (type === HttpTypes.BODY) {
             HttpRequestBodyBlock(node, settings)
         } else if (type == HttpTypes.RESPONSE_HANDLER) {
-            HttpHandlerBlock(node)
+            HttpHandlerBlock(node, mySettings)
         } else {
             super.createBlock(node)
         }
