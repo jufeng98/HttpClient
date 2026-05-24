@@ -442,6 +442,7 @@
         <copyPastePreProcessor implementation="org.javamaster.httpclient.copyPaste.CurlCopyPastePreProcessor"/>
         <lang.formatter language="http"
                         implementationClass="org.javamaster.httpclient.formatter.HttpFormattingModelBuilder"/>
+        <postFormatProcessor implementation="org.javamaster.httpclient.formatter.HttpPostFormatProcessor"/>
         <intentionAction>
             <language>http</language>
             <className>org.javamaster.httpclient.intent.HttpSwitchEnvironmentIntention</className>

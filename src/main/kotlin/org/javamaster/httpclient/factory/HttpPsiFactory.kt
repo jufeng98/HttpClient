@@ -8,6 +8,7 @@ import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpFileVariable
 import org.javamaster.httpclient.psi.HttpFileVariableName
+import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpVariable
 
 /**
@@ -32,6 +33,12 @@ object HttpPsiFactory {
 
         val tmpFile = psiFileFactory.createFileFromText("dummy.http", HttpLanguage.INSTANCE, txt) as HttpFile
         return PsiTreeUtil.findChildOfType(tmpFile, HttpFileVariable::class.java)!!
+    }
+
+    fun createMessageBody(project: Project, content: String): HttpMessageBody {
+        val str = "POST https://www.example.com\n\n$content"
+        val psiFile = createDummyFile(project, str)
+        return PsiTreeUtil.findChildOfType(psiFile, HttpMessageBody::class.java)!!
     }
 
     fun createDummyFile(project: Project, content: String): HttpFile {
