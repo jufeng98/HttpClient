@@ -11,19 +11,13 @@ import com.intellij.psi.codeStyle.CodeStyleSettings
  * @author yudong
  */
 class HttpScriptBodyBlock(node: ASTNode, mySettings: CodeStyleSettings) : HttpRequestBaseBlock(node) {
-    private val myInjectedBlockBuilder = MyDefaultInjectedLanguageBlockBuilder(mySettings)
+    private val httpInjectedBlockBuilder = HttpDefaultInjectedLanguageBlockBuilder(mySettings)
 
     override val subBlocksInternal: List<Block>
         get() {
             val result = mutableListOf<Block>()
 
-            myInjectedBlockBuilder.addInjectedBlocks(
-                result,
-                node,
-                wrap,
-                alignment,
-                Indent.getAbsoluteNoneIndent()
-            )
+            httpInjectedBlockBuilder.addInjectedBlocks(result, node, wrap, alignment, Indent.getAbsoluteNoneIndent())
 
             return result
         }

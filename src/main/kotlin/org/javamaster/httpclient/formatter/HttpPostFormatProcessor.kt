@@ -20,18 +20,11 @@ import org.javamaster.httpclient.psi.HttpRequest
  */
 class HttpPostFormatProcessor : PostFormatProcessor {
 
-    override fun processElement(
-        p0: PsiElement,
-        p1: CodeStyleSettings,
-    ): PsiElement {
-        return p0
+    override fun processElement(psiElement: PsiElement, settings: CodeStyleSettings): PsiElement {
+        return psiElement
     }
 
-    override fun processText(
-        file: PsiFile,
-        textRange: TextRange,
-        p2: CodeStyleSettings,
-    ): TextRange {
+    override fun processText(file: PsiFile, textRange: TextRange, settings: CodeStyleSettings): TextRange {
         val project = file.project
         val topLevelFile = InjectedLanguageManager.getInstance(project).getTopLevelFile(file)
         if (topLevelFile !is HttpFile) {
@@ -44,9 +37,7 @@ class HttpPostFormatProcessor : PostFormatProcessor {
 
                 HttpRequestEnum.getInstance(request.method.text) == HttpRequestEnum.POST
             }
-            .map {
-                PsiTreeUtil.findChildrenOfType(it.request, HttpMessageBody::class.java)
-            }
+            .map { PsiTreeUtil.findChildrenOfType(it.request, HttpMessageBody::class.java) }
             .flatten()
             .filter {
                 var parent = it.parent?.parent ?: return@filter false
@@ -65,14 +56,12 @@ class HttpPostFormatProcessor : PostFormatProcessor {
 
         messageBodies.forEach {
             val queryParam = it.text
-            val split = queryParam.split("&")
-
-            val queryParamNew = split.joinToString(" &\n") {
+            val queryParamFormat = queryParam.split("&").joinToString(" &\n") {
                 val list = it.split("=")
                 list[0].trim() + " = " + list[1].trim()
             }
 
-            val messageBody = HttpPsiFactory.createMessageBody(project, queryParamNew)
+            val messageBody = HttpPsiFactory.createMessageBody(project, queryParamFormat)
             it.replace(messageBody)
         }
 

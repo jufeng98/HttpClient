@@ -10,7 +10,7 @@ import com.intellij.psi.formatter.common.InjectedLanguageBlockWrapper
 /**
  * @author yudong
  */
-class MyInjectedLanguageBlockWrapper(
+class HttpInjectedLanguageBlockWrapper(
     original: Block,
     offset: Int,
     range: TextRange?,

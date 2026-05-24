@@ -4,11 +4,13 @@ import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
-import com.intellij.psi.util.PsiTreeUtil
-import org.javamaster.httpclient.psi.HttpResponseHandler
+import com.intellij.psi.util.lastLeaf
+import org.apache.commons.lang3.StringUtils
 import org.javamaster.httpclient.psi.HttpTypes
+import kotlin.text.isWhitespace
 
 /**
  * @author yudong
@@ -36,18 +38,26 @@ class HttpRequestFileBlock(fileNode: ASTNode, private val mySettings: CodeStyleS
             return Spacing.getReadOnlySpacing()
         }
 
-        val handler = PsiTreeUtil.findChildOfType(child1.node.psi, HttpResponseHandler::class.java)
-        if (handler != null) {
-            val text = handler.text
-            val length = text.length
-            return if (text[length - 1] == '\n' && !text[length - 2].isWhitespace()) {
-                Spacing.createSpacing(0, 0, 1, true, 100)
+        val psiElement1 = child1.node.psi
+        val nextSibling = psiElement1.nextSibling
+        if (nextSibling is PsiWhiteSpace) {
+            val text = nextSibling.text
+            val lineFeeds = StringUtils.countMatches(text, "\n")
+            return if (lineFeeds == 1) {
+                Spacing.createSpacing(0, 0, 2, true, 100)
             } else {
                 Spacing.getReadOnlySpacing()
             }
         }
 
-        return Spacing.createSpacing(0, 0, 2, true, 100)
+        val lastLeaf = psiElement1.lastLeaf()
+        val text = lastLeaf.text
+        val length = text.length
+        return if (length > 1 && text[length - 1] == '\n' && !text[length - 2].isWhitespace()) {
+            Spacing.createSpacing(0, 0, 1, true, 100)
+        } else {
+            Spacing.getReadOnlySpacing()
+        }
     }
 
     override fun isLeaf(): Boolean {

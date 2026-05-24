@@ -11,7 +11,7 @@ import com.intellij.psi.formatter.common.DefaultInjectedLanguageBlockBuilder
 /**
  * @author yudong
  */
-class MyDefaultInjectedLanguageBlockBuilder(settings: CodeStyleSettings) :
+class HttpDefaultInjectedLanguageBlockBuilder(settings: CodeStyleSettings) :
     DefaultInjectedLanguageBlockBuilder(settings) {
 
     override fun createInjectedBlock(
@@ -22,6 +22,6 @@ class MyDefaultInjectedLanguageBlockBuilder(settings: CodeStyleSettings) :
         range: TextRange?,
         language: Language,
     ): Block {
-        return MyInjectedLanguageBlockWrapper(originalBlock, offset, range, indent, language)
+        return HttpInjectedLanguageBlockWrapper(originalBlock, offset, range, indent, language)
     }
 }
