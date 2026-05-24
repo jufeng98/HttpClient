@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.formatter
+package org.javamaster.httpclient.formatter.support
 
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
@@ -7,12 +7,8 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
 import com.intellij.psi.util.PsiTreeUtil
-import org.javamaster.httpclient.formatter.support.HttpHandlerBlock
-import org.javamaster.httpclient.formatter.support.HttpRequestBaseBlock
-import org.javamaster.httpclient.formatter.support.HttpRequestBlockBlock
 import org.javamaster.httpclient.psi.HttpResponseHandler
 import org.javamaster.httpclient.psi.HttpTypes
-
 
 /**
  * @author yudong
