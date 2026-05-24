@@ -15,6 +15,7 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
+import com.sun.net.httpserver.HttpServer
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
@@ -50,7 +51,6 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.OutputStream
 import java.lang.reflect.InvocationTargetException
-import java.net.ServerSocket
 import java.net.http.HttpClient.Version
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -94,7 +94,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
     private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
-    private var serverSocket: ServerSocket? = null
+    private var httpServer: HttpServer? = null
     private var redirectTimes = 0
 
     var hasError = false
@@ -259,7 +259,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         httpDashboardForm.initMockServerForm(mockServer)
 
-        serverSocket = mockServer.startServerAsync(request, variableResolver, paramMap)
+        httpServer = mockServer.startServerAsync(request, variableResolver, paramMap)
     }
 
     fun prepareJsAndConvertToCurl(raw: Boolean, consumer: Consumer<String>) {
@@ -792,7 +792,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         wsRequest?.abortConnect()
 
-        serverSocket?.close()
+        httpServer?.stop(0)
 
         val code = if (hasError) {
             FAILED
