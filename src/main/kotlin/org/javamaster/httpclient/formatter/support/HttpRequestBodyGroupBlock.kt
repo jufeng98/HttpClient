@@ -15,7 +15,7 @@ class HttpRequestBodyGroupBlock(node: ASTNode, private val mySettings: CodeStyle
     override fun createBlock(node: ASTNode): Block {
         val type = node.elementType
         return if (type === HttpTypes.MESSAGE_BODY) {
-            HttpRequestBodyBlock(node, mySettings)
+            HttpRequestMessageBodyBlock(node, mySettings)
         } else {
             super.createBlock(node)
         }

@@ -13,6 +13,6 @@ class HttpRequestTargetBlock(node: ASTNode) :
     }
 
     override fun getSpacing(block: Block?, block1: Block): Spacing? {
-        return null
+        return Spacing.getReadOnlySpacing()
     }
 }

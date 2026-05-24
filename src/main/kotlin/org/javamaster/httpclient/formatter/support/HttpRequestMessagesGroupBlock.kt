@@ -8,18 +8,16 @@ import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
 import org.javamaster.httpclient.psi.HttpTypes
 
-/**
- * @author yudong
- */
-class HttpRequestGroupBlock(
-    fileNode: ASTNode,
-    private val mySettings: CodeStyleSettings
+class HttpRequestMessagesGroupBlock(
+    node: ASTNode,
+    private val mySettings: CodeStyleSettings,
 ) :
-    HttpRequestBaseBlock(fileNode), SettingsAwareBlock {
+    HttpRequestBaseBlock(node), SettingsAwareBlock {
 
     override fun createBlock(node: ASTNode): Block {
-        return if (node.elementType === HttpTypes.REQUEST) {
-            HttpRequestBlock(node, settings)
+        val type = node.elementType
+        return if (type === HttpTypes.MESSAGE_BODY) {
+            HttpRequestMessageBodyBlock(node, mySettings)
         } else {
             super.createBlock(node)
         }
@@ -41,4 +39,3 @@ class HttpRequestGroupBlock(
         return mySettings
     }
 }
-

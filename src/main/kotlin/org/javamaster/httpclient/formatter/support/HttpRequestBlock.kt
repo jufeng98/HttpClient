@@ -19,11 +19,11 @@ class HttpRequestBlock(
 
     override fun createBlock(node: ASTNode): Block {
         val type = node.elementType
-        return if (type === HttpTypes.REQUEST_MESSAGES_GROUP) {
-            HttpRequestBodyGroupBlock(node, settings)
-        } else if (type === HttpTypes.REQUEST_TARGET) {
+        return if (type === HttpTypes.REQUEST_TARGET) {
             HttpRequestTargetBlock(node)
-        } else if (type == HttpTypes.RESPONSE_HANDLER && type == HttpTypes.PRE_REQUEST_HANDLER) {
+        } else if (type === HttpTypes.BODY) {
+            HttpRequestBodyBlock(node, settings)
+        } else if (type == HttpTypes.RESPONSE_HANDLER) {
             HttpHandlerBlock(node)
         } else {
             super.createBlock(node)
@@ -35,7 +35,11 @@ class HttpRequestBlock(
     }
 
     override fun getSpacing(child1: Block?, child2: Block): Spacing? {
-        return null
+        if (child1 is HttpRequestBodyBlock && child2 is HttpHandlerBlock) {
+            return Spacing.createSpacing(0, 0, 2, true, 100)
+        }
+
+        return Spacing.getReadOnlySpacing()
     }
 
     override fun isLeaf(): Boolean {

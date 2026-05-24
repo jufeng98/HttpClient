@@ -14,7 +14,8 @@ class HttpHandlerBlock(node: ASTNode) : HttpRequestBaseBlock(node) {
         return null
     }
 
-    override fun getSpacing(block: Block?, block1: Block): Spacing? {
-        return null
+    override fun getSpacing(block1: Block?, block2: Block): Spacing? {
+        return Spacing.getReadOnlySpacing()
     }
+
 }

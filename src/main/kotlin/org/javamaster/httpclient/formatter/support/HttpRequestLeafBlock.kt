@@ -20,6 +20,7 @@ class HttpRequestLeafBlock @JvmOverloads constructor(node: ASTNode, private val 
     }
 
     override fun getSpacing(child1: Block?, child2: Block): Spacing? {
-        return null
+        return Spacing.getReadOnlySpacing()
     }
+
 }

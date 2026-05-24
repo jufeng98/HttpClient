@@ -6,15 +6,26 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
+import org.javamaster.httpclient.psi.HttpTypes
 
 /**
  * @author yudong
  */
-class HttpDirectionCommentBlock(
+class HttpRequestBlockBlock(
     fileNode: ASTNode,
     private val mySettings: CodeStyleSettings,
 ) :
     HttpRequestBaseBlock(fileNode), SettingsAwareBlock {
+
+    override fun createBlock(node: ASTNode): Block {
+        return if (node.elementType == HttpTypes.PRE_REQUEST_HANDLER) {
+            HttpHandlerBlock(node)
+        } else if (node.elementType === HttpTypes.REQUEST) {
+            HttpRequestBlock(node, settings)
+        } else {
+            super.createBlock(node)
+        }
+    }
 
     override fun getWrap(): Wrap? {
         return null

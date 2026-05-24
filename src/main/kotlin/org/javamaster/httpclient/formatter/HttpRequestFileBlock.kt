@@ -6,9 +6,10 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
-import org.javamaster.httpclient.formatter.support.HttpDirectionCommentBlock
+import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.formatter.support.HttpRequestBaseBlock
-import org.javamaster.httpclient.formatter.support.HttpRequestGroupBlock
+import org.javamaster.httpclient.formatter.support.HttpRequestBlockBlock
+import org.javamaster.httpclient.psi.HttpResponseHandler
 import org.javamaster.httpclient.psi.HttpTypes
 
 
@@ -21,9 +22,7 @@ class HttpRequestFileBlock(fileNode: ASTNode, private val mySettings: CodeStyleS
 
     override fun createBlock(node: ASTNode): Block {
         return if (node.elementType === HttpTypes.REQUEST_BLOCK) {
-            HttpRequestGroupBlock(node, settings)
-        } else if (node.elementType == HttpTypes.DIRECTION_COMMENT) {
-            HttpDirectionCommentBlock(node, settings)
+            HttpRequestBlockBlock(node, settings)
         } else {
             super.createBlock(node)
         }
@@ -34,13 +33,22 @@ class HttpRequestFileBlock(fileNode: ASTNode, private val mySettings: CodeStyleS
     }
 
     override fun getSpacing(child1: Block?, child2: Block): Spacing? {
-        return if (child1 is HttpRequestGroupBlock && child2 is HttpRequestGroupBlock) {
-            Spacing.createSpacing(0, 0, 2, true, 100)
-        } else if (child1 is HttpDirectionCommentBlock && child2 is HttpRequestGroupBlock) {
-            Spacing.createSpacing(0, 0, 2, true, 100)
-        } else {
-            Spacing.getReadOnlySpacing()
+        if (child1 !is HttpRequestBlockBlock || child2 !is HttpRequestBlockBlock) {
+            return Spacing.getReadOnlySpacing()
         }
+
+        val handler = PsiTreeUtil.findChildOfType(child1.node.psi, HttpResponseHandler::class.java)
+        if (handler != null) {
+            val text = handler.text
+            val length = text.length
+            return if (text[length - 1] == '\n' && !text[length - 2].isWhitespace()) {
+                Spacing.createSpacing(0, 0, 1, true, 100)
+            } else {
+                Spacing.getReadOnlySpacing()
+            }
+        }
+
+        return Spacing.createSpacing(0, 0, 2, true, 100)
     }
 
     override fun isLeaf(): Boolean {
