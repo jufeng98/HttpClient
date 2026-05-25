@@ -13,14 +13,19 @@ import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
 import com.intellij.openapi.vfs.JarFileSystem
+import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.HttpRequestEnum
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.dashboard.HttpExecutor.Companion.HTTP_EXECUTOR_ID
+import org.javamaster.httpclient.mock.MockServer
+import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
+import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.runconfig.HttpRunProfileState
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.ConfigUtils
-import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.NotifyUtil
 import java.nio.file.InvalidPathException
@@ -66,11 +71,27 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
             return
         }
 
+        if (httpMethod.text == HttpRequestEnum.MOCK_SERVER.name) {
+            val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
+            val requestTarget = request.requestTarget
+            if (requestTarget == null) {
+                loadingRemover?.run()
+                return
+            }
+
+            val port = MockServerHelper.resolvePort(requestTarget.port)
+            if (MockServer.mockServerRunningMap[port] != null) {
+                NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
+                loadingRemover?.run()
+                return
+            }
+        }
+
         httpMethod.putUserData(HttpConsts.gutterIconLoadingKey, loadingRemover)
 
         val httpExecutor = ExecutorRegistry.getInstance().getExecutorById(HTTP_EXECUTOR_ID)!!
 
-        val selectedEnv = HttpEditorTopForm.getSelectedEnv(httpMethod.project)
+        val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
 
         val runnerAndConfigurationSettings = ConfigUtils.saveConfiguration(tabName, project, selectedEnv, httpMethod)
 

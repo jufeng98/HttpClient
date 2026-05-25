@@ -15,7 +15,6 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
-import com.sun.net.httpserver.HttpServer
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.background.HttpBackground
@@ -34,6 +33,7 @@ import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.mock.MockServer
+import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.HttpResInfo
@@ -94,7 +94,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
     private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
-    private var httpServer: HttpServer? = null
+    private var mockServer: MockServer? = null
     private var redirectTimes = 0
 
     var hasError = false
@@ -255,11 +255,15 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     private fun handleMockServer() {
         loadingRemover?.run()
 
-        val mockServer = MockServer()
+        val requestTarget = request.requestTarget ?: return
 
-        httpDashboardForm.initMockServerForm(mockServer)
+        val resConsumer = httpDashboardForm.initMockServerForm()
 
-        httpServer = mockServer.startServerAsync(request, variableResolver, paramMap)
+        val port = MockServerHelper.resolvePort(requestTarget.port)
+
+        mockServer = MockServer(resConsumer, port)
+
+        mockServer!!.startServer(request, variableResolver, paramMap)
     }
 
     fun prepareJsAndConvertToCurl(raw: Boolean, consumer: Consumer<String>) {
@@ -611,10 +615,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         var cookieSaveDesc = ""
                         if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
-                            val desc = CookieUtils.saveCookiesToFile(cookies, project)
-                            if (desc.isNotEmpty()) {
-                                cookieSaveDesc = ", $desc"
-                            }
+                            cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project)
                         }
 
                         val resHeaders = response.headers()
@@ -624,7 +625,13 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                         val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
 
-                        val httpResDescList = mutableListOf("// $comment $cookieSaveDesc$CR_LF")
+                        val httpResDescList = mutableListOf<String>()
+
+                        if (cookieSaveDesc.isNotEmpty()) {
+                            httpResDescList.add("// $cookieSaveDesc$CR_LF")
+                        }
+
+                        httpResDescList.add("// $comment$CR_LF")
 
                         val evalJsRes = jsExecutor.evalJsAfterRequest(
                             url,
@@ -764,7 +771,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         VirtualFileManager.getInstance().asyncRefresh(null)
 
-        return "// ${nls("save.to.file")}: ${file.normalize().absolutePath}$CR_LF"
+        return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
     }
 
     private fun cancelFutureIfTerminated(future: CompletableFuture<*>) {
@@ -792,7 +799,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         wsRequest?.abortConnect()
 
-        httpServer?.stop(0)
+        mockServer?.stopServer()
 
         val code = if (hasError) {
             FAILED

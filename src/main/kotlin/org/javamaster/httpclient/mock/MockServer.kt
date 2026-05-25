@@ -1,10 +1,10 @@
 package org.javamaster.httpclient.mock
 
 import com.sun.net.httpserver.HttpServer
+import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.mock.support.RequestHandler
-import org.javamaster.httpclient.psi.HttpPsiUtils
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.resolve.VariableResolver
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
@@ -14,32 +14,32 @@ import java.util.function.Consumer
 /**
  * @author yudong
  */
-class MockServer {
-    lateinit var resConsumer: Consumer<String>
+class MockServer(private val resConsumer: Consumer<String>, private val port: Int) {
+    private var httpServer: HttpServer? = null
 
-    fun startServerAsync(
-        request: HttpRequest,
-        variableResolver: VariableResolver,
-        paramMap: Map<String, String>,
-    ): HttpServer {
-        val server = HttpServer.create(InetSocketAddress(resolvePort(request)), 0)
-        server.executor = Executors.newCachedThreadPool()
-
+    fun startServer(request: HttpRequest, variableResolver: VariableResolver, paramMap: Map<String, String>) {
         val requestHandler = RequestHandler(resConsumer, request, variableResolver, paramMap)
-        server.createContext("/", requestHandler)
 
-        return server
+        httpServer = HttpServer.create(InetSocketAddress(port), 0)
+        httpServer!!.executor = Executors.newCachedThreadPool()
+
+        httpServer!!.createContext("/", requestHandler)
+        httpServer!!.start()
+
+        mockServerRunningMap[port] = this
+
+        resConsumer.accept(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
     }
 
-    private fun resolvePort(request: HttpRequest): Int {
-        val httpPort = request.requestTarget?.port
-        return if (httpPort != null) {
-            val firstChild = httpPort.firstChild
-            val portStr = HttpPsiUtils.getNextSiblingByType(firstChild, HttpTypes.PORT_SEGMENT, false)!!.text
-            portStr.toInt()
-        } else {
-            80
-        }
+    fun stopServer() {
+        mockServerRunningMap.remove(port)
+
+        httpServer?.stop(0)
+
+        resConsumer.accept(MockServerHelper.appendTime("Server stopped\n"))
     }
 
+    companion object {
+        val mockServerRunningMap = mutableMapOf<Int, MockServer>()
+    }
 }

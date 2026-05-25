@@ -16,6 +16,7 @@ import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.util.Consumer;
 import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -24,7 +25,6 @@ import org.intellij.images.editor.impl.ImageEditorImpl;
 import org.javamaster.httpclient.action.dashboard.*;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.key.HttpKey;
-import org.javamaster.httpclient.mock.MockServer;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
 import org.javamaster.httpclient.utils.*;
@@ -72,7 +72,7 @@ public class HttpDashboardForm implements Disposable {
         historyMap.put(tabName, this);
     }
 
-    public void initLabelLoading(String tabName,String url){
+    public void initLabelLoading(String tabName, String url) {
         splitter.setVisible(false);
         labelLoading.setVisible(true);
 
@@ -313,7 +313,7 @@ public class HttpDashboardForm implements Disposable {
         );
     }
 
-    public void initMockServerForm(MockServer mockServer) {
+    public Consumer<String> initMockServerForm() {
         mainPanel.remove(splitter);
         mainPanel.remove(labelLoading);
         mainPanel.setLayout(new BorderLayout());
@@ -325,20 +325,18 @@ public class HttpDashboardForm implements Disposable {
 
         mainPanel.add(editor.getComponent(), BorderLayout.CENTER);
 
-        mockServer.setResConsumer(res ->
-                ApplicationManager.getApplication().invokeLater(() ->
-                        DocumentUtil.writeInRunUndoTransparentAction(() -> {
-                                    Document document = editor.getDocument();
-                                    document.insertString(document.getTextLength(), res);
+        return log -> ApplicationManager.getApplication().invokeLater(() ->
+                DocumentUtil.writeInRunUndoTransparentAction(() -> {
+                            Document document = editor.getDocument();
+                            document.insertString(document.getTextLength(), log);
 
-                                    Caret caret = editor.getCaretModel().getPrimaryCaret();
-                                    caret.moveToOffset(document.getTextLength());
+                            Caret caret = editor.getCaretModel().getPrimaryCaret();
+                            caret.moveToOffset(document.getTextLength());
 
-                                    ScrollingModel scrollingModel = editor.getScrollingModel();
-                                    scrollingModel.scrollToCaret(ScrollType.RELATIVE);
-                                }
-                        ))
-        );
+                            ScrollingModel scrollingModel = editor.getScrollingModel();
+                            scrollingModel.scrollToCaret(ScrollType.RELATIVE);
+                        }
+                ));
     }
 
     private static @NotNull JPanel createReqPanel(WsRequest wsRequest) {
