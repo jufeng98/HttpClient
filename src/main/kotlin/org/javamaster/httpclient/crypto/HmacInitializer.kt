@@ -1,9 +1,9 @@
 package org.javamaster.httpclient.crypto
 
-import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.binary.Hex
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -35,8 +35,13 @@ class HmacInitializer(private val mac: Mac, private val algorithm: String) {
     }
 
     fun withBase64Secret(base64Secret: String, urlSafe: Boolean): MacDigestBuilder {
-        val base64 = Base64.builder().setUrlSafe(urlSafe).get()
-        val secretKey = SecretKeySpec(base64.decode(base64Secret), algorithm)
+        val bytes = if (urlSafe) {
+            Base64.getUrlDecoder().decode(base64Secret)
+        } else {
+            Base64.getDecoder().decode(base64Secret)
+        }
+        
+        val secretKey = SecretKeySpec(bytes, algorithm)
         mac.init(secretKey)
         return MacDigestBuilder(mac)
     }

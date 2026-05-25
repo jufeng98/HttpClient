@@ -1,7 +1,7 @@
 package org.javamaster.httpclient.crypto
 
 import io.ktor.util.*
-import org.apache.commons.codec.binary.Base64
+import java.util.Base64
 
 /**
  * @author yudong
@@ -18,7 +18,11 @@ class Digest(private val digest: ByteArray) {
     }
 
     fun toBase64(urlSafe: Boolean): String {
-        val base64 = Base64.builder().setUrlSafe(urlSafe).get()
-        return base64.encodeAsString(digest)
+        val bytes = if (urlSafe) {
+            Base64.getUrlEncoder()
+        } else {
+            Base64.getEncoder()
+        }
+        return bytes.encodeToString(digest)
     }
 }

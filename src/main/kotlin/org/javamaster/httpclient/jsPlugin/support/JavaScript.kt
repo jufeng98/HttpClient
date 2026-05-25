@@ -22,6 +22,7 @@ import com.intellij.psi.util.PsiTreeUtil.getChildOfType
 import org.javamaster.httpclient.handler.JSElementResolveScopeProviderInvocationHandler
 import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.psi.HttpScriptBody
+import org.javamaster.httpclient.utils.ReflectionUtils
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.*
@@ -232,10 +233,16 @@ object JavaScript {
 
     fun addExtension(key: String, extensionObj: Any) {
         val application = ApplicationManager.getApplication()
-        val extensionArea = application.extensionArea
-        val extensionPoint = extensionArea.getExtensionPoint<Any>(key)
-        @Suppress("DEPRECATION")
-        extensionPoint.registerExtension(extensionObj)
+        var method = ReflectionUtils.findMethod(application.javaClass, "getExtensionArea")
+
+        val extensionArea = method.invoke(application)
+
+        method = ReflectionUtils.findMethod(extensionArea.javaClass, "getExtensionPoint", String::class.java)
+        val extensionPoint = method.invoke(extensionArea, key)
+
+        method = extensionPoint.javaClass.methods.first { it.name == "registerExtension" && it.parameterCount == 1 }
+        method.isAccessible = true
+        method.invoke(extensionPoint, extensionObj)
     }
 
     fun createTsVirtualFilePointers(): Array<LightFilePointer> {

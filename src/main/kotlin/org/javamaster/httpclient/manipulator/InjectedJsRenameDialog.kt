@@ -13,8 +13,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.search.FileTypeIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.endOffset
-import com.intellij.psi.util.startOffset
 import com.intellij.refactoring.rename.RenameDialog
 import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.jsPlugin.JsFacade
@@ -43,8 +41,9 @@ class InjectedJsRenameDialog(
         val virtualFile = host.containingFile.virtualFile
         val module = ModuleUtil.findModuleForPsiElement(host)
 
-        val start = host.textOffset + psiElement.startOffset
-        val end = host.textOffset + psiElement.endOffset
+        val textRange = psiElement.textRange
+        val start = host.textOffset + textRange.startOffset
+        val end = host.textOffset + textRange.endOffset
 
         val clz = JsFacade.getJsCallExpressionClz()
         val jsCallExpression = PsiTreeUtil.getParentOfType(psiElement, clz)!!

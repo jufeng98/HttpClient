@@ -7,10 +7,9 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
-import com.intellij.psi.util.lastLeaf
+import com.intellij.psi.util.PsiTreeUtil
 import org.apache.commons.lang3.StringUtils
 import org.javamaster.httpclient.psi.HttpTypes
-import kotlin.text.isWhitespace
 
 /**
  * @author yudong
@@ -50,7 +49,7 @@ class HttpRequestFileBlock(fileNode: ASTNode, private val mySettings: CodeStyleS
             }
         }
 
-        val lastLeaf = psiElement1.lastLeaf()
+        val lastLeaf = PsiTreeUtil.lastChild(psiElement1)
         val text = lastLeaf.text
         val length = text.length
         return if (length > 1 && text[length - 1] == '\n' && !text[length - 2].isWhitespace()) {

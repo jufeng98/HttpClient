@@ -5,8 +5,6 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.util.PsiUtil
-import okhttp3.Headers
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.enums.InnerVariableEnum
@@ -16,10 +14,12 @@ import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.CookieFile
 import java.io.File
+import java.net.HttpCookie
 import java.net.URI
 import java.net.http.HttpHeaders
 import java.nio.file.Files
 import java.util.*
+
 
 /**
  * @author yudong
@@ -54,16 +54,19 @@ object CookieUtils {
             return listOf()
         }
 
-        val headersBuilder = Headers.Builder()
-        setCookiesList.forEach {
-            headersBuilder.add(com.google.common.net.HttpHeaders.SET_COOKIE, it)
-        }
-        val headerList = headersBuilder.build()
+        return setCookiesList
+            .map {
+                val cookies = HttpCookie.parse(it)
 
-        val cookies = okhttp3.Cookie.parseAll(url.toHttpUrl(), headerList)
-        return cookies.map {
-            Cookie(it.domain, it.path, it.name, it.value, it.expiresAt, it.httpOnly, it.secure)
-        }
+                cookies
+                    .map { innerIt ->
+                        Cookie(
+                            innerIt.domain, innerIt.path, innerIt.name, innerIt.value,
+                            innerIt.maxAge, innerIt.isHttpOnly, innerIt.secure
+                        )
+                    }
+            }
+            .flatten()
     }
 
     fun getValidFileCookieMap(project: Project, refresh: Boolean): Map<String, List<Cookie>> {

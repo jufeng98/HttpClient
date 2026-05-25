@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.utils
 
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
@@ -10,10 +9,9 @@ import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.JsonUtils.formatJson
+import java.net.URI
 import java.net.http.HttpHeaders
 import java.nio.charset.StandardCharsets
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.jvm.optionals.getOrElse
 
 object ResUtils {
@@ -78,15 +76,22 @@ object ResUtils {
     fun resolveLocationUrl(url: String, headers: HttpHeaders): String {
         val location = headers.firstValue(com.google.common.net.HttpHeaders.LOCATION).get()
         if (location.startsWith("http")) {
+            // 为绝对路径,直接返回
             return location
         }
 
-        val httpUrl = url.toHttpUrl()
-        val scheme = httpUrl.scheme
-        val host = httpUrl.host
-        val port = httpUrl.port
-        val portStr = if (port == 443 || port == 80) "" else ":$port"
-        return "$scheme://$host$portStr$location"
+        val uri = URI(url)
+        val scheme = uri.scheme
+        val host = uri.host
+        val port = uri.port
+
+        val portResolve = if (port == -1) {
+            if (scheme == "https") 443 else 80
+        } else {
+            port
+        }
+
+        return "$scheme://$host$portResolve$location"
     }
 
 }
