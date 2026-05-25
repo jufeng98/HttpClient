@@ -672,7 +672,7 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-           throw UnsupportedOperationException()
+            throw UnsupportedOperationException()
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -829,7 +829,7 @@ enum class InnerVariableEnum(val methodName: String) {
             }
 
             if (args.size != 1 || args[0] !is String) {
-                val declaredMethod = targetObj.javaClass.declaredMethods[0]
+                val declaredMethod = targetObj.javaClass.declaredMethods.first { it.parameterCount == 0 }
                 declaredMethod.isAccessible = true
                 return "" + declaredMethod.invoke(targetObj)
             }

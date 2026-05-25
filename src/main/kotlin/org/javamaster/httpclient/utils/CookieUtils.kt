@@ -142,7 +142,7 @@ object CookieUtils {
             }
         }
 
-        return if (cookies.isNotEmpty()) nls("cookie.saved", ".idea/httpClient/" + HttpConsts.COOKIE_FILE_NAME) else ""
+        return if (cookies.isNotEmpty()) nls("cookie.saved", cookiePsiFile.virtualFile.path) else ""
     }
 
 }
