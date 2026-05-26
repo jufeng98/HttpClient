@@ -18,11 +18,11 @@ class Digest(private val digest: ByteArray) {
     }
 
     fun toBase64(urlSafe: Boolean): String {
-        val bytes = if (urlSafe) {
-            Base64.getUrlEncoder()
+        val encoder = if (urlSafe) {
+            Base64.getUrlEncoder().withoutPadding()
         } else {
             Base64.getEncoder()
         }
-        return bytes.encodeToString(digest)
+        return encoder.encodeToString(digest)
     }
 }

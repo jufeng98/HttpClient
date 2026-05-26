@@ -8,7 +8,7 @@ import org.javamaster.httpclient.nls.NlsBundle
  * @author yudong
  */
 @Suppress("unused")
-class RequestHeaders(private val headers: LinkedMultiValueMap<String, String>) {
+class RequestHeaders(private val headers: LinkedMultiValueMap<String, String?>) {
 
     fun all(): List<RequestHeader> {
         return headers.map {
@@ -20,16 +20,16 @@ class RequestHeaders(private val headers: LinkedMultiValueMap<String, String>) {
         return all().firstOrNull { it.name == name }
     }
 
-    fun set(name: String, value: String) {
+    fun set(name: String, value: String?) {
         headers.set(name, value)
 
-        GlobalLog.log(NlsBundle.nls("req.header.set", name, value))
+        GlobalLog.log(NlsBundle.nls("req.header.set", name, value ?: "null"))
     }
 
-    fun add(name: String, value: String) {
+    fun add(name: String, value: String?) {
         headers.add(name, value)
 
-        GlobalLog.log(NlsBundle.nls("req.header.add", name, value))
+        GlobalLog.log(NlsBundle.nls("req.header.add", name, value ?: "null"))
     }
 
     override fun toString(): String {

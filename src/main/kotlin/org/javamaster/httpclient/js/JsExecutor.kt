@@ -63,7 +63,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         rawBody: String?,
         reqInfo: HttpReqInfo,
         method: HttpRequestEnum,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String?>,
         selectedEnv: String?,
         fileScopeVariableMap: LinkedHashMap<String, String>,
     ) {
@@ -276,7 +276,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             }
 
             if (cause is JsFileException) {
-                throw cause.cause!!
+                rethrowException(e.stackTrace, cause.cause.toString(), fileName)
             }
 
             throw EvaluatorException(e.wrappedException.toString(), fileName, e.lineNumber())

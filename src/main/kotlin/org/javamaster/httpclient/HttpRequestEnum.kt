@@ -30,7 +30,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -41,7 +41,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -52,7 +52,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -63,7 +63,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -74,7 +74,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -85,7 +85,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -96,7 +96,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -107,7 +107,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -118,7 +118,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -129,7 +129,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -140,7 +140,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun createRequest(
             url: String,
             version: Version,
-            reqHeaderMap: LinkedMultiValueMap<String, String>,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
             paramMap: Map<String, String>,
         ): HttpRequest {
@@ -151,7 +151,7 @@ enum class HttpRequestEnum(val icon: Icon) {
 
     internal fun createBuilder(
         url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String?>,
         version: Version,
         paramMap: Map<String, String>,
     ): HttpRequest.Builder {
@@ -165,7 +165,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         reqHeaderMap.forEach {
             val name = it.key
             it.value.forEach { value ->
-                builder.header(name, value)
+                builder.header(name, value ?: "null")
             }
         }
 
@@ -175,7 +175,7 @@ enum class HttpRequestEnum(val icon: Icon) {
     fun execute(
         url: String,
         version: Version,
-        reqHttpHeaders: LinkedMultiValueMap<String, String>,
+        reqHttpHeaders: LinkedMultiValueMap<String, String?>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
         tabName: String,
@@ -241,7 +241,7 @@ enum class HttpRequestEnum(val icon: Icon) {
     abstract fun createRequest(
         url: String,
         version: Version,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String?>,
         bodyPublisher: HttpRequest.BodyPublisher,
         paramMap: Map<String, String>,
     ): HttpRequest

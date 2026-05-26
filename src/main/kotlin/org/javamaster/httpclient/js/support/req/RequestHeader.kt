@@ -4,17 +4,17 @@ package org.javamaster.httpclient.js.support.req
  * @author yudong
  */
 @Suppress("unused")
-class RequestHeader(val name: String, val values: List<String>) {
+class RequestHeader(val name: String, val values: List<String?>) {
 
-    fun getRawValue(): String {
+    fun getRawValue(): String? {
         return values[0]
     }
 
-    fun tryGetSubstitutedValue(): String {
+    fun tryGetSubstitutedValue(): String? {
         return values[0]
     }
 
-    fun value(): String {
+    fun value(): String? {
         return values[0]
     }
 

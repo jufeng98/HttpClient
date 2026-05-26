@@ -18,6 +18,7 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
+import java.io.FileFilter
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -179,13 +180,13 @@ object JsTgz {
     }
 
     private fun findPackageJsonMainJsFile(libDir: File, project: Project): File {
-        val packJson = File(libDir, "package" + File.separator + "package.json")
+        val packageJsonFile = File(libDir, "package" + File.separator + "package.json")
 
-        if (!packJson.exists()) {
+        if (!packageJsonFile.exists()) {
             throw IllegalArgumentException("Invalid library: ${libDir.name}")
         }
 
-        val packageJsonStr = Files.readString(packJson.toPath())
+        val packageJsonStr = Files.readString(packageJsonFile.toPath())
 
         val virtualFile = LightVirtualFile("dummy.json", packageJsonStr)
 
@@ -201,7 +202,17 @@ object JsTgz {
 
         val entryJs = jsonStringLiteral.value
 
-        val file = File(packJson.parentFile, entryJs)
+        val packageFolder = packageJsonFile.parentFile
+        if (entryJs == "index.js") {
+            val file = packageFolder.listFiles(FileFilter { it.isFile && it.extension == "js" })
+                .toList()
+                .maxByOrNull { Files.size(it.toPath()) }
+            if (file != null) {
+                return file
+            }
+        }
+
+        val file = File(packageFolder, entryJs)
         if (!file.exists() || file.isDirectory) {
             throw IllegalArgumentException("Invalid library: ${libDir.name}")
         }

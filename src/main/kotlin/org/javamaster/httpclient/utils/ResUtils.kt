@@ -85,13 +85,9 @@ object ResUtils {
         val host = uri.host
         val port = uri.port
 
-        val portResolve = if (port == -1) {
-            if (scheme == "https") 443 else 80
-        } else {
-            port
-        }
+        val portStr = if (port == -1) "" else ":$port"
 
-        return "$scheme://$host$portResolve$location"
+        return "$scheme://$host$portStr$location"
     }
 
 }

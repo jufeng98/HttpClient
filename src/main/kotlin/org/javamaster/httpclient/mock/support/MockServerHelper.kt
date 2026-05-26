@@ -213,7 +213,7 @@ object MockServerHelper {
     }
 
     fun writeResBody(
-        pair: Pair<Any?, LinkedMultiValueMap<String, String>>,
+        pair: Pair<Any?, LinkedMultiValueMap<String, String?>>,
         exchange: HttpExchange,
         status: Int,
         resHeaders: Headers,
@@ -255,8 +255,8 @@ object MockServerHelper {
         request: HttpRequest,
         variableResolver: VariableResolver,
         paramMap: Map<String, String>,
-    ): Pair<Any?, LinkedMultiValueMap<String, String>> {
-        return application.runReadAction<Pair<Any?, LinkedMultiValueMap<String, String>>> {
+    ): Pair<Any?, LinkedMultiValueMap<String, String?>> {
+        return application.runReadAction<Pair<Any?, LinkedMultiValueMap<String, String?>>> {
             val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
             val httpHeaderFields = request.header?.headerFieldList
