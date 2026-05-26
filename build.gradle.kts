@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "org.javamaster"
-version = "7.0.0"
+version = "8.0.0"
 
 repositories {
     maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
