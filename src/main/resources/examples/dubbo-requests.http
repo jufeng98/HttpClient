@@ -1,3 +1,4 @@
+// 测试 dubbo 接口(项目存在 dubbo 接口源码)
 ### Test project exist dubbo interface source code
 DUBBO dubbo://10.255.0.1:31299
 Content-Type: application/json
@@ -11,6 +12,8 @@ Version: 1.0.0
   }
 }
 
+// Registry 描述：此请求头表示注册中心的配置，指定此请求头将忽略 url 上的地址，并从注册中心获取服务
+// 测试 dubbo 接口(项目不存在 dubbo 接口源码)
 // Registry Description: This header indicates the configuration of the registration center,
 // specifying this header will ignore the address on the url and obtain services from the registration center
 ### Test project not exist dubbo interface source code

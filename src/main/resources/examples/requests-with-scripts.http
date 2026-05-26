@@ -3,12 +3,13 @@
 // 使用 npm 链接引入 js库, 将会被下载和缓存, npm 链接可以在 package-lock.json 文件中找到
 # @require https://registry.npmmirror.com/moment/-/moment-2.30.1.tgz
 # @require https://registry.npmmirror.com/lodash/-/lodash-4.17.21.tgz
+# @require https://registry.npmmirror.com/crypto-js/-/crypto-js-3.3.0.tgz
 
 // Global import local js file 全局导入本地 js 文件
 # @import ./js/public.js
 
 <! {%
-    // Global js previous handler 全局前置处理器
+    // Global js previous handler 全局js前置处理器
     console.log("Call moment format:", moment().format())
     client.global.clearAll();
     client.global.set('globalName', 'jufeng98');
@@ -26,7 +27,11 @@
     // Use builtin crypto object 使用内置的 crypto 对象
     const sign = crypto.md5().updateWithText(signSource).digest().toHex();
     request.variables.set('sign', sign);
-    console.log("sign:", sign);
+    console.log("md5(calculate by java):", sign);
+
+    // Use npm js library 使用 npm js库依赖
+    const signTmp = CryptoJS.MD5(signSource).toString()
+    console.log("md5(calculate by js):", signTmp);
 
     const params = new URLSearchParams();
     params.append("name", "yu");
@@ -38,13 +43,13 @@
     client.log(`result: ${res}`);
 %}
 
-// Global variables
-@tokenAdmin={{token}}
+// file variables 文件变量
+@tokenAdmin={{$random.uuid}}
 @name=jufeng
 
 ### use variable
 < {%
-    // pre-request handler 请求前置处理器
+    // pre-request js handler 预请求js前置处理器
     request.variables.set('cnName', 'jufeng987878');
     console.log("Call lodash capitalize:", _.capitalize('FRED'))
 %}
@@ -55,7 +60,7 @@ Name: {{name}}
 Cn-Name: {{cnName}}
 
 {
-    "desc": "hello"
+  "desc": "hello"
 }
 
 > {%
