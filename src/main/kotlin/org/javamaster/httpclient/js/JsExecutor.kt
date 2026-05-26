@@ -40,7 +40,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     init {
         reqScriptableObject.prototype = global
 
-        JsHandlerPredefineRequestVariables.defineConsole(reqScriptableObject)
+        JsHandlerPredefineRequestVariables.defineConsole(reqScriptableObject, context)
 
         JsHandlerPredefineRequestFunctions.defineDateFunc(reqScriptableObject, this)
 
@@ -314,19 +314,19 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val contextTmp = Context.enter()
             val globalTmp = contextTmp.initStandardObjects()
 
-            JsHandlerPredefineGlobalVariables.defineWindow(globalTmp)
+            JsHandlerPredefineGlobalVariables.defineWindow(globalTmp, contextTmp)
 
             JsHandlerPredefineGlobalVariables.defineSystemProperty(globalTmp, contextTmp)
 
             JsHandlerPredefineGlobalVariables.defineSystemEnv(globalTmp, contextTmp)
 
-            JsHandlerPredefineGlobalVariables.defineCrypto(globalTmp)
+            JsHandlerPredefineGlobalVariables.defineCrypto(globalTmp, contextTmp)
 
             JsHandlerPredefineGlobalVariables.defineURLSearchParams(globalTmp, contextTmp)
 
-            JsHandlerPredefineGlobalVariables.defineClient(globalTmp)
+            JsHandlerPredefineGlobalVariables.defineClient(globalTmp, contextTmp)
 
-            JsHandlerPredefineGlobalVariables.defineJavaBridge(globalTmp)
+            JsHandlerPredefineGlobalVariables.defineJavaBridge(globalTmp, contextTmp)
 
             JsHandlerPredefineGlobalVariables.defineRandom(globalTmp, contextTmp)
 

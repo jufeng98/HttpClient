@@ -23,13 +23,13 @@ class JsHandlerPredefineGlobalVariables {
             url.readText(StandardCharsets.UTF_8)
         }
 
-        fun defineWindow(global: ScriptableObject) {
-            val window = Context.javaToJS(Window, global)
+        fun defineWindow(global: ScriptableObject, context: Context) {
+            val window = Context.javaToJS(Window, global, context)
             ScriptableObject.putProperty(global, "Window", window)
         }
 
-        fun defineCrypto(global: ScriptableObject) {
-            val crypto = Context.javaToJS(CryptoSupport, global)
+        fun defineCrypto(global: ScriptableObject, context: Context) {
+            val crypto = Context.javaToJS(CryptoSupport, global, context)
             ScriptableObject.putProperty(global, "crypto", crypto)
         }
 
@@ -42,25 +42,25 @@ class JsHandlerPredefineGlobalVariables {
             )
         }
 
-        fun defineClient(global: ScriptableObject) {
-            val client = Context.javaToJS(HttpRequest, global)
+        fun defineClient(global: ScriptableObject, context: Context) {
+            val client = Context.javaToJS(HttpRequest, global, context)
             ScriptableObject.putProperty(global, "client", client)
         }
 
-        fun defineSystemProperty(global: ScriptableObject, contextTmp: Context) {
+        fun defineSystemProperty(global: ScriptableObject, context: Context) {
             val properties = System.getProperties()
-            val obj = JsonParser(contextTmp, global).parseValue(gsonNotPretty.toJson(properties))
+            val obj = JsonParser(context, global).parseValue(gsonNotPretty.toJson(properties))
             ScriptableObject.putProperty(global, PROPERTY_PREFIX, obj)
         }
 
-        fun defineSystemEnv(global: ScriptableObject, contextTmp: Context) {
+        fun defineSystemEnv(global: ScriptableObject, context: Context) {
             val env = System.getenv()
-            val obj = JsonParser(contextTmp, global).parseValue(gsonNotPretty.toJson(env))
+            val obj = JsonParser(context, global).parseValue(gsonNotPretty.toJson(env))
             ScriptableObject.putProperty(global, ENV_PREFIX, obj)
         }
 
-        fun defineJavaBridge(global: ScriptableObject) {
-            val javaBridge = Context.javaToJS(JavaBridge(), global)
+        fun defineJavaBridge(global: ScriptableObject, context: Context) {
+            val javaBridge = Context.javaToJS(JavaBridge(), global, context)
             ScriptableObject.putProperty(global, "javaBridge", javaBridge)
         }
 
