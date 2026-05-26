@@ -80,7 +80,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     private val methodType = HttpRequestEnum.getInstance(httpMethod.text)
     private val responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
 
-    private val preJsFiles = HttpUtils.getPreJsFiles(httpFile, false)
+    private val preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
 
     private val jsListBeforeReq = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock)
 
@@ -131,6 +131,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         if (npmFilesNotDownloaded.isNotEmpty()) {
             JsTgz.downloadAsync(project, npmFilesNotDownloaded)
 
+            httpDashboardForm.resetDashboardForm()
+
             destroyProcess()
 
             return
@@ -178,9 +180,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                 val environment = getEnvMap(project, false)
 
-                val domainCookieMap = CookieUtils.getValidFileCookieMap(project, false)
+                val fileCookies = CookieUtils.getValidFileCookieMap(project, false)
 
-                HttpReqInfo(reqBody, environment, preJsFiles, domainCookieMap)
+                HttpReqInfo(reqBody, environment, preJsFiles, fileCookies)
             }
             .finishOnUiThread {
                 startHandleRequest(it!!)
@@ -231,7 +233,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         when (methodType) {
             HttpRequestEnum.WEBSOCKET -> {
-                CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.domainCookieMap)
+                CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
 
                 reqHeaderMap.addAll(GlobalHeaders.dataHolder)
 
@@ -243,7 +245,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             HttpRequestEnum.MOCK_SERVER -> handleMockServer()
 
             else -> {
-                CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.domainCookieMap)
+                CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
 
                 reqHeaderMap.addAll(GlobalHeaders.dataHolder)
 
@@ -290,6 +292,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                 }
             }
 
+            httpDashboardForm.resetDashboardForm()
+
             return
         }
 
@@ -321,9 +325,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
                 val environment = getEnvMap(project, false)
 
-                val domainCookieMap = CookieUtils.getValidFileCookieMap(project, false)
+                val fileCookies = CookieUtils.getValidFileCookieMap(project, false)
 
-                HttpReqInfo(reqBody, environment, preJsFiles, domainCookieMap)
+                HttpReqInfo(reqBody, environment, preJsFiles, fileCookies)
             }
             .finishOnUiThread {
                 convertToCurlReal(raw, consumer, it!!)
@@ -438,7 +442,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e}</div>")
     }
 
-    private fun handleWs(url: String, reqHeaderMap: LinkedMultiValueMap<String, String>) {
+    private fun handleWs(url: String, reqHeaderMap: LinkedMultiValueMap<String, String?>) {
         loadingRemover?.run()
 
         wsRequest = WsRequest(url, reqHeaderMap, this, paramMap, httpDashboardForm)
@@ -450,12 +454,14 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
     private fun handleDubbo(
         url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String?>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
         if (DubboJars.jarsNotDownloaded()) {
             DubboJars.downloadAsync(project)
+
+            httpDashboardForm.resetDashboardForm()
 
             destroyProcess()
             return
@@ -570,7 +576,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
     private fun handleHttp(
         url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String?>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {

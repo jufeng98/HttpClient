@@ -25,7 +25,7 @@ import java.util.function.Consumer
  */
 class WsRequest(
     private val url: String,
-    private val reqHeaderMap: LinkedMultiValueMap<String, String>,
+    private val reqHeaderMap: LinkedMultiValueMap<String, String?>,
     private val httpProcessHandler: HttpProcessHandler,
     private val paramMap: Map<String, String>,
     parentDisposable: Disposable,
@@ -51,7 +51,7 @@ class WsRequest(
         val builder = client.newWebSocketBuilder()
         reqHeaderMap.forEach {
             it.value.forEach { value ->
-                builder.header(it.key, value)
+                builder.header(it.key, value ?: "null")
             }
         }
 

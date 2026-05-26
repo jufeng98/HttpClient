@@ -28,14 +28,19 @@ object CookieUtils {
 
     fun addFileCookieToReqHeader(
         url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
-        domainCookieMap: Map<String, List<Cookie>>,
+        reqHeaderMap: LinkedMultiValueMap<String, String?>,
+        fileCookies: List<Cookie>,
     ) {
         val uri = URI(url)
         val domain = uri.host
         val path = uri.path
 
-        val cookies = domainCookieMap[domain]?.filter { path.startsWith(it.path) } ?: return
+        val cookies = fileCookies
+            .filter { domain.endsWith(it.domain) }
+            .filter { path.startsWith(it.path) }
+        if (cookies.isEmpty()) {
+            return
+        }
 
         val cookieValueStr = cookies.joinToString("; ") { "${it.name}=${it.value}" }
 
@@ -44,7 +49,10 @@ object CookieUtils {
             reqHeaderMap.add(com.google.common.net.HttpHeaders.COOKIE, cookieValueStr)
         } else {
             val reqCookieStr = reqCookies[0]
-            reqHeaderMap.put(com.google.common.net.HttpHeaders.COOKIE, mutableListOf("$reqCookieStr; $cookieValueStr"))
+            reqHeaderMap.put(
+                com.google.common.net.HttpHeaders.COOKIE,
+                mutableListOf<String?>("$reqCookieStr; $cookieValueStr")
+            )
         }
     }
 
@@ -56,21 +64,27 @@ object CookieUtils {
 
         return setCookiesList
             .map {
-                val cookies = HttpCookie.parse(it)
+                val cookies = HttpCookie.parse(com.google.common.net.HttpHeaders.SET_COOKIE + ": " + it)
 
                 cookies
                     .map { innerIt ->
+                        val domain = innerIt.domain ?: URI(url).host
+
+                        val millis = System.currentTimeMillis()
+                        val maxAge = innerIt.maxAge
+                        val expiresAt = if (maxAge == -1L) Long.MAX_VALUE else millis + maxAge * 1000
+
                         Cookie(
-                            innerIt.domain, innerIt.path, innerIt.name, innerIt.value,
-                            innerIt.maxAge, innerIt.isHttpOnly, innerIt.secure
+                            domain, innerIt.path, innerIt.name, innerIt.value,
+                            expiresAt, innerIt.isHttpOnly, innerIt.secure
                         )
                     }
             }
             .flatten()
     }
 
-    fun getValidFileCookieMap(project: Project, refresh: Boolean): Map<String, List<Cookie>> {
-        val cookieFile = createCookiesFileIfNotExists(project, refresh) ?: return mapOf()
+    fun getValidFileCookieMap(project: Project, refresh: Boolean): List<Cookie> {
+        val cookieFile = createCookiesFileIfNotExists(project, refresh) ?: return listOf()
 
         val currentTimeMillis = System.currentTimeMillis()
         return cookieFile.getRecords()
@@ -89,7 +103,6 @@ object CookieUtils {
 
                 Cookie(it.domain.text, it.path.text, it.nameCk.text, it.value.text, expiresAt, false, false)
             }
-            .groupBy { it.domain }
     }
 
     fun createCookiesFileIfNotExists(project: Project, refresh: Boolean): CookieFile? {
@@ -111,10 +124,8 @@ object CookieUtils {
         return PsiUtil.getPsiFile(project, cookieVirtualFile) as CookieFile
     }
 
-    fun saveCookiesToFile(resCookies: List<Cookie>, project: Project): String {
+    fun saveCookiesToFile(cookies: List<Cookie>, project: Project): String {
         val cookiePsiFile = createCookiesFileIfNotExists(project, true) ?: return ""
-
-        val cookies = resCookies.filter { it.expiresAt > 0 }
 
         val cookieRecords = cookiePsiFile.getRecords()
 

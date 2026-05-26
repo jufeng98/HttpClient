@@ -30,8 +30,8 @@ EOL=\R
 LINE_COMMENT=#.*
 NEW_LINE=[\r\n]+
 SEPARATOR=[\t ]+
-COOKIE_TOKEN=[a-zA-Z0-9_/\-.]+
-COOKIE_CONTENT=[a-zA-Z0-9\-.!#$%&*+_]+
+COOKIE_TOKEN=[^\r\n\t ]+
+COOKIE_CONTENT=[^\r\n\t ]+
 COOKIE_DATE=[a-zA-Z0-9\-,: ]+
 
 %%

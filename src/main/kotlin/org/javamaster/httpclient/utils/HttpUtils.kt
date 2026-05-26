@@ -4,6 +4,7 @@ import com.intellij.execution.RunManager
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
@@ -18,6 +19,7 @@ import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
@@ -64,10 +66,10 @@ object HttpUtils {
     fun convertToReqHeaderMap(
         headerFields: List<HttpHeaderField>?,
         variableResolver: VariableResolver,
-    ): LinkedMultiValueMap<String, String> {
+    ): LinkedMultiValueMap<String, String?> {
         if (headerFields.isNullOrEmpty()) return LinkedMultiValueMap()
 
-        val map = LinkedMultiValueMap<String, String>()
+        val map = LinkedMultiValueMap<String, String?>()
 
         headerFields.stream()
             .forEach {
@@ -80,17 +82,22 @@ object HttpUtils {
     }
 
     fun resolveReqHeaderMapAgain(
-        reqHeaderMap: LinkedMultiValueMap<String, String>,
+        reqHeaderMap: LinkedMultiValueMap<String, String?>,
         variableResolver: VariableResolver,
-    ): LinkedMultiValueMap<String, String> {
-        val map = LinkedMultiValueMap<String, String>()
+    ): LinkedMultiValueMap<String, String?> {
+        val map = LinkedMultiValueMap<String, String?>()
 
         reqHeaderMap.entries.stream()
             .forEach {
                 val headerName = it.key
                 val values = it.value
 
-                values.forEach { value -> map.add(headerName, variableResolver.resolve(value)) }
+                values.forEach { value ->
+                    map.add(
+                        headerName,
+                        if (value == null) null else variableResolver.resolve(value)
+                    )
+                }
             }
 
         return map
@@ -375,7 +382,7 @@ object HttpUtils {
         }
     }
 
-    fun getPreJsFiles(httpFile: HttpFile, excludeRequire: Boolean): List<PreJsFile> {
+    fun getPreJsFiles(httpFile: HttpFile, excludeRequire: Boolean, checkFile: Boolean): List<PreJsFile> {
         val directionComments = httpFile.getDirectionComments()
 
         val parentPath = httpFile.virtualFile.parent.path
@@ -397,7 +404,19 @@ object HttpUtils {
                 val path = getDirectionPath(it, parentPath) ?: return@mapNotNull null
 
                 val preJsFile = PreJsFile(it, null)
-                preJsFile.file = File(path)
+                val file = File(path)
+
+                if (checkFile) {
+                    val virtualFile = VfsUtil.findFileByIoFile(file, true)
+                    if (virtualFile == null) {
+                        val doc = FileDocumentManager.getInstance().getDocument(httpFile.virtualFile)!!
+                        val ln = doc.getLineNumber(it.textOffset) + 1
+                        val msg = NlsBundle.nls("file.not.exists", file.absolutePath) + "(${httpFile.name}#${ln})"
+                        throw HttpFileException(msg)
+                    }
+                }
+
+                preJsFile.file = file
 
                 preJsFile
             }

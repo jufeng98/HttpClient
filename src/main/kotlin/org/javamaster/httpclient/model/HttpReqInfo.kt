@@ -11,5 +11,5 @@ data class HttpReqInfo(
     val reqBody: Any?,
     val environment: MutableMap<String, String>,
     val preJsFiles: List<PreJsFile>,
-    val domainCookieMap: Map<String, List<Cookie>>
+    val fileCookies: List<Cookie>,
 )

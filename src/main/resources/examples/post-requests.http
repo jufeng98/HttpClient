@@ -1,7 +1,12 @@
 import requests-with-authorization.http
 
-###
-run #with Authorization
+// 运行其他 http 文件的请求
+### Run other http file request
+run #GET with Authorization
+
+// 运行 http 文件
+### Run all request of the http file
+run responses-presentation.http
 
 ### with json param
 POST https://miao.baidu.com/abdr

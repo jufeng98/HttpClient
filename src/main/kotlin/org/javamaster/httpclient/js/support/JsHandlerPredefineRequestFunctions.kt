@@ -32,7 +32,7 @@ class JsHandlerPredefineRequestFunctions {
 
         fun defineBase64ToFileFunc(reqScriptableObject: ScriptableObject, jsExecutor: JsExecutor) {
             val function = Base64ToFileFunction(jsExecutor)
-            ScriptableObject.putProperty(reqScriptableObject, "base64ToFile", function)
+            ScriptableObject.putProperty(reqScriptableObject, "\$base64ToFile", function)
         }
 
         fun defineFileToBase64Func(reqScriptableObject: ScriptableObject, jsExecutor: JsExecutor) {
