@@ -287,5 +287,5 @@ declare function $readString(path: string): string;
 /**
  * 转换 base64 后保存到 path文件
  */
-declare function base64ToFile(base64: string, path: string): void;
+declare function $base64ToFile(base64: string, path: string): void;
 
