@@ -162,6 +162,10 @@ class ReqUtils {
 
             return split.joinToString("&") {
                 val list = it.split("=")
+                if (list.size == 1 && list[0].startsWith("{{")) {
+                    return@joinToString list[0]
+                }
+
                 list[0].trim() + "=" + list[1].trim()
             }
         }
