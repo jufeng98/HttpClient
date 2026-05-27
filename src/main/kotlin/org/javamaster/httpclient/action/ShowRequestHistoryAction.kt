@@ -3,19 +3,17 @@ package org.javamaster.httpclient.action
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpIcons
-import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.action.ConvertToCurlAndCpAction.Companion.findRequestBlock
-import org.javamaster.httpclient.curl.CurlParser
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.NotifyUtil
+import org.javamaster.httpclient.utils.PathUtils
 import org.javamaster.httpclient.utils.VirtualFileUtils
 import java.io.File
 
@@ -26,13 +24,6 @@ import java.io.File
 class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIcons.HISTORY) {
 
     override fun update(e: AnActionEvent) {
-        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
-
-        if (HttpUtils.isHistoryFile(virtualFile)) {
-            e.presentation.isEnabled = false
-            return
-        }
-
         val requestBlock = findRequestBlock(e)
 
         e.presentation.isEnabled = requestBlock != null
@@ -44,18 +35,14 @@ class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIco
         val request = requestBlock.request ?: return
         val project = e.project!!
 
-        val method = request.method.text
-        if (method == HttpRequestEnum.WEBSOCKET.name
-            || method == HttpRequestEnum.DUBBO.name
-        ) {
-            NotifyUtil.notifyWarn(project, nls("convert.not.supported"))
-            return
-        }
+        val method = request.method
+        val methodText = method.text
 
-        val tabName = HttpUtils.getTabName(request.method)
+        val tabName = HttpUtils.getTabName(method)
+        val legalTabName = PathUtils.legalizeFileName(tabName)
 
         val dateHistoryDir = VirtualFileUtils.getDateHistoryDir(project)
-        val bodyFilesFolder = File(dateHistoryDir, tabName)
+        val bodyFilesFolder = File(dateHistoryDir, legalTabName)
 
         val listFiles = bodyFilesFolder.listFiles()
         if (listFiles == null) {
@@ -63,25 +50,27 @@ class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIco
             return
         }
 
+        val url = request.requestTarget!!.text
         try {
-            CurlParser.toCurlString(requestBlock, project, true) {
-                application.executeOnPooledThread {
-                    val historyBodyFileStrList = listFiles
-                        .map { historyBodyFile ->
-                            "<> ${tabName}/${historyBodyFile.name}"
-                        }
-                        .take(30)
-                        .joinToString(CR_LF)
+            application.executeOnPooledThread {
+                val historyResFileList = listFiles
+                    .map { historyBodyFile ->
+                        "<> ${legalTabName}/${historyBodyFile.name}"
+                    }
+                    .take(30)
+                    .joinToString(CR_LF)
 
-                    val content = it + CR_LF + historyBodyFileStrList
+                var content = "### $tabName$CR_LF"
+                content += "$methodText $url$CR_LF"
 
-                    runInEdt {
-                        WriteAction.run<Exception> {
-                            val virtualFile = VirtualFileUtils.createHistoryHttpVirtualFile(content, project, tabName)
+                content += CR_LF + historyResFileList
 
-                            val editorManager = FileEditorManager.getInstance(project)
-                            editorManager.openFile(virtualFile)
-                        }
+                runInEdt {
+                    WriteAction.run<Exception> {
+                        val virtualFile = VirtualFileUtils.createHistoryHttpVirtualFile(content, project, legalTabName)
+
+                        val editorManager = FileEditorManager.getInstance(project)
+                        editorManager.openFile(virtualFile)
                     }
                 }
             }
