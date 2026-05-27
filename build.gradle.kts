@@ -6,7 +6,7 @@ import java.net.URI
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.9.25"
-    id("org.jetbrains.intellij.platform") version "2.3.0"
+    id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
 group = "org.javamaster"
@@ -53,6 +53,8 @@ dependencies {
 sourceSets["main"].java.srcDirs("src/main/gen")
 
 intellijPlatform {
+    buildSearchableOptions = false
+    autoReload = false
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "230"
