@@ -15,6 +15,7 @@ import org.javamaster.httpclient.resolve.VariableResolver
 import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 
 /**
@@ -33,11 +34,18 @@ class RequestHandler(
 
     private val responseStatus = paramMap[ParamEnum.RESPONSE_STATUS.param]?.toInt()
 
+    private val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong()
+
     override fun handle(exchange: HttpExchange) {
         val method = exchange.requestMethod
         val reqPath = exchange.requestURI.path
 
         MockServerHelper.printRequestInfo(exchange, resConsumer)
+
+        if (readTimeout != null) {
+            resConsumer.accept("Sleeping $readTimeout s......\n")
+            TimeUnit.SECONDS.sleep(readTimeout)
+        }
 
         if (HttpMethod.HEAD.name == method) {
             exchange.sendResponseHeaders(200, -1)

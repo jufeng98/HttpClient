@@ -7,6 +7,7 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
@@ -19,6 +20,7 @@ import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.env.EnvFileService.Companion.getService
 import org.javamaster.httpclient.jsPlugin.support.JavaScript
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.NotifyUtil
 
 
@@ -58,6 +60,12 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
         val fileEditor = source.getSelectedEditor(file)
         if (fileEditor == null) {
             System.err.println("Can't find file editor for ${file.path}")
+            return
+        }
+
+        if (HttpUtils.isFileInIdeaDir(file)) {
+            val textEditor = fileEditor as TextEditor
+            textEditor.editor.document.setReadOnly(true)
             return
         }
 

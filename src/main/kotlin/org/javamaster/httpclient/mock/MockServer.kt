@@ -26,13 +26,13 @@ class MockServer(private val resConsumer: Consumer<String>, private val port: In
         httpServer!!.createContext("/", requestHandler)
         httpServer!!.start()
 
-        mockServerRunningMap[port] = this
+        mockServerRunningSet.add(port)
 
         resConsumer.accept(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
     }
 
     fun stopServer() {
-        mockServerRunningMap.remove(port)
+        mockServerRunningSet.remove(port)
 
         httpServer?.stop(0)
 
@@ -40,6 +40,10 @@ class MockServer(private val resConsumer: Consumer<String>, private val port: In
     }
 
     companion object {
-        val mockServerRunningMap = mutableMapOf<Int, MockServer>()
+        private val mockServerRunningSet = mutableSetOf<Int>()
+
+        fun isRunning(port: Int): Boolean {
+            return mockServerRunningSet.contains(port)
+        }
     }
 }

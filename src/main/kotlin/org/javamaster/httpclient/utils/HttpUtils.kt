@@ -508,10 +508,6 @@ object HttpUtils {
         return virtualFile?.name?.startsWith("tmp") == true
     }
 
-    fun isHistoryFile(virtualFile: VirtualFile?): Boolean {
-        return virtualFile?.nameWithoutExtension?.endsWith("history") == true
-    }
-
     fun isRunTabName(path: String): Boolean {
         return path.startsWith("#")
     }

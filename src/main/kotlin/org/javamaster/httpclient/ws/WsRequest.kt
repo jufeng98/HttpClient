@@ -5,6 +5,7 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.application
 import org.apache.commons.lang3.exception.ExceptionUtils
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.dashboard.HttpProcessHandler
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
@@ -32,6 +33,7 @@ class WsRequest(
 ) : Disposable {
     private var webSocket: WebSocket? = null
     lateinit var resConsumer: Consumer<String>
+    private val tabName = httpProcessHandler.tabName
 
     init {
         Disposer.register(parentDisposable, this)
@@ -42,7 +44,7 @@ class WsRequest(
 
         val uri = URI(url)
 
-        val connectTimeout = paramMap[ParamEnum.CONNECT_TIMEOUT_NAME.param]?.toLong() ?: 6
+        val connectTimeout = paramMap[ParamEnum.CONNECT_TIMEOUT_NAME.param]?.toLong() ?: HttpConsts.CONNECT_TIMEOUT
 
         val client = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(connectTimeout))
@@ -59,10 +61,14 @@ class WsRequest(
 
         builder.buildAsync(uri, listener)
             .whenComplete { ws, ex ->
+                wsRunningSet.add(tabName)
+
                 if (ex == null) {
                     webSocket = ws
                     return@whenComplete
                 }
+
+                wsRunningSet.remove(tabName)
 
                 httpProcessHandler.hasError = true
                 httpProcessHandler.destroyProcess()
@@ -72,6 +78,8 @@ class WsRequest(
     }
 
     fun abortConnect() {
+        wsRunningSet.remove(tabName)
+
         if (webSocket == null) {
             return
         }
@@ -101,6 +109,14 @@ class WsRequest(
 
     override fun dispose() {
         abortConnect()
+    }
+
+    companion object {
+        private val wsRunningSet = mutableSetOf<String>()
+
+        fun isRunning(tabName: String): Boolean {
+            return wsRunningSet.contains(tabName)
+        }
     }
 }
 

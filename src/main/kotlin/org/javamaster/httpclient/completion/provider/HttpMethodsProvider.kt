@@ -38,7 +38,7 @@ class HttpMethodsProvider : CompletionProvider<CompletionParameters>() {
 
         result.addElement(
             LookupElementBuilder.create("run")
-                .withTypeText("运行文件或其他文件的请求", true)
+                .withTypeText("运行 http 文件或其他 http 文件的请求", true)
                 .withInsertHandler(AddSpaceInsertHandler.INSTANCE)
         )
     }

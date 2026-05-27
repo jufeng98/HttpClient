@@ -7,11 +7,14 @@ import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.editor.*;
+import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
+import com.intellij.ui.EditorTextField;
 import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -21,7 +24,6 @@ import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.intellij.images.editor.impl.ImageEditorImpl;
 import org.javamaster.httpclient.action.dashboard.*;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.key.HttpKey;
@@ -133,9 +135,10 @@ public class HttpDashboardForm implements Disposable {
         initVerticalToolbarPanel(resEditor, resVerticalToolbarPanel, simpleTypeEnum, responseBodyFile);
 
         if (Objects.equals(simpleTypeEnum, SimpleTypeEnum.IMAGE)) {
-            ImageEditorImpl imageEditor = new ImageEditorImpl(project, responseBodyFile);
+            ImageIcon imageIcon = new ImageIcon(httpInfo.getByteArray());
+            JLabel jLabel = new JLabel(imageIcon);
 
-            JBScrollPane presentation = new JBScrollPane(imageEditor.getComponent());
+            JBScrollPane presentation = new JBScrollPane(jLabel);
 
             renderResponsePresentation(resEditor.getComponent(), presentation, constraintsRes);
         }
@@ -191,7 +194,7 @@ public class HttpDashboardForm implements Disposable {
 
             File dateHistoryDir = VirtualFileUtils.INSTANCE.getDateHistoryDir(project);
 
-            File resBodyDir = new File(dateHistoryDir, tabName);
+            File resBodyDir = new File(dateHistoryDir, PathUtils.INSTANCE.legalizeFileName(tabName));
             if (!resBodyDir.exists()) {
                 //noinspection ResultOfMethodCallIgnored
                 resBodyDir.mkdirs();
@@ -275,10 +278,6 @@ public class HttpDashboardForm implements Disposable {
         GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
         GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
         constraints = (GridConstraints) constraints.clone();
-        int width = 200;
-        constraints.myMinimumSize.width = width;
-        constraints.myMaximumSize.width = width;
-        constraints.myPreferredSize.width = width;
 
         JPanel jPanelReq = createReqPanel(wsRequest);
 
@@ -289,7 +288,7 @@ public class HttpDashboardForm implements Disposable {
 
         Editor editor = WriteAction.computeAndWait(() ->
                 EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
-                        project, tabName, editorList, false)
+                        project, tabName, editorList, true)
         );
 
         responsePanel.add(editor.getComponent(), constraintsRes);
@@ -339,19 +338,29 @@ public class HttpDashboardForm implements Disposable {
                 ));
     }
 
-    private static @NotNull JPanel createReqPanel(WsRequest wsRequest) {
+    private JPanel createReqPanel(WsRequest wsRequest) {
         JPanel jPanelReq = new JPanel();
         jPanelReq.setLayout(new BorderLayout());
 
-        JTextArea jTextAreaReq = new JTextArea();
-        jTextAreaReq.setToolTipText(NlsBundle.INSTANCE.nls("ws.tooltip"));
-        jPanelReq.add(new JBScrollPane(jTextAreaReq), BorderLayout.CENTER);
+        EditorTextField editorTextField = new EditorTextField("", project, PlainTextFileType.INSTANCE) {
+            @Override
+            protected @NotNull EditorEx createEditor() {
+                EditorEx editor = super.createEditor();
+                editor.setVerticalScrollbarVisible(true);
+                editor.setOneLineMode(false);
+                editor.setPlaceholder(NlsBundle.INSTANCE.nls("ws.tooltip"));
+                editor.getSettings().setUseSoftWraps(true);
+                return editor;
+            }
+        };
+
+        jPanelReq.add(editorTextField, BorderLayout.CENTER);
 
         JButton jButtonSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));
         jButtonSend.addActionListener(e -> {
-            String text = jTextAreaReq.getText();
+            String text = editorTextField.getText();
             wsRequest.sendWsMsg(text);
-            jTextAreaReq.setText("");
+            editorTextField.setText("");
         });
 
         JPanel btnPanel = new JPanel();

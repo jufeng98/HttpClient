@@ -70,15 +70,18 @@
             <ul>
                 <li><b>8.0.0</b></li>
                 <ul>
-                    <li>js 处理器中的预定义变量(如 request、response、crypto 等)改为纯 Java 实现，提高执行效率</li>
+                    <li>js 处理器中的预定义对象(如 request、response、crypto 等)改为纯 Java 实现，提高执行效率</li>
                     <li>新增处理 Cookie 功能，支持保存到本地并随着后续请求发送</li>
                     <li>新增 import 指令，用于引入外部 http 文件</li>
                     <li>新增 run 方法，用于执行外部 http 文件或外部 http 文件内的特定请求</li>
-                    <li>js 处理器中新增智能提示内置的 js 预定义变量及函数功能(只适用于旗舰版)</li>
+                    <li>js 处理器中新增智能提示内置的 js 预定义对象及函数功能(只适用于旗舰版)</li>
                     <li>完善格式化功能，支持注入的 JSON、XML 格式化</li>
                     <li>完善格式化功能，支持注入的 js 的格式化(只适用于旗舰版)</li>
-                    <li>完善 Faker</li>
-                    <li>移除内置的 Crypto JS 库</li>
+                    <li>http 请求名称放开限制，可以使用特殊字符</li>
+                    <li>完善内置的随机完善函数，支持更多的 Faker 类型</li>
+                    <li>移除内置的 Crypto JS 库，因此 Crypto 全局对象不再可用，请使用 crypto 全局对象</li>
+                    <li>移除 response 对象的 jsonPath 属性和 xpath 属性，请使用全局的 jsonPath 函数和 xpath 函数</li>
+                    <li>其他功能优化等等</li>
                 </ul>
                 <li><b>6.0.0</b></li>
                 <ul>
