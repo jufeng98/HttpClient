@@ -7,7 +7,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.readBytes
 import com.intellij.openapi.vfs.readText
 import com.intellij.testFramework.LightVirtualFile
-import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.nls.NlsBundle
@@ -97,12 +96,12 @@ object VirtualFileUtils {
         txtBytes: ByteArray,
         suffix: String,
         project: Project,
-        tabName: String,
+        legalTabName: String,
         noLog: Boolean,
     ): VirtualFile {
         val parentDir = getDateHistoryDir(project)
 
-        val str = StringUtils.defaultString(tabName) + "-" + DateFormatUtils.format(Date(), "hhmmss")
+        val str = legalTabName + "-" + DateFormatUtils.format(Date(), "hhmmss")
         val path = Path.of(parentDir.toString(), "tmp-$str.$suffix")
 
         if (noLog) {
@@ -128,11 +127,11 @@ object VirtualFileUtils {
     fun createHistoryHttpVirtualFile(
         content: String,
         project: Project,
-        tabName: String,
+        legalTabName: String,
     ): VirtualFile {
         val parentDir = getDateHistoryDir(project)
 
-        val path = Path.of(parentDir.toString(), "$tabName-history.http")
+        val path = Path.of(parentDir.toString(), "tmp-$legalTabName-history.http")
 
         val file = if (Files.exists(path)) {
             path.toFile()

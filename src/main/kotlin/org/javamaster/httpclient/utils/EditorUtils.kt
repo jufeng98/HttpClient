@@ -103,7 +103,9 @@ object EditorUtils {
         val editorFactory = EditorFactory.getInstance()
         val fileDocumentManager = FileDocumentManager.getInstance()
 
-        val virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, tabName, noLog)
+        val legalTabName = PathUtils.legalizeFileName(tabName)
+
+        val virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, legalTabName, noLog)
 
         val psiFile = virtualFile.findPsiFile(project)
 

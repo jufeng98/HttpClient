@@ -458,6 +458,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
+        requestRunningSet.add(tabName)
+
         if (DubboJars.jarsNotDownloaded()) {
             DubboJars.downloadAsync(project)
 
@@ -580,6 +582,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
+        requestRunningSet.add(tabName)
+
         val start = System.currentTimeMillis()
 
         val methodTypeTmp = if (redirectTimes > 0) HttpRequestEnum.GET else methodType
@@ -760,7 +764,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
 
         path = HttpUtils.constructFilePath(path, parentPath)
 
-        val file = File(path)
+        var file = File(path)
+        file = File(PathUtils.legalizeFilePath(file.parent), PathUtils.legalizeFileName(file.name))
 
         if (!file.parentFile.exists()) {
             Files.createDirectories(file.toPath())
@@ -803,6 +808,8 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             }
         }
 
+        requestRunningSet.remove(tabName)
+
         wsRequest?.abortConnect()
 
         mockServer?.stopServer()
@@ -834,4 +841,11 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         return null
     }
 
+    companion object {
+        private val requestRunningSet = mutableSetOf<String>()
+
+        fun isRunning(tabName: String): Boolean {
+            return requestRunningSet.contains(tabName)
+        }
+    }
 }

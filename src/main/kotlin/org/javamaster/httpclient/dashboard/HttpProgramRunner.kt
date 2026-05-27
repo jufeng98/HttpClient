@@ -12,7 +12,10 @@ import com.intellij.execution.runners.GenericProgramRunner
 import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.JarFileSystem
+import com.intellij.openapi.wm.ToolWindowId
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts
@@ -28,10 +31,12 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.ConfigUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.NotifyUtil
-import java.nio.file.InvalidPathException
-import java.nio.file.Path
+import org.javamaster.httpclient.ws.WsRequest
 
 
+/**
+ * @author yudong
+ */
 class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
 
     override fun getRunnerId(): String {
@@ -58,20 +63,8 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
 
         val tabName = HttpUtils.getTabName(httpMethod)
 
-        try {
-            // tabName会用作文件名,因此需要检测下
-            Path.of(tabName)
-
-            if (tabName.contains("/") || tabName.contains("\\")) {
-                throw InvalidPathException(tabName, NlsBundle.nls("tab.name.error", "Illegal char: / \\"))
-            }
-        } catch (e: InvalidPathException) {
-            NotifyUtil.notifyError(project, NlsBundle.nls("tab.name.error", e.message!!))
-            loadingRemover?.run()
-            return
-        }
-
-        if (httpMethod.text == HttpRequestEnum.MOCK_SERVER.name) {
+        val methodText = httpMethod.text
+        if (methodText == HttpRequestEnum.MOCK_SERVER.name) {
             val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
             val requestTarget = request.requestTarget
             if (requestTarget == null) {
@@ -80,9 +73,24 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
             }
 
             val port = MockServerHelper.resolvePort(requestTarget.port)
-            if (MockServer.mockServerRunningMap[port] != null) {
+            if (MockServer.isRunning(port)) {
                 NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
                 loadingRemover?.run()
+                showWindow(project)
+                return
+            }
+        } else if (methodText == HttpRequestEnum.WEBSOCKET.name) {
+            if (WsRequest.isRunning(tabName)) {
+                NotifyUtil.notifyWarn(project, NlsBundle.nls("req.running", tabName))
+                loadingRemover?.run()
+                showWindow(project)
+                return
+            }
+        } else {
+            if (HttpProcessHandler.isRunning(tabName)) {
+                NotifyUtil.notifyWarn(project, NlsBundle.nls("req.running", tabName))
+                loadingRemover?.run()
+                showWindow(project)
                 return
             }
         }
@@ -132,6 +140,12 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         }
 
         return RunContentBuilder(executionResult, environment).showRunContent(contentToReuse)
+    }
+
+    private fun showWindow(project: Project) {
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.getToolWindow(ToolWindowId.SERVICES)
+        toolWindow?.show()
     }
 
     companion object {
