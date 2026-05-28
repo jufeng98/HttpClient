@@ -3,16 +3,15 @@ package org.javamaster.httpclient.dashboard
 import com.google.common.net.HttpHeaders
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.actionSystem.ex.ActionUtil
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.text.Formats
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
 import org.apache.http.entity.ContentType
@@ -47,13 +46,9 @@ import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
 import org.javamaster.httpclient.utils.HttpUtils.handleOrdinaryContentCurl
 import org.javamaster.httpclient.ws.WsRequest
-import java.io.ByteArrayInputStream
-import java.io.File
 import java.io.OutputStream
 import java.lang.reflect.InvocationTargetException
 import java.net.http.HttpClient.Version
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
@@ -68,17 +63,21 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     var httpStatus: Int? = null
     var costTimes: Long? = null
     var finishedTime = Long.MAX_VALUE
+    var hasError = false
 
     private val httpFile = httpMethod.containingFile as HttpFile
     private val parentPath = httpFile.virtualFile.parent.path
-    private val jsExecutor = JsExecutor(project, httpFile, tabName)
+    private val jsExecutor = JsExecutor(project, parentPath, tabName)
     private val variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv, project)
     private val loadingRemover = httpMethod.getUserData(HttpConsts.gutterIconLoadingKey)
     private val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
+    private val rawUrl = requestTarget.url
     private val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
     private val requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
     private val methodType = HttpRequestEnum.getInstance(httpMethod.text)
     private val responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
+    private val outPutFilePath = PsiTreeUtil.getChildOfType(request, HttpOutputFile::class.java)?.filePath?.text
+    private val version = request.version?.version ?: Version.HTTP_1_1
 
     private val preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
 
@@ -92,12 +91,9 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         HttpDashboardForm(tabName, project)
     }
 
-    private val version = request.version?.version ?: Version.HTTP_1_1
     private var wsRequest: WsRequest? = null
     private var mockServer: MockServer? = null
     private var redirectTimes = 0
-
-    var hasError = false
 
     fun getComponent(): JPanel {
         return httpDashboardForm.mainPanel
@@ -106,22 +102,32 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     override fun startNotify() {
         super.startNotify()
 
-        if (preJsFiles.isEmpty()) {
-            startRequest()
+        application.executeOnPooledThread {
+            try {
+                if (preJsFiles.isEmpty()) {
+                    startHandleRequest()
 
-            return
+                    return@executeOnPooledThread
+                }
+
+                initPreJsFilesThenStartRequest()
+            } catch (e: Exception) {
+                runInEdt {
+                    handleException(e)
+                }
+            }
         }
-
-        initNpmFilesThenStartRequest()
     }
 
-    private fun initNpmFilesThenStartRequest() {
+    private fun initPreJsFilesThenStartRequest() {
         val preFilePair = preJsFiles.partition { it.urlFile != null }
 
         val npmFiles = preFilePair.first
 
         if (npmFiles.isEmpty()) {
-            initPreFilesThenStartRequest()
+            JsTgz.initJsLibrariesVirtualFile(preJsFiles)
+
+            startHandleRequest()
 
             return
         }
@@ -129,75 +135,40 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         val npmFilesNotDownloaded = JsTgz.jsLibrariesNotDownloaded(npmFiles)
 
         if (npmFilesNotDownloaded.isNotEmpty()) {
-            JsTgz.downloadAsync(project, npmFilesNotDownloaded)
+            runInEdt {
+                JsTgz.downloadAsyncInEdt(project, npmFilesNotDownloaded)
 
-            httpDashboardForm.resetDashboardForm()
+                httpDashboardForm.resetDashboardForm()
+            }
 
             destroyProcess()
 
             return
         }
 
-        application.executeOnPooledThread {
-            runReadAction {
-                JsTgz.initAndCacheNpmJsLibrariesFile(npmFiles, project)
+        JsTgz.initAndCacheNpmJsLibrariesFile(npmFiles, project)
 
-                initPreFilesThenStartRequest()
-            }
-        }
+        JsTgz.initJsLibrariesVirtualFile(preJsFiles)
+
+        startHandleRequest()
     }
 
-    private fun initPreFilesThenStartRequest() {
-        application.executeOnPooledThread {
-            JsTgz.initJsLibrariesVirtualFile(preJsFiles)
+    private fun startHandleRequest() {
+        ReqUtils.initPreJsFilesContent(preJsFiles, project, httpFile)
 
-            runInEdt {
-                startRequest()
-            }
-        }
-    }
+        var reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
-    private fun initPreJsFilesContent() {
-        preJsFiles.forEach {
-            try {
-                val content = VirtualFileUtils.readNewestContent(it.virtualFile)
-                it.content = content
-            } catch (e: Exception) {
-                val document = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
-                val rowNum = document.getLineNumber(it.directionComment.textOffset) + 1
+        val environment = ReadAction.compute<MutableMap<String, String>, Exception> { getEnvMap(project, false) }
 
-                throw RuntimeException("$e(${httpFile.name}#${rowNum})", e)
-            }
-        }
-    }
+        val fileCookies = CookieUtils.getValidFileCookieMap(project, false)
 
-    private fun startRequest() {
-        HttpBackground
-            .runInBackgroundReadActionAsync {
-                initPreJsFilesContent()
+        val reqInfo = HttpReqInfo(reqBody, environment, preJsFiles, fileCookies)
 
-                val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
-
-                val environment = getEnvMap(project, false)
-
-                val fileCookies = CookieUtils.getValidFileCookieMap(project, false)
-
-                HttpReqInfo(reqBody, environment, preJsFiles, fileCookies)
-            }
-            .finishOnUiThread {
-                startHandleRequest(it!!)
-            }
-            .exceptionallyOnUiThread {
-                handleException(it)
-            }
-    }
-
-    private fun startHandleRequest(reqInfo: HttpReqInfo) {
-        val request = requestBlock.request ?: return
-        val rawUrl = requestTarget.url
         var url = variableResolver.resolve(rawUrl)
 
-        httpDashboardForm.initLabelLoading(tabName, url)
+        runInEdt {
+            httpDashboardForm.initLabelLoading(tabName, url)
+        }
 
         url = ReqUtils.handleUrl(url)
 
@@ -229,7 +200,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
             url = ReqUtils.encodeUrl(url)
         }
 
-        val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver)
+        reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver)
 
         when (methodType) {
             HttpRequestEnum.WEBSOCKET -> {
@@ -282,7 +253,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         val npmFilesNotDownloaded = JsTgz.jsLibrariesNotDownloaded(npmFiles)
 
         if (npmFilesNotDownloaded.isNotEmpty()) {
-            JsTgz.downloadAsync(project, npmFilesNotDownloaded) {
+            JsTgz.downloadAsyncInEdt(project, npmFilesNotDownloaded) {
                 application.executeOnPooledThread {
                     runReadAction {
                         JsTgz.initAndCacheNpmJsLibrariesFile(npmFiles, project)
@@ -319,7 +290,7 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     private fun convertToCurlReal(raw: Boolean, consumer: Consumer<String>) {
         HttpBackground
             .runInBackgroundReadActionAsync {
-                initPreJsFilesContent()
+                ReqUtils.initPreJsFilesContent(preJsFiles, project, httpFile)
 
                 val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
@@ -338,8 +309,6 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     }
 
     private fun convertToCurlReal(raw: Boolean, consumer: Consumer<String>, reqInfo: HttpReqInfo) {
-        val request = requestBlock.request ?: return
-        val rawUrl = requestTarget.url
         var url = variableResolver.resolve(rawUrl)
 
         val httpHeaderFields = request.header?.headerFieldList
@@ -600,101 +569,99 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
                     return@whenCompleteAsync
                 }
 
-                val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
                 runInEdt {
                     httpReqDescList.add("$CR_LF// ${nls("redirect.times.req", redirectTimes)}$CR_LF")
+
+                    val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
                     handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList)
                 }
+
                 return@whenCompleteAsync
             }
 
-            runInEdt {
-                application.runWriteAction {
-                    try {
-                        if (throwable != null) {
-                            val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+            if (throwable != null) {
+                val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
-                            dealResponse(httpInfo, parentPath)
+                dealResponse(httpInfo, parentPath)
 
-                            return@runWriteAction
-                        }
+                return@whenCompleteAsync
+            }
 
-                        val size = Formats.formatFileSize(response.body().size.toLong())
+            try {
+                val size = Formats.formatFileSize(response.body().size.toLong())
 
-                        val cookies = CookieUtils.parseAll(url, response.headers())
+                val cookies = CookieUtils.parseAll(url, response.headers())
 
-                        var cookieSaveDesc = ""
-                        if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
-                            cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project)
-                        }
-
-                        val resHeaders = response.headers()
-                        val resHeaderList = ResUtils.convertResponseHeaders(resHeaders)
-
-                        val httpResInfo = ResUtils.convertResponseBody(response.body(), resHeaders)
-
-                        val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
-
-                        val httpResDescList = mutableListOf<String>()
-
-                        if (cookieSaveDesc.isNotEmpty()) {
-                            httpResDescList.add("// $cookieSaveDesc$CR_LF")
-                        }
-
-                        httpResDescList.add("// $comment$CR_LF")
-
-                        val evalJsRes = jsExecutor.evalJsAfterRequest(
-                            url,
-                            reqBody,
-                            jsAfterReq,
-                            httpResInfo,
-                            response.statusCode(),
-                            resHeaders.map(),
-                            cookies
-                        )
-
-                        if (!evalJsRes.isNullOrEmpty()) {
-                            httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
-                            httpResDescList.add("$evalJsRes$CR_LF")
-                            httpResDescList.add("*/$CR_LF")
-                        }
-
-                        val versionDesc = MyPsiUtils.getVersionDesc(response.version())
-
-                        val commentTabName = "### $tabName$CR_LF"
-                        httpResDescList.add(commentTabName)
-
-                        if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
-                            httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
-                        }
-
-                        httpResDescList.add(methodType.name + " " + response.uri() + " " + versionDesc + CR_LF)
-
-                        httpResDescList.addAll(resHeaderList)
-
-                        val simpleTypeEnum = httpResInfo.simpleTypeEnum
-                        val bodyBytes = httpResInfo.bodyBytes
-                        val bodyStr = httpResInfo.bodyStr
-                        val contentType = httpResInfo.contentType
-
-                        if (simpleTypeEnum.binary) {
-                            httpResDescList.add(nls("res.binary.data", size))
-                        } else {
-                            httpResDescList.add(bodyStr!!)
-                        }
-
-                        val httpInfo = HttpInfo(
-                            httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
-                            null, contentType, resHeaders
-                        )
-
-                        dealResponse(httpInfo, parentPath)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-
-                        NotifyUtil.notifyError(project, e.toString())
-                    }
+                var cookieSaveDesc = ""
+                if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
+                    cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project)
                 }
+
+                val resHeaders = response.headers()
+                val resHeaderList = ResUtils.convertResponseHeaders(resHeaders)
+
+                val httpResInfo = ResUtils.convertResponseBody(response.body(), resHeaders)
+
+                val comment = nls("res.desc", response.statusCode(), costTimes!!, size)
+
+                val httpResDescList = mutableListOf<String>()
+
+                if (cookieSaveDesc.isNotEmpty()) {
+                    httpResDescList.add("// $cookieSaveDesc$CR_LF")
+                }
+
+                httpResDescList.add("// $comment$CR_LF")
+
+                val evalJsRes = jsExecutor.evalJsAfterRequest(
+                    url,
+                    reqBody,
+                    jsAfterReq,
+                    httpResInfo,
+                    response.statusCode(),
+                    resHeaders.map(),
+                    cookies
+                )
+
+                if (!evalJsRes.isNullOrEmpty()) {
+                    httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
+                    httpResDescList.add("$evalJsRes$CR_LF")
+                    httpResDescList.add("*/$CR_LF")
+                }
+
+                val versionDesc = MyPsiUtils.getVersionDesc(response.version())
+
+                val commentTabName = "### $tabName$CR_LF"
+                httpResDescList.add(commentTabName)
+
+                if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+                    httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
+                }
+
+                httpResDescList.add(methodType.name + " " + response.uri() + " " + versionDesc + CR_LF)
+
+                httpResDescList.addAll(resHeaderList)
+
+                val simpleTypeEnum = httpResInfo.simpleTypeEnum
+                val bodyBytes = httpResInfo.bodyBytes
+                val bodyStr = httpResInfo.bodyStr
+                val contentType = httpResInfo.contentType
+
+                if (simpleTypeEnum.binary) {
+                    httpResDescList.add(nls("res.binary.data", size))
+                } else {
+                    httpResDescList.add(bodyStr!!)
+                }
+
+                val httpInfo = HttpInfo(
+                    httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
+                    null, contentType, resHeaders
+                )
+
+                dealResponse(httpInfo, parentPath)
+            } catch (e: Exception) {
+                e.printStackTrace()
+
+                NotifyUtil.notifyError(project, e.toString())
             }
 
             destroyProcess()
@@ -704,18 +671,12 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
     }
 
     private fun dealResponse(httpInfo: HttpInfo, parentPath: String) {
-        val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
+        if (outPutFilePath != null && httpInfo.byteArray != null) {
+            var path = variableResolver.resolve(outPutFilePath)
+            path = HttpUtils.constructFilePath(path, parentPath)
 
-        val httpRequest = PsiTreeUtil.getParentOfType(requestTarget, HttpRequest::class.java)!!
+            val saveResult = ResUtils.saveResToFile(path, httpInfo.byteArray)
 
-        var outPutFilePath: String? = null
-        val httpOutputFile = PsiTreeUtil.getChildOfType(httpRequest, HttpOutputFile::class.java)
-        if (httpOutputFile != null) {
-            outPutFilePath = httpOutputFile.filePath!!.text
-        }
-
-        val saveResult = saveResToFile(outPutFilePath, parentPath, httpInfo.byteArray)
-        if (saveResult != null) {
             httpInfo.httpResDescList.add(0, saveResult)
         }
 
@@ -749,40 +710,6 @@ class HttpProcessHandler(val httpMethod: HttpMethod, private val selectedEnv: St
         }
 
         finishedTime = System.currentTimeMillis()
-    }
-
-    private fun saveResToFile(outPutFilePath: String?, parentPath: String, byteArray: ByteArray?): String? {
-        if (outPutFilePath == null) {
-            return null
-        }
-
-        if (byteArray == null) {
-            return null
-        }
-
-        var path = variableResolver.resolve(outPutFilePath)
-
-        path = HttpUtils.constructFilePath(path, parentPath)
-
-        var file = File(path)
-        file = File(PathUtils.legalizeFilePath(file.parent), PathUtils.legalizeFileName(file.name))
-
-        if (!file.parentFile.exists()) {
-            Files.createDirectories(file.toPath())
-        }
-
-        try {
-            ByteArrayInputStream(byteArray).use {
-                Files.copy(it, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return "// ${nls("save.failed")}: $e$CR_LF"
-        }
-
-        VirtualFileManager.getInstance().asyncRefresh(null)
-
-        return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
     }
 
     private fun cancelFutureIfTerminated(future: CompletableFuture<*>) {

@@ -2,7 +2,6 @@ package org.javamaster.httpclient.js
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiFile
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
@@ -29,16 +28,19 @@ import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
- * Execute the previous and post request js scripts (always executed in the EDT thread)
+ * Execute the previous and post request js scripts
  *
  * @author yudong
  */
-class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: String) {
-    val reqScriptableObject: ScriptableObject = context.initStandardObjects()
+class JsExecutor(val project: Project, val parentPath: String, val tabName: String) {
+    val reqScriptableObject: ScriptableObject
     private var request: HttpClientRequest? = null
 
     init {
-        reqScriptableObject.prototype = global
+        val context = Context.enter()
+
+        reqScriptableObject = context.initStandardObjects()
+        reqScriptableObject.prototype = globalScriptableObject
 
         JsHandlerPredefineRequestVariables.defineConsole(reqScriptableObject, context)
 
@@ -55,6 +57,8 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
         JsHandlerPredefineRequestFunctions.defineReadStringFunc(reqScriptableObject, this)
 
         JsHandlerPredefineRequestFunctions.defineRequireFunc(reqScriptableObject, this)
+
+        Context.exit()
     }
 
     fun initJsRequestObj(
@@ -91,6 +95,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             return mutableListOf()
         }
 
+        val context = Context.enter()
         try {
             GlobalLog.setTabName(tabName)
             threadLocal.set(this)
@@ -101,14 +106,14 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
             val npmFiles = preFilePair.first
 
-            executeNpmFiles(npmFiles)
+            executeNpmFiles(npmFiles, context)
 
             val preFiles = preFilePair.second
 
             preFiles.forEach {
                 val fileName = it.file.name
 
-                evalJs(it.content, 1, fileName, reqScriptableObject)
+                evalJs(it.content, 1, fileName, reqScriptableObject, context)
             }
 
             if (jsListBeforeReq.isNotEmpty()) {
@@ -118,7 +123,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 jsListBeforeReq.forEach {
                     val rowNum = document.getLineNumber(it.textOffset) + 1
 
-                    evalJs(it.text, rowNum, virtualFile.name, reqScriptableObject)
+                    evalJs(it.text, rowNum, virtualFile.name, reqScriptableObject, context)
                 }
             }
 
@@ -133,13 +138,14 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             throw e
         } finally {
             threadLocal.remove()
+            Context.exit()
         }
     }
 
     /**
      * Execute library js file first, so the pre and post js handler can access library obj
      */
-    private fun executeNpmFiles(npmFiles: List<PreJsFile>) {
+    private fun executeNpmFiles(npmFiles: List<PreJsFile>, context: Context) {
         if (npmFiles.isEmpty()) {
             return
         }
@@ -152,7 +158,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
                 if (scriptableObject == null) {
                     scriptableObject = context.initStandardObjects()
 
-                    evalJs(it.content, 1, fileName, scriptableObject)
+                    evalJs(it.content, 1, fileName, scriptableObject, context)
 
                     libraryLoadedMap[fileName] = scriptableObject
 
@@ -161,8 +167,6 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
                 scriptableObject!!
             }
-
-        val global = reqScriptableObject.prototype
 
         var previous: ScriptableObject? = null
 
@@ -181,7 +185,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
 
         reqScriptableObject.prototype = libraryScriptableObjects[0]
 
-        libraryScriptableObjects.last().prototype = global
+        libraryScriptableObjects.last().prototype = globalScriptableObject
     }
 
     fun evalJsAfterRequest(
@@ -197,6 +201,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             return null
         }
 
+        val context = Context.enter()
         try {
             GlobalLog.setTabName(tabName)
             threadLocal.set(this)
@@ -207,7 +212,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val typeEnum = httpResInfo.simpleTypeEnum
             when (typeEnum) {
                 SimpleTypeEnum.JSON -> {
-                    body = JsonParser(context, global).parseValue(httpResInfo.bodyStr!!)
+                    body = JsonParser(context, globalScriptableObject).parseValue(httpResInfo.bodyStr!!)
                 }
 
                 SimpleTypeEnum.HTML -> {
@@ -248,7 +253,7 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             val rowNum = document.getLineNumber(jsScript.textOffset) + 1
 
             try {
-                evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject)
+                evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject, context)
             } catch (e: Exception) {
                 GlobalLog.log("$e")
             }
@@ -260,10 +265,17 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
             throw e
         } finally {
             threadLocal.remove()
+            Context.exit()
         }
     }
 
-    private fun evalJs(jsStr: String, rowNum: Int, fileName: String, scriptableObject: ScriptableObject) {
+    private fun evalJs(
+        jsStr: String,
+        rowNum: Int,
+        fileName: String,
+        scriptableObject: ScriptableObject,
+        context: Context,
+    ) {
         try {
             context.evaluateString(scriptableObject, jsStr, fileName, rowNum, null)
         } catch (e: WrappedException) {
@@ -310,34 +322,34 @@ class JsExecutor(val project: Project, val httpFile: PsiFile, val tabName: Strin
     companion object {
         var threadLocal = ThreadLocal<JsExecutor>()
         private val libraryLoadedMap = mutableMapOf<String, ScriptableObject>()
-        private val pair by lazy {
-            val contextTmp = Context.enter()
-            val globalTmp = contextTmp.initStandardObjects()
+        val globalScriptableObject: ScriptableObject by lazy {
+            val context = Context.enter()
+            val globalTmp = context.initStandardObjects()
 
-            JsHandlerPredefineGlobalVariables.defineWindow(globalTmp, contextTmp)
+            JsHandlerPredefineGlobalVariables.defineWindow(globalTmp, context)
 
-            JsHandlerPredefineGlobalVariables.defineSystemProperty(globalTmp, contextTmp)
+            JsHandlerPredefineGlobalVariables.defineSystemProperty(globalTmp, context)
 
-            JsHandlerPredefineGlobalVariables.defineSystemEnv(globalTmp, contextTmp)
+            JsHandlerPredefineGlobalVariables.defineSystemEnv(globalTmp, context)
 
-            JsHandlerPredefineGlobalVariables.defineCrypto(globalTmp, contextTmp)
+            JsHandlerPredefineGlobalVariables.defineCrypto(globalTmp, context)
 
-            JsHandlerPredefineGlobalVariables.defineURLSearchParams(globalTmp, contextTmp)
+            JsHandlerPredefineGlobalVariables.defineURLSearchParams(globalTmp, context)
 
-            JsHandlerPredefineGlobalVariables.defineClient(globalTmp, contextTmp)
+            JsHandlerPredefineGlobalVariables.defineClient(globalTmp, context)
 
-            JsHandlerPredefineGlobalVariables.defineJavaBridge(globalTmp, contextTmp)
+            JsHandlerPredefineGlobalVariables.defineJavaBridge(globalTmp, context)
 
-            JsHandlerPredefineGlobalVariables.defineRandom(globalTmp, contextTmp)
+            JsHandlerPredefineGlobalVariables.defineRandom(globalTmp, context)
 
             JsHandlerPredefineGlobalFunctions.defineXpathFunc(globalTmp)
 
             JsHandlerPredefineGlobalFunctions.defineJsonPathFunc(globalTmp)
 
-            Pair(contextTmp, globalTmp)
+            Context.exit()
+
+            globalTmp
         }
-        val context: Context = pair.first
-        val global: ScriptableObject = pair.second
 
         @Suppress("HttpUrlsUsage")
         private val documentBuilderFactory by lazy {

@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.utils
 
+import com.intellij.openapi.vfs.VirtualFileManager
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
@@ -7,11 +8,16 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.model.HttpResInfo
+import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.JsonUtils.formatJson
+import java.io.ByteArrayInputStream
+import java.io.File
 import java.net.URI
 import java.net.http.HttpHeaders
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import kotlin.jvm.optionals.getOrElse
 
 object ResUtils {
@@ -90,4 +96,25 @@ object ResUtils {
         return "$scheme://$host$portStr$location"
     }
 
+    fun saveResToFile(path: String, byteArray: ByteArray): String {
+        var file = File(path)
+        file = File(PathUtils.legalizeFilePath(file.parent), PathUtils.legalizeFileName(file.name))
+
+        if (!file.parentFile.exists()) {
+            Files.createDirectories(file.toPath())
+        }
+
+        try {
+            ByteArrayInputStream(byteArray).use {
+                Files.copy(it, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return "// ${nls("save.failed")}: $e$CR_LF"
+        }
+
+        VirtualFileManager.getInstance().asyncRefresh(null)
+
+        return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
+    }
 }

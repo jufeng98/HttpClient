@@ -84,7 +84,7 @@ object JsTgz {
         }
     }
 
-    fun downloadAsync(project: Project, npmFiles: List<PreJsFile>, finished: Runnable? = null) {
+    fun downloadAsyncInEdt(project: Project, npmFiles: List<PreJsFile>, finished: Runnable? = null) {
         if (downloading) {
             NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("download.not.finish"))
             return

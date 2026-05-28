@@ -1,7 +1,11 @@
 package org.javamaster.httpclient.utils
 
+import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
 import org.intellij.markdown.html.urlEncode
+import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import java.net.http.HttpRequest.BodyPublishers
@@ -137,6 +141,20 @@ class ReqUtils {
             }
 
             return descList
+        }
+
+        fun initPreJsFilesContent(preJsFiles: List<PreJsFile>, project: Project, httpFile: HttpFile) {
+            preJsFiles.forEach {
+                try {
+                    val content = VirtualFileUtils.readNewestContent(it.virtualFile)
+                    it.content = content
+                } catch (e: Exception) {
+                    val document = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
+                    val rowNum = document.getLineNumber(it.directionComment.textOffset) + 1
+
+                    throw RuntimeException("$e(${httpFile.name}#${rowNum})", e)
+                }
+            }
         }
 
         fun handleUrl(url: String): String {
