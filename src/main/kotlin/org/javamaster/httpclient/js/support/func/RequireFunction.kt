@@ -17,7 +17,7 @@ class RequireFunction(private val jsExecutor: JsExecutor) : HttpBaseFunction() {
         val reqScriptableObject = jsExecutor.reqScriptableObject
 
         val path = args!![0] as String
-        val parentPath = jsExecutor.httpFile.virtualFile.parent.path
+        val parentPath = jsExecutor.parentPath
 
         val filePath = HttpUtils.constructFilePath(path, parentPath)
         val file = File(filePath)
@@ -31,7 +31,12 @@ class RequireFunction(private val jsExecutor: JsExecutor) : HttpBaseFunction() {
 
         val jsStr = VirtualFileUtils.readNewestContent(file)
 
-        JsExecutor.context.evaluateString(reqScriptableObject, jsStr, file.name, 1, null)
+        val context = Context.enter()
+        try {
+            context.evaluateString(reqScriptableObject, jsStr, file.name, 1, null)
+        } finally {
+            Context.exit()
+        }
 
         return reqScriptableObject
     }

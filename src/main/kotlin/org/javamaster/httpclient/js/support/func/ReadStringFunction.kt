@@ -15,7 +15,7 @@ class ReadStringFunction(private val jsExecutor: JsExecutor) : HttpBaseFunction(
     override fun callInner(cx: Context?, scope: Scriptable?, thisObj: Scriptable?, args: Array<out Any?>?): Any? {
         val path = args!![0] as String
 
-        val parentPath = jsExecutor.httpFile.virtualFile.parent.path
+        val parentPath = jsExecutor.parentPath
 
         val filePath = HttpUtils.constructFilePath(path, parentPath)
         val file = File(filePath)

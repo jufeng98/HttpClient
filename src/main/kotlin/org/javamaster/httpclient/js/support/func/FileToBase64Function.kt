@@ -12,7 +12,7 @@ class FileToBase64Function(private val jsExecutor: JsExecutor) : HttpBaseFunctio
 
     override fun callInner(cx: Context?, scope: Scriptable?, thisObj: Scriptable?, args: Array<out Any?>?): Any? {
         val path = args!![0] as String
-        val parentPath = jsExecutor.httpFile.virtualFile.parent.path
+        val parentPath = jsExecutor.parentPath
 
         val enum = InnerVariableEnum.FILE_TO_BASE64
         return enum.exec(enum.methodName, parentPath, path)

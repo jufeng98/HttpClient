@@ -3,6 +3,7 @@ package org.javamaster.httpclient.js.support.jsObject
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.GlobalLog
+import org.mozilla.javascript.Context
 import org.mozilla.javascript.Function
 
 /**
@@ -26,8 +27,18 @@ object HttpRequest {
     }
 
     fun test(testName: String, callback: Function) {
-        callback.call(JsExecutor.Companion.context, JsExecutor.Companion.global, JsExecutor.Companion.global, arrayOf())
-        GlobalLog.log(testName)
+        val context = Context.enter()
+        try {
+            callback.call(
+                context,
+                JsExecutor.Companion.globalScriptableObject,
+                JsExecutor.Companion.globalScriptableObject,
+                arrayOf()
+            )
+            GlobalLog.log(testName)
+        } finally {
+            Context.exit()
+        }
     }
 
     fun assert(condition: Boolean, message: String) {

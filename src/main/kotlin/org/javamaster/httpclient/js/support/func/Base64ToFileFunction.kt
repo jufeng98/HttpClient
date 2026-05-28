@@ -23,7 +23,7 @@ class Base64ToFileFunction(private val jsExecutor: JsExecutor) : HttpBaseFunctio
         val base64 = args!![0] as String
         val path = args[1] as String
 
-        val parentPath = jsExecutor.httpFile.virtualFile.parent.path
+        val parentPath = jsExecutor.parentPath
 
         val tmpPath = VariableResolver.resolveInnerVariable(path, parentPath, jsExecutor.project)
 

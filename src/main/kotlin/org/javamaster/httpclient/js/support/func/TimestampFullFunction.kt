@@ -15,7 +15,7 @@ class TimestampFullFunction(private val jsExecutor: JsExecutor) : HttpBaseFuncti
         val day = JavaBridge.convertArg(args!![0])!!
         val hour = JavaBridge.convertArg(args[1])!!
         val sec = JavaBridge.convertArg(args[2])!!
-        val parentPath = jsExecutor.httpFile.virtualFile.parent.path
+        val parentPath = jsExecutor.parentPath
 
         val enum = InnerVariableEnum.TIMESTAMP_FULL
         return enum.exec(enum.methodName, parentPath, day, hour, sec)
