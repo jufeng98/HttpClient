@@ -14,10 +14,7 @@ import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.ui.HttpEditorTopForm
-import org.javamaster.httpclient.utils.HttpUtils
-import org.javamaster.httpclient.utils.RandomStringUtils
-import org.javamaster.httpclient.utils.StreamUtils
-import org.javamaster.httpclient.utils.VirtualFileUtils
+import org.javamaster.httpclient.utils.*
 import org.mozilla.javascript.Context
 import java.io.File
 import java.nio.charset.Charset
@@ -27,7 +24,9 @@ import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 
-
+/**
+ * @author yudong
+ */
 enum class InnerVariableEnum(val methodName: String) {
     RANDOM_ALPHABETIC("\$random.alphabetic") {
         override fun typeText(): String {
@@ -95,6 +94,42 @@ enum class InnerVariableEnum(val methodName: String) {
 
             val count = args[0] as Int
             return RandomStringUtils.randomNumeric(count)
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
+    RANDOM_ASCII("\$random.ascii") {
+        override fun typeText(): String {
+            return nls("numeric.desc", methodName)
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is Int) {
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
+            }
+
+            val count = args[0] as Int
+            return RandomStringUtils.randomAscii(count)
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
+    RANDOM_RANDOM("\$random.random") {
+        override fun typeText(): String {
+            return nls("numeric.desc", methodName)
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 1 || args[0] !is Int) {
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
+            }
+
+            val count = args[0] as Int
+            return RandomStringUtils.random(count)
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -690,11 +725,12 @@ enum class InnerVariableEnum(val methodName: String) {
             }
 
             val context = Context.enter()
-
-            context.use {
-                val scriptableObject = it.initStandardObjects()
-                val res = it.evaluateString(scriptableObject, args[0] as String, "dummy.js", 1, null)
+            try {
+                val scriptableObject = context.initStandardObjects()
+                val res = context.evaluateString(scriptableObject, args[0] as String, "dummy.js", 1, null)
                 return res.toString()
+            } finally {
+                Context.exit()
             }
         }
 
@@ -818,24 +854,20 @@ enum class InnerVariableEnum(val methodName: String) {
 
             val faker = RandomStringUtils.faker()
 
-            val method = faker.javaClass.getDeclaredMethod(methodName)
-            method.isAccessible = true
+            val method = ReflectionUtils.findMethod(faker.javaClass, methodName)
             val targetObj = method.invoke(faker)
 
             if (split.size == 3) {
-                val declaredMethod = targetObj.javaClass.getDeclaredMethod(split[2])
-                declaredMethod.isAccessible = true
+                val declaredMethod = ReflectionUtils.findMethod(targetObj.javaClass, split[2])
                 return "" + declaredMethod.invoke(targetObj)
             }
 
             if (args.size != 1 || args[0] !is String) {
-                val declaredMethod = targetObj.javaClass.declaredMethods.first { it.parameterCount == 0 }
-                declaredMethod.isAccessible = true
+                val declaredMethod = ReflectionUtils.findFirstNoArgMethod(targetObj.javaClass)
                 return "" + declaredMethod.invoke(targetObj)
             }
 
-            val declaredMethod = targetObj.javaClass.getDeclaredMethod(args[0] as String)
-            declaredMethod.isAccessible = true
+            val declaredMethod = ReflectionUtils.findMethod(targetObj.javaClass, args[0] as String)
             return "" + declaredMethod.invoke(targetObj)
         }
     }

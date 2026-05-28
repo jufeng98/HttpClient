@@ -286,12 +286,16 @@ public class HttpDashboardForm implements Disposable {
         GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
-        Editor editor = WriteAction.computeAndWait(() ->
+        Editor resEditor = WriteAction.computeAndWait(() ->
                 EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
                         project, tabName, editorList, true)
         );
 
-        responsePanel.add(editor.getComponent(), constraintsRes);
+        responsePanel.add(resEditor.getComponent(), constraintsRes);
+
+        Document document = resEditor.getDocument();
+        Caret caret = resEditor.getCaretModel().getPrimaryCaret();
+        ScrollingModel scrollingModel = resEditor.getScrollingModel();
 
         wsRequest.setResConsumer(res ->
                 DocumentUtil.writeInRunUndoTransparentAction(() -> {
@@ -299,13 +303,8 @@ public class HttpDashboardForm implements Disposable {
                             String replace = res.replace(HttpUtils.CR_LF, "\n");
                             String s = time + " - " + replace;
 
-                            Document document = editor.getDocument();
                             document.insertString(document.getTextLength(), s);
-
-                            Caret caret = editor.getCaretModel().getPrimaryCaret();
                             caret.moveToOffset(document.getTextLength());
-
-                            ScrollingModel scrollingModel = editor.getScrollingModel();
                             scrollingModel.scrollToCaret(ScrollType.RELATIVE);
                         }
                 )
@@ -349,12 +348,16 @@ public class HttpDashboardForm implements Disposable {
                 editor.setVerticalScrollbarVisible(true);
                 editor.setOneLineMode(false);
                 editor.setPlaceholder(NlsBundle.INSTANCE.nls("ws.tooltip"));
-                editor.getSettings().setUseSoftWraps(true);
+
+                EditorSettings settings = editor.getSettings();
+                settings.setUseSoftWraps(true);
+                settings.setLineNumbersShown(true);
+
                 return editor;
             }
         };
 
-        jPanelReq.add(editorTextField, BorderLayout.CENTER);
+        jPanelReq.add(editorTextField.getComponent(), BorderLayout.CENTER);
 
         JButton jButtonSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));
         jButtonSend.addActionListener(e -> {

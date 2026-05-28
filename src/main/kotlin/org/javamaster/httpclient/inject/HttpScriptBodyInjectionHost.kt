@@ -2,9 +2,9 @@ package org.javamaster.httpclient.inject
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode
-import com.intellij.psi.ElementManipulators
 import com.intellij.psi.LiteralTextEscaper
 import com.intellij.psi.PsiLanguageInjectionHost
+import org.javamaster.httpclient.factory.HttpPsiFactory
 
 /**
  * Add element injection support
@@ -18,7 +18,8 @@ open class HttpScriptBodyInjectionHost(node: ASTNode) : ASTWrapperPsiElement(nod
     }
 
     override fun updateText(text: String): PsiLanguageInjectionHost {
-        return ElementManipulators.handleContentChange(this, text) as PsiLanguageInjectionHost
+        val hostNew = HttpPsiFactory.createScriptBody(project, text) as PsiLanguageInjectionHost
+        return this.replace(hostNew) as PsiLanguageInjectionHost
     }
 
     override fun createLiteralTextEscaper(): LiteralTextEscaper<PsiLanguageInjectionHost?> {

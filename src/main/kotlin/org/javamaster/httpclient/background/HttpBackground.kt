@@ -37,18 +37,18 @@ class HttpBackground<T> {
 
                         runInEdt {
                             try {
-                                background.resultConsumer!!.accept(result)
+                                background.resultConsumer?.accept(result)
                             } catch (ex: Exception) {
                                 ex.printStackTrace()
 
-                                background.exceptionConsumer!!.accept(ex)
+                                background.exceptionConsumer?.accept(ex)
                             }
                         }
                     } catch (ex: Exception) {
                         ex.printStackTrace()
 
                         runInEdt {
-                            background.exceptionConsumer!!.accept(ex)
+                            background.exceptionConsumer?.accept(ex)
                         }
                     }
                 }

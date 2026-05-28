@@ -6,10 +6,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpFileVariable
-import org.javamaster.httpclient.psi.HttpFileVariableName
-import org.javamaster.httpclient.psi.HttpMessageBody
-import org.javamaster.httpclient.psi.HttpVariable
+import org.javamaster.httpclient.psi.*
 
 /**
  * @author yudong
@@ -39,6 +36,17 @@ object HttpPsiFactory {
         val str = "POST https://www.example.com\n\n$content"
         val psiFile = createDummyFile(project, str)
         return PsiTreeUtil.findChildOfType(psiFile, HttpMessageBody::class.java)!!
+    }
+
+    fun createScriptBody(project: Project, content: String): HttpScriptBody {
+        val str = """
+<! {%
+$content
+%}
+run a.http            
+        """.trimIndent()
+        val psiFile = createDummyFile(project, str)
+        return PsiTreeUtil.findChildOfType(psiFile, HttpScriptBody::class.java)!!
     }
 
     fun createDummyFile(project: Project, content: String): HttpFile {

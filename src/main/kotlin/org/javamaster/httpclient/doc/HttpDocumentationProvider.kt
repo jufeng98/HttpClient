@@ -14,6 +14,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.FakePsiElement
+import com.intellij.util.SmartList
+import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getJsonLiteralValue
@@ -35,6 +37,19 @@ import javax.swing.Icon
  * @author yudong
  */
 class HttpDocumentationProvider : DocumentationProvider {
+
+    override fun getUrlFor(element: PsiElement?, originalElement: PsiElement?): List<String?>? {
+        if (element !is MyFakePsiElement) return null
+
+        val variableName = element.variable.variableName ?: return null
+
+        val variableEnum = InnerVariableEnum.getEnum(variableName.name)
+        if (variableEnum != null) {
+            return SmartList("https://javadoc.io/doc/com.github.javafaker/javafaker/latest/com/github/javafaker/package-summary.html")
+        }
+
+        return null
+    }
 
     override fun generateDoc(element: PsiElement, originalElement: PsiElement?): @Nls String? {
         originalElement ?: return null
@@ -221,11 +236,11 @@ class HttpDocumentationProvider : DocumentationProvider {
 
         object MyItemPresentation : ItemPresentation {
             override fun getPresentableText(): String {
-                return ""
+                return "Faker API"
             }
 
             override fun getIcon(unused: Boolean): Icon? {
-                return null
+                return HttpIcons.FILE
             }
         }
     }

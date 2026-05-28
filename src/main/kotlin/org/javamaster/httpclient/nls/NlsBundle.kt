@@ -10,18 +10,18 @@ internal object NlsBundle {
     @NonNls
     private const val BUNDLE = "messages.HttpClientBundle"
 
-     val lang by lazy {
-        val locale = ResourceBundle.getBundle(BUNDLE).locale
-        if (locale == Locale.CHINESE) {
+    val lang by lazy {
+        val locale = Locale.getDefault()
+        if (locale.language == Locale.CHINA.language) {
             return@lazy "zh"
         } else {
             return@lazy "en"
         }
     }
 
-     val region by lazy {
-        val locale = ResourceBundle.getBundle(BUNDLE).locale
-        if (locale == Locale.CHINESE) {
+    val region by lazy {
+        val locale = Locale.getDefault()
+        if (locale.language == Locale.CHINA.language) {
             return@lazy "zh-CN"
         } else {
             return@lazy "en-US"
