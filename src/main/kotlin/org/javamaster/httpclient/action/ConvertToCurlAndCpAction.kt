@@ -63,25 +63,22 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
             val method = requestBlock.request?.method?.text ?: return
             if (method == HttpRequestEnum.WEBSOCKET.name
                 || method == HttpRequestEnum.DUBBO.name
+                || method == "run"
             ) {
                 NotifyUtil.notifyWarn(project, nls("convert.not.supported"))
                 return
             }
 
-            try {
-                CurlParser.toCurlString(requestBlock, project, false) {
-                    CopyPasteManager.getInstance().setContents(StringSelection(it))
+            CurlParser.toCurlString(requestBlock, project, false) {
+                CopyPasteManager.getInstance().setContents(StringSelection(it))
 
-                    val str = if (it.length > 2000) {
-                        it.substring(0, 2000) + "$CR_LF......"
-                    } else {
-                        it
-                    }
-
-                    HintManager.getInstance().showInformationHint(editor, nls("converted.tip") + "\n" + str)
+                val str = if (it.length > 2000) {
+                    it.substring(0, 2000) + "$CR_LF......"
+                } else {
+                    it
                 }
-            } catch (e: Exception) {
-                NotifyUtil.notifyError(project, e.toString())
+
+                HintManager.getInstance().showInformationHint(editor, nls("converted.tip") + "\n" + str)
             }
         }
 

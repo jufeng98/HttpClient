@@ -34,7 +34,7 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
         }
 
         val time = System.currentTimeMillis() - processHandler.finishedTime
-        val current = time < 1000 && time > 0
+        val current = time < 1000
 
         val attributes = if (current) {
             SimpleTextAttributes.SYNTHETIC_ATTRIBUTES

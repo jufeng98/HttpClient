@@ -289,3 +289,7 @@ declare function $readString(path: string): string;
  */
 declare function $base64ToFile(base64: string, path: string): void;
 
+/**
+ * 休眠 lng ms
+ */
+declare function sleep(lng: number): void;

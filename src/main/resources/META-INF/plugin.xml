@@ -70,6 +70,7 @@
             <ul>
                 <li><b>8.0.0</b></li>
                 <ul>
+                    <li>重构 js 处理器执行逻辑，从 EDT 线程移出，改为在线程池中执行，从而避免 IDEA 出现卡顿现象</li>
                     <li>js 处理器中的预定义对象(如 request、response、crypto 等)改为纯 Java 实现，提高执行效率</li>
                     <li>新增处理 Cookie 功能，支持保存到本地并随着后续请求发送</li>
                     <li>新增 import 指令，用于引入外部 http 文件</li>

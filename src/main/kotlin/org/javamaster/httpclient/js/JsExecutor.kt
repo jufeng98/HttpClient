@@ -46,6 +46,8 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
         JsHandlerPredefineRequestFunctions.defineDateFunc(reqScriptableObject, this)
 
+        JsHandlerPredefineRequestFunctions.defineSleepFunc(reqScriptableObject)
+
         JsHandlerPredefineRequestFunctions.defineTimestampDateFunc(reqScriptableObject, this)
 
         JsHandlerPredefineRequestFunctions.defineTimestampFullFunc(reqScriptableObject, this)

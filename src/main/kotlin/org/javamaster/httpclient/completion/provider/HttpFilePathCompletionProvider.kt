@@ -39,7 +39,7 @@ class HttpFilePathCompletionProvider : CompletionProvider<CompletionParameters>(
             return
         }
 
-        if (parentParent is HttpGlobalImport) {
+        if (parentParent is HttpGlobalImport || parentParent is HttpOutputFile || parentParent is HttpInputFile) {
             fillFilePaths(parent, parentParent, result)
             return
         }

@@ -18,6 +18,12 @@ class JsHandlerPredefineRequestFunctions {
             ScriptableObject.putProperty(reqScriptableObject, methodName, function)
         }
 
+        fun defineSleepFunc(reqScriptableObject: ScriptableObject) {
+            val function = SleepFunction()
+            val methodName = "sleep"
+            ScriptableObject.putProperty(reqScriptableObject, methodName, function)
+        }
+
         fun defineTimestampDateFunc(reqScriptableObject: ScriptableObject, jsExecutor: JsExecutor) {
             val function = TimestampDateFunction(jsExecutor)
             val methodName = InnerVariableEnum.TIMESTAMP_DATE.methodName

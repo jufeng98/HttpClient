@@ -126,10 +126,10 @@ object JsTgz {
                             }
                     }
 
+                    finished?.run()
+
                     application.invokeLater {
                         NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloaded"))
-
-                        finished?.run()
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
