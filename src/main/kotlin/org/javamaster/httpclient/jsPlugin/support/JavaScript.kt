@@ -27,7 +27,9 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.*
 
-
+/**
+ * @author yudong
+ */
 object JavaScript {
 
     private val pluginClassLoader by lazy {
@@ -75,8 +77,7 @@ object JavaScript {
         val name = "com.intellij.lang.javascript.JavaScriptSupportLoader"
         val clz = pluginClassLoader.loadClass(name)
 
-        val field = clz.getDeclaredField("JAVASCRIPT")
-        field.isAccessible = true
+        val field = ReflectionUtils.findField(clz, "JAVASCRIPT")
         val languageFileType = field.get(null) as LanguageFileType
 
         languageFileType.language
@@ -226,8 +227,7 @@ object JavaScript {
 
     private fun findMethod(className: String, methodName: String, vararg parameterTypes: Class<*>?): Method {
         var clz = pluginClassLoader!!.loadClass(className)
-        var declaredMethod = clz.getDeclaredMethod(methodName, *parameterTypes)
-        declaredMethod.isAccessible = true
+        var declaredMethod = ReflectionUtils.findMethod(clz, methodName, *parameterTypes)
         return declaredMethod
     }
 
@@ -262,8 +262,10 @@ object JavaScript {
     ) {
         val virtualFiles = virtualFilePointers.map { it.file!! }.toSet()
 
-        var declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myLibraryModels")
-        declaredField.isAccessible = true
+        val jsPredefinedLibrariesDataClz = jsPredefinedLibrariesData.javaClass
+
+        var declaredField = ReflectionUtils.findField(jsPredefinedLibrariesDataClz, "myLibraryModels")
+
         @Suppress("UNCHECKED_CAST")
         val models = declaredField.get(jsPredefinedLibrariesData) as Set<Any>
 
@@ -273,8 +275,8 @@ object JavaScript {
 
         declaredField.set(jsPredefinedLibrariesData, modelsNew)
 
-        declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myRequiredLibraryFilesForResolve")
-        declaredField.isAccessible = true
+        declaredField = ReflectionUtils.findField(jsPredefinedLibrariesDataClz, "myRequiredLibraryFilesForResolve")
+
         @Suppress("UNCHECKED_CAST")
         val myRequiredLibraryFilesForResolve = declaredField.get(jsPredefinedLibrariesData) as Set<VirtualFile>
 
@@ -284,8 +286,8 @@ object JavaScript {
 
         declaredField.set(jsPredefinedLibrariesData, myRequiredLibraryFilesForResolveNew)
 
-        declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myRequiredLibraryFilesForResolveES5")
-        declaredField.isAccessible = true
+        declaredField = ReflectionUtils.findField(jsPredefinedLibrariesDataClz, "myRequiredLibraryFilesForResolveES5")
+
         @Suppress("UNCHECKED_CAST")
         val myRequiredLibraryFilesForResolveES5 = declaredField.get(jsPredefinedLibrariesData) as Set<VirtualFile>
 
@@ -295,8 +297,8 @@ object JavaScript {
 
         declaredField.set(jsPredefinedLibrariesData, myRequiredLibraryFilesForResolveES5New)
 
-        declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myLibraryFilesForResolve")
-        declaredField.isAccessible = true
+        declaredField = ReflectionUtils.findField(jsPredefinedLibrariesDataClz, "myLibraryFilesForResolve")
+
         @Suppress("UNCHECKED_CAST")
         val myLibraryFilesForResolve =
             declaredField.get(jsPredefinedLibrariesData) as NotNullLazyValue<Set<VirtualFile>>
@@ -310,11 +312,12 @@ object JavaScript {
 
         declaredField.set(jsPredefinedLibrariesData, myLibraryFilesForResolveNew)
 
-        declaredField = jsPredefinedLibrariesData.javaClass.getDeclaredField("myLibraryFiles")
-        declaredField.isAccessible = true
+        declaredField = ReflectionUtils.findField(jsPredefinedLibrariesDataClz, "myLibraryFiles")
+
         @Suppress("UNCHECKED_CAST")
         val myLibraryFiles =
             declaredField.get(jsPredefinedLibrariesData) as NotNullLazyValue<Set<VirtualFile>>
+
         val myLibraryFilesNew = NotNullLazyValue.lazy<MutableSet<VirtualFile>> {
             val result = mutableSetOf<VirtualFile>()
             result.addAll(myLibraryFiles.get())

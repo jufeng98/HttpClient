@@ -13,7 +13,8 @@ public class RandomStringUtils {
      * same millisecond.</p>
      */
     public static final Random RANDOM = new Random();
-    private static final Faker FAKER = new Faker(Locale.SIMPLIFIED_CHINESE, RANDOM);
+    private static final Faker FAKER = new Faker(Locale.getDefault(), RANDOM);
+
     /**
      * <p>{@code RandomStringUtils} instances should NOT be constructed in
      * standard programming. Instead, the class should be used as
@@ -138,30 +139,6 @@ public class RandomStringUtils {
      */
     public static String random(final int count, final int start, final int end, final boolean letters, final boolean numbers) {
         return random(count, start, end, letters, numbers, null, RANDOM);
-    }
-
-    /**
-     * <p>Creates a random string based on a variety of options, using
-     * default source of randomness.</p>
-     *
-     * <p>This method has exactly the same semantics as
-     * {@link #random(int, int, int, boolean, boolean, char[], Random)}, but
-     * instead of using an externally supplied source of randomness, it uses
-     * the internal static {@link Random} instance.</p>
-     *
-     * @param count   the length of random string to create
-     * @param start   the position in set of chars to start at
-     * @param end     the position in set of chars to end before
-     * @param letters only allow letters?
-     * @param numbers only allow numbers?
-     * @param chars   the set of chars to choose randoms from.
-     *                If {@code null}, then it will use the set of all chars.
-     * @return the random string
-     * @throws ArrayIndexOutOfBoundsException if there are not
-     *                                        {@code (end - start) + 1} characters in the set array.
-     */
-    public static String random(final int count, final int start, final int end, final boolean letters, final boolean numbers, final char... chars) {
-        return random(count, start, end, letters, numbers, chars, RANDOM);
     }
 
     /**

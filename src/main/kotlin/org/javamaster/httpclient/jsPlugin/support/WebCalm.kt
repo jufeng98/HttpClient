@@ -15,6 +15,9 @@ import org.javamaster.httpclient.psi.HttpScriptBody
 import ris58h.webcalm.javascript.JavaScriptLanguage
 import ris58h.webcalm.javascript.psi.*
 
+/**
+ * @author yudong
+ */
 object WebCalm {
     private val pluginNotAlive by lazy {
         val pluginId = PluginId.findId("ris58h.webcalm") ?: return@lazy true
