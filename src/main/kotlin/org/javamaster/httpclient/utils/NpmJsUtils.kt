@@ -13,6 +13,7 @@ import com.intellij.psi.util.PsiUtil
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.application
 import com.intellij.util.io.DigestUtil
+import com.jetbrains.rd.util.concurrentMapOf
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import java.io.File
@@ -20,13 +21,12 @@ import java.io.FileFilter
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
-import kotlin.collections.forEach
 
 /**
  * @author yudong
  */
 object NpmJsUtils {
-    private var downloading = false
+    private val downloadingMap = concurrentMapOf<String, Boolean>()
     private val jsTgzFileMap = mutableMapOf<String, File>()
     private val packageJsonMainJsFileMap = mutableMapOf<String, File>()
 
@@ -83,13 +83,13 @@ object NpmJsUtils {
         }
     }
 
-    fun downloadAsyncInEdt(project: Project, npmFiles: List<PreJsFile>, finished: Runnable? = null) {
-        if (downloading) {
+    fun downloadAsyncInEdt(project: Project, npmFiles: List<PreJsFile>, httpFilePath: String) {
+        if (downloadingMap[httpFilePath] == true) {
             NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("download.not.finish"))
             return
         }
 
-        downloading = true
+        downloadingMap[httpFilePath] = true
 
         NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloading"))
 
@@ -125,8 +125,6 @@ object NpmJsUtils {
                             }
                     }
 
-                    finished?.run()
-
                     application.invokeLater {
                         NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloaded"))
                     }
@@ -140,7 +138,7 @@ object NpmJsUtils {
                         )
                     }
                 } finally {
-                    downloading = false
+                    downloadingMap[httpFilePath] = false
                 }
             }
         }.queue()

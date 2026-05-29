@@ -6,8 +6,6 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
@@ -80,7 +78,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         super.startNotify()
 
         application.executeOnPooledThread {
-            val cookiesVirtualFile = initCookiesVirtualFile()
+            val cookiesVirtualFile = CookieUtils.createCookiesFileIfNotExists(project)
 
             runReadAction {
                 try {
@@ -110,16 +108,6 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
                 }
             }
         }
-    }
-
-    open fun downloadOtherFiles(): Boolean {
-        return true
-    }
-
-    fun initCookiesVirtualFile(): VirtualFile? {
-        val cookiesFile = CookieUtils.createCookiesFileIfNotExists(project) ?: return null
-
-        return VfsUtil.findFileByIoFile(cookiesFile, true)
     }
 
     private fun initStatus() {
@@ -165,7 +153,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         }
 
         runInEdt {
-            NpmJsUtils.downloadAsyncInEdt(project, npmFilesNotDownloaded)
+            NpmJsUtils.downloadAsyncInEdt(project, npmFilesNotDownloaded, httpFile.virtualFile.path)
 
             httpDashboardForm.resetDashboardForm()
         }
@@ -188,6 +176,10 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         NpmJsUtils.initJsLibrariesVirtualFile(preJsFiles)
 
         ReqUtils.initPreJsFilesContent(preJsFiles, project, httpFile)
+    }
+
+    open fun downloadOtherFiles(): Boolean {
+        return true
     }
 
     abstract fun startProcess()
@@ -216,14 +208,8 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         reqHeaderMap: LinkedMultiValueMap<String, String?>,
     ): List<String> {
         jsExecutor.initJsRequestObj(
-            url,
-            rawUrl,
-            rawBody,
-            reqInfo,
-            methodType,
-            reqHeaderMap,
-            selectedEnv,
-            variableResolver.fileScopeVariableMap
+            url, rawUrl, rawBody, reqInfo, methodType, reqHeaderMap,
+            selectedEnv, variableResolver.fileScopeVariableMap
         )
 
         return jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
@@ -234,6 +220,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
         if (outPutFilePath != null && httpInfo.byteArray != null) {
             var path = variableResolver.resolve(outPutFilePath!!)
+
             path = HttpUtils.constructFilePath(path, parentPath)
 
             val saveResult = ResUtils.saveResToFile(path, httpInfo.byteArray)

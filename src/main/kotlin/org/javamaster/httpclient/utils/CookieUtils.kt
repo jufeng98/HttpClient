@@ -6,6 +6,8 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFile
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.enums.InnerVariableEnum
@@ -106,7 +108,7 @@ object CookieUtils {
             }
     }
 
-    fun createCookiesFileIfNotExists(project: Project): File? {
+    fun createCookiesFileIfNotExists(project: Project): VirtualFile? {
         val historyFolder = InnerVariableEnum.HISTORY_FOLDER.exec("", project) ?: return null
 
         val historyDir = File(historyFolder)
@@ -120,7 +122,7 @@ object CookieUtils {
             Files.writeString(file, "# domain\tpath\tname\tvalue\tdate")
         }
 
-        return cookiesFile
+        return VfsUtil.findFileByIoFile(cookiesFile, true)
     }
 
     fun saveCookiesToFile(cookies: List<Cookie>, project: Project, cookiesPsiFile: CookieFile?): String {
