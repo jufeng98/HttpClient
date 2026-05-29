@@ -149,7 +149,7 @@ class DubboRequest(
         }
     }
 
-    override fun sendAsync(): CompletableFuture<Triple<ByteArray, String, Long>> {
+    override fun sendAsync(): CompletableFuture<Triple<ByteArray, String, Long>?> {
         httpReqDescList.add("/*$CR_LF")
         httpReqDescList.add(NlsBundle.nls("call.dubbo.name", methodName) + CR_LF)
 
@@ -220,7 +220,7 @@ class DubboRequest(
         reference.setInterface(targetInterfaceName)
         val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toInt() ?: TIMEOUT
         reference.timeout = timeout
-        reference.retries = 1
+        reference.retries = 0
         reference.isCheck = false
 
         if (!version.isNullOrBlank()) {

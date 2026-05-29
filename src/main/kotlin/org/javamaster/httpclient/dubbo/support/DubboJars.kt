@@ -57,8 +57,8 @@ object DubboJars {
             URL("$REPOSITORY_URL/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar")
     }
 
-    fun jarsNotDownloaded(): Boolean {
-        return jarUrls.size != jarMap.size + 2
+    fun jarsDownloaded(): Boolean {
+        return jarUrls.size == jarMap.size + 2
     }
 
     fun downloadAsync(project: Project) {
