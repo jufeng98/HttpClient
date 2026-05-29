@@ -60,7 +60,7 @@ SCHEMA_PART=https|wss|http|ws|dubbo
 HOST_VALUE=[a-zA-Z0-9\-.]+
 PORT_SEGMENT=[0-9]+
 SEGMENT=[a-zA-Z_0-9]+
-QUERY_PART=[^#&=/{\s]+
+QUERY_PART=[^#&={\s]+
 FRAGMENT_PART=[^\s]+
 HTTP_VERSION=HTTP\/[0-9]+\.?[0-9]*
 FIELD_NAME=[a-zA-Z0-9_\-]+
