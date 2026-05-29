@@ -68,6 +68,10 @@ object DubboUtils {
             return null
         }
 
+        if (methods.size > 1) {
+            println("Founded ${methods.size} methods of the same name, get the first one")
+        }
+
         return methods[0]
     }
 
