@@ -19,10 +19,8 @@ import java.util.function.Consumer
  */
 class CurlProcessHandler(
     httpMethod: HttpMethod, selectedEnv: String?,
-    private val raw: Boolean,
-    private val consumer: Consumer<String>,
-) :
-    ProcessHandlerBase(httpMethod, selectedEnv) {
+    private val raw: Boolean, private val consumer: Consumer<String>,
+) : ProcessHandlerBase(httpMethod, selectedEnv) {
 
     override fun startProcess() {
         var url = resolveAndHandleUrl()
@@ -92,7 +90,10 @@ class CurlProcessHandler(
         val httpMultipartMessage = body?.multipartMessage
 
         if (requestMessagesGroup != null) {
-            val content = handleOrdinaryContentCurl(requestMessagesGroup, variableResolver, header, raw)
+            val content = handleOrdinaryContentCurl(
+                requestMessagesGroup, variableResolver, request,
+                header, paramMap, raw
+            )
 
             list.add(
                 if (raw) {
@@ -104,7 +105,7 @@ class CurlProcessHandler(
         } else if (httpMultipartMessage != null) {
             val boundary = request.contentTypeBoundary ?: WEB_BOUNDARY
 
-            val contents = constructMultipartBodyCurl(httpMultipartMessage, variableResolver, boundary, raw)
+            val contents = constructMultipartBodyCurl(httpMultipartMessage, variableResolver, paramMap, boundary, raw)
 
             list.addAll(contents)
         }

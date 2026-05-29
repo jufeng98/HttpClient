@@ -273,14 +273,23 @@ object HttpUtils {
     fun handleOrdinaryContentCurl(
         requestMessagesGroup: HttpRequestMessagesGroup,
         variableResolver: VariableResolver,
+        request: HttpRequest,
         header: HttpHeader?,
+        paramMap: Map<String, String>,
         raw: Boolean,
     ): String {
+        val formUrlEncodeReq = request.contentType == ContentType.APPLICATION_FORM_URLENCODED
+        val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
+
         var reqStr = ""
 
         val messageBody = requestMessagesGroup.messageBody
         if (messageBody != null) {
             reqStr = variableResolver.resolve(messageBody.text)
+
+            if (shouldEncode) {
+                reqStr = encodeQueryParam(reqStr)
+            }
         }
 
         val filePath = requestMessagesGroup.inputFile?.filePath?.text
@@ -300,9 +309,13 @@ object HttpUtils {
 
         reqStr += CR_LF
 
-        val str = VirtualFileUtils.readNewestContent(file)
+        var str = VirtualFileUtils.readNewestContent(file)
 
-        reqStr += variableResolver.resolve(str)
+        str = variableResolver.resolve(str)
+
+        if (shouldEncode) {
+            reqStr += encodeQueryParam(str)
+        }
 
         return if (raw) {
             reqStr + CR_LF
@@ -314,6 +327,7 @@ object HttpUtils {
     fun constructMultipartBodyCurl(
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
+        paramMap: Map<String, String>,
         boundary: String,
         raw: Boolean,
     ): MutableList<String> {
@@ -336,7 +350,13 @@ object HttpUtils {
 
                 val messageBody = requestMessagesGroup.messageBody
                 if (messageBody != null) {
-                    val content = variableResolver.resolve(messageBody.text)
+                    var content = variableResolver.resolve(messageBody.text)
+
+                    val formUrlEncodeReq = it.contentType == ContentType.APPLICATION_FORM_URLENCODED
+                    val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
+                    if (shouldEncode) {
+                        content = encodeQueryParam(content)
+                    }
 
                     list.add(
                         if (raw) {
