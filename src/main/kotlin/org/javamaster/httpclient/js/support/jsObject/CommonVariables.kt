@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.js.support.jsObject
 
+import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_RAW
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.req.HttpClientRequest
 import org.mozilla.javascript.ScriptableObject
@@ -15,7 +16,7 @@ object CommonVariables {
             return value
         }
 
-        val request = ScriptableObject.getProperty(jsExecutor.reqScriptableObject, "requestRaw") as HttpClientRequest
+        val request = ScriptableObject.getProperty(jsExecutor.reqScriptableObject, REQUEST_RAW) as HttpClientRequest
         value = request.fileVariables[key]
         if (value != null) {
             return value

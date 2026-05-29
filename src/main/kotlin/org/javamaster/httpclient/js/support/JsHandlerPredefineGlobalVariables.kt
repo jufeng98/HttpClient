@@ -17,12 +17,8 @@ import java.nio.charset.StandardCharsets
  * @author yudong
  */
 class JsHandlerPredefineGlobalVariables {
-    companion object {
-        private val initRequestJsStr by lazy {
-            val url = Companion::class.java.classLoader.getResource("js/initRequest.js")!!
-            url.readText(StandardCharsets.UTF_8)
-        }
 
+    companion object {
         fun defineWindow(global: ScriptableObject, context: Context) {
             val window = Context.javaToJS(Window, global, context)
             ScriptableObject.putProperty(global, "Window", window)
@@ -65,6 +61,9 @@ class JsHandlerPredefineGlobalVariables {
         }
 
         fun defineRandom(global: ScriptableObject, context: Context) {
+            val url = Companion::class.java.classLoader.getResource("js/initRequest.js")!!
+            val initRequestJsStr = url.readText(StandardCharsets.UTF_8)
+
             context.evaluateString(global, initRequestJsStr, "initRequest.js", 1, null)
         }
 

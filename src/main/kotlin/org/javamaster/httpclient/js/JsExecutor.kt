@@ -2,7 +2,9 @@ package org.javamaster.httpclient.js
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.jetbrains.rd.util.concurrentMapOf
 import org.javamaster.httpclient.HttpRequestEnum
+import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_RAW
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
@@ -23,9 +25,7 @@ import org.javamaster.httpclient.utils.ReqUtils
 import org.javamaster.httpclient.utils.XmlUtils
 import org.mozilla.javascript.*
 import org.mozilla.javascript.json.JsonParser
-import org.xml.sax.InputSource
 import java.io.FileNotFoundException
-import java.io.StringReader
 
 /**
  * Execute the previous and post request js scripts
@@ -33,7 +33,7 @@ import java.io.StringReader
  * @author yudong
  */
 class JsExecutor(val project: Project, val parentPath: String, val tabName: String) {
-    val reqScriptableObject: ScriptableObject
+    internal val reqScriptableObject: ScriptableObject
     private var request: HttpClientRequest? = null
 
     init {
@@ -89,7 +89,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         )
 
         ScriptableObject.putProperty(reqScriptableObject, "request", request)
-        ScriptableObject.putProperty(reqScriptableObject, "requestRaw", request)
+        ScriptableObject.putProperty(reqScriptableObject, REQUEST_RAW, request)
     }
 
     fun evalJsBeforeRequest(preJsFiles: List<PreJsFile>, jsListBeforeReq: List<HttpScriptBody>): List<String> {
@@ -134,6 +134,71 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             resList.add("*/$CR_LF")
 
             return resList
+        } catch (e: Exception) {
+            GlobalLog.clearLogs()
+
+            throw e
+        } finally {
+            threadLocal.remove()
+            Context.exit()
+        }
+    }
+
+    fun evalJsAfterRequest(
+        url: String,
+        reqBody: Any?,
+        jsScript: HttpScriptBody?,
+        httpResInfo: HttpResInfo,
+        statusCode: Int,
+        headerMap: MutableMap<String, MutableList<String>>,
+        cookies: List<Cookie>,
+    ): String? {
+        if (jsScript == null) {
+            return null
+        }
+
+        val context = Context.enter()
+        try {
+            GlobalLog.setTabName(tabName)
+            threadLocal.set(this)
+
+            val reqBodyInJs = ReqUtils.convertReqBody(reqBody)
+
+            val resBodyStr = httpResInfo.bodyStr
+            val typeEnum = httpResInfo.simpleTypeEnum
+
+            val body: Any
+            when (typeEnum) {
+                SimpleTypeEnum.JSON -> body = JsonParser(context, globalScriptableObject).parseValue(resBodyStr!!)
+
+                SimpleTypeEnum.HTML -> body = resBodyStr!!
+
+                SimpleTypeEnum.XML -> body = XmlUtils.parseXml(resBodyStr!!)
+
+                SimpleTypeEnum.TEXT -> body = resBodyStr!!
+
+                SimpleTypeEnum.TXT -> body = resBodyStr!!
+
+                else -> body = httpResInfo.bodyBytes
+            }
+
+            val response = HttpClientResponse(statusCode, ResponseHeaders(headerMap), body, cookies)
+
+            ScriptableObject.putProperty(reqScriptableObject, "request", HttpClientRequestRes(url, reqBodyInJs))
+
+            ScriptableObject.putProperty(reqScriptableObject, "response", response)
+
+            val virtualFile = jsScript.containingFile.virtualFile
+            val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
+            val rowNum = document.getLineNumber(jsScript.textOffset) + 1
+
+            try {
+                evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject, context)
+            } catch (e: Exception) {
+                GlobalLog.log("$e")
+            }
+
+            return GlobalLog.getAndClearLogs()
         } catch (e: Exception) {
             GlobalLog.clearLogs()
 
@@ -190,87 +255,6 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         libraryScriptableObjects.last().prototype = globalScriptableObject
     }
 
-    fun evalJsAfterRequest(
-        url: String,
-        reqBody: Any?,
-        jsScript: HttpScriptBody?,
-        httpResInfo: HttpResInfo,
-        statusCode: Int,
-        headerMap: MutableMap<String, MutableList<String>>,
-        cookies: List<Cookie>,
-    ): String? {
-        if (jsScript == null) {
-            return null
-        }
-
-        val context = Context.enter()
-        try {
-            GlobalLog.setTabName(tabName)
-            threadLocal.set(this)
-
-            val jsBody = ReqUtils.convertReqBody(reqBody)
-
-            val body: Any
-            val typeEnum = httpResInfo.simpleTypeEnum
-            when (typeEnum) {
-                SimpleTypeEnum.JSON -> {
-                    body = JsonParser(context, globalScriptableObject).parseValue(httpResInfo.bodyStr!!)
-                }
-
-                SimpleTypeEnum.HTML -> {
-                    body = httpResInfo.bodyStr!!
-                }
-
-                SimpleTypeEnum.XML -> {
-                    val documentBuilder = XmlUtils.documentBuilderFactory.newDocumentBuilder()
-                    body = documentBuilder.parse(InputSource(StringReader(httpResInfo.bodyStr!!)))
-                }
-
-                SimpleTypeEnum.TEXT -> {
-                    body = httpResInfo.bodyStr!!
-                }
-
-                SimpleTypeEnum.TXT -> {
-                    body = httpResInfo.bodyStr!!
-                }
-
-                else -> {
-                    body = httpResInfo.bodyBytes
-                }
-            }
-
-            val response = HttpClientResponse(
-                statusCode,
-                ResponseHeaders(headerMap),
-                body,
-                cookies
-            )
-
-            ScriptableObject.putProperty(reqScriptableObject, "request", HttpClientRequestRes(url, jsBody))
-
-            ScriptableObject.putProperty(reqScriptableObject, "response", response)
-
-            val virtualFile = jsScript.containingFile.virtualFile
-            val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
-            val rowNum = document.getLineNumber(jsScript.textOffset) + 1
-
-            try {
-                evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject, context)
-            } catch (e: Exception) {
-                GlobalLog.log("$e")
-            }
-
-            return GlobalLog.getAndClearLogs()
-        } catch (e: Exception) {
-            GlobalLog.clearLogs()
-
-            throw e
-        } finally {
-            threadLocal.remove()
-            Context.exit()
-        }
-    }
-
     private fun evalJs(
         jsStr: String,
         rowNum: Int,
@@ -322,8 +306,10 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
     }
 
     companion object {
-        var threadLocal = ThreadLocal<JsExecutor>()
-        private val libraryLoadedMap = mutableMapOf<String, ScriptableObject>()
+        internal val threadLocal = ThreadLocal<JsExecutor>()
+
+        private val libraryLoadedMap = concurrentMapOf<String, ScriptableObject>()
+
         val globalScriptableObject: ScriptableObject by lazy {
             val context = Context.enter()
             val globalTmp = context.initStandardObjects()

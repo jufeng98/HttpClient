@@ -39,6 +39,7 @@ class HttpConsts {
         const val COOKIE_FILE_NAME = "http-client.cookies"
         const val JS_DATE_PATTERN = "EEE, dd-MMM-yyyy HH:mm:ss 'GMT'"
         const val JAVA_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss"
+        const val REQUEST_RAW = "requestRaw"
     }
 
 }
