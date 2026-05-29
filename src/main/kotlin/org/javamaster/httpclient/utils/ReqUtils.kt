@@ -180,8 +180,14 @@ class ReqUtils {
 
             return split.joinToString("&") {
                 val list = it.split("=")
-                if (list.size == 1 && list[0].startsWith("{{")) {
+
+                val oneSize = list.size == 1
+                if (oneSize && list[0].startsWith("{{")) {
                     return@joinToString list[0]
+                }
+
+                if (oneSize) {
+                    return@joinToString list[0].trim()
                 }
 
                 list[0].trim() + "=" + list[1].trim()

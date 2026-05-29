@@ -172,7 +172,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         return builder
     }
 
-    fun execute(
+    fun preExecute(
         url: String,
         version: Version,
         reqHttpHeaders: LinkedMultiValueMap<String, String?>,
@@ -180,59 +180,63 @@ enum class HttpRequestEnum(val icon: Icon) {
         httpReqDescList: MutableList<String>,
         tabName: String,
         paramMap: Map<String, String>,
-    ): CompletableFuture<HttpResponse<ByteArray>> {
+    ): HttpRequest {
+        val pair = ReqUtils.convertToReqBodyPublisher(reqBody)
+
+        val bodyPublisher = pair.first
+        val multipartLength = pair.second
+
+        val request = createRequest(url, version, reqHttpHeaders, bodyPublisher, paramMap)
+
+        var insertIdx = 1
+        httpReqDescList.add("### $tabName$CR_LF")
+
+        if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+            insertIdx++
+            httpReqDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
+        }
+
+        insertIdx++
+        httpReqDescList.add(request.method() + " " + request.uri() + " " + getVersionDesc(version) + CR_LF)
+
+        request.headers()
+            .map()
+            .forEach { entry ->
+                entry.value.forEach {
+                    insertIdx++
+                    httpReqDescList.add(entry.key + ": " + it + CR_LF)
+                }
+            }
+
+        val tmpLength = bodyPublisher.contentLength()
+
+        val contentLength = if (tmpLength == -1L) multipartLength else tmpLength
+
+        insertIdx++
+        httpReqDescList.add("${HttpHeaders.CONTENT_LENGTH}: $contentLength$CR_LF")
+
+        val size = Formats.formatFileSize(contentLength)
+
+        httpReqDescList.add(httpReqDescList.size - insertIdx, "// ${NlsBundle.nls("req.size", size)}$CR_LF")
+
+        httpReqDescList.add(CR_LF)
+
+        val descList = ReqUtils.getReqBodyDesc(reqBody)
+
+        httpReqDescList.addAll(descList)
+
+        return request
+    }
+
+    fun execute(paramMap: Map<String, String>, req: HttpRequest): CompletableFuture<HttpResponse<ByteArray>> {
         try {
-            val pair = ReqUtils.convertToReqBodyPublisher(reqBody)
-
-            val bodyPublisher = pair.first
-            val multipartLength = pair.second
-
-            val request = createRequest(url, version, reqHttpHeaders, bodyPublisher, paramMap)
-
             val connectTimeout = paramMap[ParamEnum.CONNECT_TIMEOUT_NAME.param]?.toLong() ?: CONNECT_TIMEOUT
 
             val client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeout))
                 .build()
 
-            var insertIdx = 1
-            httpReqDescList.add("### $tabName$CR_LF")
-
-            if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
-                insertIdx++
-                httpReqDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
-            }
-
-            insertIdx++
-            httpReqDescList.add(request.method() + " " + request.uri() + " " + getVersionDesc(version) + CR_LF)
-
-            request.headers()
-                .map()
-                .forEach { entry ->
-                    entry.value.forEach {
-                        insertIdx++
-                        httpReqDescList.add(entry.key + ": " + it + CR_LF)
-                    }
-                }
-
-            val tmpLength = bodyPublisher.contentLength()
-
-            val contentLength = if (tmpLength == -1L) multipartLength else tmpLength
-
-            insertIdx++
-            httpReqDescList.add("${HttpHeaders.CONTENT_LENGTH}: $contentLength$CR_LF")
-
-            val size = Formats.formatFileSize(contentLength)
-
-            httpReqDescList.add(httpReqDescList.size - insertIdx, "// ${NlsBundle.nls("req.size", size)}$CR_LF")
-
-            httpReqDescList.add(CR_LF)
-
-            val descList = ReqUtils.getReqBodyDesc(reqBody)
-
-            httpReqDescList.addAll(descList)
-
-            return client.sendAsync(request, HttpResponse.BodyHandlers.ofByteArray())
+            return client.sendAsync(req, HttpResponse.BodyHandlers.ofByteArray())
         } catch (e: Throwable) {
             return CompletableFuture.failedFuture(e)
         }

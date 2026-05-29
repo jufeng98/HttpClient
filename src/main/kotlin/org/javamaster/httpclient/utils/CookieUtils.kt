@@ -6,8 +6,6 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.psi.util.PsiUtil
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.enums.InnerVariableEnum
@@ -86,15 +84,11 @@ object CookieUtils {
             .flatten()
     }
 
-    fun getValidFileCookieMap(project: Project): List<Cookie> {
-        val cookieFile = getCookiesFilePath(project) ?: return emptyList()
-
-        val cookieVirtualFile = VfsUtil.findFileByIoFile(cookieFile, false) ?: return emptyList()
-
-        val cookiePsiFile = PsiUtil.getPsiFile(project, cookieVirtualFile) as CookieFile
+    fun getValidFileCookieMap(cookiesPsiFile: CookieFile?): List<Cookie> {
+        cookiesPsiFile ?: return emptyList()
 
         val currentTimeMillis = System.currentTimeMillis()
-        return cookiePsiFile.getRecords()
+        return cookiesPsiFile.getRecords()
             .mapNotNull {
                 val dateTxt = it.date.text
                 val expiresAt = if (dateTxt == "-1") {
@@ -112,14 +106,8 @@ object CookieUtils {
             }
     }
 
-    fun getCookiesFilePath(project: Project): File? {
+    fun createCookiesFileIfNotExists(project: Project): File? {
         val historyFolder = InnerVariableEnum.HISTORY_FOLDER.exec("", project) ?: return null
-
-        return File(historyFolder, HttpConsts.COOKIE_FILE_NAME)
-    }
-
-    fun createCookiesFileIfNotExists(project: Project) {
-        val historyFolder = InnerVariableEnum.HISTORY_FOLDER.exec("", project) ?: return
 
         val historyDir = File(historyFolder)
         if (!historyDir.exists()) {
@@ -131,6 +119,8 @@ object CookieUtils {
             val file = Files.createFile(cookiesFile.toPath())
             Files.writeString(file, "# domain\tpath\tname\tvalue\tdate")
         }
+
+        return cookiesFile
     }
 
     fun saveCookiesToFile(cookies: List<Cookie>, project: Project, cookiesPsiFile: CookieFile?): String {

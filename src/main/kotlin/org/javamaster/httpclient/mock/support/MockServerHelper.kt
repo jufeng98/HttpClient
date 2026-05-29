@@ -275,7 +275,11 @@ object MockServerHelper {
         return if (httpPort != null) {
             val firstChild = httpPort.firstChild
             val portStr = HttpPsiUtils.getNextSiblingByType(firstChild, HttpTypes.PORT_SEGMENT, false)!!.text
-            portStr.toInt()
+            return try {
+                portStr.toInt()
+            } catch (_: Exception) {
+                -1
+            }
         } else {
             80
         }

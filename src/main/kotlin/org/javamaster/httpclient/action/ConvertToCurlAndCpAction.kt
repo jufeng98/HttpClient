@@ -12,9 +12,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.curl.CurlParser
+import org.javamaster.httpclient.processHandler.CurlProcessHandler
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpRequestBlock
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.NotifyUtil
 import java.awt.datatransfer.StringSelection
@@ -69,7 +70,11 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
                 return
             }
 
-            CurlParser.toCurlString(requestBlock, project, false) {
+            val request = requestBlock.request ?: return
+
+            val editorTopForm = HttpEditorTopForm.getSelectedEditorTopForm(project)
+
+            val processHandler = CurlProcessHandler(request.method, editorTopForm?.selectedEnv, false) {
                 CopyPasteManager.getInstance().setContents(StringSelection(it))
 
                 val str = if (it.length > 2000) {
@@ -80,6 +85,8 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
 
                 HintManager.getInstance().showInformationHint(editor, nls("converted.tip") + "\n" + str)
             }
+
+            processHandler.startNotify()
         }
 
     }

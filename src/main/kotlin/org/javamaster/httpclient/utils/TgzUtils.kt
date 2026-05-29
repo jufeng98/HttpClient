@@ -1,4 +1,4 @@
-package org.javamaster.httpclient.dashboard.support
+package org.javamaster.httpclient.utils
 
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
@@ -10,7 +10,7 @@ import java.io.FileOutputStream
 /**
  * @author yudong
  */
-object TgzExtractor {
+object TgzUtils {
 
     fun extract(tgzFilePath: String, outputDir: String) {
         FileInputStream(tgzFilePath).use { fis ->

@@ -20,12 +20,12 @@ import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpScriptBody
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.ReqUtils
+import org.javamaster.httpclient.utils.XmlUtils
 import org.mozilla.javascript.*
 import org.mozilla.javascript.json.JsonParser
 import org.xml.sax.InputSource
 import java.io.FileNotFoundException
 import java.io.StringReader
-import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * Execute the previous and post request js scripts
@@ -222,7 +222,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
                 }
 
                 SimpleTypeEnum.XML -> {
-                    val documentBuilder = documentBuilderFactory.newDocumentBuilder()
+                    val documentBuilder = XmlUtils.documentBuilderFactory.newDocumentBuilder()
                     body = documentBuilder.parse(InputSource(StringReader(httpResInfo.bodyStr!!)))
                 }
 
@@ -351,13 +351,6 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             Context.exit()
 
             globalTmp
-        }
-
-        @Suppress("HttpUrlsUsage")
-        private val documentBuilderFactory by lazy {
-            val factory = DocumentBuilderFactory.newInstance()
-            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
-            factory
         }
     }
 }

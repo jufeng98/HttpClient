@@ -46,6 +46,7 @@ class HttpHeaderFieldValuePsiReference(fieldValue: HttpHeaderFieldValue, range: 
 
         val psiClass = resolveInterface(interfaceFieldValue) ?: return null
 
+        // 尝试找到实现类的方法
         ClassInheritorsSearch.search(psiClass)
             .forEach {
                 val methods = it.findMethodsByName(methodName, false)
@@ -60,6 +61,16 @@ class HttpHeaderFieldValuePsiReference(fieldValue: HttpHeaderFieldValue, range: 
                 return methods[0]
             }
 
-        return null
+        // 找不到实现类,则尝试找到接口的方法
+        val methods = psiClass.findMethodsByName(methodName, false)
+        if (methods.isEmpty()) {
+            return null
+        }
+
+        if (methods.size > 1) {
+            println("Founded ${methods.size} methods of the same name, get the first one")
+        }
+
+        return methods[0]
     }
 }

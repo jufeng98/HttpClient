@@ -1,6 +1,6 @@
-package org.javamaster.httpclient.dashboard.support
+package org.javamaster.httpclient.utils
 
-import com.intellij.ide.plugins.PluginManagerCore.getPlugin
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.json.psi.JsonFile
 import com.intellij.json.psi.JsonObject
 import com.intellij.json.psi.JsonStringLiteral
@@ -12,21 +12,20 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.application
-import com.intellij.util.io.DigestUtil.random
+import com.intellij.util.io.DigestUtil
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.utils.NotifyUtil
-import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
 import java.io.FileFilter
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
+import kotlin.collections.forEach
 
 /**
  * @author yudong
  */
-object JsTgz {
+object NpmJsUtils {
     private var downloading = false
     private val jsTgzFileMap = mutableMapOf<String, File>()
     private val packageJsonMainJsFileMap = mutableMapOf<String, File>()
@@ -121,7 +120,7 @@ object JsTgz {
                                 indicator.fraction = (index + 1) * faction
 
                                 if (index != npmFiles.size - 1) {
-                                    TimeUnit.MILLISECONDS.sleep(1000 + random.nextLong(1000))
+                                    TimeUnit.MILLISECONDS.sleep(1000 + DigestUtil.random.nextLong(1000))
                                 }
                             }
                     }
@@ -172,7 +171,7 @@ object JsTgz {
 
         outputDir.mkdirs()
 
-        TgzExtractor.extract(file.absolutePath, outputDir.absolutePath)
+        TgzUtils.extract(file.absolutePath, outputDir.absolutePath)
 
         println("Extracted js library $file to $outputDir")
 
@@ -221,7 +220,7 @@ object JsTgz {
     }
 
     private fun getJsLibPath(): File {
-        val pluginDescriptor = getPlugin(PluginId.findId("org.javamaster.HttpRequest"))
+        val pluginDescriptor = PluginManagerCore.getPlugin(PluginId.findId("org.javamaster.HttpRequest"))
         val pluginPath = pluginDescriptor!!.pluginPath.toFile()
         return File(pluginPath, "lib/jsLib")
     }

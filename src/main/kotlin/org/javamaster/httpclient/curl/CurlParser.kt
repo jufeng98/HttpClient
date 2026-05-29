@@ -1,7 +1,6 @@
 package org.javamaster.httpclient.curl
 
 import com.google.common.net.HttpHeaders
-import com.intellij.openapi.project.Project
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.entity.ContentType
@@ -19,14 +18,10 @@ import org.javamaster.httpclient.curl.support.CurlDataOptionFactory.getCurlDataO
 import org.javamaster.httpclient.curl.support.CurlFormBodyPart
 import org.javamaster.httpclient.curl.support.CurlRequest
 import org.javamaster.httpclient.curl.support.CurlTokenizer
-import org.javamaster.httpclient.dashboard.HttpProcessHandler
 import org.javamaster.httpclient.enums.HttpMethod
-import org.javamaster.httpclient.psi.HttpRequestBlock
-import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.CurlUtils
 import java.net.URI
 import java.net.URISyntaxException
-import java.util.function.Consumer
 
 
 class CurlParser(private val curl: String) {
@@ -286,16 +281,6 @@ class CurlParser(private val curl: String) {
 
         fun deleteBackslashes(data: String?): String? {
             return data?.replace("\\\\".toRegex(), "")
-        }
-
-        fun toCurlString(requestBlock: HttpRequestBlock, project: Project, raw: Boolean, consumer: Consumer<String>) {
-            val request = requestBlock.request ?: return
-
-            val editorTopForm = HttpEditorTopForm.getSelectedEditorTopForm(project)
-
-            val httpProcessHandler = HttpProcessHandler(request.method, editorTopForm?.selectedEnv)
-
-            httpProcessHandler.prepareJsAndConvertToCurl(raw, consumer)
         }
 
         private fun updateContentTypeIfNeeded(

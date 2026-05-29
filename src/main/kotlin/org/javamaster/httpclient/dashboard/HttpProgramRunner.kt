@@ -23,6 +23,7 @@ import org.javamaster.httpclient.dashboard.HttpExecutor.Companion.HTTP_EXECUTOR_
 import org.javamaster.httpclient.mock.MockServer
 import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
@@ -87,7 +88,7 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
                 return
             }
         } else {
-            if (HttpProcessHandler.isRunning(tabName)) {
+            if (ProcessHandlerBase.isRunning(tabName)) {
                 NotifyUtil.notifyWarn(project, NlsBundle.nls("req.running", tabName))
                 loadingRemover?.run()
                 showWindow(project)
@@ -127,11 +128,11 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
 
         val executionResult = state.execute(environment.executor, this) ?: return null
 
-        val handler = executionResult.processHandler as HttpProcessHandler
+        val handler = executionResult.processHandler as ProcessHandlerBase
 
         environment.contentToReuse = getAllDescriptors(environment.project)
             .firstOrNull {
-                it.processHandler is HttpProcessHandler && it.displayName == handler.tabName
+                it.processHandler is ProcessHandlerBase && it.displayName == handler.tabName
             }
 
         val contentToReuse = environment.contentToReuse

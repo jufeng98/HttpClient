@@ -7,9 +7,10 @@ import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.psi.PsiElement
 import com.intellij.ui.SimpleTextAttributes
+import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
-import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.HttpUtils.getTargetHttpMethod
+import org.javamaster.httpclient.utils.MyPsiUtils
 
 /**
  * Support Service tool window double click action, jump to request of the corresponding file.
@@ -29,7 +30,7 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
 
     override fun updatePresentation(presentation: PresentationData, node: RunDashboardRunConfigurationNode): Boolean {
         val processHandler = node.descriptor?.processHandler
-        if (processHandler !is HttpProcessHandler) {
+        if (processHandler !is ProcessHandlerBase) {
             return false
         }
 

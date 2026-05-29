@@ -6,7 +6,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.util.application
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.consts.HttpConsts
-import org.javamaster.httpclient.dashboard.HttpProcessHandler
+import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
@@ -27,13 +27,13 @@ import java.util.function.Consumer
 class WsRequest(
     private val url: String,
     private val reqHeaderMap: LinkedMultiValueMap<String, String?>,
-    private val httpProcessHandler: HttpProcessHandler,
+    private val processHandler: ProcessHandlerBase,
     private val paramMap: Map<String, String>,
     parentDisposable: Disposable,
 ) : Disposable {
     private var webSocket: WebSocket? = null
     lateinit var resConsumer: Consumer<String>
-    private val tabName = httpProcessHandler.tabName
+    private val tabName = processHandler.tabName
 
     init {
         Disposer.register(parentDisposable, this)
@@ -57,7 +57,7 @@ class WsRequest(
             }
         }
 
-        val listener = WsListener(this, httpProcessHandler)
+        val listener = WsListener(this, processHandler)
 
         builder.buildAsync(uri, listener)
             .whenComplete { ws, ex ->
@@ -70,8 +70,8 @@ class WsRequest(
 
                 wsRunningSet.remove(tabName)
 
-                httpProcessHandler.hasError = true
-                httpProcessHandler.destroyProcess()
+                processHandler.hasError = true
+                processHandler.destroyProcess()
 
                 returnResMsg(NlsBundle.nls("connected.failed") + ExceptionUtils.getStackTrace(ex) + "\n")
             }
@@ -120,7 +120,7 @@ class WsRequest(
     }
 }
 
-class WsListener(private val wsRequest: WsRequest, private val httpProcessHandler: HttpProcessHandler) :
+class WsListener(private val wsRequest: WsRequest, private val processHandler: ProcessHandlerBase) :
     WebSocket.Listener {
     override fun onText(webSocket: WebSocket?, data: CharSequence?, last: Boolean): CompletionStage<*> {
         webSocket?.request(1)
@@ -143,14 +143,14 @@ class WsListener(private val wsRequest: WsRequest, private val httpProcessHandle
     }
 
     override fun onClose(webSocket: WebSocket?, statusCode: Int, reason: String?): CompletionStage<*> {
-        httpProcessHandler.destroyProcess()
+        processHandler.destroyProcess()
 
         wsRequest.returnResMsg("${NlsBundle.nls("ws.closed")},statusCode: $statusCode, reason: $reason\n")
         return CompletableFuture<Void>()
     }
 
     override fun onError(webSocket: WebSocket?, error: Throwable?) {
-        httpProcessHandler.destroyProcess()
+        processHandler.destroyProcess()
 
         wsRequest.returnResMsg("${NlsBundle.nls("ws.failed")}, ${error}\n")
     }
