@@ -20,7 +20,7 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
 
-        wsRequest = WsRequest(url, reqHeaderMap, this, paramMap, httpDashboardForm)
+        wsRequest = WsRequest(url, reqHeaderMap, this, paramMap)
 
         runInEdt {
             loadingRemover?.run()

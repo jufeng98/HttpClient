@@ -13,6 +13,7 @@ import org.javamaster.httpclient.action.dashboard.SoftWrapAction
 import org.javamaster.httpclient.action.dashboard.view.FoldHeadersAction
 import org.javamaster.httpclient.action.dashboard.view.ShowLineNumberAction
 import org.javamaster.httpclient.consts.HttpConsts
+import org.javamaster.httpclient.consts.HttpConsts.Companion.httpWsReqEditorVirtualFileKey
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.utils.VirtualFileUtils.createHttpVirtualFileFromText
@@ -99,32 +100,45 @@ object EditorUtils {
         tabName: String,
         editorList: MutableList<Editor>,
         noLog: Boolean,
+        isViewer: Boolean,
     ): Editor {
         val editorFactory = EditorFactory.getInstance()
         val fileDocumentManager = FileDocumentManager.getInstance()
 
         val legalTabName = PathUtils.legalizeFileName(tabName)
 
-        val virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, legalTabName, noLog)
+        var virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, legalTabName, noLog)
 
         val psiFile = virtualFile.findPsiFile(project)
 
         val editor = if (psiFile != null) {
             val document = fileDocumentManager.getDocument(virtualFile)!!
-            editorFactory.createEditor(document, project, virtualFile, true)
+            editorFactory.createEditor(document, project, virtualFile, isViewer)
         } else {
-            val lightVirtualFile = LightVirtualFile(virtualFile.name)
-            lightVirtualFile.charset = StandardCharsets.UTF_8
-            lightVirtualFile.setBinaryContent(bytes)
+            virtualFile = LightVirtualFile(virtualFile.name)
+            virtualFile.charset = StandardCharsets.UTF_8
+            virtualFile.setBinaryContent(bytes)
 
-            val document = fileDocumentManager.getDocument(lightVirtualFile)!!
-            editorFactory.createEditor(document, project, lightVirtualFile, true)
+            val document = fileDocumentManager.getDocument(virtualFile)!!
+            editorFactory.createEditor(document, project, virtualFile, isViewer)
         }
+
+        editor.putUserData(httpWsReqEditorVirtualFileKey, virtualFile)
 
         editorList.add(editor)
 
         return editor
     }
 
+    fun createEditor(
+        bytes: ByteArray,
+        suffix: String,
+        project: Project,
+        tabName: String,
+        editorList: MutableList<Editor>,
+        noLog: Boolean,
+    ): Editor {
+        return createEditor(bytes, suffix, project, tabName, editorList, noLog, true)
+    }
 }
 
