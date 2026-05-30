@@ -7,14 +7,11 @@ import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.editor.*;
-import com.intellij.openapi.editor.ex.EditorEx;
-import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
-import com.intellij.ui.EditorTextField;
 import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -24,14 +21,20 @@ import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.javamaster.httpclient.action.dashboard.*;
+import org.javamaster.httpclient.action.ChooseLangAction;
+import org.javamaster.httpclient.action.dashboard.PreviewFileAction;
+import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
+import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
+import org.javamaster.httpclient.consts.HttpConsts;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.key.HttpKey;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
-import org.javamaster.httpclient.utils.*;
+import org.javamaster.httpclient.utils.EditorUtils;
+import org.javamaster.httpclient.utils.HttpUtils;
+import org.javamaster.httpclient.utils.PathUtils;
+import org.javamaster.httpclient.utils.VirtualFileUtils;
 import org.javamaster.httpclient.ws.WsRequest;
-import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
@@ -275,40 +278,9 @@ public class HttpDashboardForm implements Disposable {
         reqPanel.remove(reqVerticalToolbarPanel);
         resPanel.remove(resVerticalToolbarPanel);
 
-        GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
-        GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
-        constraints = (GridConstraints) constraints.clone();
+        initReqPanel(wsRequest);
 
-        JPanel jPanelReq = createReqPanel(wsRequest);
-
-        requestPanel.add(jPanelReq, constraints);
-
-        GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
-        GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
-
-        Editor resEditor = WriteAction.computeAndWait(() ->
-                EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
-                        project, tabName, editorList, true)
-        );
-
-        responsePanel.add(resEditor.getComponent(), constraintsRes);
-
-        Document document = resEditor.getDocument();
-        Caret caret = resEditor.getCaretModel().getPrimaryCaret();
-        ScrollingModel scrollingModel = resEditor.getScrollingModel();
-
-        wsRequest.setResConsumer(res ->
-                DocumentUtil.writeInRunUndoTransparentAction(() -> {
-                            String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");
-                            String replace = res.replace(HttpUtils.CR_LF, "\n");
-                            String s = time + " - " + replace;
-
-                            document.insertString(document.getTextLength(), s);
-                            caret.moveToOffset(document.getTextLength());
-                            scrollingModel.scrollToCaret(ScrollType.RELATIVE);
-                        }
-                )
-        );
+        initResPanel(wsRequest);
     }
 
     public Consumer<String> initMockServerForm() {
@@ -337,40 +309,89 @@ public class HttpDashboardForm implements Disposable {
                 ));
     }
 
-    private JPanel createReqPanel(WsRequest wsRequest) {
+    private void initReqPanel(WsRequest wsRequest) {
+        GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
+        GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
+        constraints = (GridConstraints) constraints.clone();
+
         JPanel jPanelReq = new JPanel();
         jPanelReq.setLayout(new BorderLayout());
 
-        EditorTextField editorTextField = new EditorTextField("", project, PlainTextFileType.INSTANCE) {
-            @Override
-            protected @NotNull EditorEx createEditor() {
-                EditorEx editor = super.createEditor();
-                editor.setVerticalScrollbarVisible(true);
-                editor.setOneLineMode(false);
-                editor.setPlaceholder(NlsBundle.INSTANCE.nls("ws.tooltip"));
+        Editor reqEditor = WriteAction.computeAndWait(() ->
+                EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws-req.txt",
+                        project, tabName, editorList, true, false)
+        );
 
-                EditorSettings settings = editor.getSettings();
-                settings.setUseSoftWraps(true);
-                settings.setLineNumbersShown(true);
+        Document reqDocument = reqEditor.getDocument();
 
-                return editor;
-            }
-        };
-
-        jPanelReq.add(editorTextField.getComponent(), BorderLayout.CENTER);
+        JComponent reqEditorComponent = reqEditor.getComponent();
+        jPanelReq.add(reqEditorComponent, BorderLayout.CENTER);
 
         JButton jButtonSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));
         jButtonSend.addActionListener(e -> {
-            String text = editorTextField.getText();
-            wsRequest.sendWsMsg(text);
-            editorTextField.setText("");
+            wsRequest.sendWsMsg(reqDocument.getText());
+
+            ApplicationManager.getApplication().invokeLater(() ->
+                    DocumentUtil.writeInRunUndoTransparentAction(() ->
+                            reqDocument.setText("")));
         });
 
         JPanel btnPanel = new JPanel();
         btnPanel.add(jButtonSend);
 
+        VirtualFile reqVirtualFile = reqEditor.getUserData(HttpConsts.Companion.getHttpWsReqEditorVirtualFileKey());
+
+        @SuppressWarnings("DataFlowIssue")
+        ChooseLangAction chooseLangAction = new ChooseLangAction(reqVirtualFile);
+        reqVirtualFile.putUserData(HttpConsts.Companion.getHttpWsReqEditorKey(), chooseLangAction);
+
+        DefaultActionGroup langGroup = new DefaultActionGroup();
+        langGroup.add(chooseLangAction);
+
+        ActionManager actionManager = ActionManager.getInstance();
+        ActionToolbar langToolbar = actionManager.createActionToolbar("wsLangToolbar", langGroup, true);
+        langToolbar.setTargetComponent(reqEditorComponent);
+        btnPanel.add(langToolbar.getComponent());
+
         jPanelReq.add(btnPanel, BorderLayout.SOUTH);
-        return jPanelReq;
+
+        chooseLangAction.triggerReparse();
+
+        requestPanel.add(jPanelReq, constraints);
+    }
+
+    private void initResPanel(WsRequest wsRequest) {
+        GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
+        GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
+
+        Editor resEditor = WriteAction.computeAndWait(() ->
+                EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
+                        project, tabName, editorList, true)
+        );
+
+        responsePanel.add(resEditor.getComponent(), constraintsRes);
+
+        Document document = resEditor.getDocument();
+        Caret caret = resEditor.getCaretModel().getPrimaryCaret();
+        ScrollingModel scrollingModel = resEditor.getScrollingModel();
+
+        wsRequest.setResConsumer(res -> {
+                    if (resEditor.isDisposed()) {
+                        return;
+                    }
+
+                    DocumentUtil.writeInRunUndoTransparentAction(() -> {
+                                String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");
+                                String replace = res.replace(HttpUtils.CR_LF, "\n");
+                                String s = time + " - " + replace;
+
+                                document.insertString(document.getTextLength(), s);
+                                caret.moveToOffset(document.getTextLength());
+                                scrollingModel.scrollToCaret(ScrollType.RELATIVE);
+                            }
+                    );
+                }
+        );
     }
 
     private void disposePreviousReqEditors() {
