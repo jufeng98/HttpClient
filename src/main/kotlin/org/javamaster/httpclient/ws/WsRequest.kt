@@ -1,15 +1,13 @@
 package org.javamaster.httpclient.ws
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.util.Disposer
 import com.intellij.util.application
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.consts.HttpConsts
-import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket
@@ -29,17 +27,14 @@ class WsRequest(
     private val reqHeaderMap: LinkedMultiValueMap<String, String?>,
     private val processHandler: ProcessHandlerBase,
     private val paramMap: Map<String, String>,
-    parentDisposable: Disposable,
-) : Disposable {
+) {
     private var webSocket: WebSocket? = null
     lateinit var resConsumer: Consumer<String>
     private val tabName = processHandler.tabName
 
-    init {
-        Disposer.register(parentDisposable, this)
-    }
-
     fun connect() {
+        wsRunningSet.add(tabName)
+
         returnResMsg(NlsBundle.nls("connecting") + " ${url}\n")
 
         val uri = URI(url)
@@ -61,8 +56,6 @@ class WsRequest(
 
         builder.buildAsync(uri, listener)
             .whenComplete { ws, ex ->
-                wsRunningSet.add(tabName)
-
                 if (ex == null) {
                     webSocket = ws
                     return@whenComplete
@@ -105,10 +98,6 @@ class WsRequest(
                 resConsumer.accept(msg)
             }
         }
-    }
-
-    override fun dispose() {
-        abortConnect()
     }
 
     companion object {
