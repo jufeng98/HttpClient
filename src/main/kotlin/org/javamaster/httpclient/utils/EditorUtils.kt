@@ -13,7 +13,6 @@ import org.javamaster.httpclient.action.dashboard.SoftWrapAction
 import org.javamaster.httpclient.action.dashboard.view.FoldHeadersAction
 import org.javamaster.httpclient.action.dashboard.view.ShowLineNumberAction
 import org.javamaster.httpclient.consts.HttpConsts
-import org.javamaster.httpclient.consts.HttpConsts.Companion.httpWsReqEditorVirtualFileKey
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.utils.VirtualFileUtils.createHttpVirtualFileFromText
@@ -122,8 +121,6 @@ object EditorUtils {
             val document = fileDocumentManager.getDocument(virtualFile)!!
             editorFactory.createEditor(document, project, virtualFile, isViewer)
         }
-
-        editor.putUserData(httpWsReqEditorVirtualFileKey, virtualFile)
 
         editorList.add(editor)
 

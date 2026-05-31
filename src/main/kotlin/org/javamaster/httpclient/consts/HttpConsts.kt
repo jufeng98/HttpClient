@@ -2,9 +2,7 @@ package org.javamaster.httpclient.consts
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.Key
-import com.intellij.openapi.vfs.VirtualFile
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.action.ChooseLangAction
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 
 /**
@@ -37,9 +35,6 @@ class HttpConsts {
         val httpDashboardResTypeKey = Key.create<SimpleTypeEnum?>("org.javamaster.dashboard.httpDashboardResType")
         val httpDashboardReqEditorKey = Key.create<Editor>("org.javamaster.dashboard.httpDashboardReqEditor")
         val httpDashboardResEditorKey = Key.create<Editor>("org.javamaster.dashboard.httpDashboardResEditor")
-
-        val httpWsReqEditorKey = Key.create<ChooseLangAction>("org.javamaster.ws.httpWsReqEditorKey")
-        val httpWsReqEditorVirtualFileKey = Key.create<VirtualFile>("org.javamaster.ws.httpWsReqEditorVirtualFileKey")
 
         const val COOKIE_FILE_NAME = "http-client.cookies"
         const val JS_DATE_PATTERN = "EEE, dd-MMM-yyyy HH:mm:ss 'GMT'"

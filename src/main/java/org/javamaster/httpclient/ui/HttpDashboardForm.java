@@ -2,16 +2,24 @@ package org.javamaster.httpclient.ui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.intellij.json.JsonLanguage;
+import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.editor.*;
+import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.fileTypes.LanguageFileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiFileFactory;
 import com.intellij.testFramework.LightVirtualFile;
+import com.intellij.ui.EditorTextField;
 import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -25,7 +33,6 @@ import org.javamaster.httpclient.action.ChooseLangAction;
 import org.javamaster.httpclient.action.dashboard.PreviewFileAction;
 import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
 import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
-import org.javamaster.httpclient.consts.HttpConsts;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.key.HttpKey;
 import org.javamaster.httpclient.model.HttpInfo;
@@ -35,6 +42,7 @@ import org.javamaster.httpclient.utils.HttpUtils;
 import org.javamaster.httpclient.utils.PathUtils;
 import org.javamaster.httpclient.utils.VirtualFileUtils;
 import org.javamaster.httpclient.ws.WsRequest;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
@@ -62,6 +70,7 @@ public class HttpDashboardForm implements Disposable {
     private JPanel resPanel;
     private JBSplitter splitter;
     private JLabel labelLoading;
+    private JPanel wsReqPanel;
 
     private final String tabName;
     private final Project project;
@@ -278,9 +287,9 @@ public class HttpDashboardForm implements Disposable {
         reqPanel.remove(reqVerticalToolbarPanel);
         resPanel.remove(resVerticalToolbarPanel);
 
-        initReqPanel(wsRequest);
+        initWsReqPanel(wsRequest);
 
-        initResPanel(wsRequest);
+        initWsResPanel(wsRequest);
     }
 
     public Consumer<String> initMockServerForm() {
@@ -309,58 +318,52 @@ public class HttpDashboardForm implements Disposable {
                 ));
     }
 
-    private void initReqPanel(WsRequest wsRequest) {
+    private EditorTextField getWsReqEditor() {
+        for (Component component : wsReqPanel.getComponents()) {
+            if (component instanceof EditorTextField) {
+                return (EditorTextField) component;
+            }
+        }
+
+        throw new IllegalArgumentException();
+    }
+
+    private void initWsReqPanel(WsRequest wsRequest) {
         GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
         GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
         constraints = (GridConstraints) constraints.clone();
 
-        JPanel jPanelReq = new JPanel();
-        jPanelReq.setLayout(new BorderLayout());
+        wsReqPanel = new JPanel();
+        wsReqPanel.setLayout(new BorderLayout());
 
-        Editor reqEditor = WriteAction.computeAndWait(() ->
-                EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws-req.txt",
-                        project, tabName, editorList, true, false)
-        );
+        EditorTextField reqEditor = createWsReqEditor("", JsonLanguage.INSTANCE);
+        wsReqPanel.add(reqEditor, BorderLayout.CENTER);
 
-        Document reqDocument = reqEditor.getDocument();
+        JButton btnSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));
+        btnSend.addActionListener(e -> {
+            EditorTextField wsReqEditor = getWsReqEditor();
 
-        JComponent reqEditorComponent = reqEditor.getComponent();
-        jPanelReq.add(reqEditorComponent, BorderLayout.CENTER);
+            wsRequest.sendWsMsg(wsReqEditor.getText());
 
-        JButton jButtonSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));
-        jButtonSend.addActionListener(e -> {
-            wsRequest.sendWsMsg(reqDocument.getText());
-
-            ApplicationManager.getApplication().invokeLater(() ->
-                    DocumentUtil.writeInRunUndoTransparentAction(() ->
-                            reqDocument.setText("")));
+            wsReqEditor.setText("");
         });
 
         JPanel btnPanel = new JPanel();
-        btnPanel.add(jButtonSend);
+        btnPanel.add(btnSend);
 
-        VirtualFile reqVirtualFile = reqEditor.getUserData(HttpConsts.Companion.getHttpWsReqEditorVirtualFileKey());
-
-        @SuppressWarnings("DataFlowIssue")
-        ChooseLangAction chooseLangAction = new ChooseLangAction(reqVirtualFile);
-        reqVirtualFile.putUserData(HttpConsts.Companion.getHttpWsReqEditorKey(), chooseLangAction);
-
-        DefaultActionGroup langGroup = new DefaultActionGroup();
-        langGroup.add(chooseLangAction);
+        DefaultActionGroup langActionGroup = new DefaultActionGroup();
+        langActionGroup.add(new ChooseLangAction(this));
 
         ActionManager actionManager = ActionManager.getInstance();
-        ActionToolbar langToolbar = actionManager.createActionToolbar("wsLangToolbar", langGroup, true);
-        langToolbar.setTargetComponent(reqEditorComponent);
+        ActionToolbar langToolbar = actionManager.createActionToolbar("langToolbar", langActionGroup, true);
         btnPanel.add(langToolbar.getComponent());
 
-        jPanelReq.add(btnPanel, BorderLayout.SOUTH);
+        wsReqPanel.add(btnPanel, BorderLayout.SOUTH);
 
-        chooseLangAction.triggerReparse();
-
-        requestPanel.add(jPanelReq, constraints);
+        requestPanel.add(wsReqPanel, constraints);
     }
 
-    private void initResPanel(WsRequest wsRequest) {
+    private void initWsResPanel(WsRequest wsRequest) {
         GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
         GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
@@ -392,6 +395,39 @@ public class HttpDashboardForm implements Disposable {
                     );
                 }
         );
+    }
+
+    public void recreateWsReqEditor(Language language) {
+        EditorTextField wsReqEditor = getWsReqEditor();
+
+        String text = wsReqEditor.getText();
+
+        EditorTextField reqEditor = createWsReqEditor(text, language);
+        wsReqPanel.remove(wsReqEditor);
+
+        wsReqPanel.add(reqEditor, BorderLayout.CENTER);
+    }
+
+    private EditorTextField createWsReqEditor(String text, Language language) {
+        PsiFile file = PsiFileFactory.getInstance(project).createFileFromText(language, text);
+        Document doc = PsiDocumentManager.getInstance(project).getDocument(file);
+        LanguageFileType fileType = language.getAssociatedFileType();
+
+        return new EditorTextField(doc, project, fileType) {
+            @Override
+            protected @NotNull EditorEx createEditor() {
+                EditorEx editor = super.createEditor();
+                editor.setVerticalScrollbarVisible(true);
+                editor.setOneLineMode(false);
+                editor.setPlaceholder(NlsBundle.INSTANCE.nls("ws.tooltip"));
+
+                EditorSettings settings = editor.getSettings();
+                settings.setUseSoftWraps(true);
+                settings.setLineNumbersShown(true);
+
+                return editor;
+            }
+        };
     }
 
     private void disposePreviousReqEditors() {
