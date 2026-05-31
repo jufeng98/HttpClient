@@ -35,7 +35,7 @@ class ChooseLangAction(private val httpDashboardForm: HttpDashboardForm) : Combo
     override fun createCustomComponent(presentation: Presentation, place: String): JComponent {
         val button = createComboBoxButton(presentation)
         button.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-        button.preferredSize = Dimension(48, button.preferredSize.height)
+        button.preferredSize = Dimension(58, button.preferredSize.height)
 
         val label = JLabel("Language:")
         label.preferredSize = Dimension(68, label.preferredSize.height)
