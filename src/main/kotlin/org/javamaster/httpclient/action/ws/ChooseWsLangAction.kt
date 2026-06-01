@@ -1,12 +1,15 @@
-package org.javamaster.httpclient.action
+package org.javamaster.httpclient.action.ws
 
 import com.intellij.json.JsonLanguage
+import com.intellij.lang.Language
 import com.intellij.lang.html.HTMLLanguage
 import com.intellij.lang.xml.XMLLanguage
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.actionSystem.ex.ComboBoxAction
 import com.intellij.openapi.fileTypes.PlainTextLanguage
-import org.javamaster.httpclient.ui.HttpDashboardForm
+import com.intellij.openapi.project.Project
+import org.javamaster.httpclient.messageBus.WsLangChangeNotifier
 import java.awt.BorderLayout
 import java.awt.Cursor
 import java.awt.Dimension
@@ -18,19 +21,27 @@ import javax.swing.SwingConstants
 /**
  * @author yudong
  */
-class ChooseLangAction(private val httpDashboardForm: HttpDashboardForm) : ComboBoxAction() {
+class ChooseWsLangAction(private val project: Project, parentDisposable: Disposable) : ComboBoxAction() {
     private var langMap = linkedMapOf(
         "Text" to PlainTextLanguage.INSTANCE, "JSON" to JsonLanguage.INSTANCE,
         "XML" to XMLLanguage.INSTANCE, "HTML" to HTMLLanguage.INSTANCE
     )
-    val actionGroup by lazy {
+    private val actionGroup by lazy {
         val actions = langMap.keys.map { LangAction(it) }
         DefaultActionGroup(actions)
     }
-
     private var selectedLang = "JSON"
-
     private var comboBoxButton: ComboBoxButton? = null
+
+    init {
+        project.messageBus.connect(parentDisposable).subscribe(
+            WsLangChangeNotifier.WS_LANG_CHANGE_TOPIC,
+            object : WsLangChangeNotifier {
+                override fun change(newLanguage: Language) {
+                    switchLang(newLanguage)
+                }
+            })
+    }
 
     override fun createCustomComponent(presentation: Presentation, place: String): JComponent {
         val button = createComboBoxButton(presentation)
@@ -64,13 +75,22 @@ class ChooseLangAction(private val httpDashboardForm: HttpDashboardForm) : Combo
         return actionGroup
     }
 
+    fun switchLang(language: Language) {
+        langMap.entries.forEach {
+            val key = it.key
+            val value = it.value
+
+            if (value == language) {
+                comboBoxButton!!.presentation.text = key
+                selectedLang = key
+            }
+        }
+    }
+
     inner class LangAction(val lang: String) : AnAction(lang) {
 
         override fun actionPerformed(e: AnActionEvent) {
-            comboBoxButton!!.presentation.text = lang
-            selectedLang = lang
-
-            httpDashboardForm.recreateWsReqEditor(langMap[selectedLang])
+            project.messageBus.syncPublisher(WsLangChangeNotifier.WS_LANG_CHANGE_TOPIC).change(langMap[lang]!!)
         }
 
     }

@@ -1,7 +1,6 @@
 package org.javamaster.httpclient.ui;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.intellij.json.JsonLanguage;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
@@ -9,16 +8,10 @@ import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.editor.*;
-import com.intellij.openapi.editor.ex.EditorEx;
-import com.intellij.openapi.fileTypes.LanguageFileType;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiFileFactory;
-import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
@@ -29,35 +22,27 @@ import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.javamaster.httpclient.action.ChooseLangAction;
-import org.javamaster.httpclient.action.dashboard.PreviewFileAction;
-import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
-import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
+import org.apache.commons.lang3.tuple.Pair;
+import org.javamaster.httpclient.action.dashboard.*;
+import org.javamaster.httpclient.action.ws.*;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.key.HttpKey;
+import org.javamaster.httpclient.messageBus.WsLangChangeNotifier;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
-import org.javamaster.httpclient.utils.EditorUtils;
-import org.javamaster.httpclient.utils.HttpUtils;
-import org.javamaster.httpclient.utils.PathUtils;
-import org.javamaster.httpclient.utils.VirtualFileUtils;
+import org.javamaster.httpclient.utils.*;
 import org.javamaster.httpclient.ws.WsRequest;
-import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.net.URLDecoder;
-import java.net.http.HttpHeaders;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
 
 public class HttpDashboardForm implements Disposable {
-    private final static Map<String, HttpDashboardForm> historyMap = Maps.newHashMap();
-
+    private final LinkedList<Pair<String, Language>> inputHistoryList = new LinkedList<>();
     private final List<Editor> editorList = Lists.newArrayList();
+
     public JPanel mainPanel;
     public Throwable throwable;
     public JPanel requestPanel;
@@ -70,20 +55,17 @@ public class HttpDashboardForm implements Disposable {
     private JPanel resPanel;
     private JBSplitter splitter;
     private JLabel labelLoading;
-    private JPanel wsReqPanel;
 
     private final String tabName;
     private final Project project;
 
-    public HttpDashboardForm(String tabName, Project project) {
+    public HttpDashboardForm(String tabName, Disposable parentDisposable, Project project) {
         this.tabName = tabName;
         this.project = project;
 
+        Disposer.register(parentDisposable, this);
+
         splitter.setSplitterProportionKey("httpRequestCustomProportionKey");
-
-        disposePreviousReqEditors();
-
-        historyMap.put(tabName, this);
     }
 
     public void initLabelLoading(String tabName, String url) {
@@ -182,86 +164,14 @@ public class HttpDashboardForm implements Disposable {
     }
 
     private VirtualFile saveResponseToFile(HttpInfo httpInfo, String tabName, boolean noLog) {
-        try {
-            String fileName = resolveFilenameFromHeader(httpInfo.getResHeaders());
+        String fileName = ResUtils.INSTANCE.resolveFilename(httpInfo);
 
-            if (fileName == null) {
-                SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
+        byte[] content = Objects.requireNonNull(httpInfo.getByteArray());
+        VirtualFile virtualFile = VirtualFileUtils.INSTANCE.saveContent(content, tabName, fileName, noLog, project);
 
-                String contentType = httpInfo.getContentType();
+        httpInfo.getHttpResDescList().add(HttpUtils.CR_LF + ">> " + virtualFile.getPath() + HttpUtils.CR_LF);
 
-                //noinspection DataFlowIssue
-                String suffix = SimpleTypeEnum.Companion.getSuffix(simpleTypeEnum, contentType);
-
-                fileName = DateFormatUtils.format(new Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix;
-            }
-
-            if (noLog) {
-                LightVirtualFile lightVirtualFile = new LightVirtualFile(fileName);
-                lightVirtualFile.setCharset(StandardCharsets.UTF_8);
-                //noinspection DataFlowIssue
-                lightVirtualFile.setBinaryContent(httpInfo.getByteArray());
-                return lightVirtualFile;
-            }
-
-            File dateHistoryDir = VirtualFileUtils.INSTANCE.getDateHistoryDir(project);
-
-            File resBodyDir = new File(dateHistoryDir, PathUtils.INSTANCE.legalizeFileName(tabName));
-            if (!resBodyDir.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                resBodyDir.mkdirs();
-            }
-
-            File file = new File(resBodyDir, fileName);
-
-            String absolutePath = file.getAbsolutePath();
-
-            boolean deleted = file.delete();
-            if (deleted) {
-                System.out.println("已删除文件:" + absolutePath);
-            }
-
-            //noinspection DataFlowIssue
-            Files.write(file.toPath(), httpInfo.getByteArray());
-            System.out.println("已保存到文件:" + absolutePath);
-
-            VirtualFile virtualFile = VfsUtil.findFileByIoFile(file, true);
-
-            httpInfo.getHttpResDescList().add(HttpUtils.CR_LF + ">> " + absolutePath + HttpUtils.CR_LF);
-
-            return virtualFile;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String resolveFilenameFromHeader(HttpHeaders resHeaders) {
-        if (resHeaders == null) {
-            return null;
-        }
-
-        Optional<String> optional = resHeaders.firstValue(com.google.common.net.HttpHeaders.CONTENT_DISPOSITION);
-        if (optional.isEmpty()) {
-            return null;
-        }
-
-        String headerValue = optional.get();
-        String[] split = headerValue.split(";");
-
-        optional = Arrays.stream(split)
-                .map(it -> {
-                    String tmp = it.trim();
-                    if (tmp.startsWith("filename")) {
-                        String name = StringUtil.unquoteString(tmp.split("=")[1]);
-                        return URLDecoder.decode(name, StandardCharsets.UTF_8);
-                    }
-
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .findFirst();
-
-        return optional.orElse(null);
+        return virtualFile;
     }
 
     private void renderResponsePresentation(JComponent resComponent, JComponent presentation, GridConstraints constraintsRes) {
@@ -281,15 +191,7 @@ public class HttpDashboardForm implements Disposable {
     }
 
     public void initWsForm(WsRequest wsRequest) {
-        splitter.setVisible(true);
-        labelLoading.setVisible(false);
-
-        reqPanel.remove(reqVerticalToolbarPanel);
-        resPanel.remove(resVerticalToolbarPanel);
-
-        initWsReqPanel(wsRequest);
-
-        initWsResPanel(wsRequest);
+        new WsDashboardForm(wsRequest);
     }
 
     public Consumer<String> initMockServerForm() {
@@ -318,128 +220,8 @@ public class HttpDashboardForm implements Disposable {
                 ));
     }
 
-    private EditorTextField getWsReqEditor() {
-        for (Component component : wsReqPanel.getComponents()) {
-            if (component instanceof EditorTextField) {
-                return (EditorTextField) component;
-            }
-        }
-
-        throw new IllegalArgumentException();
-    }
-
-    private void initWsReqPanel(WsRequest wsRequest) {
-        GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
-        GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
-        constraints = (GridConstraints) constraints.clone();
-
-        wsReqPanel = new JPanel();
-        wsReqPanel.setLayout(new BorderLayout());
-
-        EditorTextField reqEditor = createWsReqEditor("", JsonLanguage.INSTANCE);
-        wsReqPanel.add(reqEditor, BorderLayout.CENTER);
-
-        JButton btnSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));
-        btnSend.addActionListener(e -> {
-            EditorTextField wsReqEditor = getWsReqEditor();
-
-            wsRequest.sendWsMsg(wsReqEditor.getText());
-
-            wsReqEditor.setText("");
-        });
-
-        JPanel btnPanel = new JPanel();
-        btnPanel.add(btnSend);
-
-        DefaultActionGroup langActionGroup = new DefaultActionGroup();
-        langActionGroup.add(new ChooseLangAction(this));
-
-        ActionManager actionManager = ActionManager.getInstance();
-        ActionToolbar langToolbar = actionManager.createActionToolbar("langToolbar", langActionGroup, true);
-        btnPanel.add(langToolbar.getComponent());
-
-        wsReqPanel.add(btnPanel, BorderLayout.SOUTH);
-
-        requestPanel.add(wsReqPanel, constraints);
-    }
-
-    private void initWsResPanel(WsRequest wsRequest) {
-        GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
-        GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
-
-        Editor resEditor = WriteAction.computeAndWait(() ->
-                EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "ws.log",
-                        project, tabName, editorList, true)
-        );
-
-        responsePanel.add(resEditor.getComponent(), constraintsRes);
-
-        Document document = resEditor.getDocument();
-        Caret caret = resEditor.getCaretModel().getPrimaryCaret();
-        ScrollingModel scrollingModel = resEditor.getScrollingModel();
-
-        wsRequest.setResConsumer(res -> {
-                    if (resEditor.isDisposed()) {
-                        return;
-                    }
-
-                    DocumentUtil.writeInRunUndoTransparentAction(() -> {
-                                String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");
-                                String replace = res.replace(HttpUtils.CR_LF, "\n");
-                                String s = time + " - " + replace;
-
-                                document.insertString(document.getTextLength(), s);
-                                caret.moveToOffset(document.getTextLength());
-                                scrollingModel.scrollToCaret(ScrollType.RELATIVE);
-                            }
-                    );
-                }
-        );
-    }
-
-    public void recreateWsReqEditor(Language language) {
-        EditorTextField wsReqEditor = getWsReqEditor();
-
-        String text = wsReqEditor.getText();
-
-        EditorTextField reqEditor = createWsReqEditor(text, language);
-        wsReqPanel.remove(wsReqEditor);
-
-        wsReqPanel.add(reqEditor, BorderLayout.CENTER);
-    }
-
-    private EditorTextField createWsReqEditor(String text, Language language) {
-        PsiFile file = PsiFileFactory.getInstance(project).createFileFromText(language, text);
-        Document doc = PsiDocumentManager.getInstance(project).getDocument(file);
-        LanguageFileType fileType = language.getAssociatedFileType();
-
-        return new EditorTextField(doc, project, fileType) {
-            @Override
-            protected @NotNull EditorEx createEditor() {
-                EditorEx editor = super.createEditor();
-                editor.setVerticalScrollbarVisible(true);
-                editor.setOneLineMode(false);
-                editor.setPlaceholder(NlsBundle.INSTANCE.nls("ws.tooltip"));
-
-                EditorSettings settings = editor.getSettings();
-                settings.setUseSoftWraps(true);
-                settings.setLineNumbersShown(true);
-
-                return editor;
-            }
-        };
-    }
-
-    private void disposePreviousReqEditors() {
-        HttpDashboardForm previousHttpDashboardForm = historyMap.remove(tabName);
-        if (previousHttpDashboardForm == null) {
-            return;
-        }
-
-        previousHttpDashboardForm.disposeEditors();
-    }
-
-    private void disposeEditors() {
+    @Override
+    public void dispose() {
         EditorFactory editorFactory = EditorFactory.getInstance();
         editorList.forEach(it -> {
             if (it.isDisposed()) {
@@ -450,8 +232,224 @@ public class HttpDashboardForm implements Disposable {
         });
     }
 
-    @Override
-    public void dispose() {
+    public class WsDashboardForm {
+        private final WsRequest wsRequest;
+        private final JPanel wsReqPanel;
+
+        private int wsInputHistoryCurrentIndex = -1;
+        private final Key<String> editorTextKey = Key.create("org.javamaster.ws.WsDashboardForm");
+
+        public WsDashboardForm(WsRequest wsRequest) {
+            this.wsRequest = wsRequest;
+
+            wsReqPanel = new JPanel();
+            wsReqPanel.setLayout(new BorderLayout());
+
+            splitter.setVisible(true);
+            labelLoading.setVisible(false);
+
+            reqPanel.remove(reqVerticalToolbarPanel);
+            resPanel.remove(resVerticalToolbarPanel);
+
+            initWsReqPanel();
+
+            project.getMessageBus().connect(HttpDashboardForm.this).subscribe(WsLangChangeNotifier.Companion.getWS_LANG_CHANGE_TOPIC(),
+                    (WsLangChangeNotifier) this::recreateWsReqEditor);
+
+            initWsResPanel();
+        }
+
+        private void initWsReqPanel() {
+            EditorTextField reqEditor = createWsReqEditor("", JsonLanguage.INSTANCE);
+            wsReqPanel.add(reqEditor, BorderLayout.CENTER);
+
+            JButton btnSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));
+            btnSend.setToolTipText("Ctrl + Enter");
+            btnSend.addActionListener(e -> sendWsMsg());
+
+            JPanel btnPanel = new JPanel();
+            btnPanel.add(btnSend);
+
+            DefaultActionGroup langActionGroup = new DefaultActionGroup();
+            langActionGroup.add(new ChooseWsLangAction(project, HttpDashboardForm.this));
+
+            ActionManager actionManager = ActionManager.getInstance();
+            ActionToolbar langToolbar = actionManager.createActionToolbar("langToolbar", langActionGroup, true);
+            langToolbar.setTargetComponent(wsReqPanel);
+            btnPanel.add(langToolbar.getComponent());
+
+            wsReqPanel.add(btnPanel, BorderLayout.SOUTH);
+
+            GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
+            GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
+            constraints = (GridConstraints) constraints.clone();
+
+            requestPanel.add(wsReqPanel, constraints);
+        }
+
+        private void initWsResPanel() {
+            GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
+            GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
+
+            EditorTextField editorTextField = EditorUtils.INSTANCE.createEditor("", "ws-res.log", project);
+
+            responsePanel.add(editorTextField, constraintsRes);
+
+            Editor resEditor = Objects.requireNonNull(editorTextField.getEditor());
+            Document document = editorTextField.getDocument();
+
+            CaretModel caretModel = resEditor.getCaretModel();
+            Caret caret = caretModel.getPrimaryCaret();
+            ScrollingModel scrollingModel = resEditor.getScrollingModel();
+
+            wsRequest.setResConsumer(res -> {
+                        if (resEditor.isDisposed()) {
+                            System.out.println("ws res editor 已被销毁");
+                            return;
+                        }
+
+                        DocumentUtil.writeInRunUndoTransparentAction(() -> {
+                                    String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");
+                                    String replace = res.replace(HttpUtils.CR_LF, "\n");
+                                    String s = time + " - " + replace;
+
+                                    document.insertString(document.getTextLength(), s);
+                                    caret.moveToOffset(document.getTextLength());
+                                    scrollingModel.scrollToCaret(ScrollType.RELATIVE);
+                                }
+                        );
+                    }
+            );
+        }
+
+        public void sendWsMsg() {
+            EditorTextField wsReqEditor = getWsReqEditor();
+
+            String text = wsReqEditor.getText();
+            if (text.isEmpty()) {
+                return;
+            }
+
+            wsRequest.sendWsMsg(text);
+
+            wsReqEditor.setText("");
+
+            Language language = (Language) wsReqEditor.getClientProperty("language");
+
+            Iterator<Pair<String, Language>> iterator = inputHistoryList.iterator();
+            while (iterator.hasNext()) {
+                Pair<String, Language> next = iterator.next();
+                if (next.getLeft().equals(text)) {
+                    iterator.remove();
+                    break;
+                }
+            }
+            inputHistoryList.push(Pair.of(text, language));
+
+            wsInputHistoryCurrentIndex = -1;
+
+            if (inputHistoryList.size() > 50) {
+                inputHistoryList.pop();
+            }
+        }
+
+        private EditorTextField getWsReqEditor() {
+            for (Component component : wsReqPanel.getComponents()) {
+                if (component instanceof EditorTextField) {
+                    return (EditorTextField) component;
+                }
+            }
+
+            throw new IllegalArgumentException();
+        }
+
+        public void switchWsToPreviousInput() {
+            if (inputHistoryList.isEmpty()) {
+                return;
+            }
+
+            int idx = wsInputHistoryCurrentIndex + 1;
+            if (idx == inputHistoryList.size()) {
+                switchWsInput(wsInputHistoryCurrentIndex);
+                return;
+            }
+
+            switchWsInput(++wsInputHistoryCurrentIndex);
+        }
+
+        public void switchWsToNextInput() {
+            if (inputHistoryList.isEmpty()) {
+                return;
+            }
+
+            if (wsInputHistoryCurrentIndex == -1) {
+                return;
+            }
+
+            switchWsInput(--wsInputHistoryCurrentIndex);
+        }
+
+        private void switchWsInput(int idx) {
+            EditorTextField wsReqEditor = getWsReqEditor();
+            if (idx == -1) {
+                wsReqEditor.setText("");
+                return;
+            }
+
+            Pair<String, Language> pair = inputHistoryList.get(idx);
+            String text = pair.getLeft();
+            Language language = pair.getRight();
+
+            Language currentLanguage = (Language) wsReqEditor.getClientProperty("language");
+            if (currentLanguage == language) {
+                wsReqEditor.setText(text);
+            } else {
+                language.putUserData(editorTextKey, text);
+
+                project.getMessageBus().syncPublisher(WsLangChangeNotifier.Companion.getWS_LANG_CHANGE_TOPIC())
+                        .change(language);
+
+                language.putUserData(editorTextKey, null);
+            }
+        }
+
+        public void recreateWsReqEditor(Language language) {
+            EditorTextField wsReqEditor = getWsReqEditor();
+            String text = language.getUserData(editorTextKey);
+            if (text == null) {
+                text = wsReqEditor.getText();
+            }
+
+            EditorTextField reqEditor = createWsReqEditor(text, language);
+            wsReqPanel.remove(wsReqEditor);
+
+            wsReqPanel.add(reqEditor, BorderLayout.CENTER);
+
+            reqEditor.requestFocus();
+        }
+
+        private EditorTextField createWsReqEditor(String text, Language language) {
+            EditorTextField editorTextField = EditorUtils.INSTANCE.createEditor(text, NlsBundle.INSTANCE.nls("ws.tooltip"),
+                    language, project);
+            editorTextField.putClientProperty("language", language);
+
+            JComponent focusTarget = editorTextField.getFocusTarget();
+
+            SendWsAction sendWsAction = new SendWsAction(this);
+            sendWsAction.registerCustomShortcutSet(CustomShortcutSet.fromString("ctrl ENTER"),
+                    focusTarget, HttpDashboardForm.this);
+
+            WsInputPreviousHistoryAction wsInputPreviousHistoryAction = new WsInputPreviousHistoryAction(this);
+            wsInputPreviousHistoryAction.registerCustomShortcutSet(CustomShortcutSet.fromString("alt UP"),
+                    focusTarget, HttpDashboardForm.this);
+
+            WsInputNextHistoryAction wsInputNextHistoryAction = new WsInputNextHistoryAction(this);
+            wsInputNextHistoryAction.registerCustomShortcutSet(CustomShortcutSet.fromString("alt DOWN"),
+                    focusTarget, HttpDashboardForm.this);
+
+            return editorTextField;
+        }
 
     }
+
 }
