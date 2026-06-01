@@ -1,12 +1,15 @@
 package org.javamaster.httpclient.utils
 
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VirtualFileManager
+import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
@@ -14,10 +17,12 @@ import org.javamaster.httpclient.utils.JsonUtils.formatJson
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URI
+import java.net.URLDecoder
 import java.net.http.HttpHeaders
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.*
 import kotlin.jvm.optionals.getOrElse
 
 object ResUtils {
@@ -117,4 +122,34 @@ object ResUtils {
 
         return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
     }
+
+    fun resolveFilename(httpInfo: HttpInfo): String {
+        val resHeaders = httpInfo.resHeaders
+        if (resHeaders != null) {
+            var optional = resHeaders.firstValue(com.google.common.net.HttpHeaders.CONTENT_DISPOSITION)
+            if (optional.isPresent) {
+                val split = optional.get().split(";")
+
+                val fileName = split
+                    .mapNotNull {
+                        val tmp = it.trim()
+                        if (tmp.startsWith("filename", true)) {
+                            val name = StringUtil.unquoteString(tmp.split("=")[1])
+                            return@mapNotNull URLDecoder.decode(name, StandardCharsets.UTF_8)
+                        }
+
+                        null
+                    }
+                    .firstOrNull()
+
+                if (fileName != null) {
+                    return fileName
+                }
+            }
+        }
+
+        val suffix = SimpleTypeEnum.Companion.getSuffix(httpInfo.type!!, httpInfo.contentType!!)
+        return DateFormatUtils.format(Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix
+    }
+
 }

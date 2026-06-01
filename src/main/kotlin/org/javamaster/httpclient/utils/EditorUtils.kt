@@ -1,14 +1,19 @@
 package org.javamaster.httpclient.utils
 
 import com.intellij.codeInsight.folding.impl.FoldingUtil
+import com.intellij.lang.Language
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.putUserData
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileFactory
 import com.intellij.testFramework.LightVirtualFile
+import com.intellij.ui.EditorTextField
 import org.javamaster.httpclient.action.dashboard.SoftWrapAction
 import org.javamaster.httpclient.action.dashboard.view.FoldHeadersAction
 import org.javamaster.httpclient.action.dashboard.view.ShowLineNumberAction
@@ -137,5 +142,51 @@ object EditorUtils {
     ): Editor {
         return createEditor(bytes, suffix, project, tabName, editorList, noLog, true)
     }
+
+    fun createEditor(text: String, fileName: String, project: Project): EditorTextField {
+        val lightVirtualFile = LightVirtualFile(fileName, text)
+        val file: PsiFile = lightVirtualFile.findPsiFile(project)!!
+        val doc = PsiDocumentManager.getInstance(project).getDocument(file)
+
+        return object : EditorTextField(doc, project, file.language.associatedFileType) {
+
+            override fun createEditor(): EditorEx {
+                val editor = super.createEditor()
+                editor.setVerticalScrollbarVisible(true)
+                editor.isOneLineMode = false
+                editor.isViewer = true
+
+                val settings = editor.settings
+                settings.isLineNumbersShown = true
+
+                return editor
+            }
+
+        }
+
+    }
+
+    fun createEditor(text: String, placeholder: String, language: Language, project: Project): EditorTextField {
+        val file: PsiFile = PsiFileFactory.getInstance(project).createFileFromText(language, text)
+        val doc = PsiDocumentManager.getInstance(project).getDocument(file)
+
+        return object : EditorTextField(doc, project, language.associatedFileType) {
+
+            override fun createEditor(): EditorEx {
+                val editor = super.createEditor()
+                editor.setVerticalScrollbarVisible(true)
+                editor.isOneLineMode = false
+                editor.setPlaceholder(placeholder)
+
+                val settings = editor.settings
+                settings.isUseSoftWraps = true
+                settings.isLineNumbersShown = true
+
+                return editor
+            }
+
+        }
+    }
+
 }
 

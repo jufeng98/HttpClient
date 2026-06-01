@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.processHandler
 
 import com.intellij.execution.process.ProcessHandler
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
@@ -39,7 +40,8 @@ import javax.swing.JPanel
 /**
  * @author yudong
  */
-abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val selectedEnv: String?) : ProcessHandler() {
+abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val selectedEnv: String?) : ProcessHandler(),
+    Disposable {
     var httpStatus: Int? = null
     var costTimes: Long? = null
     var finishedTime = Long.MAX_VALUE
@@ -70,7 +72,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     protected var cookiesPsiFile: CookieFile? = null
 
     protected val httpDashboardForm by lazy {
-        HttpDashboardForm(tabName, project)
+        HttpDashboardForm(tabName, this, project)
     }
 
 
@@ -319,6 +321,10 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
     override fun getProcessInput(): OutputStream? {
         return null
+    }
+
+    override fun dispose() {
+
     }
 
     companion object {

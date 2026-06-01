@@ -10,6 +10,7 @@ import com.intellij.testFramework.LightVirtualFile
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.utils.PathUtils.legalizeFileName
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.charset.StandardCharsets
@@ -144,6 +145,42 @@ object VirtualFileUtils {
         virtualFile!!.setBinaryContent(content.toByteArray(StandardCharsets.UTF_8))
 
         return virtualFile
+    }
+
+    fun saveContent(
+        content: ByteArray,
+        tabName: String,
+        fileName: String,
+        noLog: Boolean,
+        project: Project,
+    ): VirtualFile {
+        if (noLog) {
+            val lightVirtualFile = LightVirtualFile(fileName)
+            lightVirtualFile.charset = StandardCharsets.UTF_8
+            lightVirtualFile.setBinaryContent(content)
+            return lightVirtualFile
+        }
+
+        val dateHistoryDir = getDateHistoryDir(project)
+
+        val resBodyDir = File(dateHistoryDir, legalizeFileName(tabName))
+        if (!resBodyDir.exists()) {
+            resBodyDir.mkdirs()
+        }
+
+        val file = File(resBodyDir, fileName)
+
+        val absolutePath = file.absolutePath
+
+        val deleted = file.delete()
+        if (deleted) {
+            println("已删除文件:$absolutePath")
+        }
+
+        Files.write(file.toPath(), content)
+        println("已保存到文件:$absolutePath")
+
+        return findFileByIoFile(file, true)!!
     }
 
     private fun isVirtualFileNewest(virtualFile: VirtualFile, file: File): Boolean {

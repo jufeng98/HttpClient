@@ -11,8 +11,10 @@ import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.GenericProgramRunner
 import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
+import com.intellij.execution.ui.RunContentManager
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
@@ -77,21 +79,21 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
             if (MockServer.isRunning(port)) {
                 NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
                 loadingRemover?.run()
-                showWindow(project)
+                showWindow(project, tabName)
                 return
             }
         } else if (methodText == HttpRequestEnum.WEBSOCKET.name) {
             if (WsRequest.isRunning(tabName)) {
                 NotifyUtil.notifyWarn(project, NlsBundle.nls("req.running", tabName))
                 loadingRemover?.run()
-                showWindow(project)
+                showWindow(project, tabName)
                 return
             }
         } else {
             if (ProcessHandlerBase.isRunning(tabName)) {
                 NotifyUtil.notifyWarn(project, NlsBundle.nls("req.running", tabName))
                 loadingRemover?.run()
-                showWindow(project)
+                showWindow(project, tabName)
                 return
             }
         }
@@ -130,23 +132,37 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
 
         val handler = executionResult.processHandler as ProcessHandlerBase
 
-        environment.contentToReuse = getAllDescriptors(environment.project)
+        val oldDescriptor = getAllDescriptors(environment.project)
             .firstOrNull {
                 it.processHandler is ProcessHandlerBase && it.displayName == handler.tabName
             }
 
-        val contentToReuse = environment.contentToReuse
-        if (contentToReuse != null) {
-            contentToReuse.isSelectContentWhenAdded = false
+        if (oldDescriptor != null) {
+            oldDescriptor.isSelectContentWhenAdded = false
+
+            val oldProcessHandler = oldDescriptor.processHandler as ProcessHandlerBase
+
+            Disposer.dispose(oldProcessHandler)
         }
 
-        return RunContentBuilder(executionResult, environment).showRunContent(contentToReuse)
+        environment.contentToReuse = oldDescriptor
+
+        return RunContentBuilder(executionResult, environment).showRunContent(oldDescriptor)
     }
 
-    private fun showWindow(project: Project) {
+    private fun showWindow(project: Project, tabName: String) {
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val toolWindow = toolWindowManager.getToolWindow(ToolWindowId.SERVICES)
         toolWindow?.show()
+
+        val descriptor = getAllDescriptors(project)
+            .firstOrNull {
+                it.processHandler is ProcessHandlerBase && it.displayName == tabName
+            }
+
+        if (descriptor != null) {
+            RunContentManager.getInstance(project).selectRunContent(descriptor)
+        }
     }
 
     companion object {
