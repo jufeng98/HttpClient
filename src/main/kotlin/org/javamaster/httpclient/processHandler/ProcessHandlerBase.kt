@@ -6,7 +6,6 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
@@ -231,19 +230,11 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         }
 
         runInEdt {
-            val toolWindowManager = ToolWindowManager.getInstance(project)
-            val toolWindow = toolWindowManager.getToolWindow(ToolWindowId.SERVICES)
-
-            val content = toolWindow!!.contentManager.getContent(getComponent())
-            if (content != null) {
-                content.setDisposer(httpDashboardForm)
-            } else {
-                Disposer.register(Disposer.newDisposable(), httpDashboardForm)
-            }
-
             WriteAction.run<Exception> {
                 httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param))
             }
+
+            val toolWindowManager = ToolWindowManager.getInstance(project)
 
             val myThrowable = httpDashboardForm.throwable
             hasError = myThrowable != null
