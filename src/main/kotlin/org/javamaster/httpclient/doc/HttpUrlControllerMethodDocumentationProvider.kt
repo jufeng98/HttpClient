@@ -27,7 +27,7 @@ class HttpUrlControllerMethodDocumentationProvider : DocumentationProvider {
         val util = TargetElementUtil.getInstance()
         val element = util.findTargetElement(editor, util.allAccepted, targetOffset)
 
-        if (element is PsiMethod) {
+        if (element is PsiMethod && element.node != null) {
             return MyPsiMethod(element)
         }
 

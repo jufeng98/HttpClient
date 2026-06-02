@@ -4,7 +4,6 @@ import com.intellij.codeInsight.daemon.GutterIconNavigationHandler
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
 import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiElement
@@ -87,7 +86,7 @@ object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiEleme
             return
         }
 
-        val runVirtualFile = VirtualFileManager.getInstance().findFileByNioPath(runFile.toPath())
+        val runVirtualFile = HttpUtils.findVirtualFile(runHttpFilePath)
         if (runVirtualFile == null) {
             NotifyUtil.notifyWarn(project, nls("file.not.exists", runFile.absolutePath))
             loadingRemover?.run()
