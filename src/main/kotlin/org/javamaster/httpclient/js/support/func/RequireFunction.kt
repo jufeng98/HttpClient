@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.js.support.func
 
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.js.factory.HttpWrapFactory
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.VirtualFileUtils
 import org.mozilla.javascript.Context
@@ -32,6 +33,7 @@ class RequireFunction(private val jsExecutor: JsExecutor) : HttpBaseFunction() {
         val jsStr = VirtualFileUtils.readNewestContent(file)
 
         val context = Context.enter()
+        context.wrapFactory = HttpWrapFactory
         try {
             context.evaluateString(reqScriptableObject, jsStr, file.name, 1, null)
         } finally {

@@ -3,6 +3,7 @@ package org.javamaster.httpclient.js.support.jsObject
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.GlobalLog
+import org.javamaster.httpclient.js.factory.HttpWrapFactory
 import org.mozilla.javascript.Context
 import org.mozilla.javascript.Function
 
@@ -28,6 +29,7 @@ object HttpRequest {
 
     fun test(testName: String, callback: Function) {
         val context = Context.enter()
+        context.wrapFactory = HttpWrapFactory
         try {
             callback.call(
                 context,

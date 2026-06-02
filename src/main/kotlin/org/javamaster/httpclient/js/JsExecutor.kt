@@ -9,6 +9,7 @@ import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.js.support.*
+import org.javamaster.httpclient.js.factory.HttpWrapFactory
 import org.javamaster.httpclient.js.support.jsObject.Cookie
 import org.javamaster.httpclient.js.support.req.*
 import org.javamaster.httpclient.js.support.res.HttpClientRequestRes
@@ -38,6 +39,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
     init {
         val context = Context.enter()
+        context.wrapFactory = HttpWrapFactory
 
         reqScriptableObject = context.initStandardObjects()
         reqScriptableObject.prototype = globalScriptableObject
@@ -98,6 +100,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         }
 
         val context = Context.enter()
+        context.wrapFactory = HttpWrapFactory
         try {
             GlobalLog.setTabName(tabName)
             threadLocal.set(this)
@@ -158,6 +161,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         }
 
         val context = Context.enter()
+        context.wrapFactory = HttpWrapFactory
         try {
             GlobalLog.setTabName(tabName)
             threadLocal.set(this)
@@ -312,6 +316,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
         val globalScriptableObject: ScriptableObject by lazy {
             val context = Context.enter()
+            context.wrapFactory = HttpWrapFactory
             val globalTmp = context.initStandardObjects()
 
             JsHandlerPredefineGlobalVariables.defineWindow(globalTmp, context)

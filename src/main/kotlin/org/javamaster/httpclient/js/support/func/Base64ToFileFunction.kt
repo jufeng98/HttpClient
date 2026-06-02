@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.js.support.func
 
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.util.application
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.GlobalLog
 import org.javamaster.httpclient.nls.NlsBundle
@@ -47,7 +48,9 @@ class Base64ToFileFunction(private val jsExecutor: JsExecutor) : HttpBaseFunctio
 
         GlobalLog.log(NlsBundle.nls("base64.convert.to.file") + " ${file.normalize()}")
 
-        VirtualFileManager.getInstance().asyncRefresh(null)
+        application.executeOnPooledThread {
+            VirtualFileManager.getInstance().refreshAndFindFileByNioPath(toPath)
+        }
 
         return Undefined.instance
     }
