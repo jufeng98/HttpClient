@@ -22,6 +22,8 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         wsRequest = WsRequest(url, reqHeaderMap, this, paramMap)
 
+        httpDashboardForm.restoreInputHistoryList()
+
         runInEdt {
             loadingRemover?.run()
 

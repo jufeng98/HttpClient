@@ -1,6 +1,9 @@
 package org.javamaster.httpclient.ui;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.json.JsonLanguage;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
@@ -25,6 +28,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javamaster.httpclient.action.dashboard.*;
 import org.javamaster.httpclient.action.ws.*;
+import org.javamaster.httpclient.consts.HttpConsts;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.key.HttpKey;
 import org.javamaster.httpclient.messageBus.WsLangChangeNotifier;
@@ -35,6 +39,7 @@ import org.javamaster.httpclient.ws.WsRequest;
 
 import javax.swing.*;
 import java.awt.*;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
@@ -220,6 +225,47 @@ public class HttpDashboardForm implements Disposable {
                 ));
     }
 
+    public void saveInputHistoryList() {
+        List<Map<String, String>> list = inputHistoryList.stream()
+                .map(it -> {
+                    Map<String, String> map = Maps.newHashMap();
+                    String content = it.getKey();
+                    Language language = it.getValue();
+                    map.put("id", language.getID());
+                    map.put("content", content);
+                    return map;
+                })
+                .toList();
+
+        String json = JsonUtils.INSTANCE.getGsonNotPretty().toJson(list);
+
+        PropertiesComponent propertiesComponent = PropertiesComponent.getInstance(project);
+        propertiesComponent.setValue(HttpConsts.HTTP_CLIENT + ":http:" + tabName, json);
+    }
+
+    public void restoreInputHistoryList() {
+        PropertiesComponent propertiesComponent = PropertiesComponent.getInstance(project);
+        String json = propertiesComponent.getValue(HttpConsts.HTTP_CLIENT + ":http:" + tabName);
+        if (StringUtils.isBlank(json)) {
+            return;
+        }
+
+        Type listType = new TypeToken<List<Map<String, String>>>() {
+        }.getType();
+
+        List<Map<String, String>> list = JsonUtils.INSTANCE.getGsonNotPretty().fromJson(json, listType);
+
+        List<Pair<String, Language>> pairs = list.stream()
+                .map(it -> {
+                    String id = it.get("id");
+                    String content = it.get("content");
+                    return Pair.of(content, Language.findLanguageByID(id));
+                })
+                .toList();
+
+        inputHistoryList.addAll(pairs);
+    }
+
     @Override
     public void dispose() {
         EditorFactory editorFactory = EditorFactory.getInstance();
@@ -230,6 +276,8 @@ public class HttpDashboardForm implements Disposable {
 
             editorFactory.releaseEditor(it);
         });
+
+        saveInputHistoryList();
     }
 
     public class WsDashboardForm {
