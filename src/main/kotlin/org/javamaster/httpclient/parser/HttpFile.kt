@@ -38,12 +38,20 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
         return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpRequestBlock::class.java)
     }
 
+    fun getRequests(): List<HttpRequest> {
+        return getRequestBlocks().mapNotNull { PsiTreeUtil.getChildOfType(it, HttpRequest::class.java) }
+    }
+
     fun getDirectionComments(): List<HttpDirectionComment> {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpDirectionComment::class.java)
     }
 
     fun getGlobalImports(): List<HttpGlobalImport> {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpGlobalImport::class.java)
+    }
+
+    fun getHttpMethods(): List<HttpMethod> {
+        return getRequests().mapNotNull { PsiTreeUtil.getChildOfType(it, HttpMethod::class.java) }
     }
 
     fun modifyFileVariable(key: String, newKey: String, newValue: String): PsiElement? {

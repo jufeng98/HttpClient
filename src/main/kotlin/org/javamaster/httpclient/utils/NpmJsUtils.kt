@@ -8,7 +8,7 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.util.PsiUtil
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.application
@@ -78,7 +78,7 @@ object NpmJsUtils {
 
     fun initJsLibrariesVirtualFile(preJsFiles: List<PreJsFile>) {
         preJsFiles.forEach {
-            val virtualFile = VfsUtil.findFileByIoFile(it.file, true)
+            val virtualFile = HttpUtils.findVirtualFile(it.file.absolutePath, true)
             it.virtualFile = virtualFile!!
         }
     }
@@ -174,6 +174,9 @@ object NpmJsUtils {
         println("Extracted js library $file to $outputDir")
 
         jsTgzFileMap[name] = file
+
+        val virtualFile = VirtualFileManager.getInstance().refreshAndFindFileByNioPath(outputDir.toPath())
+        virtualFile?.refresh(true, true)
     }
 
     private fun findPackageJsonMainJsFile(libDir: File, project: Project): File {
@@ -209,7 +212,7 @@ object NpmJsUtils {
             }
         }
 
-        val file = File(packageFolder, entryJs)
+        val file = File(packageFolder, entryJs).normalize()
         if (!file.exists() || file.isDirectory) {
             throw IllegalArgumentException("Invalid library: ${libDir.name}")
         }

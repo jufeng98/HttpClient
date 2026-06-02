@@ -427,7 +427,7 @@ object HttpUtils {
                 val file = File(path)
 
                 if (checkFile) {
-                    val virtualFile = VfsUtil.findFileByIoFile(file, true)
+                    val virtualFile = findVirtualFile(path, true)
                     if (virtualFile == null) {
                         val doc = FileDocumentManager.getInstance().getDocument(httpFile.virtualFile)!!
                         val ln = doc.getLineNumber(it.textOffset) + 1
@@ -513,7 +513,7 @@ object HttpUtils {
 
         val httpRunConfiguration = configurationSettings.configuration as HttpRunConfiguration
 
-        return VfsUtil.findFileByIoFile(File(httpRunConfiguration.httpFilePath), true)
+        return VfsUtil.findFileByIoFile(File(httpRunConfiguration.httpFilePath), false)
     }
 
     fun getOriginalModule(requestTarget: HttpRequestTarget): Module? {
@@ -545,11 +545,26 @@ object HttpUtils {
         return name.substring(idx).trim()
     }
 
-    fun getTargetHttpMethod(httpFilePath: String, runConfigName: String, project: Project): HttpMethod? {
-        val virtualFile = VfsUtil.findFileByIoFile(File(httpFilePath), false) ?: return null
+    fun findVirtualFile(httpFilePath: String, refresh: Boolean = false): VirtualFile? {
+        val file = File(httpFilePath)
+        var virtualFile = VfsUtil.findFileByIoFile(file, refresh)
+        if (virtualFile == null) {
+            val url = javaClass.classLoader.getResource("examples/${file.name}")
+            if (url == null) {
+                return null
+            }
 
-        val psiFile = PsiUtil.getPsiFile(project, virtualFile)
-        val httpMethods = PsiTreeUtil.findChildrenOfType(psiFile, HttpMethod::class.java)
+            virtualFile = VfsUtil.findFileByURL(url)
+        }
+
+        return virtualFile
+    }
+
+    fun getTargetHttpMethod(httpFilePath: String, runConfigName: String, project: Project): HttpMethod? {
+        var virtualFile = findVirtualFile(httpFilePath) ?: return null
+
+        val httpFile = PsiUtil.getPsiFile(project, virtualFile) as HttpFile
+        val httpMethods = httpFile.getHttpMethods()
 
         return httpMethods.firstOrNull {
             val tabName = getTabName(it)
@@ -581,8 +596,7 @@ object HttpUtils {
     fun resolveFilePath(path: String, httpFileParentPath: String, project: Project): PsiElement? {
         val filePath = constructFilePath(path, httpFileParentPath)
 
-        val file = File(filePath)
-        val virtualFile = VfsUtil.findFileByIoFile(file, false) ?: return null
+        val virtualFile = findVirtualFile(filePath) ?: return null
 
         if (virtualFile.isDirectory) {
             return PsiManager.getInstance(project).findDirectory(virtualFile)!!

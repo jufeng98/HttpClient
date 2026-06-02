@@ -2,6 +2,7 @@ package org.javamaster.httpclient.utils
 
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.util.application
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.HttpStatus
@@ -118,7 +119,9 @@ object ResUtils {
             return "// ${nls("save.failed")}: $e$CR_LF"
         }
 
-        VirtualFileManager.getInstance().asyncRefresh(null)
+        application.executeOnPooledThread {
+            VirtualFileManager.getInstance().refreshAndFindFileByNioPath(file.toPath())
+        }
 
         return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
     }

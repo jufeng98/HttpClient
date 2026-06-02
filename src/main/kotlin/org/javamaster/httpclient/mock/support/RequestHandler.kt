@@ -13,6 +13,8 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
 import java.io.File
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
@@ -38,7 +40,7 @@ class RequestHandler(
 
     override fun handle(exchange: HttpExchange) {
         val method = exchange.requestMethod
-        val reqPath = exchange.requestURI.path
+        val reqPath = URLDecoder.decode(exchange.requestURI.path, StandardCharsets.UTF_8)
 
         MockServerHelper.printRequestInfo(exchange, resConsumer)
 

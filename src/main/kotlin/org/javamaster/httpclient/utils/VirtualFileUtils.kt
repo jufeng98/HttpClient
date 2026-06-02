@@ -24,7 +24,7 @@ import java.util.*
 object VirtualFileUtils {
 
     fun readNewestBytes(file: File): ByteArray {
-        val virtualFile = findFileByIoFile(file, false)
+        val virtualFile = HttpUtils.findVirtualFile(file.absolutePath)
         if (virtualFile != null && isVirtualFileNewest(virtualFile, file)) {
             return readNewestBytes(virtualFile)
         }
@@ -52,7 +52,7 @@ object VirtualFileUtils {
     }
 
     fun readNewestContent(file: File): String {
-        val virtualFile = findFileByIoFile(file, false)
+        val virtualFile = HttpUtils.findVirtualFile(file.absolutePath)
         if (virtualFile != null && isVirtualFileNewest(virtualFile, file)) {
             return readNewestContent(virtualFile)
         }
@@ -185,7 +185,7 @@ object VirtualFileUtils {
 
     private fun isVirtualFileNewest(virtualFile: VirtualFile, file: File): Boolean {
         if (!file.exists()) {
-            return false
+            return true
         }
 
         val timeStamp = virtualFile.timeStamp

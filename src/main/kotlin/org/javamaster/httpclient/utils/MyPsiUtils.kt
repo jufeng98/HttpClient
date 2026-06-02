@@ -5,7 +5,6 @@ import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.InheritanceUtil
@@ -58,7 +57,7 @@ class MyPsiUtils {
                 return listOf()
             }
 
-            val importVirtualFile = VirtualFileManager.getInstance().findFileByNioPath(file.toPath())
+            val importVirtualFile = HttpUtils.findVirtualFile(httpFilePath)
             if (importVirtualFile == null) {
                 return listOf()
             }

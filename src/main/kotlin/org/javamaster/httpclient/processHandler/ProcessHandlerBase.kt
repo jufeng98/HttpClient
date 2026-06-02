@@ -48,8 +48,8 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
     var tabName = HttpUtils.getTabName(httpMethod)
     var project = httpMethod.project
+    protected val httpFile = httpMethod.containingFile as HttpFile
 
-    protected lateinit var httpFile: HttpFile
     protected lateinit var parentPath: String
     protected lateinit var jsExecutor: JsExecutor
     protected lateinit var variableResolver: VariableResolver
@@ -79,6 +79,8 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         super.startNotify()
 
         application.executeOnPooledThread {
+            preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
+
             val cookiesVirtualFile = CookieUtils.createCookiesFileIfNotExists(project)
 
             runReadAction {
@@ -112,7 +114,6 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     }
 
     private fun initStatus() {
-        httpFile = httpMethod.containingFile as HttpFile
         parentPath = httpFile.virtualFile.parent.path
         methodType = HttpRequestEnum.getInstance(httpMethod.text)
         jsExecutor = JsExecutor(project, parentPath, tabName)
@@ -126,8 +127,6 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         outPutFilePath = PsiTreeUtil.getChildOfType(request, HttpOutputFile::class.java)?.filePath?.text
         version = request.version?.version ?: Version.HTTP_1_1
         rawBody = request.body?.text
-
-        preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
 
         jsListBeforeReq = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock)
 
