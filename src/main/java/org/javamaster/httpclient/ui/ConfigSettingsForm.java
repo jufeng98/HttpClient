@@ -48,10 +48,11 @@ public class ConfigSettingsForm {
     private void initEnvComboBox(String env, File httpFile, Project project) {
         EnvFileService envFileService = EnvFileService.Companion.getService(project);
 
-        Set<String> presetEnvSet = envFileService.getPresetEnvSet(httpFile.getParentFile().getAbsolutePath());
-
         List<String> envNameList = Lists.newArrayList(noEnv);
-        envNameList.addAll(presetEnvSet);
+        if (httpFile.exists()) {
+            Set<String> presetEnvSet = envFileService.getPresetEnvSet(httpFile.getParentFile().getAbsolutePath());
+            envNameList.addAll(presetEnvSet);
+        }
 
         envComboBox.setModel(new CollectionComboBoxModel<>(envNameList));
 
