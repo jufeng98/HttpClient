@@ -2,7 +2,9 @@ package org.javamaster.httpclient.consts
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.NotNullLazyValue
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 
 /**
@@ -22,11 +24,13 @@ class HttpConsts {
         const val RES_SIZE_LIMIT = (1.5 * 1024 * 1024).toInt()
 
         const val HTTP_TYPE_ID = "intellijHttpClient"
+        const val HTTP_CLIENT = "HttpClient"
         const val WEB_BOUNDARY = "boundary"
         const val VARIABLE_SIGN_END = "}}"
         const val SUCCESS = 0
         const val FAILED = 1
 
+        val HTTP_CLIENT_ICON = NotNullLazyValue.createConstantValue(HttpIcons.FILE)
         val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
         val requestFinishedKey: Key<Int> = Key.create("REQUEST_FINISHED_KEY")
         val httpDashboardContentTypeKey = Key.create<ContentType>("org.javamaster.dashboard.httpDashboardContentType")

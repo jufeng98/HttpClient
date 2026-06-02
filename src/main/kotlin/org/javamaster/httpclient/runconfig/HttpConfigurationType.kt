@@ -1,8 +1,8 @@
 package org.javamaster.httpclient.runconfig
 
 import com.intellij.execution.configurations.ConfigurationTypeBase
-import com.intellij.openapi.util.NotNullLazyValue
-import org.javamaster.httpclient.HttpIcons
+import org.javamaster.httpclient.consts.HttpConsts.Companion.HTTP_CLIENT
+import org.javamaster.httpclient.consts.HttpConsts.Companion.HTTP_CLIENT_ICON
 import org.javamaster.httpclient.consts.HttpConsts.Companion.HTTP_TYPE_ID
 
 /**
@@ -10,9 +10,9 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.HTTP_TYPE_ID
  */
 class HttpConfigurationType : ConfigurationTypeBase(
     HTTP_TYPE_ID,
-    "HttpClient",
+    HTTP_CLIENT,
     "Use to send request",
-    NotNullLazyValue.createConstantValue(HttpIcons.FILE)
+    HTTP_CLIENT_ICON
 ) {
     init {
         addFactory(HttpConfigurationFactory())
