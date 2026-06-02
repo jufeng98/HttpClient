@@ -9,12 +9,14 @@ run #GET with Authorization
 run responses-presentation.http
 
 ### with json param
-POST https://miao.baidu.com/abdr
+POST https://baike.baidu.com/api/activity/resource?tk=fda90026557974f384a8e5f687d13edb
 Content-Type: application/json
 
 {
-  "id": 999,
-  "value": "content"
+  "type": "starMap",
+  "ids": [
+    "260181"
+  ]
 }
 
 ### mulitline query body
@@ -36,7 +38,7 @@ Content-Type: application/json
   "desc": "{{$random.alphabetic(10)}}",
   "desc1": "{{$random.alphanumeric(10)}}",
   "desc2": "{{$random.numeric(10)}}",
-  "base64": "{{$imageToBase64('E:\\image\\test.jpg')}}",
+  "base64": "{{$fileToBase64('input.txt')}}",
   "value": "content",
   "ts": "{{$timestamp}}",
   "price2": {{$randomInt}}
@@ -62,7 +64,8 @@ This is text
 Content-Disposition: form-data; name="third"
 Content-Type: application/x-www-form-urlencoded
 
-name=yu&age=23
+name = yu &
+age = 23
 --boundary
 Content-Disposition: form-data; name="forth"
 Content-Type: application/json

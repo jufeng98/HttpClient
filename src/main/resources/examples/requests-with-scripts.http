@@ -6,7 +6,7 @@
 # @require https://registry.npmmirror.com/crypto-js/-/crypto-js-3.3.0.tgz
 
 // Global import local js file 全局导入本地 js 文件
-# @import ./js/public.js
+# @import public.js
 
 <! {%
     // Global js previous handler 全局js前置处理器
@@ -38,9 +38,10 @@
     console.log("query param:", params.toString());
 
     // Execute local js file 执行本地 js 文件
-    const global = require('./js/myUtils.js');
+    const global = require('myUtils.js');
     const res = global.MyUtils.isBlank('hello');
     client.log(`result: ${res}`);
+
 %}
 
 // file variables 文件变量
@@ -53,7 +54,7 @@
     request.variables.set('cnName', 'jufeng987878');
     console.log("Call lodash capitalize:", _.capitalize('FRED'))
 %}
-POST https://miao.baidu.com/abdr?a={{globalName}}&b={{requestName}}&sign={{sign}}
+POST https://baike.baidu.com/api/activity/resource?a={{globalName}}&b={{requestName}}&sign={{sign}}
 Content-Type: application/json
 Admin-Token: {{tokenAdmin}}
 Name: {{name}}
@@ -64,27 +65,27 @@ Cn-Name: {{cnName}}
 }
 
 > {%
-    client.global.set("name", response.body.data.name);
+    client.global.set("errmsg", response.body.errmsg);
     console.log("Call lodash capitalize:", _.capitalize('JACK'))
 %}
 
->> result.html
+>> result.json
 
 ### post js handler
-GET https://miao.baidu.com/abdr
+GET https://baike.baidu.com/api/activity/resource
 
 > {%
     client.test("Request executed successfully", () => {
         client.assert(response.status === 200, "Response status is not 200");
         client.log('content-type:' + response.contentType.mimeType)
 
-        const result = jsonPath(response.body, "$.code");
+        const result = jsonPath(response.body, "$.errno");
         console.log(result);
     })
 %}
 
 ### Check response body
-GET https://miao.baidu.com/abdr
+GET https://baike.baidu.com/api/activity/resource
 
 > {%
     client.test("Headers option exists", () => {
@@ -93,12 +94,12 @@ GET https://miao.baidu.com/abdr
 %}
 
 ### Check Content-Type from headers
-GET https://miao.baidu.com/abdr
+GET https://baike.baidu.com/api/activity/resource
 
 > {%
     client.test("Content-Type is application/json", () => {
         const mimeType = response.contentType.mimeType;
-        client.assert(mimeType === "application/json", `Expected Content-Type is application/json, but actual is  ${mimeType}`);
+        client.assert(mimeType === 'application/json', `Expected Content-Type is application/json, but actual is  ${mimeType}`);
     })
 %}
 

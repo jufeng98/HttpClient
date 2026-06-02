@@ -1,13 +1,16 @@
+@host = https://baike.baidu.com
+@show_env = true
+
 ### With header
 GET https://www.baidu.com
-Accept: application/json
+Accept: text/html
 
 ### Url with param
 GET https://www.baidu.com?show_env=1
-Accept: application/json
+Accept: text/html
 
 ### Reference variable
-GET {{host}}/get?show_env={{show_env}}
+GET {{host}}/lemma/api/home/module?show_env={{show_env}}
 Accept: application/json
 
 ### With cookie
@@ -17,7 +20,7 @@ Cookie: uid=123456789
 ### With builtin variable
 GET https://www.baidu.com?id={{$uuid}}&ts={{$timestamp}}
 
-### path mulitline query
+### path mulitline query param
 GET https://www.baidu.com?
     firstname=John&
     lastname=Doe&

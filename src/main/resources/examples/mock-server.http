@@ -3,18 +3,19 @@ MOCK_SERVER http://localhost
 Content-Type: application/json
 
 {
-  "title": "{{$random.book.title}}",
-  "time": "{{$isoTimestamp}}"
+  "title": "{{$random.university}}",
+  "time": {{$timestamp}}
 }
 
 ### mock server2
 # @responseStatus 201
 MOCK_SERVER http://localhost:8080
 Content-Type: application/json
+Message-ID: {{$random.alphanumeric(32)}}
 
 {
   "title": "{{$random.book.title}}",
-  "time": "{{$isoTimestamp}}"
+  "time": "{{$datetime}}"
 }
 
 ### mock server3
