@@ -343,18 +343,16 @@ public class HttpDashboardForm implements Disposable {
 
             responsePanel.add(editorTextField, constraintsRes);
 
-            Editor resEditor = Objects.requireNonNull(editorTextField.getEditor());
-            Document document = editorTextField.getDocument();
-
-            CaretModel caretModel = resEditor.getCaretModel();
-            Caret caret = caretModel.getPrimaryCaret();
-            ScrollingModel scrollingModel = resEditor.getScrollingModel();
-
             wsRequest.setResConsumer(res -> {
-                        if (resEditor.isDisposed()) {
+                        Editor resEditor = editorTextField.getEditor(true);
+                        if (resEditor == null || resEditor.isDisposed()) {
                             System.out.println("ws res editor 已被销毁");
                             return;
                         }
+
+                        Caret caret =  resEditor.getCaretModel().getPrimaryCaret();
+                        ScrollingModel scrollingModel = resEditor.getScrollingModel();
+                        Document document = editorTextField.getDocument();
 
                         DocumentUtil.writeInRunUndoTransparentAction(() -> {
                                     String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");

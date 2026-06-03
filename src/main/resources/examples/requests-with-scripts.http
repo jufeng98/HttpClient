@@ -69,7 +69,7 @@ Cn-Name: {{cnName}}
     console.log("Call lodash capitalize:", _.capitalize('JACK'))
 %}
 
->> result.json
+>> {{$historyFolder}}/result.json
 
 ### post js handler
 GET https://baike.baidu.com/api/activity/resource
