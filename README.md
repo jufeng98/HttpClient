@@ -62,17 +62,17 @@
 
 ![post.png](./images/post.png)
 
-#### DUBBO 请求(针对项目中存在 Dubbo 接口类源码情况)
-
-![dubbo-1.png](./images/dubbo-1.png)
-
-#### DUBBO 请求(针对项目中不存在 Dubbo 接口类源码情况)
-
-![dubbo-2.png](./images/dubbo-2.png)
-
 #### WebSocket 请求
 
 ![websocket.png](./images/websocket.png)
+
+#### DUBBO 请求(针对项目中能找到 Dubbo 接口类的情况)
+
+![dubbo-1.png](./images/dubbo-1.png)
+
+#### DUBBO 请求(针对项目中找不到 Dubbo 接口类的情况)，由于存在 Registry，此时会忽略 url，直接从注册中心取得服务去调用
+
+![dubbo-2.png](./images/dubbo-2.png)
 
 #### 环境变量跳转
 
