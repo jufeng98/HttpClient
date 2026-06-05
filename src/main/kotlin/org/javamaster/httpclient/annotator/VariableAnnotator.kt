@@ -57,7 +57,7 @@ object VariableAnnotator {
     fun annotateQueryValue(range: TextRange, holder: AnnotationHolder) {
         holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES)
             .range(range)
-            .textAttributes(DefaultLanguageHighlighterColors.METADATA)
+            .textAttributes(DefaultLanguageHighlighterColors.STRING)
             .create()
     }
 

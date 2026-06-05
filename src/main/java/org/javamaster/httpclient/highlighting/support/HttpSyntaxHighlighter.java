@@ -36,7 +36,7 @@ public class HttpSyntaxHighlighter extends SyntaxHighlighterBase {
 
     static {
         HTTP_PARAMETER_NAME = createTextAttributesKey("HTTP_PARAMETER_NAME", DefaultLanguageHighlighterColors.STATIC_FIELD);
-        HTTP_PARAMETER_VALUE = createTextAttributesKey("HTTP_PARAMETER_VALUE", DefaultLanguageHighlighterColors.METADATA);
+        HTTP_PARAMETER_VALUE = createTextAttributesKey("HTTP_PARAMETER_VALUE", DefaultLanguageHighlighterColors.STRING);
         HTTP_PORT = createTextAttributesKey("HTTP_PORT", DefaultLanguageHighlighterColors.NUMBER);
         HTTP_HEADER_FIELD_NAME = createTextAttributesKey("HTTP_HEADER_FIELD_NAME", DefaultLanguageHighlighterColors.STATIC_FIELD);
         HTTP_REQUEST_COMMENT = createTextAttributesKey("HTTP_REQUEST_COMMENT", DefaultLanguageHighlighterColors.DOC_COMMENT);
