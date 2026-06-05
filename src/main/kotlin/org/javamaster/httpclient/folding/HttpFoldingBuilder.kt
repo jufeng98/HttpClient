@@ -19,8 +19,6 @@ import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getMultipartFieldDescription
 import org.javamaster.httpclient.utils.HttpUtils
-import java.nio.file.Paths
-import kotlin.io.path.name
 
 /**
  * @author yudong
@@ -35,11 +33,12 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
     override fun getPlaceholderText(node: ASTNode): String {
         val type = node.elementType
         if (type === HttpTypes.REQUEST) {
-            val httpMethodNode = node.findChildByType(HttpTypes.METHOD)
-            val httpRequestTargetNode = node.findChildByType(HttpTypes.REQUEST_TARGET)
-            if (httpMethodNode != null) {
-                val methodType = httpMethodNode.text
-                return methodType + (if (httpRequestTargetNode != null) " " + httpRequestTargetNode.text else "")
+            val methodNode = node.findChildByType(HttpTypes.METHOD)
+            if (methodNode != null) {
+                val methodType = methodNode.text
+                val requestTarget = node.findChildByType(HttpTypes.REQUEST_TARGET)?.text ?: ""
+
+                return "$methodType $requestTarget"
             }
         } else if (type === HttpTypes.MULTIPART_FIELD) {
             val messagesGroupNode = node.findChildByType(HttpTypes.REQUEST_MESSAGES_GROUP)
@@ -59,26 +58,19 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
             if (node.firstChildNode != null) {
                 return node.firstChildNode.text
             }
+        } else if (type === HttpTypes.PRE_REQUEST_HANDLER) {
+            return "< {% ... %}"
         } else if (type === HttpTypes.RESPONSE_HANDLER) {
-            return "{% ... %}"
+            return "> {% ... %}"
         } else if (type == HttpTypes.GLOBAL_HANDLER) {
-            return "{% ... %}"
+            return "<! {% ... %}"
         } else if (type == HttpTypes.HEADER) {
-            val contentTypeField = (node.psi as HttpHeader).contentTypeField
-            if (contentTypeField != null) {
-                return "(Headers)...${contentTypeField.text}..."
-            }
-            return "(Headers)..."
+            val contentType = (node.psi as HttpHeader).contentTypeField?.text ?: ""
+            return "(Headers)...${contentType}..."
         } else if (type == HttpTypes.OUTPUT_FILE) {
             val filePath = (node.psi as HttpOutputFile).filePath
             if (filePath != null) {
-                val text = filePath.filePathContentList.lastOrNull()?.text
-                if (filePath.variableList.isEmpty()) {
-                    if (text != null && text.length > 32) {
-                        return Paths.get(text).name
-                    }
-                }
-                return text ?: "..."
+                return HttpUtils.getFilePathText(filePath)
             }
         } else if (type == HttpTypes.BLOCK_COMMENT) {
             return "/* ... */"
@@ -153,13 +145,9 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
 
         val bodyNode = node.findChildByType(HttpTypes.BODY) ?: return descriptors
 
-        val multipartMessage: ASTNode?
-        val multipart = bodyNode.findChildByType(HttpTypes.MULTIPART_MESSAGE)
-            .also { multipartMessage = it }
+        val multipartMessage = bodyNode.findChildByType(HttpTypes.MULTIPART_MESSAGE) ?: return descriptors
 
-        if (multipart == null) return descriptors
-
-        val multipartFields = multipartMessage!!.getChildren(TokenSet.create(HttpTypes.MULTIPART_FIELD))
+        val multipartFields = multipartMessage.getChildren(TokenSet.create(HttpTypes.MULTIPART_FIELD))
 
         for (multipartFieldNode in multipartFields) {
             val prevElement = skipCommentsAndWhitespaces(multipartFieldNode)

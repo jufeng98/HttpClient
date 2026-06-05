@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.folding
 
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.JsonElementTypes
 import com.intellij.lang.ASTNode
 import com.intellij.lang.folding.FoldingBuilder
@@ -26,8 +25,10 @@ import java.util.*
 class JsonFoldingBuilder : FoldingBuilder, DumbAware {
 
     override fun buildFoldRegions(node: ASTNode, document: Document): Array<FoldingDescriptor> {
-        val activeProject = ProjectUtil.getActiveProject() ?: return FoldingDescriptor.EMPTY_ARRAY
-        val injectionHost = InjectedLanguageManager.getInstance(activeProject).getInjectionHost(node.psi)
+        val psiElement = node.psi
+        val project = psiElement.project
+
+        val injectionHost = InjectedLanguageManager.getInstance(project).getInjectionHost(psiElement)
         if (injectionHost !is HttpMessageBody) {
             return FoldingDescriptor.EMPTY_ARRAY
         }
@@ -45,7 +46,12 @@ class JsonFoldingBuilder : FoldingBuilder, DumbAware {
     }
 
     override fun getPlaceholderText(node: ASTNode): String {
-        return DateFormatUtils.format(Date(node.text.toLong()), HttpConsts.JAVA_DATE_PATTERN)
+        val text = node.text
+        val length = text.length
+
+        val date = if (length >= 13) Date(text.toLong()) else Date(text.toLong() * 1000)
+
+        return DateFormatUtils.format(date, HttpConsts.JAVA_DATE_PATTERN)
     }
 
     override fun isCollapsedByDefault(node: ASTNode): Boolean {
@@ -78,7 +84,8 @@ class JsonFoldingBuilder : FoldingBuilder, DumbAware {
 
                 resList.addAll(list)
             } else if (elementType == JsonElementTypes.NUMBER_LITERAL) {
-                if (childNode.textLength == 13) {
+                val textLength = childNode.textLength
+                if (textLength >= 10) {
                     resList.add(childNode)
                 }
             }
