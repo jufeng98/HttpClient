@@ -191,6 +191,24 @@ object JavaScript {
         return newExpressionStatement
     }
 
+    fun isTsLibraryNotInstalled(project: Project): Boolean {
+        var declaredMethod = findMethod(
+            "com.intellij.lang.javascript.library.JSPredefinedLibraryManager",
+            "getPredefinedLibraryManager",
+            Project::class.java
+        )
+        val jsPredefinedLibraryManager = declaredMethod.invoke(null, project)
+
+        declaredMethod = findMethod(
+            "com.intellij.lang.javascript.library.JSPredefinedLibraryManager",
+            "getLibraryModels",
+        )
+
+        val scriptingLibraryModelSet = declaredMethod.invoke(jsPredefinedLibraryManager) as Set<*>
+
+        return scriptingLibraryModelSet.none { it.toString().contains("HttpRequest PrePost Js Handler") }
+    }
+
     fun installTsLibrary(project: Project) {
         val virtualFilePointers = createTsVirtualFilePointers()
 
@@ -215,23 +233,34 @@ object JavaScript {
         val jsPredefinedLibrariesData = declaredMethod.invoke(jsPredefinedLibraryManager)
 
         modifyJsPredefinedLibrariesData(jsPredefinedLibrariesData, scriptingLibraryModel, virtualFilePointers)
+    }
 
+    fun isElementScopeNoRegister(): Boolean {
+        val application = ApplicationManager.getApplication()
+        var method = ReflectionUtils.findMethod(application.javaClass, "getExtensionArea")
+
+        val extensionArea = method.invoke(application)
+
+        method = ReflectionUtils.findMethod(extensionArea.javaClass, "getExtensionPoint", String::class.java)
+        val extensionPoint = method.invoke(extensionArea, "JavaScript.elementScopeProvider")
+
+        method = ReflectionUtils.findMethod(extensionPoint.javaClass, "getExtensionList")
+        val extensionList = method.invoke(extensionPoint) as List<*>
+
+        return extensionList.none { it.toString() == JSElementResolveScopeProviderInvocationHandler::class.java.simpleName }
+    }
+
+    fun registerElementScopeProvider() {
         val myJSElementResolveScopeProvider = Proxy.newProxyInstance(
             pluginClassLoader,
             arrayOf(pluginClassLoader!!.loadClass("com.intellij.lang.javascript.psi.resolve.JSElementResolveScopeProvider")),
             JSElementResolveScopeProviderInvocationHandler()
         )
 
-        addExtension("JavaScript.elementScopeProvider", myJSElementResolveScopeProvider)
+        registerExtension("JavaScript.elementScopeProvider", myJSElementResolveScopeProvider)
     }
 
-    private fun findMethod(className: String, methodName: String, vararg parameterTypes: Class<*>?): Method {
-        var clz = pluginClassLoader!!.loadClass(className)
-        var declaredMethod = ReflectionUtils.findMethod(clz, methodName, *parameterTypes)
-        return declaredMethod
-    }
-
-    fun addExtension(key: String, extensionObj: Any) {
+    fun registerExtension(key: String, extensionObj: Any) {
         val application = ApplicationManager.getApplication()
         var method = ReflectionUtils.findMethod(application.javaClass, "getExtensionArea")
 
@@ -332,4 +361,9 @@ object JavaScript {
         return pluginClassLoader != null
     }
 
+    private fun findMethod(className: String, methodName: String, vararg parameterTypes: Class<*>?): Method {
+        var clz = pluginClassLoader!!.loadClass(className)
+        var declaredMethod = ReflectionUtils.findMethod(clz, methodName, *parameterTypes)
+        return declaredMethod
+    }
 }

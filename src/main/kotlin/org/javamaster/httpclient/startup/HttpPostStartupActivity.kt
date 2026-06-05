@@ -2,12 +2,14 @@ package org.javamaster.httpclient.startup
 
 import com.intellij.json.JsonFileType
 import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.fileTypes.PlainTextFileType
+import com.intellij.openapi.fileTypes.UnknownFileType
 import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
@@ -15,13 +17,14 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.application
+import com.intellij.util.concurrency.AppExecutorUtil
 import org.javamaster.httpclient.HttpFileType
-import org.javamaster.httpclient.background.HttpBackground
 import org.javamaster.httpclient.env.EnvFileService.Companion.getService
 import org.javamaster.httpclient.jsPlugin.support.JavaScript
+import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.logWarn
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
-import org.javamaster.httpclient.utils.NotifyUtil
 
 
 /**
@@ -38,16 +41,25 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
             fileEditorManager.openFiles.forEach {
                 fileOpened(fileEditorManager, it)
             }
+
+            project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this)
         }
 
-        project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this)
-
         if (JavaScript.isAvailable()) {
-            try {
-                JavaScript.installTsLibrary(project)
-            } catch (t: Throwable) {
-                System.err.println("安装ts库错误")
-                t.printStackTrace()
+            if (JavaScript.isTsLibraryNotInstalled(project)) {
+                try {
+                    JavaScript.installTsLibrary(project)
+                } catch (t: Throwable) {
+                    logWarn("安装ts库错误", t)
+                }
+            }
+
+            if (JavaScript.isElementScopeNoRegister()) {
+                try {
+                    JavaScript.registerElementScopeProvider()
+                } catch (t: Throwable) {
+                    logWarn("注册element scope provider错误", t)
+                }
             }
         }
     }
@@ -59,40 +71,51 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
 
         val fileEditor = source.getSelectedEditor(file)
         if (fileEditor == null) {
-            System.err.println("Can't find file editor for ${file.path}")
+            logWarn("Can't find file editor for ${file.path}")
             return
         }
 
-        if (HttpUtils.isFileInIdeaDir(file)) {
+        val project = source.project
+
+        if (HttpUtils.isFileInHistoryDir(file, project)) {
             val textEditor = fileEditor as TextEditor
             textEditor.editor.document.setReadOnly(true)
             return
         }
 
         application.executeOnPooledThread {
-            val project = source.project
             val module = ModuleUtil.findModuleForFile(file, project)
             val fileTypeManagerEx = FileTypeManagerEx.getInstanceEx()
 
             val jsonFileType = JsonFileType.INSTANCE
             val jsonExtension = jsonFileType.defaultExtension
 
-            val extension = fileTypeManagerEx.getFileTypeByExtension(jsonExtension)
-            if (extension === jsonFileType) {
-                initTopForm(source, file, module, fileEditor)
+            val currentType = fileTypeManagerEx.getFileTypeByExtension(jsonExtension)
+            if (currentType === jsonFileType) {
+                initTopForm(source, file, module, fileEditor, project)
+
                 return@executeOnPooledThread
             }
 
-            @Suppress("DEPRECATION")
-            runInEdt(ModalityState.NON_MODAL) {
-                runWriteAction {
-                    fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
-                    println("The json suffix file has been associated with the $jsonFileType")
+            if (currentType == UnknownFileType.INSTANCE || currentType == PlainTextFileType.INSTANCE) {
+                @Suppress("DEPRECATION")
+                runInEdt(ModalityState.NON_MODAL) {
+                    application.runWriteAction {
+                        fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
+                        logInfo("The json suffix file has been associated with the $jsonFileType")
+                    }
 
-                    initTopForm(source, file, module, fileEditor)
+                    application.executeOnPooledThread { initTopForm(source, file, module, fileEditor, project) }
                 }
+            } else {
+                initTopForm(source, file, module, fileEditor, project)
             }
         }
+    }
+
+    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+        val fileEditor = source.getSelectedEditor(file)
+        fileEditor?.putUserData(HttpEditorTopForm.KEY, null)
     }
 
     private fun initTopForm(
@@ -100,19 +123,16 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
         file: VirtualFile,
         module: Module?,
         fileEditor: FileEditor,
+        project: Project,
     ) {
-        HttpBackground
-            .runInBackgroundReadActionAsync {
-                val envFileService = getService(source.project)
-                val path = file.parent?.path ?: return@runInBackgroundReadActionAsync null
+        if (fileEditor.getUserData(HttpEditorTopForm.KEY) != null) return
 
-                envFileService.getPresetEnvSet(path)
-            }
-            .finishOnUiThread {
-                if (it == null) {
-                    return@finishOnUiThread
-                }
+        val parentPath = file.parent?.path ?: return
 
+        ReadAction
+            .nonBlocking<MutableSet<String>> { getService(project).getPresetEnvSet(parentPath) }
+            .expireWhen { project.isDisposed }
+            .finishOnUiThread(ModalityState.defaultModalityState()) {
                 val httpEditorTopForm = HttpEditorTopForm(file, module, fileEditor)
 
                 httpEditorTopForm.initEnvCombo(it)
@@ -121,9 +141,7 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
 
                 source.addTopComponent(fileEditor, httpEditorTopForm.mainPanel)
             }
-            .exceptionallyOnUiThread {
-                NotifyUtil.notifyError(source.project, it.message)
-            }
+            .submit(AppExecutorUtil.getAppExecutorService())
     }
 
 }

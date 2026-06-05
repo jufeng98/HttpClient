@@ -28,11 +28,21 @@ public class JSElementResolveScopeProviderInvocationHandler implements Invocatio
 
     @Override
     public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
-        if (method.getReturnType() != GlobalSearchScope.class) {
+        Class<?> returnType = method.getReturnType();
+        if (returnType == String.class) {
+            return toString();
+        }
+
+        if (returnType != GlobalSearchScope.class) {
             return method.invoke(o, objects);
         }
 
         return getElementResolveScope((PsiElement) objects[0]);
+    }
+
+    @Override
+    public String toString() {
+        return JSElementResolveScopeProviderInvocationHandler.class.getSimpleName();
     }
 
     public @Nullable GlobalSearchScope getElementResolveScope(PsiElement element) {
