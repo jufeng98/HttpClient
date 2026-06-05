@@ -373,13 +373,9 @@
                          shortName="HttpInspection" enabledByDefault="true" level="WARNING"
                          implementationClass="org.javamaster.httpclient.inspection.HttpInspection"
                          key="inspection.http.display.name" bundle="messages.HttpClientBundle"/>
-        <localInspection groupKey="inspection.http.group.name" language="JSON"
-                         shortName="MyJsonInspection" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.javamaster.httpclient.inspection.MyJsonInspection"
-                         key="inspection.http.display.name" bundle="messages.HttpClientBundle"/>
         <localInspection groupKey="inspection.http.group.name" language="TEXT"
-                         shortName="MyTextInspection" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.javamaster.httpclient.inspection.MyTextInspection"
+                         shortName="HttpTextInspection" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.javamaster.httpclient.inspection.HttpTextInspection"
                          key="inspection.http.display.name" bundle="messages.HttpClientBundle"/>
         <!--        <psi.referenceContributor language="JSON"-->
         <!--                                  implementation="org.javamaster.httpclient.reference.JsonValuePsiReferenceContributor"/>-->
