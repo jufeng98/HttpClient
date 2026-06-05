@@ -44,6 +44,11 @@ object HttpUtils {
 
     fun getTabName(httpMethod: HttpMethod): String {
         val requestBlock = PsiTreeUtil.getParentOfType(httpMethod, HttpRequestBlock::class.java)!!
+
+        return getTabName(requestBlock)
+    }
+
+    fun getTabName(requestBlock: HttpRequestBlock): String {
         val comment = requestBlock.comment
         if (comment != null) {
             val text = comment.text

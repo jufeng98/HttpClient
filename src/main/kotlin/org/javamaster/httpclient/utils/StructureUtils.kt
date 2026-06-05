@@ -25,28 +25,44 @@ object StructureUtils {
 
     fun create(element: HttpRequestBlock): HttpRequestStructureViewElement {
         val request = element.request
-        if (request == null) {
-            return HttpRequestStructureViewElement(element, NlsBundle.nls("not.defined"), null, null, false)
+        if (request != null) {
+            val tabName = HttpUtils.getTabName(element)
+
+            val icon = MyPsiUtils.pickMethodIcon(request.method.text)
+
+            return create(element, tabName, null, icon, true)
         }
 
-        val method = request.method
-        val tabName = HttpUtils.getTabName(method)
-        val icon = MyPsiUtils.pickMethodIcon(method.text)
+        val runCommand = element.runCommand
+        if (runCommand != null) {
+            val path = runCommand.filePath?.text
+            if (path != null) {
+                if (HttpUtils.isRunTabName(path)) {
+                    val name = HttpUtils.getTargetTabName(path)
 
-        return HttpRequestStructureViewElement(element, tabName, null, icon, true)
+                    return create(element, NlsBundle.nls("run.request"), name, AllIcons.Actions.Execute, true)
+                } else {
+                    return create(element, NlsBundle.nls("run.file"), path, HttpIcons.RUN_ALL, true)
+                }
+            } else {
+                return create(element, null, null)
+            }
+        }
+
+        return create(element, NlsBundle.nls("not.defined"), null, null, false)
     }
 
-    fun create(element: PsiElement, text: String?, icon: Icon?): StructureViewTreeElement {
-        return HttpRequestStructureViewElement(
-            element, StringUtil.notNullize(text, NlsBundle.nls("not.defined")),
-            null, icon, StringUtil.isNotEmpty(text)
+    fun create(element: PsiElement, text: String?, icon: Icon?): HttpRequestStructureViewElement {
+        return create(
+            element, StringUtil.notNullize(text, NlsBundle.nls("not.defined")), null,
+            icon, StringUtil.isNotEmpty(text)
         )
     }
 
     fun create(
         element: PsiElement, text: String,
         location: String?, icon: Icon?, isValid: Boolean,
-    ): StructureViewTreeElement {
+    ): HttpRequestStructureViewElement {
         return HttpRequestStructureViewElement(element, text, location, icon, isValid)
     }
 
@@ -64,7 +80,12 @@ object StructureUtils {
             children.add(create(preRequestHandler, NlsBundle.nls("pre.handler"), AllIcons.Actions.Play_first))
         }
 
-        val location = StringUtil.notNullize(path, NlsBundle.nls("not.defined"))
+        var location = StringUtil.notNullize(path, NlsBundle.nls("not.defined"))
+
+        val idx = location.lastIndexOf("?")
+        if (idx != -1) {
+            location = location.substring(0, idx)
+        }
 
         children.add(create(request, "", location, null, StringUtil.isNotEmpty(originalHost)))
 
@@ -86,8 +107,7 @@ object StructureUtils {
             children.add(create(messagesGroup, NlsBundle.nls("request.body") + " $mimeType", bodyIcon))
         }
 
-        val multipartMessage = body?.multipartMessage
-        multipartMessage?.multipartFieldList?.forEach {
+        body?.multipartMessage?.multipartFieldList?.forEach {
             var name = ""
             val headerFieldValue = HttpPsiImplUtil.getMultipartFieldDescription(it)
             if (headerFieldValue != null) {
@@ -126,8 +146,7 @@ object StructureUtils {
             return null
         }
 
-        val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
-        val files = injectedLanguageManager.getInjectedPsiFiles(messageBody)
+        val files = InjectedLanguageManager.getInstance(project).getInjectedPsiFiles(messageBody)
         val psiElement = files?.get(0)?.first
         val psiFile = psiElement as PsiFile?
         return psiFile?.getIcon(Iconable.ICON_FLAG_VISIBILITY)
