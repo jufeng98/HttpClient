@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.inject
 
-import com.intellij.json.JsonLanguage
 import com.intellij.lang.Language
 import com.intellij.lang.injection.MultiHostInjector
 import com.intellij.lang.injection.MultiHostRegistrar
@@ -13,11 +12,11 @@ import com.intellij.util.SmartList
 import com.intellij.util.containers.ContainerUtil
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts
+import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpMultipartField
 import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.utils.InjectionUtils
 
 /**
@@ -62,32 +61,33 @@ class MessageBodyInjectionContributor : MultiHostInjector {
             return
         }
 
-        if (language == JsonLanguage.INSTANCE) {
-            if (length > 3000 && text.indexOf('\n', length - 3000) == -1) {
-                // 表明是未格式化的过长的JSON，注入语言也没有意义，跳过注入
-                return
-            }
+        if (length > 3000 && text.indexOf('\n', length - 3000) == -1) {
+            // 表明是未格式化的过长的文本，注入语言也没有意义，跳过注入
+            return
+        }
 
-            registrar.startInjecting(language)
-
-            val variableRanges = injectBody(registrar, host, text)
-
-            registrar.doneInjecting()
-
-            if (variableRanges.isNotEmpty()) {
-                registrar.startInjecting(PlainTextLanguage.INSTANCE)
-
-                variableRanges.forEach {
-                    registrar.addPlace(null, null, host, it)
-                }
-
-                registrar.doneInjecting()
-            }
-        } else {
+        if (language == PlainTextLanguage.INSTANCE) {
             val textRange = InjectionUtils.innerRange(host) ?: return
 
             registrar.startInjecting(language)
             registrar.addPlace(null, null, host, textRange)
+            registrar.doneInjecting()
+            return
+        }
+
+        registrar.startInjecting(language)
+
+        val variableRanges = injectBody(registrar, host, text)
+
+        registrar.doneInjecting()
+
+        if (variableRanges.isNotEmpty()) {
+            registrar.startInjecting(PlainTextLanguage.INSTANCE)
+
+            variableRanges.forEach {
+                registrar.addPlace(null, null, host, it)
+            }
+
             registrar.doneInjecting()
         }
     }
