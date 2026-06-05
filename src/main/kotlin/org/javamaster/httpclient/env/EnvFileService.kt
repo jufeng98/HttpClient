@@ -467,7 +467,9 @@ class EnvFileService(val project: Project) {
         }
 
         fun getEnvJsonFile(envFileName: String, httpFileParentPath: String, project: Project): JsonFile? {
-            val dir = VfsUtil.findFileByIoFile(File(project.basePath!!), true)!!
+            val basePath = project.basePath ?: return null
+
+            val dir = VfsUtil.findFileByIoFile(File(basePath), true)!!
 
             return getEnvJsonFile(envFileName, httpFileParentPath, project, dir)
         }
@@ -483,15 +485,21 @@ class EnvFileService(val project: Project) {
             val virtualFile = dir.findFile(envFileName)
 
             if (virtualFile != null) {
-                return PsiUtil.getPsiFile(project, virtualFile) as JsonFile
+                val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+                if (psiFile !is JsonFile) {
+                    return null
+                }
+
+                return psiFile
             }
 
             if (dir == projectDir) {
                 return null
             }
 
-            if (dir.parent != null) {
-                val path = dir.parent.path
+            val parent = dir.parent
+            if (parent != null) {
+                val path = parent.path
                 return getEnvJsonFile(envFileName, path, project, projectDir)
             }
 

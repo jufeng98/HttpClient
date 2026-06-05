@@ -40,10 +40,21 @@ class HttpConsts {
         val httpDashboardReqEditorKey = Key.create<Editor>("org.javamaster.dashboard.httpDashboardReqEditor")
         val httpDashboardResEditorKey = Key.create<Editor>("org.javamaster.dashboard.httpDashboardResEditor")
 
+        val imageContentSet = setOf(
+            ContentType.IMAGE_PNG,
+            ContentType.IMAGE_JPEG,
+            ContentType.IMAGE_BMP,
+            ContentType.IMAGE_WEBP,
+            ContentType.IMAGE_SVG,
+            ContentType.IMAGE_GIF,
+            ContentType.IMAGE_TIFF,
+        )
+
         const val COOKIE_FILE_NAME = "http-client.cookies"
         const val JS_DATE_PATTERN = "EEE, dd-MMM-yyyy HH:mm:ss 'GMT'"
         const val JAVA_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss"
         const val REQUEST_RAW = "requestRaw"
+
     }
 
 }

@@ -42,6 +42,7 @@ class ViewSettingsAction(editor: Editor) : DashboardBaseAction(nls("view.setting
         val actionManager = ActionManager.getInstance()
 
         val actionToolbar = actionManager.createActionToolbar("httpViewSettingsToolBar", actionGroup, false)
+        actionToolbar.targetComponent = editor.component
         actionToolbar.setShowSeparatorTitles(true)
 
         jbPopupFactory.createComponentPopupBuilder(actionToolbar.component, null)

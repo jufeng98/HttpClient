@@ -4,9 +4,8 @@ import com.intellij.execution.RunManager
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
@@ -17,6 +16,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
@@ -32,7 +32,9 @@ import org.javamaster.httpclient.utils.ReqUtils.Companion.handleQueryParam
 import java.io.File
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import java.nio.file.Paths
 import java.util.*
+import kotlin.io.path.name
 
 /**
  * @author yudong
@@ -61,6 +63,21 @@ object HttpUtils {
         }
 
         return "HTTP Request ▏#0"
+    }
+
+    fun getFilePathText(filePath: HttpFilePath?): String {
+        if (filePath == null) {
+            return ""
+        }
+
+        val text = filePath.filePathContentList.lastOrNull()?.text
+        if (filePath.variableList.isEmpty()) {
+            if (text != null && text.length > 32) {
+                return Paths.get(text).name
+            }
+        }
+
+        return text ?: "..."
     }
 
     fun convertToReqHeaderMap(
@@ -490,15 +507,17 @@ object HttpUtils {
 
     fun getOriginalFile(requestTarget: HttpRequestTarget): VirtualFile? {
         val virtualFile = PsiUtil.getVirtualFile(requestTarget)
-        if (!isFileInIdeaDir(virtualFile)) {
-            return virtualFile
+
+        val project = requestTarget.project
+        if (isFileInHistoryDir(virtualFile, project)) {
+            val httpMethod = PsiTreeUtil.getPrevSiblingOfType(requestTarget, HttpMethod::class.java) ?: return null
+
+            val tabName = getTabName(httpMethod)
+
+            return getOriginalFile(project, tabName)
         }
 
-        val httpMethod = PsiTreeUtil.getPrevSiblingOfType(requestTarget, HttpMethod::class.java) ?: return null
-
-        val tabName = getTabName(httpMethod)
-
-        return getOriginalFile(requestTarget.project, tabName)
+        return virtualFile
     }
 
     fun getOriginalFile(project: Project, tabName: String): VirtualFile? {
@@ -516,16 +535,16 @@ object HttpUtils {
         return VfsUtil.findFileByIoFile(File(httpRunConfiguration.httpFilePath), false)
     }
 
-    fun getOriginalModule(requestTarget: HttpRequestTarget): Module? {
-        val project = requestTarget.project
+    fun isFileInHistoryDir(virtualFile: VirtualFile?, project: Project): Boolean {
+        virtualFile ?: return false
 
-        val virtualFile = getOriginalFile(requestTarget) ?: return null
+        return ReadAction.compute<Boolean, Throwable> {
+            val ideaDir = InnerVariableEnum.HISTORY_FOLDER.exec("", project) ?: return@compute false
 
-        return ModuleUtilCore.findModuleForFile(virtualFile, project)
-    }
+            val ideaDirFile = VfsUtil.findFileByIoFile(File(ideaDir), false) ?: return@compute false
 
-    fun isFileInIdeaDir(virtualFile: VirtualFile?): Boolean {
-        return virtualFile?.name?.startsWith("tmp") == true
+            VfsUtil.isAncestor(ideaDirFile, virtualFile, true)
+        }
     }
 
     fun isRunTabName(path: String): Boolean {
@@ -582,8 +601,8 @@ object HttpUtils {
                 if (resolvedPath != null) {
                     path += resolvedPath
                 }
-            } else {
-                val filePathContent = child as HttpFilePathContent
+            } else if (child is HttpFilePathContent) {
+                val filePathContent = child
                 path += filePathContent.text ?: ""
             }
 

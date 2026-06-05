@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.reference.support
 
+import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
@@ -11,6 +12,7 @@ import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.psi.HttpHeaderFieldValue
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.utils.DubboUtils
+import org.javamaster.httpclient.utils.DubboUtils.getOriginalFile
 
 /**
  * @author yudong
@@ -34,7 +36,11 @@ class HttpHeaderFieldValuePsiReference(fieldValue: HttpHeaderFieldValue, range: 
     }
 
     private fun resolveInterface(fieldValue: HttpHeaderFieldValue): PsiClass? {
-        val module = DubboUtils.getOriginalModule(fieldValue) ?: return null
+        val httpRequest = PsiTreeUtil.getParentOfType(fieldValue, HttpRequest::class.java) ?: return null
+
+        val originalFile = getOriginalFile(httpRequest) ?: return null
+
+        val module = ModuleUtilCore.findModuleForFile(originalFile, httpRequest.project) ?: return null
 
         return DubboUtils.findInterface(module, fieldValue.text)
     }

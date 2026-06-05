@@ -90,15 +90,15 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
 
         if (oldDescriptor != null) {
             oldDescriptor.isSelectContentWhenAdded = true
-
-            val oldProcessHandler = oldDescriptor.processHandler as ProcessHandlerBase
-
-            Disposer.dispose(oldProcessHandler)
+            Disposer.dispose(oldDescriptor.processHandler as ProcessHandlerBase)
         }
 
         environment.contentToReuse = oldDescriptor
 
-        return RunContentBuilder(executionResult, environment).showRunContent(oldDescriptor)
+        val descriptor = RunContentBuilder(executionResult, environment).showRunContent(oldDescriptor)
+        descriptor.isSelectContentWhenAdded = true
+
+        return descriptor
     }
 
     companion object {

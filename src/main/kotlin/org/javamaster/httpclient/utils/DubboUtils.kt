@@ -15,11 +15,9 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
-import org.javamaster.httpclient.psi.HttpHeaderFieldValue
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.utils.HttpUtils.getTabName
-import org.javamaster.httpclient.utils.HttpUtils.isFileInIdeaDir
 
 object DubboUtils {
     const val INTERFACE_KEY = "Interface"
@@ -54,7 +52,8 @@ object DubboUtils {
             ?.firstOrNull { it.headerFieldName.text.equals(INTERFACE_KEY, ignoreCase = true) }
             ?: return null
 
-        val module = getOriginalModule(httpRequest) ?: return null
+        val originalFile = getOriginalFile(httpRequest) ?: return null
+        val module = ModuleUtilCore.findModuleForFile(originalFile, httpRequest.project) ?: return null
         val name = headerField.headerFieldValue?.text ?: return null
         val psiClass = findInterface(module, name) ?: return null
 
@@ -75,42 +74,17 @@ object DubboUtils {
         return methods[0]
     }
 
-    private fun getOriginalFile(headerFieldValue: HttpHeaderFieldValue): VirtualFile? {
-        val virtualFile = PsiUtil.getVirtualFile(headerFieldValue)
-        if (!isFileInIdeaDir(virtualFile)) {
-            return virtualFile
-        }
-
-        val httpRequest = PsiTreeUtil.getParentOfType(headerFieldValue, HttpRequest::class.java) ?: return null
-
-        return getOriginalFile(httpRequest)
-    }
-
-    private fun getOriginalFile(httpRequest: HttpRequest): VirtualFile? {
+    fun getOriginalFile(httpRequest: HttpRequest): VirtualFile? {
         val virtualFile = PsiUtil.getVirtualFile(httpRequest)
-        if (!isFileInIdeaDir(virtualFile)) {
-            return virtualFile
+
+        val project = httpRequest.project
+        if (HttpUtils.isFileInHistoryDir(virtualFile, project)) {
+            val tabName = getTabName(httpRequest.method)
+
+            return HttpUtils.getOriginalFile(project, tabName)
         }
 
-        val tabName = getTabName(httpRequest.method)
-
-        return HttpUtils.getOriginalFile(httpRequest.project, tabName)
-    }
-
-    private fun getOriginalModule(httpRequest: HttpRequest): Module? {
-        val project = httpRequest.project
-
-        val virtualFile = getOriginalFile(httpRequest) ?: return null
-
-        return ModuleUtilCore.findModuleForFile(virtualFile, project)
-    }
-
-    fun getOriginalModule(headerFieldValue: HttpHeaderFieldValue): Module? {
-        val project = headerFieldValue.project
-
-        val virtualFile = getOriginalFile(headerFieldValue) ?: return null
-
-        return ModuleUtilCore.findModuleForFile(virtualFile, project)
+        return virtualFile
     }
 
     fun resolveTargetPsiElement(jsonString: JsonStringLiteral): PsiElement? {

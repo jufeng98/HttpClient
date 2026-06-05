@@ -50,13 +50,13 @@ class HttpLineMarkerProvider : LineMarkerProvider {
     }
 
     private fun createRunIconInfo(element: PsiElement): HttpLineMarkerInfo? {
-        val parent = element.parent
-        if (parent !is HttpMethod) {
+        val method = element.parent
+        if (method !is HttpMethod) {
             return null
         }
 
-        val virtualFile = PsiUtil.getVirtualFile(element)
-        if (HttpUtils.isFileInIdeaDir(virtualFile)) {
+        val virtualFile = PsiUtil.getVirtualFile(method)
+        if (HttpUtils.isFileInHistoryDir(virtualFile, method.project)) {
             return null
         }
 
@@ -69,16 +69,17 @@ class HttpLineMarkerProvider : LineMarkerProvider {
 
     private fun createDiffIconInfo(element: PsiElement): HttpLineMarkerInfo? {
         val historyBodyFile = element.parent
-        // 不知道什么情况会出现 ClassCastException: class com.intellij.psi.DummyBlockType$DummyBlock
-        // cannot be cast to class org.javamaster.httpclient.psi.HttpHistoryBodyFile
-        // 加上这个避免下
         if (historyBodyFile !is HttpHistoryBodyFile) {
+            return null
+        }
+
+        if (historyBodyFile.filePath == null) {
             return null
         }
 
         val bodyFileList = historyBodyFile.parent as HttpHistoryBodyFileList
 
-        if (historyBodyFile.filePath == null || bodyFileList.historyBodyFileList.size <= 1) return null
+        if (bodyFileList.historyBodyFileList.size <= 1) return null
 
         return HttpLineMarkerInfo(
             element, element.textRange, AllIcons.Actions.Diff,
@@ -88,13 +89,13 @@ class HttpLineMarkerProvider : LineMarkerProvider {
     }
 
     private fun createRunCommandIconInfo(element: PsiElement): HttpLineMarkerInfo? {
-        val parent = element.parent
-        if (parent !is HttpRunCommand) {
+        val runCommand = element.parent
+        if (runCommand !is HttpRunCommand) {
             return null
         }
 
-        val virtualFile = PsiUtil.getVirtualFile(element)
-        if (HttpUtils.isFileInIdeaDir(virtualFile)) {
+        val virtualFile = PsiUtil.getVirtualFile(runCommand)
+        if (HttpUtils.isFileInHistoryDir(virtualFile, runCommand.project)) {
             return null
         }
 

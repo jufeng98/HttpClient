@@ -1,12 +1,11 @@
 package org.javamaster.httpclient.scan.support
 
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
 import com.intellij.psi.impl.PsiTreeChangePreprocessor
-import com.intellij.util.application
 import org.javamaster.httpclient.enums.Control
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -35,11 +34,9 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
             return
         }
 
-        scheduledFuture?.cancel(false)
+        scheduledFuture?.cancel(true)
 
-        scheduledFuture = executor.schedule({
-            scheduleControllerCheck(psiFile)
-        }, 1, TimeUnit.SECONDS)
+        scheduledFuture = executor.schedule({ scheduleControllerCheck(psiFile) }, 3, TimeUnit.SECONDS)
     }
 
     private fun scheduleControllerCheck(psiFile: PsiJavaFile) {
@@ -47,13 +44,9 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
         val dumbService = DumbService.getInstance(project)
 
         dumbService.runWhenSmart {
-            application.executeOnPooledThread {
-                runReadAction {
+            ReadAction
+                .nonBlocking<Unit> {
                     try {
-                        if (!psiFile.isValid) {
-                            return@runReadAction
-                        }
-
                         if (isSpringController(psiFile)) {
                             ControllerPsiModificationTracker.myModificationCount.incModificationCount()
                         }
@@ -61,7 +54,8 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
                         System.err.println(t.message)
                     }
                 }
-            }
+                .expireWhen { !psiFile.isValid }
+                .submit(executor)
         }
     }
 

@@ -27,7 +27,7 @@ object HttpDiffGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElem
 
     override fun navigate(event: MouseEvent, element: PsiElement) {
         val project = element.project
-        val editorVirtualFile = PsiUtil.getVirtualFile(element)!!
+        val editorVirtualFile = PsiUtil.getVirtualFile(element) ?: return
 
         val currentBodyFile = element.parent as HttpHistoryBodyFile
         val currentFilePath = currentBodyFile.filePath ?: return
@@ -35,11 +35,11 @@ object HttpDiffGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElem
         val editorManager = FileEditorManager.getInstance(project)
         val hintManager = HintManager.getInstance()
 
-        val editor = editorManager.selectedTextEditor!!
+        val editor = editorManager.selectedTextEditor ?: return
         val historyPath = editorVirtualFile.parent.path
 
         val currentFile = File(historyPath, currentFilePath.text)
-        val currentVirtualFile = findFileByIoFile(currentFile, true)
+        val currentVirtualFile = findFileByIoFile(currentFile, false)
 
         if (currentVirtualFile == null) {
             editor.caretModel.moveToOffset(element.textRange.endOffset)
@@ -70,7 +70,7 @@ object HttpDiffGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElem
                 val pair = map[it]!!
                 val chooseFile = pair.second
 
-                val chooseVirtualFile = findFileByIoFile(chooseFile, true)
+                val chooseVirtualFile = findFileByIoFile(chooseFile, false)
                 if (chooseVirtualFile == null) {
                     editor.caretModel.moveToOffset(pair.first.textRange.endOffset)
 

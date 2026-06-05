@@ -15,18 +15,18 @@ import org.javamaster.httpclient.utils.MyPsiUtils
 class HttpUrlControllerMethodPsiReferenceProvider : PsiReferenceProvider() {
 
     override fun getReferencesByElement(element: PsiElement, context: ProcessingContext): Array<PsiReference> {
-        val httpRequestTarget = element as HttpRequestTarget
+        val requestTarget = element as HttpRequestTarget
 
-        val virtualFile = HttpUtils.getOriginalFile(httpRequestTarget) ?: return PsiReference.EMPTY_ARRAY
+        val originalFile = HttpUtils.getOriginalFile(requestTarget) ?: return PsiReference.EMPTY_ARRAY
 
-        val path = virtualFile.parent?.path ?: return PsiReference.EMPTY_ARRAY
+        val path = originalFile.parent?.path ?: return PsiReference.EMPTY_ARRAY
 
-        val pair = MyPsiUtils.getSearchTxtInfo(httpRequestTarget, path) ?: return PsiReference.EMPTY_ARRAY
+        val pair = MyPsiUtils.getSearchTxtInfo(requestTarget, path) ?: return PsiReference.EMPTY_ARRAY
 
         val searchTxt = pair.first
         val textRange = pair.second
 
-        return arrayOf(HttpUrlControllerMethodPsiReference(searchTxt, httpRequestTarget, textRange))
+        return arrayOf(HttpUrlControllerMethodPsiReference(searchTxt, requestTarget, textRange, originalFile))
     }
 
 }

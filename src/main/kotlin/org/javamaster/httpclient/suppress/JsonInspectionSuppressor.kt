@@ -5,7 +5,6 @@ import com.intellij.codeInspection.SuppressQuickFix
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.psi.PsiElement
 import com.intellij.spellchecker.inspections.SpellCheckingInspection
-import org.javamaster.httpclient.inspection.MyJsonInspection
 import org.javamaster.httpclient.psi.HttpMessageBody
 
 /**
@@ -14,7 +13,6 @@ import org.javamaster.httpclient.psi.HttpMessageBody
 class JsonInspectionSuppressor : InspectionSuppressor {
     private val notSuppressSet = setOf(
         SpellCheckingInspection::class.java.simpleName,
-        MyJsonInspection::class.java.simpleName,
     )
 
     override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {

@@ -44,6 +44,7 @@ object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiEleme
     private fun runTargetFileRequest(name: String, httpFile: HttpFile, gutterComponent: EditorGutterComponentEx?) {
         val targetTabName = HttpUtils.getTargetTabName(name)
         if (targetTabName == null) {
+            NotifyUtil.notifyWarn(httpFile.project, nls("req.not.exists", name))
             val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
             loadingRemover?.run()
             return
