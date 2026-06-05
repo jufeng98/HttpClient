@@ -13,6 +13,7 @@ import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.Processor
 import org.javamaster.httpclient.enums.HttpMethod
+import org.javamaster.httpclient.logger.logWarn
 import org.javamaster.httpclient.psi.impl.RequestNavigationItem
 import org.javamaster.httpclient.scan.ScanRequest
 
@@ -56,24 +57,28 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
         consumer: Processor<in FoundItemDescriptor<Any>>,
     ) {
         val fetchRunnable = Runnable {
-            if (dumbService.isDumb) {
-                return@Runnable
-            }
-
-            if (shouldNotProvideElements()) {
-                return@Runnable
-            }
-
-            val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
-
-            val scope = scope.scope as GlobalSearchScope? ?: GlobalSearchScope.projectScope(myProject)
-
-            ScanRequest.fetchRequests(myProject, scope) {
-                progressIndicator.checkCanceled()
-
-                if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
-                    consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
+            try {
+                if (dumbService.isDumb) {
+                    return@Runnable
                 }
+
+                if (shouldNotProvideElements()) {
+                    return@Runnable
+                }
+
+                val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
+
+                val searchScope = (scope.scope as? GlobalSearchScope) ?: GlobalSearchScope.projectScope(myProject)
+
+                ScanRequest.fetchRequests(myProject, searchScope) {
+                    progressIndicator.checkCanceled()
+
+                    if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
+                        consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
+                    }
+                }
+            } catch (t: Throwable) {
+                logWarn("fetchWeightedElements error", t)
             }
         }
 
@@ -95,11 +100,7 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
 
     private fun shouldNotProvideElements(): Boolean {
         val seManager = SearchEverywhereManager.getInstance(myProject)
-        if (!seManager.isShown) {
-            return true
-        }
-
-        return searchProviderId != seManager.selectedTabID
+        return !seManager.isShown || searchProviderId != seManager.selectedTabID
     }
 
     override fun getGroupName(): String {

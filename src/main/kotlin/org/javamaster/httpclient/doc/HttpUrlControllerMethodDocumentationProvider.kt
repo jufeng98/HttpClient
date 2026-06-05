@@ -1,13 +1,13 @@
 package org.javamaster.httpclient.doc
 
 import com.intellij.codeInsight.TargetElementUtil
-import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.documentation.DocumentationProvider
 import com.intellij.lang.java.JavaDocumentationProvider
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_OPERATION_ANNO_NAME
 import org.javamaster.httpclient.utils.MyPsiUtils
 
@@ -27,7 +27,7 @@ class HttpUrlControllerMethodDocumentationProvider : DocumentationProvider {
         val util = TargetElementUtil.getInstance()
         val element = util.findTargetElement(editor, util.allAccepted, targetOffset)
 
-        if (element is PsiMethod && element.node != null) {
+        if (element is PsiMethod) {
             return MyPsiMethod(element)
         }
 
@@ -52,6 +52,12 @@ class HttpUrlControllerMethodDocumentationProvider : DocumentationProvider {
         }
     }
 
-    private class MyPsiMethod(val psiMethod: PsiMethod) : ASTWrapperPsiElement(psiMethod.node)
+    private class MyPsiMethod(val psiMethod: PsiMethod) : FakePsiElement() {
+
+        override fun getParent(): PsiElement? {
+            return psiMethod.parent
+        }
+
+    }
 
 }
