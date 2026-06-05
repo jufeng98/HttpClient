@@ -105,12 +105,11 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_GLOBAL_SCRIPT_END> {
-  "%}"{EOL_MULTI}              { yybegin(YYINITIAL); return END_SCRIPT_BRACE; }
-  {WHITE_SPACE}                { yybegin(YYINITIAL); return WHITE_SPACE; }
+  "%}"                         { yybegin(YYINITIAL); return END_SCRIPT_BRACE; }
 }
 
 <IN_FILE_VARIABLE> {
-  {FILE_VARIABLE_NAME}        { return GLOBAL_NAME; }
+  {FILE_VARIABLE_NAME}          { return GLOBAL_NAME; }
   "="                           { nextState = IN_FILE_VARIABLE_VALUE; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return EQUALS; }
   {ONLY_SPACE}                  { return WHITE_SPACE; }
   {EOL_MULTI}                   { yybegin(YYINITIAL); return WHITE_SPACE; }
@@ -152,7 +151,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_PRE_SCRIPT_END> {
-  "%}"{EOL_MULTI}              { yybegin(YYINITIAL); return END_SCRIPT_BRACE; }
+  "%}"                      { yybegin(YYINITIAL); return END_SCRIPT_BRACE; }
 }
 
 <IN_DIRECTION_NAME> {
@@ -224,6 +223,7 @@ STRING=('([^'])*'|\"([^\"])*\")
   {EOL_MULTI}         { yybegin(IN_HEADER); return WHITE_SPACE; }
 }
 
+// 用于延迟解析，见 UrlEncodedLazyParseableElementType
 <IN_BODY_QUERY> {
   "&"                 { nameFlag = true; return AND; }
   "="                 { nameFlag = false; return EQUALS; }
@@ -324,7 +324,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_POST_SCRIPT_END> {
-  "%}"\s*                   { yybegin(IN_OUTPUT_FILE); return END_SCRIPT_BRACE; }
+  "%}"                      { yybegin(IN_OUTPUT_FILE); return END_SCRIPT_BRACE; }
 }
 
 <IN_MULTIPART> {
@@ -332,14 +332,14 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_OUTPUT_FILE> {
-  ">> "                      { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return OUTPUT_FILE_SIGN; }
-  "<> "                      { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return HISTORY_FILE_SIGN; }
-  {WHITE_SPACE}              { yybegin(YYINITIAL); return WHITE_SPACE; }
+  ">>"                       { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return OUTPUT_FILE_SIGN; }
+  "<>"                       { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return HISTORY_FILE_SIGN; }
+  {WHITE_SPACE}              { return WHITE_SPACE;  }
   [^]                        { yypushback(yylength()); yybegin(YYINITIAL); }
 }
 
 <IN_OUTPUT_FILE_PATH> {
-  ">> "                      { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return OUTPUT_FILE_SIGN; }
+  ">>"                       { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return OUTPUT_FILE_SIGN; }
   "{{"                       { nextState = IN_OUTPUT_FILE_PATH; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {FILE_PATH_PART}           { return FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
@@ -347,7 +347,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_HISTORY_BODY_FILE_PART> {
-  "<> "                      { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return HISTORY_FILE_SIGN; }
+  "<>"                       { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_TRIM_PREFIX_ONLY_SPACE); return HISTORY_FILE_SIGN; }
   "{{"                       { nextState = IN_HISTORY_BODY_FILE_PART; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
   {FILE_PATH_PART}           { return FILE_PATH_PART; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
