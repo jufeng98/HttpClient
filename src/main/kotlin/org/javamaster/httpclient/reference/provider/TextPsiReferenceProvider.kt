@@ -42,7 +42,7 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
         ) {
             val query = UrlEncodedLazyFileElement.parse(text) ?: return emptyArray()
 
-            val references = request.requestTarget!!.references
+            val references = request.requestTarget?.pathAbsolute?.references ?: return emptyArray()
 
             val controllerMethod = if (references.isNotEmpty()) {
                 references[0].resolve() as PsiMethod?

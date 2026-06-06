@@ -304,7 +304,7 @@ class MyPsiUtils {
 
             val httpRequest = PsiTreeUtil.getParentOfType(messageBody, HttpRequest::class.java) ?: return null
 
-            val references = httpRequest.requestTarget?.references ?: return null
+            val references = httpRequest.requestTarget?.pathAbsolute?.references ?: return null
             if (references.isEmpty()) {
                 return null
             }
