@@ -15,27 +15,27 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
     override fun treeChanged(event: PsiTreeChangeEventImpl) {
         val psiJavaFile = event.file as? PsiJavaFile ?: return
 
-        val code = event.code
-        if (code == PsiTreeChangeEventImpl.PsiEventType.BEFORE_PROPERTY_CHANGE
-            || code == PsiTreeChangeEventImpl.PsiEventType.PROPERTY_CHANGED
-        ) {
+        val project = psiJavaFile.project
+        val dumbService = DumbService.getInstance(project)
+        if (dumbService.isDumb) {
             return
         }
 
-        val project = psiJavaFile.project
-        val dumbService = DumbService.getInstance(project)
-        val scanRequest = project.getService(ScanRequest::class.java)
+        val code = event.code
+        if (code == PsiTreeChangeEventImpl.PsiEventType.CHILDREN_CHANGED) {
+            val scanRequest = project.getService(ScanRequest::class.java)
 
-        dumbService.runWhenSmart {
-            ReadAction
-                .nonBlocking<Unit> {
-                    val module = ModuleUtilCore.findModuleForFile(psiJavaFile) ?: return@nonBlocking
+            dumbService.runWhenSmart {
+                ReadAction
+                    .nonBlocking<Unit> {
+                        val module = ModuleUtilCore.findModuleForFile(psiJavaFile) ?: return@nonBlocking
 
-                    scanRequest.handleFileChange(psiJavaFile, module)
-                }
-                .expireWhen { !psiJavaFile.isValid }
-                .submit(AppExecutorUtil.getAppExecutorService())
-                .onError { logWarn("check controller failed", it) }
+                        scanRequest.handleFileChange(psiJavaFile, module)
+                    }
+                    .expireWhen { !psiJavaFile.isValid }
+                    .submit(AppExecutorUtil.getAppExecutorService())
+                    .onError { logWarn("scanRequest failed", it) }
+            }
         }
     }
 

@@ -13,6 +13,7 @@ import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.Processor
 import org.javamaster.httpclient.enums.HttpMethod
+import org.javamaster.httpclient.logger.logInfo
 import org.javamaster.httpclient.psi.impl.RequestNavigationItem
 import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.scan.support.SpringControllerScanService
@@ -66,15 +67,13 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
             }
 
             if (pattern.isEmpty()) {
-                val scanRequest = myProject.getService(ScanRequest::class.java)
-                if (scanRequest.isCacheMapInit()) {
-                    scanRequest.fetchCacheRequestList() {
-                        progressIndicator.checkCanceled()
+                val requests = myProject.getService(ScanRequest::class.java).getCacheRequestList(filterMethods)
 
-                        if (it.psiElement != null && filterMethods.contains(it.method)) {
-                            consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
-                        }
-                    }
+                if (requests != null) {
+                    logInfo("直接从缓存中取出 ${requests.size} 个请求")
+
+                    requests.forEach { consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100)) }
+
                     return@Runnable
                 }
             }
