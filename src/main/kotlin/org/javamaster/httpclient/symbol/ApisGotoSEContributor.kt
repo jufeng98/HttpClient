@@ -13,8 +13,8 @@ import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.Processor
 import org.javamaster.httpclient.enums.HttpMethod
-import org.javamaster.httpclient.logger.logWarn
 import org.javamaster.httpclient.psi.impl.RequestNavigationItem
+import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.scan.support.SpringControllerScanService
 
 /**
@@ -57,30 +57,40 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
         consumer: Processor<in FoundItemDescriptor<Any>>,
     ) {
         val fetchRunnable = Runnable {
-            try {
-                if (dumbService.isDumb) {
-                    return@Runnable
-                }
+            if (dumbService.isDumb) {
+                return@Runnable
+            }
 
-                if (shouldNotProvideElements()) {
-                    return@Runnable
-                }
+            if (shouldNotProvideElements()) {
+                return@Runnable
+            }
 
-                val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
-
-                val searchScope = (scope.scope as? GlobalSearchScope) ?: GlobalSearchScope.projectScope(myProject)
-
-                SpringControllerScanService.getService(project)
-                    .fetchRequests(myProject, searchScope) {
+            if (pattern.isEmpty()) {
+                val scanRequest = myProject.getService(ScanRequest::class.java)
+                if (scanRequest.isCacheMapInit()) {
+                    scanRequest.fetchCacheRequestList() {
                         progressIndicator.checkCanceled()
 
-                        if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
+                        if (it.psiElement != null && filterMethods.contains(it.method)) {
                             consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
                         }
                     }
-            } catch (t: Throwable) {
-                logWarn("fetchWeightedElements error", t)
+                    return@Runnable
+                }
             }
+
+            val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
+
+            val searchScope = (scope.scope as? GlobalSearchScope) ?: GlobalSearchScope.projectScope(myProject)
+
+            SpringControllerScanService.getService(project)
+                .fetchRequests(myProject, searchScope) {
+                    progressIndicator.checkCanceled()
+
+                    if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
+                        consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
+                    }
+                }
         }
 
         @Suppress("UsagesOfObsoleteApi", "DEPRECATION")

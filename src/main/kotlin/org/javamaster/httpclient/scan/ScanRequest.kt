@@ -11,6 +11,7 @@ import org.javamaster.httpclient.scan.support.Request
 import org.javamaster.httpclient.scan.support.SpringControllerScanService
 import org.javamaster.httpclient.utils.SpringUtils
 import java.util.concurrent.ConcurrentMap
+import java.util.function.Consumer
 
 /**
  * @author yudong
@@ -30,6 +31,20 @@ class ScanRequest {
         // There may be more than one controller method here, so for simplicity, take the first one directly,
         // without making complex judgments based on the mapping rules of SpringMVC
         return requests.firstOrNull()?.psiElement
+    }
+
+    fun isCacheMapInit(): Boolean {
+        return moduleControllerMap.isNotEmpty()
+    }
+
+    fun fetchCacheRequestList(consumer: Consumer<Request>) {
+        for (concurrentMap in moduleControllerMap.values) {
+            for (entry in concurrentMap) {
+                for (request in entry.value) {
+                    consumer.accept(request)
+                }
+            }
+        }
     }
 
     fun handleFileChange(javaFile: PsiJavaFile, module: Module) {
