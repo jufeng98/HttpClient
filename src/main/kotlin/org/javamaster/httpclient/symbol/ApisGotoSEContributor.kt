@@ -15,7 +15,7 @@ import com.intellij.util.Processor
 import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.logger.logWarn
 import org.javamaster.httpclient.psi.impl.RequestNavigationItem
-import org.javamaster.httpclient.scan.ScanRequest
+import org.javamaster.httpclient.scan.support.SpringControllerScanService
 
 /**
  * @author yudong
@@ -66,19 +66,18 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
                     return@Runnable
                 }
 
-                val scanRequest = myProject.getService(ScanRequest::class.java)
-
                 val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
 
                 val searchScope = (scope.scope as? GlobalSearchScope) ?: GlobalSearchScope.projectScope(myProject)
 
-                scanRequest.fetchRequests(myProject, searchScope) {
-                    progressIndicator.checkCanceled()
+                SpringControllerScanService.getService(project)
+                    .fetchRequests(myProject, searchScope) {
+                        progressIndicator.checkCanceled()
 
-                    if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
-                        consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
+                        if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
+                            consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
+                        }
                     }
-                }
             } catch (t: Throwable) {
                 logWarn("fetchWeightedElements error", t)
             }

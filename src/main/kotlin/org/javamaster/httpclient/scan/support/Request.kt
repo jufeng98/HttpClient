@@ -8,6 +8,7 @@ class Request(
     tmpPath: String,
     val psiElement: PsiMethod?,
     parent: Request?,
+    val controllerClassQualifiedName: String,
 ) {
     val method: HttpMethod
     val path: String
@@ -40,7 +41,7 @@ class Request(
     }
 
     fun copyWithParent(parent: Request): Request {
-        return Request(this.method, this.path, this.psiElement, parent)
+        return Request(this.method, this.path, this.psiElement, parent, this.controllerClassQualifiedName)
     }
 
     override fun toString(): String {

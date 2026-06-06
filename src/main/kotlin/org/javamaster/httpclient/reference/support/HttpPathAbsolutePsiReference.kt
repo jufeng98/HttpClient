@@ -28,7 +28,7 @@ class HttpPathAbsolutePsiReference(
         val project = module.project
         val scanRequest = project.getService(ScanRequest::class.java)
 
-        val map = scanRequest.getCacheRequestMap(module)
+        val map = scanRequest.getCacheRequestPathMethodMap(module)
 
         return map.values
             .map {

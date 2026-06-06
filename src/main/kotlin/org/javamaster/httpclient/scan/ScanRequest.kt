@@ -1,70 +1,88 @@
 package org.javamaster.httpclient.scan
 
+import com.google.common.collect.Maps
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Key
+import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.util.CachedValue
-import com.intellij.psi.util.CachedValueProvider
-import com.intellij.psi.util.CachedValuesManager
 import com.jetbrains.rd.util.concurrentMapOf
-import org.javamaster.httpclient.logger.logWarn
-import org.javamaster.httpclient.scan.support.ControllerPsiModificationTracker
 import org.javamaster.httpclient.scan.support.Request
 import org.javamaster.httpclient.scan.support.SpringControllerScanService
-import java.util.function.Consumer
+import org.javamaster.httpclient.utils.SpringUtils
+import java.util.concurrent.ConcurrentMap
 
 /**
  * @author yudong
  */
 @Service(Service.Level.PROJECT)
 class ScanRequest {
-    private val keyMap = concurrentMapOf<Module, Key<CachedValue<Map<String, List<Request>>>>>()
+    /**
+     * 模块名 -> 控制器类全限定名 -> 请求列表
+     */
+    private val moduleControllerMap = concurrentMapOf<String, ConcurrentMap<String, List<Request>>>()
 
-    fun findApiMethod(module: Module, searchTxt: String, method: String): PsiMethod? {
-        return runCatching {
-            val requestMap = getCacheRequestMap(module)
+    fun findCacheApiMethod(module: Module, searchTxt: String, method: String): PsiMethod? {
+        val requestMap = getCacheRequestPathMethodMap(module)
 
-            val requests = requestMap["$searchTxt-$method"] ?: return null
+        val requests = requestMap["$searchTxt-$method"] ?: return null
 
-            // There may be more than one controller method here, so for simplicity, take the first one directly,
-            // without making complex judgments based on the mapping rules of SpringMVC
-            requests.firstOrNull()?.psiElement ?: return null
-        }.onFailure {
-            logWarn("findApiMethod failed, module: ${module.name}, searchTxt: $searchTxt, method: $method")
-        }.getOrNull()
+        // There may be more than one controller method here, so for simplicity, take the first one directly,
+        // without making complex judgments based on the mapping rules of SpringMVC
+        return requests.firstOrNull()?.psiElement
     }
 
-    fun fetchRequests(project: Project, searchScope: GlobalSearchScope, consumer: Consumer<Request>) {
-        runCatching {
-            val controllerScanService = SpringControllerScanService.getService(project)
-
-            controllerScanService.fetchRequests(project, searchScope, consumer)
-        }.onFailure {
-            logWarn("fetchRequests failed, project: ${project.name}, searchScope: $searchScope")
-        }
-    }
-
-    fun getCacheRequestMap(module: Module): Map<String, List<Request>> {
+    fun handleFileChange(javaFile: PsiJavaFile, module: Module) {
         val project = module.project
         val controllerScanService = SpringControllerScanService.getService(project)
-        val controllerPsiModificationTracker = project.getService(ControllerPsiModificationTracker::class.java)
 
-        val key = keyMap.computeIfAbsent(module) {
-            Key.create("httpClient.requestMap.$it")
+        val cacheRequestMap = getCacheRequestMap(module)
+
+        for (psiClass in javaFile.classes) {
+            val qualifiedName = psiClass.qualifiedName ?: continue
+
+            if (cacheRequestMap.containsKey(qualifiedName) || SpringUtils.isSpringController(javaFile)) {
+                val requestsNew = controllerScanService.findRequests(project, GlobalSearchScope.fileScope(javaFile))
+
+                val map = requestsNew.groupBy { it.controllerClassQualifiedName }
+
+                map.forEach {
+                    cacheRequestMap[it.key] = it.value
+                }
+
+                break
+            }
         }
+    }
 
-        return CachedValuesManager.getManager(project)
-            .getCachedValue(module, key, {
-                val requests = controllerScanService.findRequests(project, module.moduleWithLibrariesScope)
+    fun getCacheRequestMap(module: Module): ConcurrentMap<String, List<Request>> {
+        val project = module.project
+        val controllerScanService = SpringControllerScanService.getService(project)
 
-                val requestMap = requests.groupBy { it.toString() }
+        return moduleControllerMap.computeIfAbsent(module.name) {
+            val requests = controllerScanService.findRequests(project, module.moduleWithLibrariesScope)
 
-                CachedValueProvider.Result.create(requestMap, controllerPsiModificationTracker)
+            val map = requests.groupBy { it.controllerClassQualifiedName }
 
-            }, false)
+            val currentMap = Maps.newConcurrentMap<String, List<Request>>()
+
+            currentMap.putAll(map)
+
+            currentMap
+        }
+    }
+
+    fun getCacheRequestList(module: Module): List<Request> {
+        val moduleControllerQualifiedNameMap = getCacheRequestMap(module)
+
+        return moduleControllerQualifiedNameMap.values
+            .flatten()
+    }
+
+    fun getCacheRequestPathMethodMap(module: Module): Map<String, List<Request>> {
+        val requests = getCacheRequestList(module)
+
+        return requests.groupBy { it.toString() }
     }
 
 }

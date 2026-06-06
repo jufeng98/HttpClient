@@ -29,7 +29,7 @@ class HttpUrlControllerMethodPsiReference(
 
         val scanRequest = project.getService(ScanRequest::class.java)
 
-        return scanRequest.findApiMethod(module, searchTxt, httpMethod.text)
+        return scanRequest.findCacheApiMethod(module, searchTxt, httpMethod.text)
     }
 
 }

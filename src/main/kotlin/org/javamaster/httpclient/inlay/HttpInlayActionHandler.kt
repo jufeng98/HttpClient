@@ -53,7 +53,7 @@ class HttpInlayActionHandler : InlayActionHandler {
 
                     val module = ModuleUtil.findModuleForPsiElement(element) ?: return@runReadAction
 
-                    val map = scanRequest.getCacheRequestMap(module)
+                    val map = scanRequest.getCacheRequestPathMethodMap(module)
 
                     val values = map.values
                     for (value in values) {
