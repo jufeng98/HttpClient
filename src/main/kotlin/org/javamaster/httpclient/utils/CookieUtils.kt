@@ -128,34 +128,36 @@ object CookieUtils {
     fun saveCookiesToFile(cookies: List<Cookie>, project: Project, cookiesPsiFile: CookieFile?): String {
         cookiesPsiFile ?: return ""
 
-        val cookieRecords = runReadAction { cookiesPsiFile.getRecords() }
-
         runInEdt {
             runWriteAction {
                 CommandProcessor.getInstance().runUndoTransparentAction {
-                    // 只保留 300 个 Cookie
-                    val size = cookieRecords.size + cookies.size - 300
-                    if (size > 0) {
-                        cookieRecords.subList(0, Integer.min(size, cookieRecords.size))
-                            .forEach {
-                                it.prevSibling.delete()
-                                it.delete()
+                    synchronized(this) {
+                        val cookieRecords = runReadAction { cookiesPsiFile.getRecords() }
+
+                        // 只保留 300 个 Cookie
+                        val size = cookieRecords.size + cookies.size - 300
+                        if (size > 0) {
+                            cookieRecords.subList(0, Integer.min(size, cookieRecords.size))
+                                .forEach {
+                                    it.prevSibling.delete()
+                                    it.delete()
+                                }
+                        }
+
+                        val cookieMap =
+                            Maps.uniqueIndex(cookieRecords) { "${it.domain.text}-${it.path.text}-${it.nameCk.text}" }
+
+                        cookies.forEach {
+                            val record = CookiePsiFactory.createRecord(project, it)
+
+                            val key = "${it.domain}-${it.path}-${it.name}"
+                            val cookieRecord = cookieMap[key]
+                            if (cookieRecord == null) {
+                                cookiesPsiFile.add(record.prevSibling)
+                                cookiesPsiFile.add(record)
+                            } else {
+                                cookieRecord.replace(record)
                             }
-                    }
-
-                    val cookieMap =
-                        Maps.uniqueIndex(cookieRecords) { "${it.domain.text}-${it.path.text}-${it.nameCk.text}" }
-
-                    cookies.forEach {
-                        val record = CookiePsiFactory.createRecord(project, it)
-
-                        val key = "${it.domain}-${it.path}-${it.name}"
-                        val cookieRecord = cookieMap[key]
-                        if (cookieRecord == null) {
-                            cookiesPsiFile.add(record.prevSibling)
-                            cookiesPsiFile.add(record)
-                        } else {
-                            cookieRecord.replace(record)
                         }
                     }
                 }
