@@ -49,29 +49,30 @@ class HttpInlayActionHandler : InlayActionHandler {
         object : Task.Backgroundable(project, NlsBundle.nls("creating.file"), true) {
             override fun run(indicator: ProgressIndicator) {
                 runReadAction {
-                    val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
+                    val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return@runReadAction
+
+                    val qualifiedName = method.containingClass?.qualifiedName ?: return@runReadAction
 
                     val module = ModuleUtil.findModuleForPsiElement(element) ?: return@runReadAction
 
-                    val map = scanRequest.getCacheRequestPathMethodMap(module)
+                    val map = scanRequest.getCacheRequestMap(module)
 
-                    val values = map.values
-                    for (value in values) {
-                        for (request in value) {
-                            val psiMethod = request.psiElement ?: continue
+                    val requests = map[qualifiedName] ?: return@runReadAction
 
-                            if (method != psiMethod) {
-                                continue
-                            }
+                    for (request in requests) {
+                        val psiMethod = request.psiElement ?: continue
 
-                            runInEdt {
-                                runWriteAction {
-                                    createRequest(project, request)
-                                }
-                            }
-
-                            return@runReadAction
+                        if (method != psiMethod) {
+                            continue
                         }
+
+                        runInEdt {
+                            runWriteAction {
+                                createRequest(project, request)
+                            }
+                        }
+
+                        return@runReadAction
                     }
                 }
             }

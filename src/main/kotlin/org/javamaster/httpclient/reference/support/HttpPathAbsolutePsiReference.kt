@@ -25,24 +25,20 @@ class HttpPathAbsolutePsiReference(
     override fun getVariants(): Array<Any> {
         val module = ModuleUtil.findModuleForPsiElement(httpPathAbsolute) ?: return emptyArray()
 
-        val project = module.project
-        val scanRequest = project.getService(ScanRequest::class.java)
+        val scanRequest = module.project.getService(ScanRequest::class.java)
 
-        val map = scanRequest.getCacheRequestPathMethodMap(module)
+        val requests = scanRequest.getCacheRequestList(module)
 
-        return map.values
-            .map {
-                it.mapNotNull { innerIt ->
-                    val name = innerIt.psiElement?.containingClass?.name ?: return@mapNotNull null
+        return requests
+            .mapNotNull {
+                val name = it.psiElement?.containingClass?.name ?: return@mapNotNull null
 
-                    LookupElementBuilder
-                        .create(innerIt.path)
-                        .appendTailText("[${innerIt.method.name}]", true)
-                        .withIcon(HttpIcons.REQUEST_MAPPING)
-                        .withTypeText(name)
-                }
+                LookupElementBuilder
+                    .create(it.path)
+                    .appendTailText("[${it.method.name}]", true)
+                    .withIcon(HttpIcons.REQUEST_MAPPING)
+                    .withTypeText(name)
             }
-            .flatten()
             .toTypedArray()
     }
 

@@ -10,6 +10,9 @@ import com.intellij.util.concurrency.AppExecutorUtil
 import org.javamaster.httpclient.logger.logWarn
 import org.javamaster.httpclient.scan.ScanRequest
 
+/**
+ * @author yudong
+ */
 class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
 
     override fun treeChanged(event: PsiTreeChangeEventImpl) {

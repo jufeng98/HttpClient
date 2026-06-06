@@ -14,7 +14,7 @@ import org.javamaster.httpclient.scan.ScanRequest
  * @author yudong
  */
 class HttpUrlControllerMethodPsiReference(
-    private val searchTxt: String,
+    private val path: String,
     private val requestTarget: HttpRequestTarget,
     textRange: TextRange,
     private val originalFile: VirtualFile,
@@ -29,7 +29,7 @@ class HttpUrlControllerMethodPsiReference(
 
         val scanRequest = project.getService(ScanRequest::class.java)
 
-        return scanRequest.findCacheApiMethod(module, searchTxt, httpMethod.text)
+        return scanRequest.findSpringMvcMethod(module, path, httpMethod.text)
     }
 
 }

@@ -20,21 +20,44 @@ import java.util.concurrent.ConcurrentMap
  */
 @Service(Service.Level.PROJECT)
 class ScanRequest(private val project: Project) {
-    val controllerScanService = SpringControllerScanService.getService(project)
+    private val controllerScanService = SpringControllerScanService.getService(project)
 
     /**
      * 模块名 -> 控制器类全限定名 -> 请求列表
      */
     private val moduleControllerMap = concurrentMapOf<String, ConcurrentMap<String, List<Request>>>()
 
-    fun findCacheApiMethod(module: Module, searchTxt: String, method: String): PsiMethod? {
-        val requestMap = getCacheRequestPathMethodMap(module)
+    /**
+     * 查找 Spring MVC 控制器的方法
+     *
+     * @param module 模块
+     * @param path 调用路径，例如 /api/user
+     * @param method 调用方法名，例如 GET、POST等
+     */
+    fun findSpringMvcMethod(module: Module, path: String, method: String): PsiMethod? {
+        val allRequests = getCacheRequestList(module)
 
-        val requests = requestMap["$searchTxt-$method"] ?: return null
+        val methodMap = allRequests.groupBy { it.method.name }
 
-        // There may be more than one controller method here, so for simplicity, take the first one directly,
-        // without making complex judgments based on the mapping rules of SpringMVC
-        return requests.firstOrNull()?.psiElement
+        // 按方法名先匹配
+        val requests = methodMap[method] ?: return null
+
+        val pathMap = requests.groupBy { it.path }
+
+        // 为提高效率, 先根据路径完全匹配规则来查找
+        val request = pathMap[path]?.firstOrNull()
+        if (request != null) {
+            return request.psiElement
+        }
+
+        // 模式匹配（较慢，作为降级策略）
+        for (request in requests) {
+            if (SpringUtils.matchPath(request.path, path)) {
+                return request.psiElement
+            }
+        }
+
+        return null
     }
 
     fun getCacheRequestList(filterMethods: MutableSet<HttpMethod>): MutableList<Request>? {
@@ -67,7 +90,7 @@ class ScanRequest(private val project: Project) {
 
         var cacheRequestMap = moduleControllerMap[moduleName]
         if (cacheRequestMap == null) {
-            // 尝试初始化模块的请求并缓存
+            // 初始化模块的请求并缓存
             getCacheRequestMap(module)
 
             return
@@ -80,8 +103,6 @@ class ScanRequest(private val project: Project) {
                 val requestsNew = controllerScanService.findRequests(project, GlobalSearchScope.fileScope(javaFile))
 
                 val map = requestsNew.groupBy { it.controllerClassQualifiedName }
-
-                logInfo("完成扫描文件 ${javaFile.name} 的请求,共 ${map.size} 个控制器类,共 ${requestsNew.size} 个请求")
 
                 cacheRequestMap.putAll(map)
 
@@ -109,14 +130,7 @@ class ScanRequest(private val project: Project) {
     fun getCacheRequestList(module: Module): List<Request> {
         val moduleControllerQualifiedNameMap = getCacheRequestMap(module)
 
-        return moduleControllerQualifiedNameMap.values
-            .flatten()
-    }
-
-    fun getCacheRequestPathMethodMap(module: Module): Map<String, List<Request>> {
-        val requests = getCacheRequestList(module)
-
-        return requests.groupBy { it.toString() }
+        return moduleControllerQualifiedNameMap.values.flatten()
     }
 
 }
