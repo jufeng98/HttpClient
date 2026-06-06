@@ -50,6 +50,26 @@ class ScanRequest(private val project: Project) {
             return request.psiElement
         }
 
+        // 有可能带有 contextPath 或者网关的前缀,先尝试去掉第一段来匹配
+        val firstIdx = path.indexOf("/", 1)
+        if (firstIdx != -1) {
+            val pathWithoutFirst = path.substring(firstIdx)
+            val requestWithoutFirst = pathMap[pathWithoutFirst]?.firstOrNull()
+            if (requestWithoutFirst != null) {
+                return requestWithoutFirst.psiElement
+            }
+
+            // 在尝试去掉第二段来匹配
+            val secondIdx = pathWithoutFirst.indexOf("/", 1)
+            if (secondIdx != -1) {
+                val pathWithoutSecond = pathWithoutFirst.substring(secondIdx)
+                val requestWithoutSecond = pathMap[pathWithoutSecond]?.firstOrNull()
+                if (requestWithoutSecond != null) {
+                    return requestWithoutSecond.psiElement
+                }
+            }
+        }
+
         // 模式匹配（较慢，作为降级策略）
         for (request in requests) {
             if (SpringUtils.matchPath(request.path, path)) {
