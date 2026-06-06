@@ -21,11 +21,11 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.LightVirtualFile
+import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_BODY_ANNO_NAME
 import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.scan.support.Request
-import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_BODY_ANNO_NAME
 import org.javamaster.httpclient.utils.JsonUtils.gson
 import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.PsiTypeUtils
@@ -44,6 +44,7 @@ class HttpInlayActionHandler : InlayActionHandler {
         val actionPayload = payload as PsiPointerInlayActionPayload
         val element = actionPayload.pointer.element as PsiLiteralExpression
         val project = element.project
+        val scanRequest = project.getService(ScanRequest::class.java)
 
         object : Task.Backgroundable(project, NlsBundle.nls("creating.file"), true) {
             override fun run(indicator: ProgressIndicator) {
@@ -52,7 +53,7 @@ class HttpInlayActionHandler : InlayActionHandler {
 
                     val module = ModuleUtil.findModuleForPsiElement(element) ?: return@runReadAction
 
-                    val map = ScanRequest.getCacheRequestMap(module, project)
+                    val map = scanRequest.getCacheRequestMap(module)
 
                     val values = map.values
                     for (value in values) {

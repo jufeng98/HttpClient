@@ -25,7 +25,10 @@ class HttpPathAbsolutePsiReference(
     override fun getVariants(): Array<Any> {
         val module = ModuleUtil.findModuleForPsiElement(httpPathAbsolute) ?: return emptyArray()
 
-        val map = ScanRequest.getCacheRequestMap(module, module.project)
+        val project = module.project
+        val scanRequest = project.getService(ScanRequest::class.java)
+
+        val map = scanRequest.getCacheRequestMap(module)
 
         return map.values
             .map {

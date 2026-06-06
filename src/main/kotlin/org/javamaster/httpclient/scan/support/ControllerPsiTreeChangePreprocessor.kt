@@ -41,6 +41,7 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
 
     private fun scheduleControllerCheck(psiFile: PsiJavaFile) {
         val project = psiFile.project
+        val controllerPsiModificationTracker = project.getService(ControllerPsiModificationTracker::class.java)
         val dumbService = DumbService.getInstance(project)
 
         dumbService.runWhenSmart {
@@ -48,7 +49,7 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
                 .nonBlocking<Unit> {
                     try {
                         if (isSpringController(psiFile)) {
-                            ControllerPsiModificationTracker.myModificationCount.incModificationCount()
+                            controllerPsiModificationTracker.myModificationCount.incModificationCount()
                         }
                     } catch (t: Throwable) {
                         System.err.println(t.message)

@@ -24,9 +24,12 @@ class HttpUrlControllerMethodPsiReference(
     override fun resolve(): PsiElement? {
         val httpMethod = PsiTreeUtil.getPrevSiblingOfType(requestTarget, HttpMethod::class.java) ?: return null
 
-        val module = ModuleUtil.findModuleForFile(originalFile, httpMethod.project) ?: return null
+        val project = httpMethod.project
+        val module = ModuleUtil.findModuleForFile(originalFile, project) ?: return null
 
-        return ScanRequest.findApiMethod(module, searchTxt, httpMethod.text)
+        val scanRequest = project.getService(ScanRequest::class.java)
+
+        return scanRequest.findApiMethod(module, searchTxt, httpMethod.text)
     }
 
 }

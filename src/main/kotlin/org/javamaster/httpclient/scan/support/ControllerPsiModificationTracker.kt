@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.scan.support
 
 import com.intellij.lang.Language
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.util.PsiModificationTracker
@@ -12,7 +13,8 @@ import java.util.function.Predicate
  * @see ControllerPsiTreeChangePreprocessor
  * @author yudong
  */
-object ControllerPsiModificationTracker : PsiModificationTracker {
+@Service(Service.Level.PROJECT)
+class ControllerPsiModificationTracker : PsiModificationTracker {
     val myModificationCount = SimpleModificationTracker()
 
     override fun getModificationCount(): Long {

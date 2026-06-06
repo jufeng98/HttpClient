@@ -66,11 +66,13 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
                     return@Runnable
                 }
 
+                val scanRequest = myProject.getService(ScanRequest::class.java)
+
                 val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
 
                 val searchScope = (scope.scope as? GlobalSearchScope) ?: GlobalSearchScope.projectScope(myProject)
 
-                ScanRequest.fetchRequests(myProject, searchScope) {
+                scanRequest.fetchRequests(myProject, searchScope) {
                     progressIndicator.checkCanceled()
 
                     if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
