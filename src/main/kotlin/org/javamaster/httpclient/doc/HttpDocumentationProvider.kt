@@ -13,7 +13,6 @@ import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiReference
-import com.intellij.psi.impl.FakePsiElement
 import com.intellij.util.SmartList
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.enums.InnerVariableEnum
@@ -221,10 +220,8 @@ class HttpDocumentationProvider : DocumentationProvider {
         return "<div class='definition'><pre>$identifier</pre></div>$description"
     }
 
-    private class MyFakePsiElement(val contextElement: PsiElement, val variable: HttpVariable) : FakePsiElement() {
-        override fun getParent(): PsiElement {
-            return contextElement
-        }
+    private class MyFakePsiElement(contextElement: PsiElement, val variable: HttpVariable) :
+        HttpFakePsiElement(contextElement) {
 
         override fun getPresentation(): ItemPresentation {
             return MyItemPresentation

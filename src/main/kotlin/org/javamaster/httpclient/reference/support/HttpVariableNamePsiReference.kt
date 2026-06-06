@@ -10,7 +10,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiReferenceBase
-import com.intellij.psi.impl.FakePsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.completion.support.SlashEndInsertHandler
 import org.javamaster.httpclient.enums.InnerVariableEnum
@@ -18,6 +17,7 @@ import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder
 import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.parser.HttpFile
+import org.javamaster.httpclient.psi.HttpFakePsiElement
 import org.javamaster.httpclient.psi.HttpFilePath
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.HttpVariableName
@@ -192,20 +192,10 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
 
 
     class JsGlobalVariableValueFakePsiElement(val element: PsiElement, val variableName: String, val value: String) :
-        FakePsiElement() {
-        override fun getParent(): PsiElement {
-            return element
-        }
-
-        override fun canNavigate(): Boolean {
-            return false
-        }
-
-        override fun navigate(requestFocus: Boolean) {
-        }
+        HttpFakePsiElement(element) {
 
         override fun getPresentation(): ItemPresentation {
-            return MyItemPresentation
+            return super.getPresentation() ?: MyItemPresentation
         }
 
         object MyItemPresentation : ItemPresentation {

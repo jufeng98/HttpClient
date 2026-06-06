@@ -7,8 +7,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiFile
-import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_MODEL_PROPERTY_ANNO_NAME
+import org.javamaster.httpclient.psi.HttpFakePsiElement
 import org.javamaster.httpclient.utils.MyPsiUtils
 
 /**
@@ -52,12 +52,6 @@ class JsonKeyMethodFieldDocumentationProvider : DocumentationProvider {
         }
     }
 
-    private class MyPsiField(val psiField: PsiField) : FakePsiElement() {
-
-        override fun getParent(): PsiElement? {
-            return psiField.parent
-        }
-
-    }
+    private class MyPsiField(val psiField: PsiField) : HttpFakePsiElement(psiField)
 
 }

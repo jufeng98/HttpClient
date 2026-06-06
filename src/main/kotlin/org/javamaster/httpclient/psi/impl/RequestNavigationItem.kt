@@ -10,8 +10,7 @@ import javax.swing.Icon
 /**
  * @author yudong
  */
-class RequestNavigationItem(val request: Request) :
-    FakePsiElement() {
+class RequestNavigationItem(val request: Request) : FakePsiElement() {
     private val psiMethod = request.psiElement!!
 
     override fun getPresentation(): ItemPresentation {

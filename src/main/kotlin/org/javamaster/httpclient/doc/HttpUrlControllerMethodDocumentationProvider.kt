@@ -7,8 +7,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_OPERATION_ANNO_NAME
+import org.javamaster.httpclient.psi.HttpFakePsiElement
 import org.javamaster.httpclient.utils.MyPsiUtils
 
 /**
@@ -52,12 +52,6 @@ class HttpUrlControllerMethodDocumentationProvider : DocumentationProvider {
         }
     }
 
-    private class MyPsiMethod(val psiMethod: PsiMethod) : FakePsiElement() {
-
-        override fun getParent(): PsiElement? {
-            return psiMethod.parent
-        }
-
-    }
+    private class MyPsiMethod(val psiMethod: PsiMethod) : HttpFakePsiElement(psiMethod)
 
 }
