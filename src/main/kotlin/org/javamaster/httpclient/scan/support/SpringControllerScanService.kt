@@ -16,6 +16,7 @@ import org.javamaster.httpclient.enums.HttpMethod.Companion.parse
 import org.javamaster.httpclient.enums.SpringHttpMethod
 import org.javamaster.httpclient.enums.SpringHttpMethod.Companion.getByQualifiedName
 import org.javamaster.httpclient.enums.SpringHttpMethod.Companion.getByShortName
+import org.javamaster.httpclient.logger.logInfo
 import org.javamaster.httpclient.utils.AnnoUtils
 import org.javamaster.httpclient.utils.AnnoUtils.collectMethodAnnotations
 import org.javamaster.httpclient.utils.AnnoUtils.findAnnotationValue
@@ -42,45 +43,49 @@ class SpringControllerScanService {
     fun fetchRequests(project: Project, scope: GlobalSearchScope, consumer: Consumer<Request>) {
         val annotationIndex = JavaAnnotationIndex.getInstance()
 
-        val annotations = StubIndex.getElements(
-            annotationIndex.key, Control.Controller.simpleName, project, JavaSourceFilterScope(scope),
+        val filterScope = JavaSourceFilterScope(scope)
+
+        val controllerAnnotations = StubIndex.getElements(
+            annotationIndex.key, Control.Controller.simpleName, project, filterScope,
             PsiAnnotation::class.java
         )
 
-        iterateControllers(annotations, consumer)
+        iterateControllerAnnotations(controllerAnnotations, consumer)
 
-        val annotationsRest = StubIndex.getElements(
-            annotationIndex.key, Control.RestController.simpleName, project, JavaSourceFilterScope(scope),
+        val restControllerAnnotations = StubIndex.getElements(
+            annotationIndex.key, Control.RestController.simpleName, project, filterScope,
             PsiAnnotation::class.java
         )
 
-        iterateControllers(annotationsRest, consumer)
+        iterateControllerAnnotations(restControllerAnnotations, consumer)
     }
 
-    private fun iterateControllers(controllerAnnoList: Collection<PsiAnnotation>, consumer: Consumer<Request>) {
+    private fun iterateControllerAnnotations(
+        controllerAnnoList: Collection<PsiAnnotation>,
+        consumer: Consumer<Request>,
+    ) {
         controllerAnnoList
             .forEach { controllerAnno ->
                 val psiModifierList = controllerAnno.parent as PsiModifierList
                 val controllerClass = psiModifierList.parent as PsiClass? ?: return@forEach
 
-                val psiAnnotation = getClassAnnotation(
+                val classRequestMappingAnno = getClassAnnotation(
                     controllerClass,
                     SpringHttpMethod.REQUEST_MAPPING.shortName,
                     SpringHttpMethod.REQUEST_MAPPING.qualifiedName
                 )
 
-                val childrenRequests: MutableList<Request> = mutableListOf()
                 var parentRequests: List<Request> = mutableListOf()
 
-                if (psiAnnotation != null) {
-                    parentRequests = getRequests(psiAnnotation, null)
-
+                if (classRequestMappingAnno != null) {
+                    parentRequests = getRequests(classRequestMappingAnno, null)
                 }
 
                 val requests = controllerClass.allMethods
                     .map { getRequests(it) }
                     .flatten()
 
+                val childrenRequests: MutableList<Request> = mutableListOf()
                 childrenRequests.addAll(requests)
 
                 if (parentRequests.isEmpty()) {
@@ -97,39 +102,39 @@ class SpringControllerScanService {
             }
     }
 
-    private fun getRequests(method: PsiMethod): List<Request> {
-        val methodAnnotations = collectMethodAnnotations(method)
+    private fun getRequests(controllerMethod: PsiMethod): List<Request> {
+        val methodAnnotations = collectMethodAnnotations(controllerMethod)
 
         return methodAnnotations
-            .map { getRequests(it, method) }
+            .map { getRequests(it, controllerMethod) }
             .flatten()
     }
 
-    private fun getRequests(annotation: PsiAnnotation, psiMethod: PsiMethod?): List<Request> {
-        var httpMethod = getByQualifiedName(annotation.qualifiedName)
+    private fun getRequests(controllerMethodAnno: PsiAnnotation, controllerMethod: PsiMethod?): List<Request> {
+        var springMethod = getByQualifiedName(controllerMethodAnno.qualifiedName)
 
-        if (httpMethod == null) {
-            httpMethod = getByShortName(annotation.nameReferenceElement?.text)
+        if (springMethod == null) {
+            springMethod = getByShortName(controllerMethodAnno.nameReferenceElement?.text)
         }
 
         val methods: MutableSet<HttpMethod> = mutableSetOf()
-        val paths: MutableList<String> = mutableListOf()
         var refAnnotation: CustomRefAnnotation? = null
 
-        if (httpMethod == null) {
-            refAnnotation = findCustomAnnotation(annotation)
+        if (springMethod == null) {
+            refAnnotation = findCustomAnnotation(controllerMethodAnno)
             if (refAnnotation == null) {
                 return emptyList()
             }
 
             methods.addAll(refAnnotation.methods)
         } else {
-            methods.add(httpMethod.method)
+            methods.add(springMethod.method)
         }
 
+        val paths: MutableList<String> = mutableListOf()
         var hasImplicitPath = true
-        val attributes = annotation.attributes
-        for (attribute in attributes) {
+
+        for (attribute in controllerMethodAnno.attributes) {
             val name = attribute.attributeName
 
             if (methods.contains(HttpMethod.REQUEST) && "method" == name) {
@@ -169,18 +174,18 @@ class SpringControllerScanService {
                 }
 
                 else -> {
-                    System.err.println(String.format("Scan api: %s,Class: %s", value, value?.javaClass))
+                    logInfo("Scan api: $value,Class: ${value?.javaClass}")
                 }
             }
 
             hasImplicitPath = false
         }
 
-        if (hasImplicitPath && psiMethod != null) {
+        if (hasImplicitPath && controllerMethod != null) {
             if (refAnnotation != null) {
                 paths.addAll(refAnnotation.paths)
             } else {
-                paths.add("/")
+                paths.add("/${controllerMethod.name}")
             }
         }
 
@@ -188,16 +193,15 @@ class SpringControllerScanService {
             .map {
                 methods
                     .filter { it != HttpMethod.REQUEST || methods.size <= 1 }
-                    .map { method -> Request(method, it, psiMethod, null) }
+                    .map { method -> Request(method, it, controllerMethod, null) }
             }
             .flatten()
     }
 
-    private fun findCustomAnnotation(psiAnnotation: PsiAnnotation): CustomRefAnnotation? {
+    private fun findCustomAnnotation(controllerMethodAnno: PsiAnnotation): CustomRefAnnotation? {
         val qualifiedAnnotation = getQualifiedAnnotation(
-            psiAnnotation,
-            SpringHttpMethod.REQUEST_MAPPING.qualifiedName
-        )
+            controllerMethodAnno,
+            SpringHttpMethod.REQUEST_MAPPING.qualifiedName)
 
         if (qualifiedAnnotation == null) {
             return null

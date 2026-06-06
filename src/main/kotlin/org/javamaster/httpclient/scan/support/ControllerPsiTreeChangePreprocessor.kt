@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.scan.support
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiClass
@@ -7,25 +8,24 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
 import com.intellij.psi.impl.PsiTreeChangePreprocessor
 import org.javamaster.httpclient.enums.Control
+import org.javamaster.httpclient.logger.logWarn
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
+class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor, Disposable {
     private val controllerAnnoSet = setOf(
         Control.RestController.qualifiedName,
         Control.Controller.qualifiedName,
     )
 
-    private val executor = Executors.newSingleThreadScheduledExecutor()
+    private val executor = Executors.newSingleThreadScheduledExecutor { r ->
+        Thread(r, "ControllerPsiTreeChangePreprocessor").apply { isDaemon = true }
+    }
     private var scheduledFuture: ScheduledFuture<*>? = null
 
     override fun treeChanged(event: PsiTreeChangeEventImpl) {
-        val psiFile = event.file ?: return
-
-        if (psiFile !is PsiJavaFile) {
-            return
-        }
+        val psiFile = event.file as? PsiJavaFile ?: return
 
         val code = event.code
         if (code == PsiTreeChangeEventImpl.PsiEventType.BEFORE_PROPERTY_CHANGE
@@ -34,7 +34,7 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
             return
         }
 
-        scheduledFuture?.cancel(true)
+        scheduledFuture?.cancel(false)
 
         scheduledFuture = executor.schedule({ scheduleControllerCheck(psiFile) }, 3, TimeUnit.SECONDS)
     }
@@ -47,16 +47,13 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
         dumbService.runWhenSmart {
             ReadAction
                 .nonBlocking<Unit> {
-                    try {
-                        if (isSpringController(psiFile)) {
-                            controllerPsiModificationTracker.myModificationCount.incModificationCount()
-                        }
-                    } catch (t: Throwable) {
-                        System.err.println(t.message)
+                    if (isSpringController(psiFile)) {
+                        controllerPsiModificationTracker.myModificationCount.incModificationCount()
                     }
                 }
                 .expireWhen { !psiFile.isValid }
                 .submit(executor)
+                .onError { logWarn("check controller failed", it) }
         }
     }
 
@@ -105,6 +102,18 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
         }
 
         return hasControllerAnnotationInHierarchy(superClass, depth + 1)
+    }
+
+    override fun dispose() {
+        try {
+            scheduledFuture?.cancel(false)
+            executor.shutdown()
+            if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+                executor.shutdownNow()
+            }
+        } catch (t: Throwable) {
+            logWarn("dispose failed", t)
+        }
     }
 
 }
