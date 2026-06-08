@@ -26,7 +26,6 @@ class HttpConsts {
         const val HTTP_TYPE_ID = "intellijHttpClient"
         const val HTTP_CLIENT = "HttpClient"
         const val WEB_BOUNDARY = "boundary"
-        const val VARIABLE_SIGN_END = "}}"
         const val SUCCESS = 0
         const val FAILED = 1
 

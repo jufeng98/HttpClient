@@ -58,6 +58,10 @@ class HttpPostFormatProcessor : PostFormatProcessor {
             val queryParam = it.text
             val queryParamFormat = queryParam.split("&").joinToString(" &\n") {
                 val list = it.split("=")
+                if (list.size == 1) {
+                    return@joinToString list[0].trim()
+                }
+
                 list[0].trim() + " = " + list[1].trim()
             }
 

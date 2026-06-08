@@ -5,7 +5,6 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.util.application
 import org.javamaster.httpclient.dubbo.DubboRequest
 import org.javamaster.httpclient.dubbo.loader.DubboClassLoader
 import org.javamaster.httpclient.nls.NlsBundle
@@ -112,18 +111,11 @@ object DubboJars {
 
                     dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboRequest::class.java.classLoader)
 
-                    application.invokeLater {
-                        NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("dubbo.downloaded"))
-                    }
+                    NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("dubbo.downloaded"))
                 } catch (e: Exception) {
                     e.printStackTrace()
 
-                    application.invokeLater {
-                        NotifyUtil.notifyCornerWarn(
-                            project,
-                            NlsBundle.nls("dubbo.downloaded.error") + " ${e.message}"
-                        )
-                    }
+                    NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("dubbo.downloaded.error") + " ${e.message}")
                 } finally {
                     downloading = false
                 }

@@ -11,7 +11,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.util.PsiUtil
 import com.intellij.testFramework.LightVirtualFile
-import com.intellij.util.application
 import com.intellij.util.io.DigestUtil
 import com.jetbrains.rd.util.concurrentMapOf
 import org.javamaster.httpclient.model.PreJsFile
@@ -125,18 +124,11 @@ object NpmJsUtils {
                             }
                     }
 
-                    application.invokeLater {
-                        NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloaded"))
-                    }
+                    NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloaded"))
                 } catch (e: Exception) {
                     e.printStackTrace()
 
-                    application.invokeLater {
-                        NotifyUtil.notifyCornerError(
-                            project,
-                            NlsBundle.nls("js.download.error") + " $e"
-                        )
-                    }
+                    NotifyUtil.notifyCornerError(project, NlsBundle.nls("js.download.error") + " $e")
                 } finally {
                     downloadingMap[httpFilePath] = false
                 }

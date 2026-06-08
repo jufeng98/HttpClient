@@ -11,7 +11,9 @@ import org.javamaster.httpclient.utils.EnvFileUtils
 class AddEnvPrivateFileAction : AddAction(NlsBundle.nls("create.env.private.json.file")) {
 
     override fun actionPerformed(e: AnActionEvent) {
-        EnvFileUtils.createAndReInitEnvCompo(true)
+        val project = e.project ?: return
+
+        EnvFileUtils.createAndReInitEnvCompo(true, project)
     }
 
 }

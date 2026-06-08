@@ -30,9 +30,7 @@ class EnvFileUtils {
 
     companion object {
 
-        fun createAndReInitEnvCompo(isPrivate: Boolean) {
-            val project = HttpUtils.getActiveValidProject() ?: return
-
+        fun createAndReInitEnvCompo(isPrivate: Boolean, project: Project) {
             val envFileName = if (isPrivate) EnvFileService.PRIVATE_ENV_FILE_NAME else EnvFileService.ENV_FILE_NAME
 
             val envFile = createEnvFile(envFileName, isPrivate, project)
@@ -46,19 +44,15 @@ class EnvFileUtils {
 
             notifyInfo(project, nls("file.created") + " " + envFileName)
 
-            try {
-                val allEditors = fileEditorManager.allEditors
-                for (editor in allEditors) {
-                    val httpEditorTopForm = editor.getUserData(HttpEditorTopForm.KEY) ?: continue
+            val allEditors = fileEditorManager.allEditors
+            for (editor in allEditors) {
+                val httpEditorTopForm = editor.getUserData(HttpEditorTopForm.KEY) ?: continue
 
-                    val set = LinkedHashSet<String>()
-                    set.add("dev")
-                    set.add("uat")
-                    set.add("pro")
-                    httpEditorTopForm.initEnvCombo(set)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+                val set = LinkedHashSet<String>()
+                set.add("dev")
+                set.add("uat")
+                set.add("pro")
+                httpEditorTopForm.initEnvCombo(set)
             }
         }
 

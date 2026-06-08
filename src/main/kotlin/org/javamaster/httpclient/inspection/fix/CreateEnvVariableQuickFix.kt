@@ -46,7 +46,7 @@ class CreateEnvVariableQuickFix(
 
         val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project)
         if (jsonFile == null) {
-            EnvFileUtils.createAndReInitEnvCompo(isPrivate)
+            EnvFileUtils.createAndReInitEnvCompo(isPrivate, project)
             topForm.setSelectEnv("dev")
         } else {
             topForm.selectedEnv ?: return

@@ -16,9 +16,10 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 class RunAllRequestAction : AnAction(nls("run.all.tooltip"), null, HttpIcons.RUN_ALL) {
 
     override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project!!
+        val project = e.project ?: return
+
         val presentation = e.presentation
-        val topForm = HttpEditorTopForm.getSelectedEditorTopForm(project)!!
+        val topForm = HttpEditorTopForm.getSelectedEditorTopForm(project) ?: return
 
         if (presentation.icon === HttpIcons.STOP) {
             switchRunBtnToInitialing(presentation)

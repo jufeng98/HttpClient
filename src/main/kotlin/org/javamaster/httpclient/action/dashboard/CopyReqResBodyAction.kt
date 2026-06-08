@@ -23,12 +23,14 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY)
 
     override fun actionPerformed(e: AnActionEvent) {
         val editor = getHttpEditor(e)
-        val project = editor.project!!
+        val project = editor.project ?: return
+
         val document = editor.document
-        val httpFile = PsiDocumentManager.getInstance(project).getPsiFile(document)!!
+        val httpFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return
+
         val copyPasteManager = CopyPasteManager.getInstance()
 
-        val component = PlatformCoreDataKeys.CONTEXT_COMPONENT.getData(e.dataContext)!! as JComponent
+        val component = PlatformCoreDataKeys.CONTEXT_COMPONENT.getData(e.dataContext) as? JComponent? ?: return
 
         if (isReq(e)) {
             val text = PsiTreeUtil.findChildOfType(httpFile, HttpBody::class.java)?.text ?: return
@@ -40,9 +42,9 @@ class CopyReqResBodyAction : DashboardBaseAction(nls("cy.body"), HttpIcons.COPY)
             val simpleTypeEnum = component.getUserData(HttpConsts.httpDashboardResTypeKey) ?: return
 
             if (simpleTypeEnum.binary) {
-                val outputFile = PsiTreeUtil.findChildOfType(httpFile, HttpOutputFile::class.java)!!
+                val outputFile = PsiTreeUtil.findChildOfType(httpFile, HttpOutputFile::class.java) ?: return
 
-                copyPasteManager.setContents(StringSelection(outputFile.filePath!!.text))
+                copyPasteManager.setContents(StringSelection(outputFile.filePath?.text ?: return))
 
                 NotifyUtil.notifyInfo(project, "Copy file path success!")
 

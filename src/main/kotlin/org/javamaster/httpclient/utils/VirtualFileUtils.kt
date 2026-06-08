@@ -125,11 +125,7 @@ object VirtualFileUtils {
         return virtualFile
     }
 
-    fun createHistoryHttpVirtualFile(
-        content: String,
-        project: Project,
-        legalTabName: String,
-    ): VirtualFile {
+    fun createHistoryHttpVirtualFile(project: Project, legalTabName: String): VirtualFile {
         val parentDir = getDateHistoryDir(project)
 
         val path = Path.of(parentDir.toString(), "tmp-$legalTabName-history.http")
@@ -141,10 +137,7 @@ object VirtualFileUtils {
             tempFile.toFile()
         }
 
-        val virtualFile = findFileByIoFile(file, true)
-        virtualFile!!.setBinaryContent(content.toByteArray(StandardCharsets.UTF_8))
-
-        return virtualFile
+        return findFileByIoFile(file, true)!!
     }
 
     fun saveContent(

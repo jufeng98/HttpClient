@@ -79,8 +79,6 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         super.startNotify()
 
         application.executeOnPooledThread {
-            preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
-
             val cookiesVirtualFile = CookieUtils.createCookiesFileIfNotExists(project)
 
             runReadAction {
@@ -114,6 +112,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     }
 
     private fun initStatus() {
+        preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
         parentPath = httpFile.virtualFile.parent.path
         methodType = HttpRequestEnum.getInstance(httpMethod.text)
         jsExecutor = JsExecutor(project, parentPath, tabName)
@@ -259,8 +258,9 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
         runInEdt {
             httpDashboardForm.resetDashboardForm()
-            NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e}</div>")
         }
+
+        NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e}</div>")
 
         destroyProcess()
     }

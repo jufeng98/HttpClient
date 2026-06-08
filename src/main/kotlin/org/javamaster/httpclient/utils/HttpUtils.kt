@@ -4,19 +4,16 @@ import com.intellij.execution.RunManager
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
-import com.intellij.psi.util.InheritanceUtil
-import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.PsiUtil
+import com.intellij.psi.util.*
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.enums.InnerVariableEnum
+import org.javamaster.httpclient.cache.HistoryFolderCache
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
@@ -309,6 +306,10 @@ object HttpUtils {
         if (messageBody != null) {
             reqStr = variableResolver.resolve(messageBody.text)
 
+            if (formUrlEncodeReq) {
+                reqStr = handleQueryParam(reqStr)
+            }
+
             if (shouldEncode) {
                 reqStr = encodeQueryParam(reqStr)
             }
@@ -375,6 +376,10 @@ object HttpUtils {
                     var content = variableResolver.resolve(messageBody.text)
 
                     val formUrlEncodeReq = it.contentType == ContentType.APPLICATION_FORM_URLENCODED
+                    if (formUrlEncodeReq) {
+                        content = handleQueryParam(content)
+                    }
+
                     val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
                     if (shouldEncode) {
                         content = encodeQueryParam(content)
@@ -543,13 +548,9 @@ object HttpUtils {
     fun isFileInHistoryDir(virtualFile: VirtualFile?, project: Project): Boolean {
         virtualFile ?: return false
 
-        return ReadAction.compute<Boolean, Throwable> {
-            val ideaDir = InnerVariableEnum.HISTORY_FOLDER.exec("", project) ?: return@compute false
+        val ideaDirFile = project.getService(HistoryFolderCache::class.java).getHistoryFolder()
 
-            val ideaDirFile = VfsUtil.findFileByIoFile(File(ideaDir), false) ?: return@compute false
-
-            VfsUtil.isAncestor(ideaDirFile, virtualFile, true)
-        }
+        return VfsUtil.isAncestor(ideaDirFile ?: return false, virtualFile, true)
     }
 
     fun isRunTabName(path: String): Boolean {
