@@ -2,9 +2,8 @@ package org.javamaster.httpclient.processHandler
 
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
@@ -30,6 +29,7 @@ import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.*
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.io.OutputStream
 import java.net.http.HttpClient.Version
 import java.util.concurrent.CancellationException
@@ -49,6 +49,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     var tabName = HttpUtils.getTabName(httpMethod)
     var project = httpMethod.project
     protected val httpFile = httpMethod.containingFile as HttpFile
+    protected val httpDocument = httpFile.fileDocument
 
     protected lateinit var parentPath: String
     protected lateinit var jsExecutor: JsExecutor
@@ -81,57 +82,57 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         application.executeOnPooledThread {
             val cookiesVirtualFile = CookieUtils.createCookiesFileIfNotExists(project)
 
-            runReadAction {
-                try {
-                    if (cookiesVirtualFile != null) {
-                        cookiesPsiFile = PsiUtil.getPsiFile(project, cookiesVirtualFile) as CookieFile
-                    }
-
-                    initStatus()
-
-                    val finished = downloadPreJsNpmFiles()
-                    if (!finished) {
-                        destroyProcess()
-                        return@runReadAction
-                    }
-
-                    initPreJsFiles()
-
-                    val otherFinished = downloadOtherFiles()
-                    if (!otherFinished) {
-                        destroyProcess()
-                        return@runReadAction
-                    }
-
-                    startProcess()
-                } catch (e: Exception) {
-                    handleException(e)
+            try {
+                if (cookiesVirtualFile != null) {
+                    cookiesPsiFile = computeReadAction { PsiUtil.getPsiFile(project, cookiesVirtualFile) as CookieFile }
                 }
+
+                initStatus()
+
+                val finished = downloadPreJsNpmFiles()
+                if (!finished) {
+                    destroyProcess()
+                    return@executeOnPooledThread
+                }
+
+                initPreJsFiles()
+
+                val otherFinished = downloadOtherFiles()
+                if (!otherFinished) {
+                    destroyProcess()
+                    return@executeOnPooledThread
+                }
+
+                startProcess()
+            } catch (e: Exception) {
+                handleException(e)
             }
         }
     }
 
     private fun initStatus() {
-        preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
-        parentPath = httpFile.virtualFile.parent.path
-        methodType = HttpRequestEnum.getInstance(httpMethod.text)
-        jsExecutor = JsExecutor(project, parentPath, tabName)
-        variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv, project)
-        loadingRemover = httpMethod.getUserData(HttpConsts.gutterIconLoadingKey)
-        requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
-        rawUrl = requestTarget.url
-        request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
-        requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
-        responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
-        outPutFilePath = PsiTreeUtil.getChildOfType(request, HttpOutputFile::class.java)?.filePath?.text
-        version = request.version?.version ?: Version.HTTP_1_1
-        rawBody = request.body?.text
+        ReadAction.run<Exception> {
+            preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
+            parentPath = httpFile.virtualFile.parent.path
+            methodType = HttpRequestEnum.getInstance(httpMethod.text)
+            jsExecutor = JsExecutor(project, parentPath, tabName)
+            variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv, project)
+            loadingRemover = httpMethod.getUserData(HttpConsts.gutterIconLoadingKey)
+            requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
+            rawUrl = requestTarget.url
+            request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
+            requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
+            responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
+            outPutFilePath = PsiTreeUtil.getChildOfType(request, HttpOutputFile::class.java)?.filePath?.text
+            version = request.version?.version ?: Version.HTTP_1_1
+            rawBody = request.body?.text
 
-        jsListBeforeReq = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock)
+            jsListBeforeReq = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock)
 
-        jsAfterReq = MyPsiUtils.getJsScript(responseHandler)
+            jsAfterReq = MyPsiUtils.getJsScript(responseHandler)
 
-        paramMap = MyPsiUtils.getReqDirectionCommentParamMap(requestBlock)
+            paramMap = MyPsiUtils.getReqDirectionCommentParamMap(requestBlock)
+        }
     }
 
     /**
@@ -211,45 +212,38 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             selectedEnv, variableResolver.fileScopeVariableMap
         )
 
-        return jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
+        return jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq, httpFile.name, httpDocument)
     }
 
     fun dealResponse(httpInfo: HttpInfo, parentPath: String) {
-        finishedTime = System.currentTimeMillis()
-
         if (outPutFilePath != null && httpInfo.byteArray != null) {
             var path = variableResolver.resolve(outPutFilePath!!)
 
             path = HttpUtils.constructFilePath(path, parentPath)
 
-            val saveResult = ResUtils.saveResToFile(path, httpInfo.byteArray)
+            val saveResult = ResUtils.saveResBodyToFile(path, httpInfo.byteArray)
 
             httpInfo.httpResDescList.add(0, saveResult)
         }
 
-        runInEdt {
-            WriteAction.run<Exception> {
-                httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param))
-            }
+        httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param))
 
-            val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindowManager = ToolWindowManager.getInstance(project)
 
-            val myThrowable = httpDashboardForm.throwable
-            hasError = myThrowable != null
-            if (hasError) {
-                myThrowable.printStackTrace()
+        val myThrowable = httpInfo.httpException
+        if (myThrowable != null) {
+            myThrowable.printStackTrace()
 
-                val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
-                    nls("req.interrupted", tabName)
-                } else {
-                    nls("req.failed", tabName, myThrowable)
-                }
-                val msg = "<div style='font-size:12pt'>$error</div>"
-                toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)
+            val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
+                nls("req.interrupted", tabName)
             } else {
-                val msg = "<div style='font-size:12pt'>$tabName ${nls("request.success")}!</div>"
-                toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
+                nls("req.failed", tabName, myThrowable)
             }
+            val msg = "<div style='font-size:12pt'>$error</div>"
+            toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)
+        } else {
+            val msg = "<div style='font-size:12pt'>$tabName ${nls("request.success")}!</div>"
+            toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
         }
     }
 

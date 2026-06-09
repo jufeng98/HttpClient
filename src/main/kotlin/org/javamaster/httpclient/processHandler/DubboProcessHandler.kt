@@ -21,6 +21,7 @@ import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.ReqUtils
 import java.lang.reflect.InvocationTargetException
 
@@ -67,7 +68,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
-        val module = ModuleUtil.findModuleForPsiElement(httpFile)
+        val module = computeReadAction { ModuleUtil.findModuleForPsiElement(httpFile) }
 
         val clsName = "org.javamaster.httpclient.dubbo.DubboRequest"
         val dubboRequestClazz = DubboJars.dubboClassLoader.loadClass(clsName)

@@ -15,6 +15,7 @@ import com.intellij.util.io.DigestUtil
 import com.jetbrains.rd.util.concurrentMapOf
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.io.File
 import java.io.FileFilter
 import java.io.InputStream
@@ -182,15 +183,17 @@ object NpmJsUtils {
 
         val virtualFile = LightVirtualFile("dummy.json", packageJsonStr)
 
-        val jsonFile = PsiUtil.getPsiFile(project, virtualFile) as JsonFile
+        val jsonFile = computeReadAction { PsiUtil.getPsiFile(project, virtualFile) as JsonFile }
 
-        val jsonObject = jsonFile.topLevelValue
+        val jsonObject = computeReadAction { jsonFile.topLevelValue }
         if (jsonObject !is JsonObject) {
             throw IllegalArgumentException("Invalid library: ${libDir.name}")
         }
 
-        val jsonStringLiteral = jsonObject.findProperty("main")?.value as JsonStringLiteral?
-            ?: throw IllegalArgumentException("Invalid library: ${libDir.name}")
+        val jsonStringLiteral = computeReadAction {
+            jsonObject.findProperty("main")?.value as JsonStringLiteral?
+                ?: throw IllegalArgumentException("Invalid library: ${libDir.name}")
+        }
 
         val entryJs = jsonStringLiteral.value
 

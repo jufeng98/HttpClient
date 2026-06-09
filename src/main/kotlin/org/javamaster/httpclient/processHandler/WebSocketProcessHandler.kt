@@ -42,6 +42,8 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             toolWindow?.show()
         }
 
+        finishedTime = System.currentTimeMillis()
+
         wsRequest!!.connect()
     }
 

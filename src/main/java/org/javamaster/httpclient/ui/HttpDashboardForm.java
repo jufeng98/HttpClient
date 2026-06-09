@@ -9,8 +9,9 @@ import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.*;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
@@ -20,7 +21,6 @@ import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.util.Consumer;
 import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -40,16 +40,15 @@ import org.javamaster.httpclient.ws.WsRequest;
 import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class HttpDashboardForm implements Disposable {
     private final LinkedList<Pair<String, Language>> inputHistoryList = new LinkedList<>();
     private final List<Editor> editorList = Lists.newArrayList();
 
     public JPanel mainPanel;
-    public Throwable throwable;
     public JPanel requestPanel;
     public JPanel responsePanel;
     private JPanel reqVerticalToolbarPanel;
@@ -88,59 +87,60 @@ public class HttpDashboardForm implements Disposable {
     }
 
     public void initHttpResContent(HttpInfo httpInfo, boolean noLog) {
-        splitter.setVisible(true);
-        labelLoading.setVisible(false);
+        VirtualFile reqVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(httpInfo.getHttpReqDescList(),
+                "req.http", tabName, noLog, project);
 
-        GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
-        GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
+        Document reqDocument = ResUtils.INSTANCE.getDocument(reqVirtualFile);
 
-        throwable = httpInfo.getHttpException();
-        SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
-
-        byte[] reqBytes = String.join("", httpInfo.getHttpReqDescList()).getBytes(StandardCharsets.UTF_8);
-
-        Editor reqEditor = EditorUtils.INSTANCE.createEditor(reqBytes, "req.http", project, tabName,
-                editorList, true, simpleTypeEnum, noLog);
-
-        requestPanel.add(reqEditor.getComponent(), constraints);
-
-        initVerticalToolbarPanel(reqEditor, reqVerticalToolbarPanel, null, null);
-
+        VirtualFile resVirtualFile;
+        Throwable throwable = httpInfo.getHttpException();
         if (throwable != null) {
             String msg = ExceptionUtils.getStackTrace(throwable);
-
-            Editor errorEditor = EditorUtils.INSTANCE.createEditor(msg.getBytes(StandardCharsets.UTF_8),
-                    "error.log", project, tabName, editorList, false, simpleTypeEnum, noLog);
-
-            responsePanel.add(errorEditor.getComponent(), constraints);
-
-            initVerticalToolbarPanel(errorEditor, resVerticalToolbarPanel, null, null);
-
-            return;
+            resVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(Lists.newArrayList(msg),
+                    "error.log", tabName, noLog, project);
+        } else {
+            resVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(httpInfo.getHttpResDescList(),
+                    "res.http", tabName, noLog, project);
         }
 
-        VirtualFile responseBodyFile = saveResponseToFile(httpInfo, tabName, noLog);
+        Document resDocument = ResUtils.INSTANCE.getDocument(resVirtualFile);
 
-        byte[] resBytes = String.join("", httpInfo.getHttpResDescList()).getBytes(StandardCharsets.UTF_8);
+        VirtualFile resBodyFile = ResUtils.INSTANCE.saveResBodyToFile(httpInfo, tabName, noLog, project);
 
-        GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
-        GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            resetDashboardForm();
 
-        Editor resEditor = EditorUtils.INSTANCE.createEditor(resBytes, "res.http", project, tabName,
-                editorList, false, simpleTypeEnum, noLog);
+            GridLayoutManager layout = (GridLayoutManager) requestPanel.getParent().getLayout();
+            GridConstraints constraints = layout.getConstraintsForComponent(requestPanel);
 
-        responsePanel.add(resEditor.getComponent(), constraintsRes);
+            SimpleTypeEnum simpleTypeEnum = httpInfo.getType();
 
-        initVerticalToolbarPanel(resEditor, resVerticalToolbarPanel, simpleTypeEnum, responseBodyFile);
+            Editor reqEditor = EditorUtils.INSTANCE.createEditor(reqVirtualFile, reqDocument, true,
+                    project, true, simpleTypeEnum, editorList);
 
-        if (Objects.equals(simpleTypeEnum, SimpleTypeEnum.IMAGE)) {
-            ImageIcon imageIcon = new ImageIcon(httpInfo.getByteArray());
-            JLabel jLabel = new JLabel(imageIcon);
+            requestPanel.add(reqEditor.getComponent(), constraints);
 
-            JBScrollPane presentation = new JBScrollPane(jLabel);
+            initVerticalToolbarPanel(reqEditor, reqVerticalToolbarPanel, null, null);
 
-            renderResponsePresentation(resEditor.getComponent(), presentation, constraintsRes);
-        }
+            Editor resEditor = EditorUtils.INSTANCE.createEditor(resVirtualFile, resDocument, true,
+                    project, false, simpleTypeEnum, editorList);
+
+            GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
+            GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
+
+            responsePanel.add(resEditor.getComponent(), constraintsRes);
+
+            initVerticalToolbarPanel(resEditor, resVerticalToolbarPanel, simpleTypeEnum, resBodyFile);
+
+            if (Objects.equals(simpleTypeEnum, SimpleTypeEnum.IMAGE)) {
+                ImageIcon imageIcon = new ImageIcon(httpInfo.getByteArray());
+                JLabel jLabel = new JLabel(imageIcon);
+
+                JBScrollPane presentation = new JBScrollPane(jLabel);
+
+                renderResponsePresentation(resEditor.getComponent(), presentation, constraintsRes);
+            }
+        });
     }
 
     private void initVerticalToolbarPanel(Editor target, JPanel jPanel, SimpleTypeEnum resType, VirtualFile resBodyFile) {
@@ -168,17 +168,6 @@ public class HttpDashboardForm implements Disposable {
         jPanel.add(component);
     }
 
-    private VirtualFile saveResponseToFile(HttpInfo httpInfo, String tabName, boolean noLog) {
-        String fileName = ResUtils.INSTANCE.resolveFilename(httpInfo);
-
-        byte[] content = Objects.requireNonNull(httpInfo.getByteArray());
-        VirtualFile virtualFile = VirtualFileUtils.INSTANCE.saveContent(content, tabName, fileName, noLog, project);
-
-        httpInfo.getHttpResDescList().add(HttpUtils.CR_LF + ">> " + virtualFile.getPath() + HttpUtils.CR_LF);
-
-        return virtualFile;
-    }
-
     private void renderResponsePresentation(JComponent resComponent, JComponent presentation, GridConstraints constraintsRes) {
         Dimension size = resComponent.getSize();
         resComponent.setPreferredSize(new Dimension(size.width, 160));
@@ -199,30 +188,26 @@ public class HttpDashboardForm implements Disposable {
         new WsDashboardForm(wsRequest);
     }
 
-    public Consumer<String> initMockServerForm() {
-        mainPanel.remove(splitter);
-        mainPanel.remove(labelLoading);
-        mainPanel.setLayout(new BorderLayout());
+    public void initMockServerForm(Consumer<Editor> editorConsumer) {
+        FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
 
-        Editor editor = WriteAction.computeAndWait(() ->
-                EditorUtils.INSTANCE.createEditor("".getBytes(StandardCharsets.UTF_8), "mockServer.log",
-                        project, tabName, editorList, false)
-        );
+        VirtualFile virtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(Lists.newArrayList(""),
+                "mock-server.log", tabName, false, project);
 
-        mainPanel.add(editor.getComponent(), BorderLayout.CENTER);
+        Document document = ReadAction.compute(() -> Objects.requireNonNull(fileDocumentManager.getDocument(virtualFile)));
 
-        return log -> ApplicationManager.getApplication().invokeLater(() ->
-                DocumentUtil.writeInRunUndoTransparentAction(() -> {
-                            Document document = editor.getDocument();
-                            document.insertString(document.getTextLength(), log);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            mainPanel.remove(splitter);
+            mainPanel.remove(labelLoading);
+            mainPanel.setLayout(new BorderLayout());
 
-                            Caret caret = editor.getCaretModel().getPrimaryCaret();
-                            caret.moveToOffset(document.getTextLength());
+            var editor = EditorFactory.getInstance().createEditor(document, project, virtualFile, true);
+            editorList.add(editor);
 
-                            ScrollingModel scrollingModel = editor.getScrollingModel();
-                            scrollingModel.scrollToCaret(ScrollType.RELATIVE);
-                        }
-                ));
+            mainPanel.add(editor.getComponent(), BorderLayout.CENTER);
+
+            editorConsumer.accept(editor);
+        });
     }
 
     public void saveInputHistoryList() {
@@ -350,7 +335,7 @@ public class HttpDashboardForm implements Disposable {
                             return;
                         }
 
-                        Caret caret =  resEditor.getCaretModel().getPrimaryCaret();
+                        Caret caret = resEditor.getCaretModel().getPrimaryCaret();
                         ScrollingModel scrollingModel = resEditor.getScrollingModel();
                         Document document = editorTextField.getDocument();
 

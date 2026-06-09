@@ -1,13 +1,13 @@
 package org.javamaster.httpclient.parser
 
 import com.intellij.extapi.psi.PsiFileBase
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.CookieFileType
 import org.javamaster.httpclient.CookieLanguage
 import org.javamaster.httpclient.psi.CookieRecord
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 
 /**
  * @author yudong
@@ -15,9 +15,7 @@ import org.javamaster.httpclient.psi.CookieRecord
 class CookieFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, CookieLanguage.INSTANCE) {
 
     fun getRecords(): List<CookieRecord> {
-        return ReadAction.compute<List<CookieRecord>, Exception> {
-            PsiTreeUtil.getChildrenOfTypeAsList(this, CookieRecord::class.java)
-        }
+        return computeReadAction { PsiTreeUtil.getChildrenOfTypeAsList(this, CookieRecord::class.java) }
     }
 
     override fun getFileType(): FileType {

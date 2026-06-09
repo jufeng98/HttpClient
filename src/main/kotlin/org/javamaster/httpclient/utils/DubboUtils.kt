@@ -17,6 +17,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequest
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.HttpUtils.getTabName
 
 object DubboUtils {
@@ -30,7 +31,7 @@ object DubboUtils {
         val javaPsiFacade = JavaPsiFacade.getInstance(module.project)
         val scope = GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)
 
-        return javaPsiFacade.findClass(name, scope)
+        return computeReadAction { javaPsiFacade.findClass(name, scope) }
     }
 
     fun findInterface(project: Project, name: String): PsiClass? {

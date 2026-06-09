@@ -4,19 +4,21 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil.findFileByIoFile
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.openapi.vfs.readBytes
 import com.intellij.openapi.vfs.readText
 import com.intellij.testFramework.LightVirtualFile
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.PathUtils.legalizeFileName
 import java.io.File
 import java.io.FileNotFoundException
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.name
 
 /**
  * @author yudong
@@ -93,38 +95,6 @@ object VirtualFileUtils {
         return parentDir
     }
 
-    fun createHttpVirtualFileFromText(
-        txtBytes: ByteArray,
-        suffix: String,
-        project: Project,
-        legalTabName: String,
-        noLog: Boolean,
-    ): VirtualFile {
-        val parentDir = getDateHistoryDir(project)
-
-        val str = legalTabName + "-" + DateFormatUtils.format(Date(), "hhmmss")
-        val path = Path.of(parentDir.toString(), "tmp-$str.$suffix")
-
-        if (noLog) {
-            val lightVirtualFile = LightVirtualFile(path.toFile().name)
-            lightVirtualFile.charset = StandardCharsets.UTF_8
-            lightVirtualFile.setBinaryContent(txtBytes)
-            return lightVirtualFile
-        }
-
-        val file = if (Files.exists(path)) {
-            path.toFile()
-        } else {
-            val tempFile = Files.createFile(path)
-            tempFile.toFile()
-        }
-
-        val virtualFile = findFileByIoFile(file, true)
-        virtualFile!!.setBinaryContent(txtBytes)
-
-        return virtualFile
-    }
-
     fun createHistoryHttpVirtualFile(project: Project, legalTabName: String): VirtualFile {
         val parentDir = getDateHistoryDir(project)
 
@@ -140,40 +110,45 @@ object VirtualFileUtils {
         return findFileByIoFile(file, true)!!
     }
 
-    fun saveContent(
-        content: ByteArray,
+    fun createDescListVirtualFile(
+        descList: MutableList<String>,
+        suffix: String,
         tabName: String,
-        fileName: String,
         noLog: Boolean,
         project: Project,
     ): VirtualFile {
+        val legalTabName = legalizeFileName(tabName)
+
+        val descContent = descList.joinToString("")
+
+        val parentDir = getDateHistoryDir(project)
+
+        val str = legalTabName + "-" + DateFormatUtils.format(Date(), "hhmmss")
+        val path = Path.of(parentDir.toString(), "tmp-$str.$suffix")
+
         if (noLog) {
-            val lightVirtualFile = LightVirtualFile(fileName)
-            lightVirtualFile.charset = StandardCharsets.UTF_8
-            lightVirtualFile.setBinaryContent(content)
+            val lightVirtualFile = LightVirtualFile(path.name, descContent)
             return lightVirtualFile
         }
 
-        val dateHistoryDir = getDateHistoryDir(project)
-
-        val resBodyDir = File(dateHistoryDir, legalizeFileName(tabName))
-        if (!resBodyDir.exists()) {
-            resBodyDir.mkdirs()
+        val file = if (Files.exists(path)) {
+            Files.writeString(path, descContent)
+            path.toFile()
+        } else {
+            val tempFile = Files.createFile(path)
+            Files.writeString(path, descContent)
+            tempFile.toFile()
         }
 
-        val file = File(resBodyDir, fileName)
+        var virtualFile = findFileByIoFile(file, true)
+        virtualFile!!.refresh(false, false)
 
-        val absolutePath = file.absolutePath
-
-        val deleted = file.delete()
-        if (deleted) {
-            println("已删除文件:$absolutePath")
+        val psiFile = computeReadAction { virtualFile!!.findPsiFile(project) }
+        if (psiFile == null) {
+            virtualFile = LightVirtualFile(virtualFile.name, descContent)
         }
 
-        Files.write(file.toPath(), content)
-        println("已保存到文件:$absolutePath")
-
-        return findFileByIoFile(file, true)!!
+        return virtualFile
     }
 
     private fun isVirtualFileNewest(virtualFile: VirtualFile, file: File): Boolean {

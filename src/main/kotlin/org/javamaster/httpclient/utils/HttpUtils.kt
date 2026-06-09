@@ -4,9 +4,11 @@ import com.intellij.execution.RunManager
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -169,6 +171,10 @@ object HttpUtils {
         val headerFieldValue = headerField.headerFieldValue ?: return true
 
         return SimpleTypeEnum.isTextContentType(headerFieldValue.text)
+    }
+
+    fun <T> computeReadAction(runnable: () -> T): T {
+        return ApplicationManager.getApplication().runReadAction(Computable(runnable))
     }
 
     private fun handleOrdinaryContent(

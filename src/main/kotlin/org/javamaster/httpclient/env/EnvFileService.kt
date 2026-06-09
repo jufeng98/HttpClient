@@ -2,7 +2,6 @@ package org.javamaster.httpclient.env
 
 import com.intellij.json.JsonElementTypes
 import com.intellij.json.psi.*
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -13,7 +12,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findFile
 import com.intellij.openapi.vfs.writeText
 import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtil
@@ -26,6 +24,7 @@ import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.escapeRegexp
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.io.File
 
 
@@ -309,7 +308,7 @@ class EnvFileService(val project: Project) {
 
             val psiFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return emptyMap()
 
-            val topLevelValue = psiFile.topLevelValue
+            val topLevelValue = computeReadAction { psiFile.topLevelValue }
             if (topLevelValue !is JsonObject) {
                 System.err.println("The environment file: ${psiFile.virtualFile.path} outer format does not conform to the specification!")
                 return emptyMap()
@@ -375,7 +374,7 @@ class EnvFileService(val project: Project) {
                 System.err.println("The environment file: ${jsonFile.virtualFile.path} inner format does not conform to the specification!")
                 return null
             }
-            val jsonProperty = ReadAction.compute<JsonProperty, Exception> { jsonValue.findProperty(key) }
+            val jsonProperty = computeReadAction { jsonValue.findProperty(key) }
                 ?: return null
 
             val innerJsonValue = jsonProperty.value ?: return null
@@ -433,13 +432,13 @@ class EnvFileService(val project: Project) {
 
             val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return null
 
-            val topLevelValue = ReadAction.compute<JsonValue?, Exception> { jsonFile.topLevelValue }
+            val topLevelValue = computeReadAction { jsonFile.topLevelValue }
             if (topLevelValue !is JsonObject) {
                 System.err.println("The environment file: ${jsonFile.virtualFile.path} outer format does not conform to the specification!")
                 return null
             }
 
-            return ReadAction.compute<JsonProperty, Exception> { topLevelValue.findProperty(env) }
+            return computeReadAction { topLevelValue.findProperty(env) }
         }
 
         fun getJsonLiteralValue(literal: JsonLiteral): String {
@@ -487,7 +486,7 @@ class EnvFileService(val project: Project) {
             val virtualFile = dir.findFile(envFileName)
 
             if (virtualFile != null) {
-                val psiFile = ReadAction.compute<PsiFile, Exception> { PsiUtil.getPsiFile(project, virtualFile) }
+                val psiFile = computeReadAction { PsiUtil.getPsiFile(project, virtualFile) }
                 if (psiFile !is JsonFile) {
                     return null
                 }

@@ -1,11 +1,11 @@
 package org.javamaster.httpclient.cache
 
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import org.javamaster.httpclient.enums.InnerVariableEnum
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.io.File
 
 /**
@@ -23,9 +23,7 @@ class HistoryFolderCache(private val project: Project) {
 
         val ideaDir = InnerVariableEnum.HISTORY_FOLDER.exec("", project)!!
 
-        historyFolder = ReadAction.compute<VirtualFile?, Throwable> {
-            VfsUtil.findFileByIoFile(File(ideaDir), false)
-        }
+        historyFolder = computeReadAction { VfsUtil.findFileByIoFile(File(ideaDir), false) }
 
         return historyFolder
     }

@@ -1,7 +1,6 @@
 package org.javamaster.httpclient.processHandler
 
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.util.text.Formats
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
@@ -74,8 +73,10 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         val future = methodTypeTmp.execute(paramMap, req)
 
         future.whenCompleteAsync { response, throwable ->
-            costTimes = System.currentTimeMillis() - start
+            finishedTime = System.currentTimeMillis()
+            costTimes = finishedTime - start
             httpStatus = response?.statusCode()
+            hasError = throwable != null
 
             application.executeOnPooledThread {
                 if (ResUtils.shouldRedirect(httpStatus, paramMap)) {
@@ -97,7 +98,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                 destroyProcess()
 
-                if (throwable != null) {
+                if (hasError) {
                     val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
                     dealResponse(httpInfo, parentPath)
@@ -112,68 +113,66 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project, cookiesPsiFile)
                 }
 
-                runReadAction {
-                    try {
-                        val resHeaders = response.headers()
-                        val resHeaderList = ResUtils.convertResponseHeaders(resHeaders)
+                try {
+                    val resHeaders = response.headers()
+                    val resHeaderList = ResUtils.convertResponseHeaders(resHeaders)
 
-                        val httpResInfo = ResUtils.convertResponseBody(response.body(), resHeaders)
+                    val httpResInfo = ResUtils.convertResponseBody(response.body(), resHeaders)
 
-                        val size = Formats.formatFileSize(response.body().size.toLong())
-                        val comment = NlsBundle.nls("res.desc", response.statusCode(), costTimes!!, size)
+                    val size = Formats.formatFileSize(response.body().size.toLong())
+                    val comment = NlsBundle.nls("res.desc", response.statusCode(), costTimes!!, size)
 
-                        val httpResDescList = mutableListOf<String>()
+                    val httpResDescList = mutableListOf<String>()
 
-                        if (cookieSaveDesc.isNotEmpty()) {
-                            httpResDescList.add("// $cookieSaveDesc${CR_LF}")
-                        }
-
-                        httpResDescList.add("// $comment${CR_LF}")
-
-                        val evalJsRes = jsExecutor.evalJsAfterRequest(
-                            url, reqBody, jsAfterReq, httpResInfo, response.statusCode(),
-                            resHeaders.map(), cookies
-                        )
-
-                        if (!evalJsRes.isNullOrEmpty()) {
-                            httpResDescList.add("/*${CR_LF}${NlsBundle.nls("post.js.executed.result")}:${CR_LF}")
-                            httpResDescList.add("$evalJsRes${CR_LF}")
-                            httpResDescList.add("*/${CR_LF}")
-                        }
-
-                        val versionDesc = MyPsiUtils.Companion.getVersionDesc(response.version())
-
-                        val commentTabName = "### $tabName${CR_LF}"
-                        httpResDescList.add(commentTabName)
-
-                        if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
-                            httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}${CR_LF}")
-                        }
-
-                        httpResDescList.add(methodType.name + " " + response.uri() + " " + versionDesc + CR_LF)
-
-                        httpResDescList.addAll(resHeaderList)
-
-                        val simpleTypeEnum = httpResInfo.simpleTypeEnum
-                        val bodyBytes = httpResInfo.bodyBytes
-                        val bodyStr = httpResInfo.bodyStr
-                        val contentType = httpResInfo.contentType
-
-                        if (simpleTypeEnum.binary) {
-                            httpResDescList.add(NlsBundle.nls("res.binary.data", size))
-                        } else {
-                            httpResDescList.add(bodyStr!!)
-                        }
-
-                        val httpInfo = HttpInfo(
-                            httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
-                            null, contentType, resHeaders
-                        )
-
-                        dealResponse(httpInfo, parentPath)
-                    } catch (e: Exception) {
-                        handleException(e)
+                    if (cookieSaveDesc.isNotEmpty()) {
+                        httpResDescList.add("// $cookieSaveDesc${CR_LF}")
                     }
+
+                    httpResDescList.add("// $comment${CR_LF}")
+
+                    val evalJsRes = jsExecutor.evalJsAfterRequest(
+                        url, reqBody, jsAfterReq, httpResInfo, response.statusCode(),
+                        resHeaders.map(), cookies, httpFile.name, httpDocument
+                    )
+
+                    if (!evalJsRes.isNullOrEmpty()) {
+                        httpResDescList.add("/*${CR_LF}${NlsBundle.nls("post.js.executed.result")}:${CR_LF}")
+                        httpResDescList.add("$evalJsRes${CR_LF}")
+                        httpResDescList.add("*/${CR_LF}")
+                    }
+
+                    val versionDesc = MyPsiUtils.Companion.getVersionDesc(response.version())
+
+                    val commentTabName = "### $tabName${CR_LF}"
+                    httpResDescList.add(commentTabName)
+
+                    if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+                        httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}${CR_LF}")
+                    }
+
+                    httpResDescList.add(methodType.name + " " + response.uri() + " " + versionDesc + CR_LF)
+
+                    httpResDescList.addAll(resHeaderList)
+
+                    val simpleTypeEnum = httpResInfo.simpleTypeEnum
+                    val bodyBytes = httpResInfo.bodyBytes
+                    val bodyStr = httpResInfo.bodyStr
+                    val contentType = httpResInfo.contentType
+
+                    if (simpleTypeEnum.binary) {
+                        httpResDescList.add(NlsBundle.nls("res.binary.data", size))
+                    } else {
+                        httpResDescList.add(bodyStr!!)
+                    }
+
+                    val httpInfo = HttpInfo(
+                        httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
+                        null, contentType, resHeaders
+                    )
+
+                    dealResponse(httpInfo, parentPath)
+                } catch (e: Exception) {
+                    handleException(e)
                 }
             }
         }

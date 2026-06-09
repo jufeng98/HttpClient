@@ -15,6 +15,7 @@ import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.JsonUtils.gson
 import org.javamaster.httpclient.utils.PsiTypeUtils
 import java.nio.charset.StandardCharsets
@@ -89,9 +90,10 @@ class DubboRequest(
 
             val targetMethod = findTargetMethod(psiClass, reqBodyMap)
 
-            paramTypeNameArray = targetMethod.parameterList.parameters
+            val parameters = computeReadAction { targetMethod.parameterList.parameters }
+            paramTypeNameArray = parameters
                 .map {
-                    val type = it.type
+                    val type = computeReadAction { it.type }
                     val psiType = PsiTypeUtils.resolvePsiType(type)
                     if (psiType != null) {
                         val qualifiedName = psiType.qualifiedName
@@ -108,7 +110,7 @@ class DubboRequest(
                 }
                 .toTypedArray()
 
-            paramValueArray = targetMethod.parameterList.parameters
+            paramValueArray = parameters
                 .map {
                     val name = it.name
                     reqBodyMap!![name]
