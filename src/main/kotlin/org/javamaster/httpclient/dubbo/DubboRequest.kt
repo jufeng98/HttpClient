@@ -9,11 +9,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiPrimitiveType
+import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
-import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.JsonUtils.gson
 import org.javamaster.httpclient.utils.PsiTypeUtils
@@ -218,10 +218,13 @@ class DubboRequest(
         reference.isGeneric = true
         reference.application = application
         reference.setInterface(targetInterfaceName)
+
         val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toInt() ?: TIMEOUT
         reference.timeout = timeout
+
         reference.retries = 0
         reference.isCheck = false
+        reference.reconnect = "false"
 
         if (!version.isNullOrBlank()) {
             reference.version = version
@@ -279,6 +282,7 @@ class DubboRequest(
         init {
             application.name = "HttpClient"
             application.qosEnable = false
+            application.logger = "slf4j"
         }
 
     }

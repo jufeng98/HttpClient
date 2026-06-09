@@ -89,9 +89,11 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         future.whenCompleteAsync { triple, throwable ->
             costTimes = triple?.third
+            finishedTime = System.currentTimeMillis()
+            hasError = throwable != null
 
             application.executeOnPooledThread {
-                if (throwable != null) {
+                if (hasError) {
                     val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
                     dealResponse(httpInfo, parentPath)
@@ -115,46 +117,50 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     ContentType.APPLICATION_JSON.mimeType
                 )
 
-                val evalJsRes = jsExecutor.evalJsAfterRequest(
-                    url, reqBody, jsAfterReq, httpResInfo, httpStatus!!,
-                    mutableMapOf(), listOf()
-                )
+                try {
+                    val evalJsRes = jsExecutor.evalJsAfterRequest(
+                        url, reqBody, jsAfterReq, httpResInfo, httpStatus!!,
+                        mutableMapOf(), listOf(), httpFile.name, httpDocument
+                    )
 
-                if (!evalJsRes.isNullOrEmpty()) {
-                    httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
-                    httpResDescList.add("$evalJsRes$CR_LF")
-                    httpResDescList.add("*/$CR_LF")
-                }
-
-                httpResDescList.add("### $tabName$CR_LF")
-
-                if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
-                    httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
-                }
-
-                httpResDescList.add("DUBBO $url $CR_LF")
-                httpResDescList.add("${HttpHeaders.CONTENT_LENGTH}: ${bodyBytes.size}$CR_LF")
-
-                reqHeaderMap.forEach {
-                    val name = it.key
-                    it.value.forEach { value ->
-                        httpResDescList.add("$name: $value$CR_LF")
+                    if (!evalJsRes.isNullOrEmpty()) {
+                        httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
+                        httpResDescList.add("$evalJsRes$CR_LF")
+                        httpResDescList.add("*/$CR_LF")
                     }
+
+                    httpResDescList.add("### $tabName$CR_LF")
+
+                    if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+                        httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
+                    }
+
+                    httpResDescList.add("DUBBO $url $CR_LF")
+                    httpResDescList.add("${HttpHeaders.CONTENT_LENGTH}: ${bodyBytes.size}$CR_LF")
+
+                    reqHeaderMap.forEach {
+                        val name = it.key
+                        it.value.forEach { value ->
+                            httpResDescList.add("$name: $value$CR_LF")
+                        }
+                    }
+                    httpResDescList.add(CR_LF)
+
+                    httpResDescList.add(bodyStr)
+
+                    val httpInfo = HttpInfo(
+                        httpReqDescList,
+                        httpResDescList,
+                        SimpleTypeEnum.JSON,
+                        bodyBytes,
+                        null,
+                        ContentType.APPLICATION_JSON.mimeType
+                    )
+
+                    dealResponse(httpInfo, parentPath)
+                } catch (e: Exception) {
+                    handleException(e)
                 }
-                httpResDescList.add(CR_LF)
-
-                httpResDescList.add(bodyStr)
-
-                val httpInfo = HttpInfo(
-                    httpReqDescList,
-                    httpResDescList,
-                    SimpleTypeEnum.JSON,
-                    bodyBytes,
-                    null,
-                    ContentType.APPLICATION_JSON.mimeType
-                )
-
-                dealResponse(httpInfo, parentPath)
             }
 
             destroyProcess()

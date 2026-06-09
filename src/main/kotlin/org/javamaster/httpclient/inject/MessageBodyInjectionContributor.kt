@@ -61,7 +61,7 @@ class MessageBodyInjectionContributor : MultiHostInjector {
             return
         }
 
-        if (length > 3000 && text.indexOf('\n', length - 3000) == -1) {
+        if (length > 8000 && text.indexOf('\n', length - 8000) == -1) {
             // 表明是未格式化的过长的文本，注入语言也没有意义，跳过注入
             return
         }

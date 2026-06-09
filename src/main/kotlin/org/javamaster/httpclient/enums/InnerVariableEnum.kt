@@ -14,6 +14,7 @@ import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.factory.HttpWrapFactory
+import org.javamaster.httpclient.js.support.jsObject.JavaBridge
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.*
@@ -181,13 +182,40 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            if (args.size != 2 || args[0] !is Int || args[1] !is Int) {
+            if (args.size != 2) {
                 return ThreadLocalRandom.current().nextFloat(0F, 1000F).toString()
             }
 
-            val start = args[0] as Int
-            val end = args[1] as Int
-            return ThreadLocalRandom.current().nextFloat(start.toFloat(), end.toFloat()).toString()
+            val start = JavaBridge.convertToFloat(args[0])
+            val end = JavaBridge.convertToFloat(args[1])
+            if (start == null || end == null) {
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
+            }
+
+            return ThreadLocalRandom.current().nextFloat(start, end).toString()
+        }
+
+        override fun insertHandler(): InsertHandler<LookupElement>? {
+            return ParenthesesInsertHandler.WITH_PARAMETERS
+        }
+    },
+    RANDOM_DOUBLE("\$random.double") {
+        override fun typeText(): String {
+            return nls("float.desc", methodName)
+        }
+
+        override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
+            if (args.size != 2) {
+                return ThreadLocalRandom.current().nextDouble(0.0, 1000.0).toString()
+            }
+
+            val start = JavaBridge.convertToDouble(args[0])
+            val end = JavaBridge.convertToDouble(args[1])
+            if (start == null || end == null) {
+                throw IllegalArgumentException(nls("method.wrong.args", methodName, typeText()))
+            }
+
+            return ThreadLocalRandom.current().nextDouble(start, end).toString()
         }
 
         override fun insertHandler(): InsertHandler<LookupElement>? {
@@ -729,7 +757,10 @@ enum class InnerVariableEnum(val methodName: String) {
             val context = Context.enter()
             context.wrapFactory = HttpWrapFactory
             try {
-                val res = context.evaluateString(JsExecutor.globalScriptableObject, args[0] as String, "dummy.js", 1, null)
+                val res = context.evaluateString(
+                    JsExecutor.globalScriptableObject, args[0] as String,
+                    "dummy.js", 1, null
+                )
                 return res.toString()
             } finally {
                 Context.exit()

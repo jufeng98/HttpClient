@@ -4,13 +4,16 @@ import com.intellij.execution.RunManager
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
-import com.intellij.psi.util.*
+import com.intellij.psi.util.InheritanceUtil
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.cache.HistoryFolderCache
@@ -90,12 +93,14 @@ object HttpUtils {
 
         val map = LinkedMultiValueMap<String, String?>()
 
-        headerFields.stream()
-            .forEach {
-                val headerName = it.headerFieldName.text
-                val headerValue = it.headerFieldValue?.text ?: ""
-                map.add(headerName, variableResolver.resolve(headerValue))
-            }
+        ReadAction.run<Exception> {
+            headerFields.stream()
+                .forEach {
+                    val headerName = it.headerFieldName.text
+                    val headerValue = it.headerFieldValue?.text ?: ""
+                    map.add(headerName, variableResolver.resolve(headerValue))
+                }
+        }
 
         return map
     }

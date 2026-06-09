@@ -2,6 +2,7 @@ package org.javamaster.httpclient.env
 
 import com.intellij.json.JsonElementTypes
 import com.intellij.json.psi.*
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -12,6 +13,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findFile
 import com.intellij.openapi.vfs.writeText
 import com.intellij.pom.Navigatable
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtil
@@ -373,8 +375,8 @@ class EnvFileService(val project: Project) {
                 System.err.println("The environment file: ${jsonFile.virtualFile.path} inner format does not conform to the specification!")
                 return null
             }
-
-            val jsonProperty = jsonValue.findProperty(key) ?: return null
+            val jsonProperty = ReadAction.compute<JsonProperty, Exception> { jsonValue.findProperty(key) }
+                ?: return null
 
             val innerJsonValue = jsonProperty.value ?: return null
 
@@ -431,13 +433,13 @@ class EnvFileService(val project: Project) {
 
             val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return null
 
-            val topLevelValue = jsonFile.topLevelValue
+            val topLevelValue = ReadAction.compute<JsonValue?, Exception> { jsonFile.topLevelValue }
             if (topLevelValue !is JsonObject) {
                 System.err.println("The environment file: ${jsonFile.virtualFile.path} outer format does not conform to the specification!")
                 return null
             }
 
-            return topLevelValue.findProperty(env)
+            return ReadAction.compute<JsonProperty, Exception> { topLevelValue.findProperty(env) }
         }
 
         fun getJsonLiteralValue(literal: JsonLiteral): String {
@@ -485,7 +487,7 @@ class EnvFileService(val project: Project) {
             val virtualFile = dir.findFile(envFileName)
 
             if (virtualFile != null) {
-                val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+                val psiFile = ReadAction.compute<PsiFile, Exception> { PsiUtil.getPsiFile(project, virtualFile) }
                 if (psiFile !is JsonFile) {
                     return null
                 }

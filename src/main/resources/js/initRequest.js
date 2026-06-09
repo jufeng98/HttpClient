@@ -20,6 +20,9 @@ var $random = {
     float(from, to) {
         return javaBridge.callJava('$random.float', from, to);
     },
+    double(from, to) {
+        return javaBridge.callJava('$random.double', from, to);
+    },
     hexadecimal(length) {
         return javaBridge.callJava('$random.hexadecimal', length);
     },
