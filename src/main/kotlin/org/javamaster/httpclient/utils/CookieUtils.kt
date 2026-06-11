@@ -117,10 +117,16 @@ object CookieUtils {
         }
     }
 
-    fun saveCookiesToFile(cookies: List<Cookie>, project: Project, cookiesPsiFile: CookieFile): String {
+    fun saveCookiesToFile(cookies: List<Cookie>, project: Project): String {
         if (cookies.isEmpty()) {
             return ""
         }
+
+        val cookiesFileService = project.getService(CookiesFileService::class.java)
+
+        val cookiesFile = cookiesFileService.getCookiesFile() ?: return ""
+
+        val cookiesPsiFile = computeReadAction { PsiUtil.getPsiFile(project, cookiesFile) as CookieFile }
 
         // 准备批次内去重的 key（在写操作外完成，减少写锁持有时间）
         val cookiesWithKey = cookies

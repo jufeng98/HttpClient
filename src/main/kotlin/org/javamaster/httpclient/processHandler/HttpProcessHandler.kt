@@ -111,7 +111,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                 var cookieSaveDesc = ""
                 if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
-                    cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project, cookiesPsiFile)
+                    cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project)
                 }
 
                 try {
