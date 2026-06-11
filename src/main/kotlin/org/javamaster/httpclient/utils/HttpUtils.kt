@@ -10,6 +10,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.text.Formats
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
@@ -18,7 +19,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.cache.HistoryFolderCache
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
@@ -29,6 +29,7 @@ import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
+import org.javamaster.httpclient.service.HistoryFolderService
 import org.javamaster.httpclient.utils.ReqUtils.Companion.encodeQueryParam
 import org.javamaster.httpclient.utils.ReqUtils.Companion.handleQueryParam
 import java.io.File
@@ -44,8 +45,8 @@ import kotlin.io.path.name
 object HttpUtils {
     const val CR_LF = "\r\n"
 
-    fun getTabName(httpMethod: HttpMethod): String {
-        val requestBlock = PsiTreeUtil.getParentOfType(httpMethod, HttpRequestBlock::class.java)!!
+    fun getTabName(method: HttpMethod): String {
+        val requestBlock = computeReadAction { PsiTreeUtil.getParentOfType(method, HttpRequestBlock::class.java)!! }
 
         return getTabName(requestBlock)
     }
@@ -175,6 +176,10 @@ object HttpUtils {
 
     fun <T> computeReadAction(runnable: () -> T): T {
         return ApplicationManager.getApplication().runReadAction(Computable(runnable))
+    }
+
+    fun runReadAction(runnable: () -> Unit) {
+        ApplicationManager.getApplication().runReadAction(Computable(runnable))
     }
 
     private fun handleOrdinaryContent(
@@ -553,13 +558,13 @@ object HttpUtils {
 
         val httpRunConfiguration = configurationSettings.configuration as HttpRunConfiguration
 
-        return VfsUtil.findFileByIoFile(File(httpRunConfiguration.httpFilePath), false)
+        return LocalFileSystem.getInstance().findFileByIoFile(File(httpRunConfiguration.httpFilePath))
     }
 
     fun isFileInHistoryDir(virtualFile: VirtualFile?, project: Project): Boolean {
         virtualFile ?: return false
 
-        val ideaDirFile = project.getService(HistoryFolderCache::class.java).getHistoryFolder()
+        val ideaDirFile = project.getService(HistoryFolderService::class.java).getHistoryFolder()
 
         return VfsUtil.isAncestor(ideaDirFile ?: return false, virtualFile, true)
     }

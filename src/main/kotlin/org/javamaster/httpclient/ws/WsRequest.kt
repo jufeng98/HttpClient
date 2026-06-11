@@ -64,7 +64,7 @@ class WsRequest(
                 wsRunningSet.remove(tabName)
 
                 processHandler.hasError = true
-                processHandler.destroyProcess()
+                processHandler.detachProcess()
 
                 returnResMsg(NlsBundle.nls("connected.failed") + ExceptionUtils.getStackTrace(ex) + "\n")
             }
@@ -132,14 +132,14 @@ class WsListener(private val wsRequest: WsRequest, private val processHandler: P
     }
 
     override fun onClose(webSocket: WebSocket?, statusCode: Int, reason: String?): CompletionStage<*> {
-        processHandler.destroyProcess()
+        processHandler.detachProcess()
 
         wsRequest.returnResMsg("${NlsBundle.nls("ws.closed")},statusCode: $statusCode, reason: $reason\n")
         return CompletableFuture<Void>()
     }
 
     override fun onError(webSocket: WebSocket?, error: Throwable?) {
-        processHandler.destroyProcess()
+        processHandler.detachProcess()
 
         wsRequest.returnResMsg("${NlsBundle.nls("ws.failed")}, ${error}\n")
     }

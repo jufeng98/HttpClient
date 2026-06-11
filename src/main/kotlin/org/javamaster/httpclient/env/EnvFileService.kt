@@ -7,10 +7,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.findFile
-import com.intellij.openapi.vfs.writeText
+import com.intellij.openapi.vfs.*
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
@@ -314,7 +311,7 @@ class EnvFileService(val project: Project) {
                 return emptyMap()
             }
 
-            val envProperty = topLevelValue.findProperty(env) ?: return mapOf()
+            val envProperty = computeReadAction { topLevelValue.findProperty(env) } ?: return mapOf()
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
                 System.err.println("The environment file: ${psiFile.virtualFile.path} inner format does not conform to the specification!")
@@ -470,18 +467,18 @@ class EnvFileService(val project: Project) {
         fun getEnvJsonFile(envFileName: String, httpFileParentPath: String, project: Project): JsonFile? {
             val basePath = project.basePath ?: return null
 
-            val dir = VfsUtil.findFileByIoFile(File(basePath), true)!!
+            val projectDir = LocalFileSystem.getInstance().findFileByPath(basePath) ?: return null
 
-            return getEnvJsonFile(envFileName, httpFileParentPath, project, dir)
+            return getEnvJsonFile(envFileName, httpFileParentPath, project, projectDir)
         }
 
         private fun getEnvJsonFile(
             envFileName: String,
-            httpFileParentPath: String,
+            parentPath: String,
             project: Project,
             projectDir: VirtualFile,
         ): JsonFile? {
-            val dir = VfsUtil.findFileByIoFile(File(httpFileParentPath), true) ?: return null
+            val dir = VfsUtil.findFileByIoFile(File(parentPath), true) ?: return null
 
             val virtualFile = dir.findFile(envFileName)
 

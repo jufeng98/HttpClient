@@ -13,7 +13,6 @@ import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.js.JsExecutor
-import org.javamaster.httpclient.js.factory.HttpWrapFactory
 import org.javamaster.httpclient.js.support.jsObject.JavaBridge
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.ui.HttpEditorTopForm
@@ -755,7 +754,6 @@ enum class InnerVariableEnum(val methodName: String) {
             }
 
             val context = Context.enter()
-            context.wrapFactory = HttpWrapFactory
             try {
                 val res = context.evaluateString(
                     JsExecutor.globalScriptableObject, args[0] as String,

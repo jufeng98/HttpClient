@@ -2,6 +2,7 @@ package org.javamaster.httpclient.utils
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil.findFileByIoFile
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
@@ -140,10 +141,9 @@ object VirtualFileUtils {
             tempFile.toFile()
         }
 
-        var virtualFile = findFileByIoFile(file, true)
-        virtualFile!!.refresh(false, false)
+        var virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)!!
 
-        val psiFile = computeReadAction { virtualFile!!.findPsiFile(project) }
+        val psiFile = computeReadAction { virtualFile.findPsiFile(project) }
         if (psiFile == null) {
             virtualFile = LightVirtualFile(virtualFile.name, descContent)
         }

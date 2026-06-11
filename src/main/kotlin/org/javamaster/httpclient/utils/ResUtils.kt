@@ -4,7 +4,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
-import com.intellij.openapi.vfs.VfsUtil.findFileByIoFile
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.testFramework.LightVirtualFile
@@ -16,6 +16,7 @@ import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.logger.logInfo
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls
@@ -123,17 +124,18 @@ object ResUtils {
             ByteArrayInputStream(byteArray).use {
                 Files.copy(it, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
             }
+
+            logInfo("响应体已保存到 output path: $file")
+
+            application.executeOnPooledThread {
+                VirtualFileManager.getInstance().refreshAndFindFileByNioPath(file.toPath())
+            }
+
+            return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
         } catch (e: Exception) {
             e.printStackTrace()
             return "// ${nls("save.failed")}: $e$CR_LF"
         }
-
-        application.executeOnPooledThread {
-            val resBodyFile = VirtualFileManager.getInstance().refreshAndFindFileByNioPath(file.toPath())
-            resBodyFile?.refresh(false, false)
-        }
-
-        return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
     }
 
     fun saveResBodyToFile(httpInfo: HttpInfo, tabName: String, noLog: Boolean, project: Project): VirtualFile? {
@@ -143,7 +145,9 @@ object ResUtils {
 
         val virtualFile = saveResBodyToFile(content, tabName, fileName, noLog, project)
 
-        httpInfo.httpResDescList.add(CR_LF + ">> " + virtualFile.path + CR_LF)
+        if (!noLog) {
+            httpInfo.httpResDescList.add(CR_LF + ">> " + virtualFile.path + CR_LF)
+        }
 
         return virtualFile
     }
@@ -209,14 +213,13 @@ object ResUtils {
 
         val deleted = file.delete()
         if (deleted) {
-            println("已删除文件:$absolutePath")
+            logInfo("已删除文件:$absolutePath")
         }
 
         Files.write(file.toPath(), content)
-        println("已保存到文件:$absolutePath")
+        logInfo("响应体已保存到文件: $absolutePath")
 
-        val virtualFile = findFileByIoFile(file, true)!!
-        virtualFile.refresh(false, false)
+        val virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)!!
 
         return virtualFile
     }

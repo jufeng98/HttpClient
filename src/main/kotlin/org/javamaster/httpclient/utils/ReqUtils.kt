@@ -3,6 +3,7 @@ package org.javamaster.httpclient.utils
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import org.intellij.markdown.html.urlEncode
+import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
@@ -145,6 +146,10 @@ class ReqUtils {
 
         fun initPreJsFilesContent(preJsFiles: List<PreJsFile>, project: Project, httpFile: HttpFile) {
             preJsFiles.forEach {
+                if (JsExecutor.isLibraryLoaded(it.file.absolutePath)) {
+                    return@forEach
+                }
+
                 try {
                     val content = VirtualFileUtils.readNewestContent(it.virtualFile)
                     it.content = content

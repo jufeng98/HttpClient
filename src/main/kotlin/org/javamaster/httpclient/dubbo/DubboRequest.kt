@@ -257,18 +257,20 @@ class DubboRequest(
             method = methods[0]
         } else {
             val paramNames = reqMap.keys
-            method = methods.filter {
-                val iterator = paramNames.iterator()
-                val parameterList = it.parameterList
-                for (i in 0 until parameterList.parametersCount) {
-                    val name = parameterList.parameters[i].name
-                    val jsonName = iterator.next()
-                    if (name != jsonName) {
-                        return@filter false
+            method = computeReadAction {
+                methods.filter {
+                    val iterator = paramNames.iterator()
+                    val parameterList = it.parameterList
+                    for (i in 0 until parameterList.parametersCount) {
+                        val name = parameterList.parameters[i].name
+                        val jsonName = iterator.next()
+                        if (name != jsonName) {
+                            return@filter false
+                        }
                     }
-                }
-                true
-            }.firstOrNull()
+                    true
+                }.firstOrNull()
+            }
 
             if (method == null) {
                 throw IllegalArgumentException(NlsBundle.nls("method.not.found", paramNames, methodName))

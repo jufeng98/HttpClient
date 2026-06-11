@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit
 object DubboJars {
     var dubboClassLoader: DubboClassLoader
 
+    @Volatile
     private var downloading = false
 
     private const val REPOSITORY_URL = "https://maven.aliyun.com/nexus/content/groups/public"
@@ -100,7 +101,7 @@ object DubboJars {
                                 indicator.fraction = (index + 1) * faction
 
                                 if (index != jarMap.entries.size - 1) {
-                                    TimeUnit.MILLISECONDS.sleep(1000 + RandomStringUtils.RANDOM.nextLong(1000))
+                                    TimeUnit.MILLISECONDS.sleep(500 + RandomStringUtils.RANDOM.nextLong(500))
                                 }
                             }
                     }

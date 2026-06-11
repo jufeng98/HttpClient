@@ -64,8 +64,6 @@ object EditorUtils {
         var editor = EditorFactory.getInstance().createEditor(document, project, virtualFile, isViewer)
         editorList.add(editor)
 
-        val document = editor.document
-
         val settings = editor.settings
         if (req) {
             settings.isUseSoftWraps = SoftWrapAction.reqUseSoftWrap

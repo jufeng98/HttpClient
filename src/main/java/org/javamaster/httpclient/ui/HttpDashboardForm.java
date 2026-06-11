@@ -87,6 +87,8 @@ public class HttpDashboardForm implements Disposable {
     }
 
     public void initHttpResContent(HttpInfo httpInfo, boolean noLog) {
+        VirtualFile resBodyFile = ResUtils.INSTANCE.saveResBodyToFile(httpInfo, tabName, noLog, project);
+
         VirtualFile reqVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(httpInfo.getHttpReqDescList(),
                 "req.http", tabName, noLog, project);
 
@@ -104,8 +106,6 @@ public class HttpDashboardForm implements Disposable {
         }
 
         Document resDocument = ResUtils.INSTANCE.getDocument(resVirtualFile);
-
-        VirtualFile resBodyFile = ResUtils.INSTANCE.saveResBodyToFile(httpInfo, tabName, noLog, project);
 
         ApplicationManager.getApplication().invokeLater(() -> {
             resetDashboardForm();

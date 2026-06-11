@@ -4,6 +4,7 @@ import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.InheritanceUtil
@@ -20,6 +21,7 @@ import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.utils.HttpUtils.collectJsonPropertyNameLevels
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.HttpUtils.resolveTargetField
 import java.io.File
 import java.net.http.HttpClient
@@ -32,9 +34,11 @@ class MyPsiUtils {
 
     companion object {
 
-        fun getImportFileHttpRequests(httpFile: HttpFile): List<Pair<HttpComment, HttpMethod>> {
-            val project = httpFile.project
-            val parentPath = httpFile.virtualFile.parent.path
+        fun getImportFileHttpRequests(
+            httpFile: HttpFile,
+            project: Project,
+            parentPath: String,
+        ): List<Pair<HttpComment, HttpMethod>> {
             val globalImports = httpFile.getGlobalImports()
             return globalImports
                 .mapNotNull {
@@ -57,9 +61,12 @@ class MyPsiUtils {
                 return listOf()
             }
 
-            val httpFile = PsiUtil.getPsiFile(project, importVirtualFile) as HttpFile
-            val requestBlocks =
+            val httpFile = computeReadAction { PsiUtil.getPsiFile(project, importVirtualFile) as HttpFile }
+
+            val requestBlocks = computeReadAction {
                 PsiTreeUtil.getChildrenOfTypeAsList(httpFile, HttpRequestBlock::class.java)
+            }
+
             return requestBlocks.mapNotNull { requestBlock ->
                 var comment = requestBlock.comment ?: return@mapNotNull null
 
@@ -310,6 +317,53 @@ class MyPsiUtils {
             }
 
             return references[0].resolve() as PsiMethod?
+        }
+
+        fun collectMethods(project: Project, file: VirtualFile): List<HttpMethod> {
+            val httpFile = PsiUtil.getPsiFile(project, file) as HttpFile
+            val parentPath = file.parent.path
+
+            return httpFile.getRequestBlocks()
+                .map {
+                    val method = it.request?.method
+                    if (method != null) {
+                        return@map listOf(method)
+                    }
+
+                    val runCommand = it.runCommand
+                    if (runCommand != null) {
+                        val path = runCommand.filePath?.text ?: return@map emptyList()
+
+                        if (HttpUtils.isRunTabName(path)) {
+                            val targetTabName = HttpUtils.getTargetTabName(path) ?: return@map emptyList()
+
+                            val pairs = getImportFileHttpRequests(httpFile, project, parentPath)
+                            val targetMethod = pairs
+                                .firstOrNull {
+                                    var comment = it.first.text
+                                    val tabName = comment.substring(3).trim()
+                                    tabName == targetTabName
+                                }
+                                ?.second
+                            return@map listOf(targetMethod!!)
+                        } else {
+                            val runHttpFilePath = HttpUtils.constructFilePath(path, parentPath)
+
+                            val runFile = File(runHttpFilePath)
+                            if (runFile.extension != HttpFileType.DEFAULT_EXTENSION) {
+                                return@map emptyList()
+                            }
+
+                            val runVirtualFile = HttpUtils.findVirtualFile(runHttpFilePath) ?: return@map emptyList()
+
+                            val runPsiFile = PsiUtil.getPsiFile(project, runVirtualFile) as HttpFile
+                            return@map runPsiFile.getHttpMethods()
+                        }
+                    }
+
+                    listOf<HttpMethod>()
+                }
+                .flatten()
         }
 
     }
