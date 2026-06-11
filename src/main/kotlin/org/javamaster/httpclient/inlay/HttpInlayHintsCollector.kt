@@ -9,14 +9,6 @@ import org.javamaster.httpclient.nls.NlsBundle
  * @author yudong
  */
 object HttpInlayHintsCollector : SharedBypassCollector {
-    private val mvcAnnoSet = setOf(
-        SpringHttpMethod.REQUEST_MAPPING.qualifiedName,
-        SpringHttpMethod.GET_MAPPING.qualifiedName,
-        SpringHttpMethod.POST_MAPPING.qualifiedName,
-        SpringHttpMethod.PATCH_MAPPING.qualifiedName,
-        SpringHttpMethod.PUT_MAPPING.qualifiedName,
-        SpringHttpMethod.DELETE_MAPPING.qualifiedName,
-    )
 
     override fun collectFromElement(element: PsiElement, sink: InlayTreeSink) {
         if (element !is PsiLiteralExpression) {
@@ -38,13 +30,9 @@ object HttpInlayHintsCollector : SharedBypassCollector {
             return
         }
 
-        val qualifiedName = psiAnno.qualifiedName ?: return
+        SpringHttpMethod.getByQualifiedName(psiAnno.qualifiedName) ?: return
 
-        if (!mvcAnnoSet.contains(qualifiedName)) {
-            return
-        }
-
-        if (psiAnno.parent.parent !is PsiMethod) {
+        if (psiAnno.parent?.parent !is PsiMethod) {
             return
         }
 
@@ -52,15 +40,9 @@ object HttpInlayHintsCollector : SharedBypassCollector {
 
         @Suppress("DEPRECATION")
         sink.addPresentation(
-            InlineInlayPosition(element.textRange.startOffset, false),
-            null,
-            NlsBundle.nls("create.http.req"),
-            false
+            InlineInlayPosition(element.textRange.startOffset, false), null, NlsBundle.nls("create.http.req"), false
         ) {
-            text(
-                "url",
-                InlayActionData(PsiPointerInlayActionPayload(pointer), "HttpInlayHintsCollector")
-            )
+            text("path", InlayActionData(PsiPointerInlayActionPayload(pointer), "HttpInlayHintsCollector"))
         }
     }
 

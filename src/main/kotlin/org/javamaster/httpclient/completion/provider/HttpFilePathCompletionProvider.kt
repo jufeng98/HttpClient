@@ -98,9 +98,11 @@ class HttpFilePathCompletionProvider : CompletionProvider<CompletionParameters>(
 
         if (virtualFile.fileType != HttpFileType.INSTANCE) return
 
-        val httpFile = PsiUtil.getPsiFile(parentParent.project, virtualFile) as HttpFile
+        val project = parentParent.project
+        val parentPath = virtualFile.parent.path
+        val httpFile = PsiUtil.getPsiFile(project, virtualFile) as HttpFile
 
-        val pairs = MyPsiUtils.getImportFileHttpRequests(httpFile)
+        val pairs = MyPsiUtils.getImportFileHttpRequests(httpFile, project, parentPath)
 
         pairs.forEach {
             var comment = it.first.text

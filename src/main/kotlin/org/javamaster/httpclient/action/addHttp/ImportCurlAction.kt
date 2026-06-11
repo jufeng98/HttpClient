@@ -24,7 +24,7 @@ import java.awt.datatransfer.DataFlavor
 class ImportCurlAction : AddAction(NlsBundle.nls("import.from.curl")) {
 
     override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project!!
+        val project = e.project ?: return
 
         val contents = CopyPasteManager.getInstance().getContents<String?>(DataFlavor.stringFlavor)
 

@@ -20,10 +20,7 @@ class ShowAddHttpPopupAction : AnAction(nls("add.to.http"), null, AllIcons.Gener
 
         val group = actionManager.getAction("addToHttpGroup") as ActionGroup
 
-        val listPopup = popupFactory.createActionGroupPopup(
-            nls("new"), group, e.dataContext,
-            true, null, 16
-        )
+        val listPopup = popupFactory.createActionGroupPopup(nls("new"), group, e.dataContext, true, null, 16)
 
         listPopup.showUnderneathOf(e.inputEvent!!.component)
     }

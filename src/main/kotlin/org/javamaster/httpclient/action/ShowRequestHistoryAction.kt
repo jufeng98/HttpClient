@@ -16,6 +16,7 @@ import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.PathUtils
 import org.javamaster.httpclient.utils.VirtualFileUtils
 import java.io.File
+import java.nio.charset.StandardCharsets
 
 /**
  * @author yudong
@@ -33,10 +34,10 @@ class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIco
         val requestBlock = findRequestBlock(e) ?: return
 
         val request = requestBlock.request ?: return
-        val project = e.project!!
+
+        val project = e.project ?: return
 
         val method = request.method
-        val methodText = method.text
 
         val tabName = HttpUtils.getTabName(method)
         val legalTabName = PathUtils.legalizeFileName(tabName)
@@ -50,32 +51,28 @@ class ShowRequestHistoryAction : AnAction(nls("show.req.history"), null, HttpIco
             return
         }
 
-        val url = request.requestTarget!!.text
-        try {
-            application.executeOnPooledThread {
-                val historyResFileList = listFiles
-                    .map { historyBodyFile ->
-                        "<> ${legalTabName}/${historyBodyFile.name}"
-                    }
-                    .take(30)
-                    .joinToString(CR_LF)
+        val url = request.requestTarget?.text ?: return
 
-                var content = "### $tabName$CR_LF"
-                content += "$methodText $url$CR_LF"
+        application.executeOnPooledThread {
+            val historyResFileList = listFiles
+                .map { "<> ${legalTabName}/${it.name}" }
+                .take(30)
+                .joinToString(CR_LF)
 
-                content += CR_LF + historyResFileList
+            var content = "### $tabName$CR_LF"
+            content += "${method.text} $url$CR_LF"
 
-                runInEdt {
-                    WriteAction.run<Exception> {
-                        val virtualFile = VirtualFileUtils.createHistoryHttpVirtualFile(content, project, legalTabName)
+            content += CR_LF + historyResFileList
 
-                        val editorManager = FileEditorManager.getInstance(project)
-                        editorManager.openFile(virtualFile)
-                    }
+            val virtualFile = VirtualFileUtils.createHistoryHttpVirtualFile(project, legalTabName)
+
+            runInEdt {
+                WriteAction.run<Exception> {
+                    virtualFile.setBinaryContent(content.toByteArray(StandardCharsets.UTF_8))
+
+                    FileEditorManager.getInstance(project).openFile(virtualFile)
                 }
             }
-        } catch (e: Exception) {
-            NotifyUtil.notifyError(project, e.toString())
         }
     }
 

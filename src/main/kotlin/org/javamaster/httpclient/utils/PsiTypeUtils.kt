@@ -1,9 +1,11 @@
 package org.javamaster.httpclient.utils
 
+import com.intellij.openapi.application.ReadAction
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiType
 import com.intellij.psi.impl.source.PsiClassReferenceType
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 
 /**
  * @author yudong
@@ -15,7 +17,7 @@ object PsiTypeUtils {
             return null
         }
 
-        return psiType.resolve()
+        return computeReadAction { psiType.resolve() }
     }
 
     fun collectFields(psiClass: PsiClass): MutableList<PsiField> {

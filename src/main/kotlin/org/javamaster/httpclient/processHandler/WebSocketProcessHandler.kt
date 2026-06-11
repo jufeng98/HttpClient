@@ -33,16 +33,18 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         httpDashboardForm.restoreInputHistoryList()
 
         runInEdt {
-            loadingRemover?.run()
+            try {
+                loadingRemover?.run()
 
-            httpDashboardForm.initWsForm(wsRequest)
+                httpDashboardForm.initWsForm(wsRequest)
 
-            val toolWindowManager = ToolWindowManager.getInstance(project)
-            val toolWindow = toolWindowManager.getToolWindow(ToolWindowId.SERVICES)
-            toolWindow?.show()
+                wsRequest!!.connect()
+
+                ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
+            } catch (e: Exception) {
+                handleException(e)
+            }
         }
-
-        wsRequest!!.connect()
     }
 
     override fun destroyProcessImpl() {

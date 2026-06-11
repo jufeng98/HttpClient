@@ -1,7 +1,13 @@
 package org.javamaster.httpclient.utils
 
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.application
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.http.HttpHeaders.CONTENT_TYPE
@@ -10,11 +16,15 @@ import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.logger.logInfo
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.JsonUtils.formatJson
+import org.javamaster.httpclient.utils.PathUtils.legalizeFileName
+import org.javamaster.httpclient.utils.VirtualFileUtils.getDateHistoryDir
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URI
@@ -102,9 +112,9 @@ object ResUtils {
         return "$scheme://$host$portStr$location"
     }
 
-    fun saveResToFile(path: String, byteArray: ByteArray): String {
+    fun saveResBodyToFile(path: String, byteArray: ByteArray): String {
         var file = File(path)
-        file = File(PathUtils.legalizeFilePath(file.parent), PathUtils.legalizeFileName(file.name))
+        file = File(PathUtils.legalizeFilePath(file.parent), legalizeFileName(file.name))
 
         if (!file.parentFile.exists()) {
             Files.createDirectories(file.toPath())
@@ -114,19 +124,35 @@ object ResUtils {
             ByteArrayInputStream(byteArray).use {
                 Files.copy(it, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
             }
+
+            logInfo("响应体已保存到 output path: $file")
+
+            application.executeOnPooledThread {
+                VirtualFileManager.getInstance().refreshAndFindFileByNioPath(file.toPath())
+            }
+
+            return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
         } catch (e: Exception) {
             e.printStackTrace()
             return "// ${nls("save.failed")}: $e$CR_LF"
         }
-
-        application.executeOnPooledThread {
-            VirtualFileManager.getInstance().refreshAndFindFileByNioPath(file.toPath())
-        }
-
-        return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
     }
 
-    fun resolveFilename(httpInfo: HttpInfo): String {
+    fun saveResBodyToFile(httpInfo: HttpInfo, tabName: String, noLog: Boolean, project: Project): VirtualFile? {
+        val content = httpInfo.byteArray ?: return null
+
+        val fileName = resolveFilename(httpInfo)
+
+        val virtualFile = saveResBodyToFile(content, tabName, fileName, noLog, project)
+
+        if (!noLog) {
+            httpInfo.httpResDescList.add(CR_LF + ">> " + virtualFile.path + CR_LF)
+        }
+
+        return virtualFile
+    }
+
+    private fun resolveFilename(httpInfo: HttpInfo): String {
         val resHeaders = httpInfo.resHeaders
         if (resHeaders != null) {
             var optional = resHeaders.firstValue(com.google.common.net.HttpHeaders.CONTENT_DISPOSITION)
@@ -153,6 +179,49 @@ object ResUtils {
 
         val suffix = SimpleTypeEnum.Companion.getSuffix(httpInfo.type!!, httpInfo.contentType!!)
         return DateFormatUtils.format(Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix
+    }
+
+    fun getDocument(virtualFile: VirtualFile): Document {
+        val fileDocumentManager = FileDocumentManager.getInstance()
+        return computeReadAction { fileDocumentManager.getDocument(virtualFile)!! }
+    }
+
+    private fun saveResBodyToFile(
+        content: ByteArray,
+        tabName: String,
+        fileName: String,
+        noLog: Boolean,
+        project: Project,
+    ): VirtualFile {
+        if (noLog) {
+            val lightVirtualFile = LightVirtualFile(fileName)
+            lightVirtualFile.charset = StandardCharsets.UTF_8
+            lightVirtualFile.setBinaryContent(content)
+            return lightVirtualFile
+        }
+
+        val dateHistoryDir = getDateHistoryDir(project)
+
+        val resBodyDir = File(dateHistoryDir, legalizeFileName(tabName))
+        if (!resBodyDir.exists()) {
+            resBodyDir.mkdirs()
+        }
+
+        val file = File(resBodyDir, fileName)
+
+        val absolutePath = file.absolutePath
+
+        val deleted = file.delete()
+        if (deleted) {
+            logInfo("已删除文件:$absolutePath")
+        }
+
+        Files.write(file.toPath(), content)
+        logInfo("响应体已保存到文件: $absolutePath")
+
+        val virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)!!
+
+        return virtualFile
     }
 
 }

@@ -2,12 +2,13 @@ package org.javamaster.httpclient.utils
 
 import com.intellij.codeInsight.folding.impl.FoldingUtil
 import com.intellij.lang.Language
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ex.EditorEx
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.putUserData
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
@@ -20,8 +21,6 @@ import org.javamaster.httpclient.action.dashboard.view.ShowLineNumberAction
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.utils.VirtualFileUtils.createHttpVirtualFileFromText
-import java.nio.charset.StandardCharsets
 
 
 object EditorUtils {
@@ -54,17 +53,16 @@ object EditorUtils {
     }
 
     fun createEditor(
-        bytes: ByteArray,
-        suffix: String,
+        virtualFile: VirtualFile,
+        document: Document,
+        isViewer: Boolean,
         project: Project,
-        tabName: String,
-        editorList: MutableList<Editor>,
         req: Boolean,
         simpleTypeEnum: SimpleTypeEnum?,
-        noLog: Boolean,
+        editorList: MutableList<Editor>,
     ): Editor {
-        val editor = createEditor(bytes, suffix, project, tabName, editorList, noLog)
-        val document = editor.document
+        var editor = EditorFactory.getInstance().createEditor(document, project, virtualFile, isViewer)
+        editorList.add(editor)
 
         val settings = editor.settings
         if (req) {
@@ -95,52 +93,6 @@ object EditorUtils {
         component.putUserData(key, editor)
 
         return editor
-    }
-
-    fun createEditor(
-        bytes: ByteArray,
-        suffix: String,
-        project: Project,
-        tabName: String,
-        editorList: MutableList<Editor>,
-        noLog: Boolean,
-        isViewer: Boolean,
-    ): Editor {
-        val editorFactory = EditorFactory.getInstance()
-        val fileDocumentManager = FileDocumentManager.getInstance()
-
-        val legalTabName = PathUtils.legalizeFileName(tabName)
-
-        var virtualFile = createHttpVirtualFileFromText(bytes, suffix, project, legalTabName, noLog)
-
-        val psiFile = virtualFile.findPsiFile(project)
-
-        val editor = if (psiFile != null) {
-            val document = fileDocumentManager.getDocument(virtualFile)!!
-            editorFactory.createEditor(document, project, virtualFile, isViewer)
-        } else {
-            virtualFile = LightVirtualFile(virtualFile.name)
-            virtualFile.charset = StandardCharsets.UTF_8
-            virtualFile.setBinaryContent(bytes)
-
-            val document = fileDocumentManager.getDocument(virtualFile)!!
-            editorFactory.createEditor(document, project, virtualFile, isViewer)
-        }
-
-        editorList.add(editor)
-
-        return editor
-    }
-
-    fun createEditor(
-        bytes: ByteArray,
-        suffix: String,
-        project: Project,
-        tabName: String,
-        editorList: MutableList<Editor>,
-        noLog: Boolean,
-    ): Editor {
-        return createEditor(bytes, suffix, project, tabName, editorList, noLog, true)
     }
 
     fun createEditor(text: String, fileName: String, project: Project): EditorTextField {

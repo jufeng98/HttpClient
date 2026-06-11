@@ -14,7 +14,7 @@ import java.util.function.Consumer
 /**
  * @author yudong
  */
-class MockServer(private val resConsumer: Consumer<String>, private val port: Int) {
+class MockServer(private val port: Int, private val resConsumer: Consumer<String>) {
     private var httpServer: HttpServer? = null
 
     fun startServer(request: HttpRequest, variableResolver: VariableResolver, paramMap: Map<String, String>) {

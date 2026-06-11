@@ -20,7 +20,7 @@ class VisualizeTimestampAction : AnAction(nls("visualize.timestamp"), nls("visua
     override fun update(e: AnActionEvent) {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val selectedText = editor?.selectionModel?.selectedText
-        e.presentation.isEnabledAndVisible = selectedText != null && selectedText.length == 13
+        e.presentation.isEnabledAndVisible = selectedText != null && selectedText.length >= 10
                 && StringUtils.isNumeric(selectedText)
     }
 
@@ -28,8 +28,10 @@ class VisualizeTimestampAction : AnAction(nls("visualize.timestamp"), nls("visua
         val editor = e.getData(CommonDataKeys.EDITOR)
         val selectedText = editor?.selectionModel?.selectedText ?: return
 
-        val timestamp = selectedText.toLong()
+        val timestamp = if (selectedText.length >= 13) selectedText.toLong() else selectedText.toLong() * 1000
+
         val format = DateFormatUtils.format(Date(timestamp), HttpConsts.JAVA_DATE_PATTERN)
+
         HintManager.getInstance().showInformationHint(editor, format)
     }
 

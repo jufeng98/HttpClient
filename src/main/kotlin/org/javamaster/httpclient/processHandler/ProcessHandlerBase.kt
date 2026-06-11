@@ -2,14 +2,8 @@ package org.javamaster.httpclient.processHandler
 
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.wm.ToolWindowId
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.PsiUtil
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts
@@ -17,19 +11,20 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
 import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
-import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.logger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle.nls
-import org.javamaster.httpclient.parser.CookieFile
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
+import org.javamaster.httpclient.service.RunHttpFileService
 import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.*
+import org.javamaster.httpclient.utils.HttpUtils.runReadAction
 import java.io.OutputStream
 import java.net.http.HttpClient.Version
 import java.util.concurrent.CancellationException
@@ -43,12 +38,13 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     Disposable {
     var httpStatus: Int? = null
     var costTimes: Long? = null
-    var finishedTime = Long.MAX_VALUE
+    var future: CompletableFuture<*>? = null
     var hasError = false
 
     var tabName = HttpUtils.getTabName(httpMethod)
     var project = httpMethod.project
     protected val httpFile = httpMethod.containingFile as HttpFile
+    protected val httpDocument = httpFile.fileDocument
 
     protected lateinit var parentPath: String
     protected lateinit var jsExecutor: JsExecutor
@@ -64,11 +60,11 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     protected lateinit var paramMap: Map<String, String>
 
     protected var loadingRemover: Runnable? = null
+    protected var requestFinished: Runnable? = null
     protected var responseHandler: HttpResponseHandler? = null
     protected var rawBody: String? = null
     protected var outPutFilePath: String? = null
     protected var jsAfterReq: HttpScriptBody? = null
-    protected var cookiesPsiFile: CookieFile? = null
 
     protected val httpDashboardForm by lazy {
         HttpDashboardForm(tabName, this, project)
@@ -79,36 +75,30 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         super.startNotify()
 
         application.executeOnPooledThread {
-            preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
+            try {
+                CookieUtils.createCookiesFileIfNotExists(project)
 
-            val cookiesVirtualFile = CookieUtils.createCookiesFileIfNotExists(project)
+                initStatus()
 
-            runReadAction {
-                try {
-                    if (cookiesVirtualFile != null) {
-                        cookiesPsiFile = PsiUtil.getPsiFile(project, cookiesVirtualFile) as CookieFile
-                    }
+                val finished = downloadPreJsNpmFiles()
+                if (!finished) {
+                    detachProcess()
 
-                    initStatus()
-
-                    val finished = downloadPreJsNpmFiles()
-                    if (!finished) {
-                        destroyProcess()
-                        return@runReadAction
-                    }
-
-                    initPreJsFiles()
-
-                    val otherFinished = downloadOtherFiles()
-                    if (!otherFinished) {
-                        destroyProcess()
-                        return@runReadAction
-                    }
-
-                    startProcess()
-                } catch (e: Exception) {
-                    handleException(e)
+                    return@executeOnPooledThread
                 }
+
+                initPreJsFiles()
+
+                val otherFinished = downloadOtherFiles()
+                if (!otherFinished) {
+                    detachProcess()
+
+                    return@executeOnPooledThread
+                }
+
+                startProcess()
+            } catch (e: Exception) {
+                handleException(e)
             }
         }
     }
@@ -117,22 +107,27 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         parentPath = httpFile.virtualFile.parent.path
         methodType = HttpRequestEnum.getInstance(httpMethod.text)
         jsExecutor = JsExecutor(project, parentPath, tabName)
-        variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv, project)
         loadingRemover = httpMethod.getUserData(HttpConsts.gutterIconLoadingKey)
-        requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
-        rawUrl = requestTarget.url
-        request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
-        requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
-        responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
-        outPutFilePath = PsiTreeUtil.getChildOfType(request, HttpOutputFile::class.java)?.filePath?.text
-        version = request.version?.version ?: Version.HTTP_1_1
-        rawBody = request.body?.text
+        requestFinished = httpMethod.getUserData(HttpConsts.requestFinishedKey)
 
-        jsListBeforeReq = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock)
+        runReadAction {
+            preJsFiles = HttpUtils.getPreJsFiles(httpFile, false, true)
+            variableResolver = VariableResolver(jsExecutor, httpFile, selectedEnv, project)
+            requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
+            rawUrl = requestTarget.url
+            request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
+            requestBlock = PsiTreeUtil.getParentOfType(request, HttpRequestBlock::class.java)!!
+            responseHandler = PsiTreeUtil.getChildOfType(request, HttpResponseHandler::class.java)
+            outPutFilePath = PsiTreeUtil.getChildOfType(request, HttpOutputFile::class.java)?.filePath?.text
+            rawBody = request.body?.text
+            version = request.version?.version ?: Version.HTTP_1_1
 
-        jsAfterReq = MyPsiUtils.getJsScript(responseHandler)
+            jsListBeforeReq = MyPsiUtils.getAllPreJsScripts(httpFile, requestBlock)
 
-        paramMap = MyPsiUtils.getReqDirectionCommentParamMap(requestBlock)
+            jsAfterReq = MyPsiUtils.getJsScript(responseHandler)
+
+            paramMap = MyPsiUtils.getReqDirectionCommentParamMap(requestBlock)
+        }
     }
 
     /**
@@ -142,7 +137,6 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         val preFilePair = preJsFiles.partition { it.urlFile != null }
 
         val npmFiles = preFilePair.first
-
         if (npmFiles.isEmpty()) {
             return true
         }
@@ -152,11 +146,9 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             return true
         }
 
-        runInEdt {
-            NpmJsUtils.downloadAsyncInEdt(project, npmFilesNotDownloaded, httpFile.virtualFile.path)
+        NpmJsUtils.downloadAsync(project, npmFilesNotDownloaded, httpFile.virtualFile.path)
 
-            httpDashboardForm.resetDashboardForm()
-        }
+        runInEdt { httpDashboardForm.resetDashboardForm() }
 
         return false
     }
@@ -185,13 +177,11 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     abstract fun startProcess()
 
     fun createHttpReqInfo(): HttpReqInfo {
-        ReqUtils.initPreJsFilesContent(preJsFiles, project, httpFile)
-
         var reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
 
         val environment = getEnvMap(project, false)
 
-        val fileCookies = CookieUtils.getValidFileCookieMap(cookiesPsiFile)
+        val fileCookies = CookieUtils.getValidFileCookieMap(project)
 
         return HttpReqInfo(reqBody, environment, preJsFiles, fileCookies)
     }
@@ -212,81 +202,55 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             selectedEnv, variableResolver.fileScopeVariableMap
         )
 
-        return jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq)
+        return jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq, httpFile.name, httpDocument)
     }
 
     fun dealResponse(httpInfo: HttpInfo, parentPath: String) {
-        finishedTime = System.currentTimeMillis()
-
         if (outPutFilePath != null && httpInfo.byteArray != null) {
             var path = variableResolver.resolve(outPutFilePath!!)
 
             path = HttpUtils.constructFilePath(path, parentPath)
 
-            val saveResult = ResUtils.saveResToFile(path, httpInfo.byteArray)
+            val saveResult = ResUtils.saveResBodyToFile(path, httpInfo.byteArray)
 
             httpInfo.httpResDescList.add(0, saveResult)
         }
 
-        runInEdt {
-            WriteAction.run<Exception> {
-                httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param))
+        httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param))
+
+        val virtualFile = httpFile.virtualFile
+        val isRunFile = virtualFile.getUserData(HttpConsts.runFileKey) == true
+
+        val myThrowable = httpInfo.httpException
+        if (myThrowable != null) {
+            myThrowable.printStackTrace()
+
+            val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
+                nls("req.interrupted", tabName)
+            } else {
+                nls("req.failed", tabName, myThrowable)
             }
 
-            val toolWindowManager = ToolWindowManager.getInstance(project)
+            if (!isRunFile) {
+                NotifyUtil.notifyError(project, error)
+            }
+        } else {
+            val msg = "$tabName ${nls("request.success")}!"
 
-            val myThrowable = httpDashboardForm.throwable
-            hasError = myThrowable != null
-            if (hasError) {
-                myThrowable.printStackTrace()
-
-                val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
-                    nls("req.interrupted", tabName)
-                } else {
-                    nls("req.failed", tabName, myThrowable)
-                }
-                val msg = "<div style='font-size:12pt'>$error</div>"
-                toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.ERROR, msg)
-            } else {
-                val msg = "<div style='font-size:12pt'>$tabName ${nls("request.success")}!</div>"
-                toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
+            if (!isRunFile) {
+                NotifyUtil.notifyInfo(project, msg)
             }
         }
     }
 
     fun handleException(e: Exception) {
-        e.printStackTrace()
+        logWarn("处理出错了", e)
 
-        runInEdt {
-            httpDashboardForm.resetDashboardForm()
-            NotifyUtil.notifyError(project, "<div style='font-size:13pt'>${e}</div>")
-        }
+        runInEdt { httpDashboardForm.resetDashboardForm() }
 
-        destroyProcess()
-    }
+        NotifyUtil.notifyError(project, "$e")
 
-    fun switchToEdt(runnable: Runnable) {
-        runInEdt {
-            try {
-                runnable.run()
-            } catch (e: Exception) {
-                handleException(e)
-            }
-        }
-    }
-
-    fun cancelFutureIfTerminated(future: CompletableFuture<*>) {
-        CompletableFuture.runAsync {
-            while (!isProcessTerminated && !RunFileHandler.isInterrupted()) {
-                Thread.sleep(600)
-            }
-
-            runInEdt {
-                loadingRemover?.run()
-            }
-
-            future.cancel(true)
-        }
+        detachProcess()
     }
 
     fun getComponent(): JPanel {
@@ -294,6 +258,21 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     }
 
     override fun destroyProcessImpl() {
+        if (future?.isDone == false) {
+            future?.cancel(true)
+
+            val virtualFile = httpFile.virtualFile
+            if (virtualFile.getUserData(HttpConsts.runFileKey) == true) {
+                project.getService(RunHttpFileService::class.java).stopRunning(virtualFile)
+            }
+        }
+
+        requestFinished?.run()
+
+        httpMethod.putUserData(HttpConsts.gutterIconLoadingKey, null)
+
+        httpMethod.putUserData(HttpConsts.requestFinishedKey, null)
+
         val code = if (hasError) FAILED else SUCCESS
 
         notifyProcessTerminated(code)

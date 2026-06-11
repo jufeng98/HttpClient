@@ -12,8 +12,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.processHandler.CurlProcessHandler
 import org.javamaster.httpclient.nls.NlsBundle.nls
+import org.javamaster.httpclient.processHandler.CurlProcessHandler
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
@@ -37,7 +37,7 @@ class ConvertToCurlAndCpAction : AnAction(nls("convert.to.curl.cp"), null, AllIc
 
         val requestBlock = findRequestBlock(e) ?: return
 
-        val project = e.project!!
+        val project = e.project ?: return
 
         convertToCurlAnCy(requestBlock, project, editor)
     }

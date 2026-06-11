@@ -33,7 +33,6 @@ class RequireFunction(private val jsExecutor: JsExecutor) : HttpBaseFunction() {
         val jsStr = VirtualFileUtils.readNewestContent(file)
 
         val context = Context.enter()
-        context.wrapFactory = HttpWrapFactory
         try {
             context.evaluateString(reqScriptableObject, jsStr, file.name, 1, null)
         } finally {

@@ -33,17 +33,17 @@ import org.javamaster.httpclient.utils.HttpUtils
  * @author yudong
  */
 class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
+    @Volatile
+    private var jsonAssociated = false
 
     override suspend fun execute(project: Project) {
         val fileEditorManager = FileEditorManager.getInstance(project)
 
-        runInEdt {
-            fileEditorManager.openFiles.forEach {
-                fileOpened(fileEditorManager, it)
-            }
-
-            project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this)
+        fileEditorManager.openFiles.forEach {
+            handleFileOpened(fileEditorManager, it)
         }
+
+        project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this)
 
         if (JavaScript.isAvailable()) {
             if (JavaScript.isTsLibraryNotInstalled(project)) {
@@ -65,6 +65,17 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
     }
 
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
+        application.executeOnPooledThread {
+            handleFileOpened(source, file)
+        }
+    }
+
+    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+        val fileEditor = source.getSelectedEditor(file)
+        fileEditor?.putUserData(HttpEditorTopForm.KEY, null)
+    }
+
+    private fun handleFileOpened(source: FileEditorManager, file: VirtualFile) {
         if (file.fileType !is HttpFileType) {
             return
         }
@@ -83,39 +94,42 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
             return
         }
 
-        application.executeOnPooledThread {
-            val module = ModuleUtil.findModuleForFile(file, project)
-            val fileTypeManagerEx = FileTypeManagerEx.getInstanceEx()
+        val module = ModuleUtil.findModuleForFile(file, project)
 
-            val jsonFileType = JsonFileType.INSTANCE
-            val jsonExtension = jsonFileType.defaultExtension
-
-            val currentType = fileTypeManagerEx.getFileTypeByExtension(jsonExtension)
-            if (currentType === jsonFileType) {
-                initTopForm(source, file, module, fileEditor, project)
-
-                return@executeOnPooledThread
-            }
-
-            if (currentType == UnknownFileType.INSTANCE || currentType == PlainTextFileType.INSTANCE) {
-                @Suppress("DEPRECATION")
-                runInEdt(ModalityState.NON_MODAL) {
-                    application.runWriteAction {
-                        fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
-                        logInfo("The json suffix file has been associated with the $jsonFileType")
-                    }
-
-                    application.executeOnPooledThread { initTopForm(source, file, module, fileEditor, project) }
-                }
-            } else {
-                initTopForm(source, file, module, fileEditor, project)
-            }
+        if (jsonAssociated) {
+            initTopForm(source, file, module, fileEditor, project)
+            return
         }
-    }
 
-    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
-        val fileEditor = source.getSelectedEditor(file)
-        fileEditor?.putUserData(HttpEditorTopForm.KEY, null)
+        val fileTypeManagerEx = FileTypeManagerEx.getInstanceEx()
+
+        val jsonFileType = JsonFileType.INSTANCE
+        val jsonExtension = jsonFileType.defaultExtension
+
+        val currentType = fileTypeManagerEx.getFileTypeByExtension(jsonExtension)
+        if (currentType === jsonFileType) {
+            jsonAssociated = true
+
+            initTopForm(source, file, module, fileEditor, project)
+            return
+        }
+
+        if (currentType != UnknownFileType.INSTANCE && currentType != PlainTextFileType.INSTANCE) {
+            initTopForm(source, file, module, fileEditor, project)
+            return
+        }
+
+        @Suppress("DEPRECATION")
+        runInEdt(ModalityState.NON_MODAL) {
+            application.runWriteAction {
+                jsonAssociated = true
+
+                fileTypeManagerEx.associateExtension(jsonFileType, jsonExtension)
+                logInfo("The json suffix file has been associated with the $jsonFileType")
+            }
+
+            application.executeOnPooledThread { initTopForm(source, file, module, fileEditor, project) }
+        }
     }
 
     private fun initTopForm(

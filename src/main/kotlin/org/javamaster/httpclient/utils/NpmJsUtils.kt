@@ -11,11 +11,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.util.PsiUtil
 import com.intellij.testFramework.LightVirtualFile
-import com.intellij.util.application
 import com.intellij.util.io.DigestUtil
 import com.jetbrains.rd.util.concurrentMapOf
+import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.logger.logInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.io.File
 import java.io.FileFilter
 import java.io.InputStream
@@ -69,7 +71,7 @@ object NpmJsUtils {
 
                 packageJsonMainJsFileMap[name] = file
 
-                println("Cache the main js entry $file of the $name")
+                logInfo("Cache the main js entry $file of the $name")
             }
 
             it.file = file
@@ -78,12 +80,18 @@ object NpmJsUtils {
 
     fun initJsLibrariesVirtualFile(preJsFiles: List<PreJsFile>) {
         preJsFiles.forEach {
-            val virtualFile = HttpUtils.findVirtualFile(it.file.absolutePath, true)
-            it.virtualFile = virtualFile!!
+            val file = it.file
+            if (JsExecutor.isLibraryLoaded(file.absolutePath)) {
+                return@forEach
+            }
+
+            val virtualFile = HttpUtils.findVirtualFile(file.absolutePath, true)
+            virtualFile!!.refresh(false, false)
+            it.virtualFile = virtualFile
         }
     }
 
-    fun downloadAsyncInEdt(project: Project, npmFiles: List<PreJsFile>, httpFilePath: String) {
+    fun downloadAsync(project: Project, npmFiles: List<PreJsFile>, httpFilePath: String) {
         if (downloadingMap[httpFilePath] == true) {
             NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("download.not.finish"))
             return
@@ -120,23 +128,16 @@ object NpmJsUtils {
                                 indicator.fraction = (index + 1) * faction
 
                                 if (index != npmFiles.size - 1) {
-                                    TimeUnit.MILLISECONDS.sleep(1000 + DigestUtil.random.nextLong(1000))
+                                    TimeUnit.MILLISECONDS.sleep(500 + DigestUtil.random.nextLong(500))
                                 }
                             }
                     }
 
-                    application.invokeLater {
-                        NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloaded"))
-                    }
+                    NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("js.downloaded"))
                 } catch (e: Exception) {
                     e.printStackTrace()
 
-                    application.invokeLater {
-                        NotifyUtil.notifyCornerError(
-                            project,
-                            NlsBundle.nls("js.download.error") + " $e"
-                        )
-                    }
+                    NotifyUtil.notifyCornerError(project, NlsBundle.nls("js.download.error") + " $e")
                 } finally {
                     downloadingMap[httpFilePath] = false
                 }
@@ -154,24 +155,24 @@ object NpmJsUtils {
 
         if (file.exists()) {
             file.delete()
-            println("Deleted exists file: $file")
+            logInfo("Deleted exists file: $file")
         }
 
         Files.write(file.toPath(), byteArray)
-        println("Downloaded js library ${file.name} : $file")
+        logInfo("Downloaded js library ${file.name} : $file")
 
         val outputDir = File(jsLibPath.absolutePath, nameWithoutExtension)
 
         if (outputDir.exists()) {
             outputDir.deleteRecursively()
-            println("Deleted exists dir ${outputDir.name}: $outputDir")
+            logInfo("Deleted exists dir ${outputDir.name}: $outputDir")
         }
 
         outputDir.mkdirs()
 
         TgzUtils.extract(file.absolutePath, outputDir.absolutePath)
 
-        println("Extracted js library $file to $outputDir")
+        logInfo("Extracted js library $file to $outputDir")
 
         jsTgzFileMap[name] = file
 
@@ -180,7 +181,7 @@ object NpmJsUtils {
     }
 
     private fun findPackageJsonMainJsFile(libDir: File, project: Project): File {
-        val packageJsonFile = File(libDir, "package" + File.separator + "package.json")
+        val packageJsonFile = File(libDir, "package${File.separator}package.json")
 
         if (!packageJsonFile.exists()) {
             throw IllegalArgumentException("Invalid library: ${libDir.name}")
@@ -190,15 +191,17 @@ object NpmJsUtils {
 
         val virtualFile = LightVirtualFile("dummy.json", packageJsonStr)
 
-        val jsonFile = PsiUtil.getPsiFile(project, virtualFile) as JsonFile
+        val jsonFile = computeReadAction { PsiUtil.getPsiFile(project, virtualFile) as JsonFile }
 
-        val jsonObject = jsonFile.topLevelValue
+        val jsonObject = computeReadAction { jsonFile.topLevelValue }
         if (jsonObject !is JsonObject) {
             throw IllegalArgumentException("Invalid library: ${libDir.name}")
         }
 
-        val jsonStringLiteral = jsonObject.findProperty("main")?.value as JsonStringLiteral?
-            ?: throw IllegalArgumentException("Invalid library: ${libDir.name}")
+        val jsonStringLiteral = computeReadAction {
+            jsonObject.findProperty("main")?.value as JsonStringLiteral?
+                ?: throw IllegalArgumentException("Invalid library: ${libDir.name}")
+        }
 
         val entryJs = jsonStringLiteral.value
 

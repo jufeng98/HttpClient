@@ -18,7 +18,10 @@ import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.jsPlugin.JsFacade
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.psi.HttpGlobalHandler
+import org.javamaster.httpclient.psi.HttpPreRequestHandler
+import org.javamaster.httpclient.psi.HttpRequestBlock
+import org.javamaster.httpclient.psi.HttpVariableName
 
 /**
  * @author yudong
@@ -82,7 +85,6 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
                     request.variables.set('$variableName', '');
                 %}
                 
-                
             """.trimIndent()
         } else {
             """
@@ -107,11 +109,18 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
                 httpFile.addBefore(newGlobalHandler, httpFile.firstChild) as HttpGlobalHandler
             }
 
+            // 添加 \n
+            httpFile.addAfter(newGlobalHandler.nextSibling, globalHandler)
+
             globalHandler.globalScript.scriptBody!!
         } else {
             val request = requestBlock.request
             val newPreRequestHandler = tmpFile.getRequestBlocks()[0].preRequestHandler!!
             val preRequestHandler = requestBlock.addBefore(newPreRequestHandler, request) as HttpPreRequestHandler
+
+            // 添加 \n
+            requestBlock.addAfter(newPreRequestHandler.nextSibling, preRequestHandler)
+
             preRequestHandler.preRequestScript.scriptBody!!
         }
 

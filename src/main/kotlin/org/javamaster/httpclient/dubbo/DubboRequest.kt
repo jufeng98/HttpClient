@@ -9,12 +9,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiPrimitiveType
+import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
-import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.JsonUtils.gson
 import org.javamaster.httpclient.utils.PsiTypeUtils
 import java.nio.charset.StandardCharsets
@@ -89,9 +90,10 @@ class DubboRequest(
 
             val targetMethod = findTargetMethod(psiClass, reqBodyMap)
 
-            paramTypeNameArray = targetMethod.parameterList.parameters
+            val parameters = computeReadAction { targetMethod.parameterList.parameters }
+            paramTypeNameArray = parameters
                 .map {
-                    val type = it.type
+                    val type = computeReadAction { it.type }
                     val psiType = PsiTypeUtils.resolvePsiType(type)
                     if (psiType != null) {
                         val qualifiedName = psiType.qualifiedName
@@ -108,7 +110,7 @@ class DubboRequest(
                 }
                 .toTypedArray()
 
-            paramValueArray = targetMethod.parameterList.parameters
+            paramValueArray = parameters
                 .map {
                     val name = it.name
                     reqBodyMap!![name]
@@ -218,10 +220,13 @@ class DubboRequest(
         reference.isGeneric = true
         reference.application = application
         reference.setInterface(targetInterfaceName)
+
         val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toInt() ?: TIMEOUT
         reference.timeout = timeout
+
         reference.retries = 0
         reference.isCheck = false
+        reference.reconnect = "false"
 
         if (!version.isNullOrBlank()) {
             reference.version = version
@@ -252,18 +257,20 @@ class DubboRequest(
             method = methods[0]
         } else {
             val paramNames = reqMap.keys
-            method = methods.filter {
-                val iterator = paramNames.iterator()
-                val parameterList = it.parameterList
-                for (i in 0 until parameterList.parametersCount) {
-                    val name = parameterList.parameters[i].name
-                    val jsonName = iterator.next()
-                    if (name != jsonName) {
-                        return@filter false
+            method = computeReadAction {
+                methods.filter {
+                    val iterator = paramNames.iterator()
+                    val parameterList = it.parameterList
+                    for (i in 0 until parameterList.parametersCount) {
+                        val name = parameterList.parameters[i].name
+                        val jsonName = iterator.next()
+                        if (name != jsonName) {
+                            return@filter false
+                        }
                     }
-                }
-                true
-            }.firstOrNull()
+                    true
+                }.firstOrNull()
+            }
 
             if (method == null) {
                 throw IllegalArgumentException(NlsBundle.nls("method.not.found", paramNames, methodName))
@@ -279,6 +286,7 @@ class DubboRequest(
         init {
             application.name = "HttpClient"
             application.qosEnable = false
+            application.logger = "slf4j"
         }
 
     }

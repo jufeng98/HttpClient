@@ -7,14 +7,15 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.CookieFileType
 import org.javamaster.httpclient.CookieLanguage
 import org.javamaster.httpclient.psi.CookieRecord
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 
 /**
  * @author yudong
  */
 class CookieFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, CookieLanguage.INSTANCE) {
 
-    fun getRecords(): List<CookieRecord> {
-        return PsiTreeUtil.getChildrenOfTypeAsList(this, CookieRecord::class.java)
+    fun getRecords(): MutableList<CookieRecord> {
+        return computeReadAction { PsiTreeUtil.getChildrenOfTypeAsList(this, CookieRecord::class.java) }
     }
 
     override fun getFileType(): FileType {

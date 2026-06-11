@@ -54,12 +54,25 @@ class JavaBridge() {
                 return null
             }
 
-            if (arg is Double) {
-                return arg.toInt()
-            }
-
             return arg
         }
+
+        fun convertToFloat(arg: Any): Float? {
+            return if (arg is Int) {
+                arg.toFloat()
+            } else if (arg is Double) {
+                arg.toFloat()
+            } else {
+                null
+            }
+        }
+
+        fun convertToDouble(arg: Any): Double? {
+            return if (arg is Int) {
+                arg.toDouble()
+            } else arg as? Double
+        }
+
     }
 
 }

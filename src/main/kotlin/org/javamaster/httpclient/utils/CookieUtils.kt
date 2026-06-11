@@ -1,26 +1,22 @@
 package org.javamaster.httpclient.utils
 
-import com.google.common.collect.Maps
-import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.util.PsiUtil
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
-import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.factory.CookiePsiFactory
 import org.javamaster.httpclient.js.support.jsObject.Cookie
+import org.javamaster.httpclient.logger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.CookieFile
-import java.io.File
+import org.javamaster.httpclient.service.CookiesFileService
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.net.HttpCookie
 import java.net.URI
 import java.net.http.HttpHeaders
-import java.nio.file.Files
 import java.util.*
 
 
@@ -86,8 +82,12 @@ object CookieUtils {
             .flatten()
     }
 
-    fun getValidFileCookieMap(cookiesPsiFile: CookieFile?): List<Cookie> {
-        cookiesPsiFile ?: return emptyList()
+    fun getValidFileCookieMap(project: Project): List<Cookie> {
+        val cookiesFileService = project.getService(CookiesFileService::class.java)
+
+        val cookiesFile = cookiesFileService.getCookiesFile() ?: return listOf()
+
+        val cookiesPsiFile = computeReadAction { PsiUtil.getPsiFile(project, cookiesFile) as CookieFile }
 
         val currentTimeMillis = System.currentTimeMillis()
         return cookiesPsiFile.getRecords()
@@ -108,49 +108,51 @@ object CookieUtils {
             }
     }
 
-    fun createCookiesFileIfNotExists(project: Project): VirtualFile? {
-        val historyFolder = InnerVariableEnum.HISTORY_FOLDER.exec("", project) ?: return null
+    fun createCookiesFileIfNotExists(project: Project) {
+        val cookiesFileService = project.getService(CookiesFileService::class.java)
 
-        val historyDir = File(historyFolder)
-        if (!historyDir.exists()) {
-            Files.createDirectories(historyDir.toPath())
+        var cookiesFile = cookiesFileService.getCookiesFile()
+        if (cookiesFile == null) {
+            cookiesFile = cookiesFileService.createCookiesFile()
         }
-
-        val cookiesFile = File(historyDir, HttpConsts.COOKIE_FILE_NAME)
-        if (!cookiesFile.exists()) {
-            val file = Files.createFile(cookiesFile.toPath())
-            Files.writeString(file, "# domain\tpath\tname\tvalue\tdate")
-        }
-
-        return VfsUtil.findFileByIoFile(cookiesFile, true)
     }
 
-    fun saveCookiesToFile(cookies: List<Cookie>, project: Project, cookiesPsiFile: CookieFile?): String {
-        cookiesPsiFile ?: return ""
+    fun saveCookiesToFile(cookies: List<Cookie>, project: Project, cookiesPsiFile: CookieFile): String {
+        if (cookies.isEmpty()) {
+            return ""
+        }
 
-        runInEdt {
-            runWriteAction {
-                CommandProcessor.getInstance().runUndoTransparentAction {
-                    synchronized(this) {
-                        val cookieRecords = runReadAction { cookiesPsiFile.getRecords() }
+        // 准备批次内去重的 key（在写操作外完成，减少写锁持有时间）
+        val cookiesWithKey = cookies
+            .map { it to "${it.domain}-${it.path}-${it.name}" }
+            .distinctBy { it.second }
+
+        var resultMessage = ""
+
+        WriteCommandAction.runWriteCommandAction(project) {
+            CommandProcessor.getInstance().runUndoTransparentAction {
+                synchronized(cookiesPsiFile.virtualFile.path.intern()) {
+                    try {
+                        var cookieRecords = cookiesPsiFile.getRecords()
 
                         // 只保留 300 个 Cookie
-                        val size = cookieRecords.size + cookies.size - 300
-                        if (size > 0) {
-                            cookieRecords.subList(0, Integer.min(size, cookieRecords.size))
-                                .forEach {
-                                    it.prevSibling.delete()
-                                    it.delete()
-                                }
+                        val toRemoveCount = cookieRecords.size + cookies.size - 300
+                        if (toRemoveCount > 0) {
+                            cookieRecords.take(toRemoveCount).forEach {
+                                it.prevSibling?.delete()
+                                it.delete()
+                            }
+
+                            cookieRecords = cookiesPsiFile.getRecords()
                         }
 
-                        val cookieMap =
-                            Maps.uniqueIndex(cookieRecords) { "${it.domain.text}-${it.path.text}-${it.nameCk.text}" }
+                        val cookieMap = cookieRecords.associateBy {
+                            "${it.domain.text}-${it.path.text}-${it.nameCk.text}"
+                        }
 
-                        cookies.forEach {
-                            val record = CookiePsiFactory.createRecord(project, it)
+                        for ((cookie, key) in cookiesWithKey) {
+                            val record = CookiePsiFactory.createRecord(project, cookie)
 
-                            val key = "${it.domain}-${it.path}-${it.name}"
                             val cookieRecord = cookieMap[key]
                             if (cookieRecord == null) {
                                 cookiesPsiFile.add(record.prevSibling)
@@ -159,12 +161,18 @@ object CookieUtils {
                                 cookieRecord.replace(record)
                             }
                         }
+
+                        resultMessage = nls("cookie.saved", cookiesPsiFile.virtualFile.path)
+                    } catch (e: Exception) {
+                        logWarn("处理cookie出错", e)
+
+                        resultMessage = "保存 cookie 到文件失败了: $e"
                     }
                 }
             }
         }
 
-        return if (cookies.isNotEmpty()) nls("cookie.saved", cookiesPsiFile.virtualFile.path) else ""
+        return resultMessage
     }
 
 }

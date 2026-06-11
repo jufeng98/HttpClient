@@ -6,6 +6,7 @@ import com.intellij.openapi.util.NotNullLazyValue
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import java.util.function.Consumer
 
 /**
  * @author yudong
@@ -26,13 +27,18 @@ class HttpConsts {
         const val HTTP_TYPE_ID = "intellijHttpClient"
         const val HTTP_CLIENT = "HttpClient"
         const val WEB_BOUNDARY = "boundary"
-        const val VARIABLE_SIGN_END = "}}"
         const val SUCCESS = 0
         const val FAILED = 1
 
         val HTTP_CLIENT_ICON = NotNullLazyValue.createConstantValue(HttpIcons.FILE)
-        val gutterIconLoadingKey: Key<Runnable?> = Key.create("GUTTER_ICON_LOADING_KEY")
-        val requestFinishedKey: Key<Int> = Key.create("REQUEST_FINISHED_KEY")
+
+        val gutterIconLoadingKey: Key<Runnable?> = Key.create("org.javamaster.gutterIconLoadingKey")
+        val requestFinishedKey: Key<Runnable?> = Key.create("org.javamaster.requestFinishedKey")
+        val interruptFlagKey = Key.create<Boolean>("org.javamaster.interruptFlagKey")
+        val runFinishedKey = Key.create<Consumer<Int>?>("org.javamaster.runFinishedKey")
+        val runFileKey = Key.create<Boolean>("org.javamaster.runFileKey")
+        val runFileRequestIdxKey = Key.create<Int>("org.javamaster.runFileRequestIdxKey")
+
         val httpDashboardContentTypeKey = Key.create<ContentType>("org.javamaster.dashboard.httpDashboardContentType")
         val httpDashboardFoldHeaderKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardFoldHeader")
         val httpDashboardToolbarKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardToolbar")

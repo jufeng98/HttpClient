@@ -11,7 +11,9 @@ import org.javamaster.httpclient.utils.EnvFileUtils
 class AddEnvFileAction : AddAction(NlsBundle.nls("create.env.json.file")) {
 
     override fun actionPerformed(e: AnActionEvent) {
-        EnvFileUtils.createAndReInitEnvCompo(false)
+        val project = e.project ?: return
+
+        EnvFileUtils.createAndReInitEnvCompo(false, project)
     }
 
 }

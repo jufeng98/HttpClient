@@ -16,17 +16,19 @@ class HttpRequestScratchFileCreationHelper : ScratchFileCreationHelper() {
     override fun prepareText(project: Project, context: Context, dataContext: DataContext): Boolean {
         if (context.language !== HttpLanguage.INSTANCE || StringUtil.isNotEmpty(context.text)) return false
 
-        val file = createFileFromTemplate(project)
+        val content = createFileFromTemplate(project)
 
-        context.text = file + "\n"
+        context.text = content + "\n"
         context.caretOffset = context.text.length
 
         return true
     }
 
     private fun createFileFromTemplate(project: Project): String {
-        val template = FileTemplateManager.getInstance(project).findInternalTemplate(templateName)
+        val fileTemplateManager = FileTemplateManager.getInstance(project)
 
-        return template.getText(FileTemplateManager.getInstance(project).defaultProperties)
+        val template = fileTemplateManager.findInternalTemplate(templateName)
+
+        return template.getText(fileTemplateManager.defaultProperties)
     }
 }

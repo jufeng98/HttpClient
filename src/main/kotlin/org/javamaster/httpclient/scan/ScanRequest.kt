@@ -71,9 +71,9 @@ class ScanRequest(private val project: Project) {
         }
 
         // 模式匹配（较慢，作为降级策略）
-        for (request in requests) {
-            if (SpringUtils.matchPath(request.path, path)) {
-                return request.psiElement
+        for (requestTmp in requests) {
+            if (SpringUtils.matchPath(requestTmp.path, path)) {
+                return requestTmp.psiElement
             }
         }
 

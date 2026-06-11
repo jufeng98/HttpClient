@@ -1,6 +1,6 @@
 package org.javamaster.httpclient.js
 
-import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.util.concurrentMapOf
 import org.javamaster.httpclient.HttpRequestEnum
@@ -8,13 +8,15 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_RAW
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
+import org.javamaster.httpclient.js.factory.HttpContextFactory
 import org.javamaster.httpclient.js.support.*
-import org.javamaster.httpclient.js.factory.HttpWrapFactory
 import org.javamaster.httpclient.js.support.jsObject.Cookie
 import org.javamaster.httpclient.js.support.req.*
 import org.javamaster.httpclient.js.support.res.HttpClientRequestRes
 import org.javamaster.httpclient.js.support.res.HttpClientResponse
 import org.javamaster.httpclient.js.support.res.ResponseHeaders
+import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.HttpResInfo
@@ -39,7 +41,6 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
     init {
         val context = Context.enter()
-        context.wrapFactory = HttpWrapFactory
 
         reqScriptableObject = context.initStandardObjects()
         reqScriptableObject.prototype = globalScriptableObject
@@ -94,13 +95,17 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         ScriptableObject.putProperty(reqScriptableObject, REQUEST_RAW, request)
     }
 
-    fun evalJsBeforeRequest(preJsFiles: List<PreJsFile>, jsListBeforeReq: List<HttpScriptBody>): List<String> {
+    fun evalJsBeforeRequest(
+        preJsFiles: List<PreJsFile>,
+        jsListBeforeReq: List<HttpScriptBody>,
+        httpFileName: String,
+        httpDocument: Document,
+    ): List<String> {
         if (jsListBeforeReq.isEmpty() && preJsFiles.isEmpty()) {
             return mutableListOf()
         }
 
         val context = Context.enter()
-        context.wrapFactory = HttpWrapFactory
         try {
             GlobalLog.setTabName(tabName)
             threadLocal.set(this)
@@ -122,13 +127,11 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             }
 
             if (jsListBeforeReq.isNotEmpty()) {
-                val virtualFile = jsListBeforeReq[0].containingFile.virtualFile
-                val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
 
                 jsListBeforeReq.forEach {
-                    val rowNum = document.getLineNumber(it.textOffset) + 1
+                    val rowNum = httpDocument.getLineNumber(it.textOffset) + 1
 
-                    evalJs(it.text, rowNum, virtualFile.name, reqScriptableObject, context)
+                    evalJs(it.text, rowNum, httpFileName, reqScriptableObject, context)
                 }
             }
 
@@ -155,13 +158,14 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         statusCode: Int,
         headerMap: MutableMap<String, MutableList<String>>,
         cookies: List<Cookie>,
+        httpFileName: String,
+        httpDocument: Document,
     ): String? {
         if (jsScript == null) {
             return null
         }
 
         val context = Context.enter()
-        context.wrapFactory = HttpWrapFactory
         try {
             GlobalLog.setTabName(tabName)
             threadLocal.set(this)
@@ -192,12 +196,10 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
             ScriptableObject.putProperty(reqScriptableObject, "response", response)
 
-            val virtualFile = jsScript.containingFile.virtualFile
-            val document = FileDocumentManager.getInstance().getDocument(virtualFile)!!
-            val rowNum = document.getLineNumber(jsScript.textOffset) + 1
+            val rowNum = httpDocument.getLineNumber(jsScript.textOffset) + 1
 
             try {
-                evalJs(jsScript.text, rowNum, virtualFile.name, reqScriptableObject, context)
+                evalJs(jsScript.text, rowNum, httpFileName, reqScriptableObject, context)
             } catch (e: Exception) {
                 GlobalLog.log("$e")
             }
@@ -223,17 +225,19 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
         val libraryScriptableObjects = npmFiles
             .map {
-                val fileName = it.file.name
-                var scriptableObject = libraryLoadedMap[fileName]
+                val file = it.file
+                val fileName = file.name
+                val absolutePath = file.absolutePath
 
+                var scriptableObject = libraryLoadedMap[absolutePath]
                 if (scriptableObject == null) {
                     scriptableObject = context.initStandardObjects()
 
                     evalJs(it.content, 1, fileName, scriptableObject, context)
 
-                    libraryLoadedMap[fileName] = scriptableObject
+                    libraryLoadedMap[absolutePath] = scriptableObject
 
-                    println("Loaded and cached js library: $fileName")
+                    logInfo("Loaded and cached js library: $fileName")
                 }
 
                 scriptableObject!!
@@ -269,8 +273,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         try {
             context.evaluateString(scriptableObject, jsStr, fileName, rowNum, null)
         } catch (e: WrappedException) {
-            System.err.println("WrappedException")
-            e.printStackTrace()
+            logWarn("WrappedException")
 
             val cause = e.cause
             if (cause is FileNotFoundException || cause is IllegalArgumentException || cause is HttpFileException) {
@@ -283,13 +286,11 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
             throw EvaluatorException(e.wrappedException.toString(), fileName, e.lineNumber())
         } catch (e: JavaScriptException) {
-            System.err.println("JavaScriptException")
-            e.printStackTrace()
+            logWarn("JavaScriptException")
 
             rethrowException(e.stackTrace, e.toString(), fileName)
         } catch (e: Exception) {
-            System.err.println("Exception")
-            e.printStackTrace()
+            logWarn("Exception")
 
             throw e
         }
@@ -315,8 +316,9 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         private val libraryLoadedMap = concurrentMapOf<String, ScriptableObject>()
 
         val globalScriptableObject: ScriptableObject by lazy {
+            ContextFactory.initGlobal(HttpContextFactory)
+
             val context = Context.enter()
-            context.wrapFactory = HttpWrapFactory
             val globalTmp = context.initStandardObjects()
 
             JsHandlerPredefineGlobalVariables.defineWindow(globalTmp, context)
@@ -343,5 +345,10 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
             globalTmp
         }
+
+        fun isLibraryLoaded(absolutePath: String): Boolean {
+            return libraryLoadedMap.contains(absolutePath)
+        }
+
     }
 }

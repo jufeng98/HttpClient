@@ -7,10 +7,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.findFile
-import com.intellij.openapi.vfs.writeText
+import com.intellij.openapi.vfs.*
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
@@ -24,6 +21,7 @@ import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.escapeRegexp
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.io.File
 
 
@@ -307,13 +305,13 @@ class EnvFileService(val project: Project) {
 
             val psiFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return emptyMap()
 
-            val topLevelValue = psiFile.topLevelValue
+            val topLevelValue = computeReadAction { psiFile.topLevelValue }
             if (topLevelValue !is JsonObject) {
                 System.err.println("The environment file: ${psiFile.virtualFile.path} outer format does not conform to the specification!")
                 return emptyMap()
             }
 
-            val envProperty = topLevelValue.findProperty(env) ?: return mapOf()
+            val envProperty = computeReadAction { topLevelValue.findProperty(env) } ?: return mapOf()
             val jsonValue = envProperty.value
             if (jsonValue !is JsonObject) {
                 System.err.println("The environment file: ${psiFile.virtualFile.path} inner format does not conform to the specification!")
@@ -373,8 +371,8 @@ class EnvFileService(val project: Project) {
                 System.err.println("The environment file: ${jsonFile.virtualFile.path} inner format does not conform to the specification!")
                 return null
             }
-
-            val jsonProperty = jsonValue.findProperty(key) ?: return null
+            val jsonProperty = computeReadAction { jsonValue.findProperty(key) }
+                ?: return null
 
             val innerJsonValue = jsonProperty.value ?: return null
 
@@ -431,13 +429,13 @@ class EnvFileService(val project: Project) {
 
             val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return null
 
-            val topLevelValue = jsonFile.topLevelValue
+            val topLevelValue = computeReadAction { jsonFile.topLevelValue }
             if (topLevelValue !is JsonObject) {
                 System.err.println("The environment file: ${jsonFile.virtualFile.path} outer format does not conform to the specification!")
                 return null
             }
 
-            return topLevelValue.findProperty(env)
+            return computeReadAction { topLevelValue.findProperty(env) }
         }
 
         fun getJsonLiteralValue(literal: JsonLiteral): String {
@@ -469,23 +467,23 @@ class EnvFileService(val project: Project) {
         fun getEnvJsonFile(envFileName: String, httpFileParentPath: String, project: Project): JsonFile? {
             val basePath = project.basePath ?: return null
 
-            val dir = VfsUtil.findFileByIoFile(File(basePath), true)!!
+            val projectDir = LocalFileSystem.getInstance().findFileByPath(basePath) ?: return null
 
-            return getEnvJsonFile(envFileName, httpFileParentPath, project, dir)
+            return getEnvJsonFile(envFileName, httpFileParentPath, project, projectDir)
         }
 
         private fun getEnvJsonFile(
             envFileName: String,
-            httpFileParentPath: String,
+            parentPath: String,
             project: Project,
             projectDir: VirtualFile,
         ): JsonFile? {
-            val dir = VfsUtil.findFileByIoFile(File(httpFileParentPath), true) ?: return null
+            val dir = VfsUtil.findFileByIoFile(File(parentPath), true) ?: return null
 
             val virtualFile = dir.findFile(envFileName)
 
             if (virtualFile != null) {
-                val psiFile = PsiUtil.getPsiFile(project, virtualFile)
+                val psiFile = computeReadAction { PsiUtil.getPsiFile(project, virtualFile) }
                 if (psiFile !is JsonFile) {
                     return null
                 }

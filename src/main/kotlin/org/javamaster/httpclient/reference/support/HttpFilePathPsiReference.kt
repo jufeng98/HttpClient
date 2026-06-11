@@ -31,7 +31,10 @@ class HttpFilePathPsiReference(httpFilePath: HttpFilePath, textRange: TextRange)
     private fun resolveHttpRequest(name: String, httpFile: HttpFile): PsiElement? {
         val targetTabName = HttpUtils.getTargetTabName(name) ?: return null
 
-        val pairs = MyPsiUtils.getImportFileHttpRequests(httpFile)
+        val project = httpFile.project
+        val parentPath = httpFile.virtualFile.parent.path
+
+        val pairs = MyPsiUtils.getImportFileHttpRequests(httpFile, project, parentPath)
 
         return pairs
             .firstOrNull {
