@@ -70,7 +70,8 @@
             <ul>
                 <li><b>8.0.0</b></li>
                 <ul>
-                    <li>重构 js 处理器执行逻辑，从 EDT 线程移出，改为在线程池中执行，从而避免 IDEA 出现卡顿现象</li>
+                    <li>重构 http 请求逻辑，大量耗时操作从 UI 线程移出，改为在线程池中执行，使得 IDEA 界面操作更加流畅</li>
+                    <li>重构 js 处理器执行逻辑，从 UI 线程移出，改为在线程池中执行，从而避免 IDEA 出现卡顿现象</li>
                     <li>js 处理器中的预定义对象(如 request、response、crypto 等)改为纯 Java 实现，提高执行效率</li>
                     <li>新增处理 Cookie 功能，支持保存到本地并随着后续请求发送</li>
                     <li>新增 import 指令，用于引入外部 http 文件</li>
@@ -82,7 +83,7 @@
                     <li>移除 response 对象的 jsonPath 属性和 xpath 属性，请使用全局的 jsonPath 函数和 xpath 函数</li>
                     <li>js 处理器中新增智能提示内置的 js 预定义对象及函数功能(只适用于旗舰版)</li>
                     <li>完善格式化功能，支持注入的 js 的格式化(只适用于旗舰版)</li>
-                    <li>其他功能优化等等</li>
+                    <li>bug修复及其他功能优化等等</li>
                 </ul>
                 <li><b>6.0.0</b></li>
                 <ul>
