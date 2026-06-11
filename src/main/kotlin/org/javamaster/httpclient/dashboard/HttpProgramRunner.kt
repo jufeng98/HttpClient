@@ -11,7 +11,7 @@ import com.intellij.execution.runners.GenericProgramRunner
 import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.execution.ui.RunContentManager
-import com.intellij.openapi.editor.ex.EditorGutterComponentEx
+import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.util.Disposer
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.dashboard.HttpExecutor.Companion.HTTP_EXECUTOR_ID
@@ -22,6 +22,7 @@ import org.javamaster.httpclient.runconfig.HttpRunProfileState
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.ConfigUtils
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 
 
 /**
@@ -41,13 +42,12 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         return DefaultRunExecutor.EXECUTOR_ID == executorId || DefaultDebugExecutor.EXECUTOR_ID == executorId
     }
 
-    fun executeFromGutter(httpMethod: HttpMethod, gutterComponent: EditorGutterComponentEx?) {
-        val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
-        val project = httpMethod.project
+    fun executeFromGutter(httpMethod: HttpMethod, loadingRemover: Runnable? = null) {
+        val project = computeReadAction { httpMethod.project }
         val tabName = HttpUtils.getTabName(httpMethod)
 
         if (ConfigUtils.checkRequestRunning(httpMethod, tabName, project)) {
-            loadingRemover?.run()
+            runInEdt { loadingRemover?.run() }
             return
         }
 

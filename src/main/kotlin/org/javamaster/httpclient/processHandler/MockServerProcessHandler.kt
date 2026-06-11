@@ -25,32 +25,32 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         val port = MockServerHelper.resolvePort(requestTarget.port)
 
         httpDashboardForm.initMockServerForm { editor ->
-            loadingRemover?.run()
+            try {
+                loadingRemover?.run()
 
-            val document = editor.document
+                val document = editor.document
 
-            mockServer = MockServer(port) { log ->
-                runInEdt {
-                    DocumentUtil.writeInRunUndoTransparentAction {
-                        document.insertString(document.textLength, log)
-                        val caret: Caret = editor.caretModel.primaryCaret
-                        caret.moveToOffset(document.textLength)
+                mockServer = MockServer(port) { log ->
+                    runInEdt {
+                        DocumentUtil.writeInRunUndoTransparentAction {
+                            document.insertString(document.textLength, log)
+                            val caret: Caret = editor.caretModel.primaryCaret
+                            caret.moveToOffset(document.textLength)
 
-                        val scrollingModel: ScrollingModel = editor.scrollingModel
-                        scrollingModel.scrollToCaret(ScrollType.RELATIVE)
+                            val scrollingModel: ScrollingModel = editor.scrollingModel
+                            scrollingModel.scrollToCaret(ScrollType.RELATIVE)
+                        }
                     }
                 }
+
+                mockServer!!.startServer(request, variableResolver, paramMap)
+
+                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.server.start", port))
+
+                ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
+            } catch (e: Exception) {
+                handleException(e)
             }
-
-            mockServer!!.startServer(request, variableResolver, paramMap)
-
-            NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.server.start", port))
-
-            val toolWindowManager = ToolWindowManager.getInstance(project)
-            val toolWindow = toolWindowManager.getToolWindow(ToolWindowId.SERVICES)
-            toolWindow?.show()
-
-            finishedTime = System.currentTimeMillis()
         }
     }
 

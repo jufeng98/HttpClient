@@ -29,7 +29,6 @@ object HttpRequest {
 
     fun test(testName: String, callback: Function) {
         val context = Context.enter()
-        context.wrapFactory = HttpWrapFactory
         try {
             callback.call(
                 context,

@@ -6,14 +6,10 @@ import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.util.text.Formats
 import com.intellij.util.application
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.consts.HttpConsts
-import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
-import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.dubbo.DubboHandler
 import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
-import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
@@ -36,9 +32,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         var url = resolveAndHandleUrl()
 
-        runInEdt {
-            httpDashboardForm.initLabelLoading(tabName, url)
-        }
+        runInEdt { httpDashboardForm.initLabelLoading(tabName, url) }
 
         val reqInfo = createHttpReqInfo()
 
@@ -79,8 +73,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         val dubboRequest: DubboHandler
         try {
             dubboRequest = constructor.newInstance(
-                tabName, url, reqHeaderMap, reqBody,
-                httpReqDescList, module, project, paramMap
+                tabName, url, reqHeaderMap, reqBody, httpReqDescList, module, project, paramMap
             ) as DubboHandler
         } catch (e: InvocationTargetException) {
             throw e.targetException
@@ -88,37 +81,44 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val future = dubboRequest.sendAsync()
 
+        this.future = future
+
         future.whenCompleteAsync { triple, throwable ->
             costTimes = triple?.third
-            finishedTime = System.currentTimeMillis()
             hasError = throwable != null
 
             application.executeOnPooledThread {
                 if (hasError) {
-                    val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+                    try {
+                        val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
-                    dealResponse(httpInfo, parentPath)
+                        dealResponse(httpInfo, parentPath)
+
+                        detachProcess()
+                    } catch (e: Exception) {
+                        handleException(e)
+                    }
 
                     return@executeOnPooledThread
                 }
 
-                httpStatus = 200
-
-                val bodyBytes = triple!!.first
-                val bodyStr = triple.second
-
-                val size = Formats.formatFileSize(bodyBytes.size.toLong())
-
-                val comment = nls("res.desc", httpStatus!!, costTimes!!, size)
-
-                val httpResDescList = mutableListOf("// $comment$CR_LF")
-
-                val httpResInfo = HttpResInfo(
-                    SimpleTypeEnum.JSON, bodyBytes, bodyStr,
-                    ContentType.APPLICATION_JSON.mimeType
-                )
-
                 try {
+                    httpStatus = 200
+
+                    val bodyBytes = triple!!.first
+                    val bodyStr = triple.second
+
+                    val size = Formats.formatFileSize(bodyBytes.size.toLong())
+
+                    val comment = nls("res.desc", httpStatus!!, costTimes!!, size)
+
+                    val httpResDescList = mutableListOf("// $comment$CR_LF")
+
+                    val httpResInfo = HttpResInfo(
+                        SimpleTypeEnum.JSON, bodyBytes, bodyStr,
+                        ContentType.APPLICATION_JSON.mimeType
+                    )
+
                     val evalJsRes = jsExecutor.evalJsAfterRequest(
                         url, reqBody, jsAfterReq, httpResInfo, httpStatus!!,
                         mutableMapOf(), listOf(), httpFile.name, httpDocument
@@ -159,15 +159,13 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     )
 
                     dealResponse(httpInfo, parentPath)
+
+                    detachProcess()
                 } catch (e: Exception) {
                     handleException(e)
                 }
             }
-
-            destroyProcess()
         }
-
-        cancelFutureIfTerminated(future)
     }
 
     override fun downloadOtherFiles(): Boolean {
@@ -175,27 +173,17 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             return true
         }
 
-        runInEdt {
-            DubboJars.downloadAsync(project)
+        DubboJars.downloadAsync(project)
 
-            httpDashboardForm.resetDashboardForm()
-        }
+        runInEdt { httpDashboardForm.resetDashboardForm() }
 
         return false
     }
 
     override fun destroyProcessImpl() {
-        runInEdt {
-            loadingRemover?.run()
-        }
+        runInEdt { loadingRemover?.run() }
 
         requestRunningSet.remove(tabName)
-
-        val code = if (hasError) FAILED else SUCCESS
-
-        httpMethod.putUserData(HttpConsts.requestFinishedKey, code)
-
-        RunFileHandler.resetInterrupt()
 
         super.destroyProcessImpl()
     }

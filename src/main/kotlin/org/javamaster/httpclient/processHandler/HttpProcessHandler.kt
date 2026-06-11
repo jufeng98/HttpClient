@@ -4,9 +4,7 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.util.text.Formats
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.enums.ParamEnum
-import org.javamaster.httpclient.handler.RunFileHandler
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
@@ -28,9 +26,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         var url = resolveAndHandleUrl()
 
-        runInEdt {
-            httpDashboardForm.initLabelLoading(tabName, url)
-        }
+        runInEdt { httpDashboardForm.initLabelLoading(tabName, url) }
 
         val reqInfo = createHttpReqInfo()
 
@@ -72,9 +68,10 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val future = methodTypeTmp.execute(paramMap, req)
 
+        this.future = future
+
         future.whenCompleteAsync { response, throwable ->
-            finishedTime = System.currentTimeMillis()
-            costTimes = finishedTime - start
+            costTimes = System.currentTimeMillis() - start
             httpStatus = response?.statusCode()
             hasError = throwable != null
 
@@ -82,7 +79,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                 if (ResUtils.shouldRedirect(httpStatus, paramMap)) {
                     redirectTimes++
                     if (redirectTimes > 3) {
-                        destroyProcess()
+                        detachProcess()
 
                         return@executeOnPooledThread
                     }
@@ -96,12 +93,16 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     return@executeOnPooledThread
                 }
 
-                destroyProcess()
-
                 if (hasError) {
-                    val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+                    try {
+                        val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
-                    dealResponse(httpInfo, parentPath)
+                        dealResponse(httpInfo, parentPath)
+
+                        detachProcess()
+                    } catch (e: Exception) {
+                        handleException(e)
+                    }
 
                     return@executeOnPooledThread
                 }
@@ -171,27 +172,19 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     )
 
                     dealResponse(httpInfo, parentPath)
+
+                    detachProcess()
                 } catch (e: Exception) {
                     handleException(e)
                 }
             }
         }
-
-        cancelFutureIfTerminated(future)
     }
 
     override fun destroyProcessImpl() {
-        runInEdt {
-            loadingRemover?.run()
-        }
+        runInEdt { loadingRemover?.run() }
 
         requestRunningSet.remove(tabName)
-
-        val code = if (hasError) HttpConsts.Companion.FAILED else HttpConsts.Companion.SUCCESS
-
-        httpMethod.putUserData(HttpConsts.Companion.requestFinishedKey, code)
-
-        RunFileHandler.resetInterrupt()
 
         super.destroyProcessImpl()
     }

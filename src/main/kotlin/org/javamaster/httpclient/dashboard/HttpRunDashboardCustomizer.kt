@@ -4,9 +4,11 @@ import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.execution.dashboard.RunDashboardCustomizer
 import com.intellij.execution.dashboard.RunDashboardRunConfigurationNode
 import com.intellij.execution.ui.RunContentDescriptor
+import com.intellij.execution.ui.RunContentManager
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.psi.PsiElement
 import com.intellij.ui.SimpleTextAttributes
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.utils.HttpUtils.getTargetHttpMethod
@@ -34,8 +36,10 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
             return false
         }
 
-        val time = System.currentTimeMillis() - processHandler.finishedTime
-        val current = time < 1000
+        val project = processHandler.project
+        val runContentManager = RunContentManager.getInstance(project)
+
+        val current = runContentManager.selectedContent?.processHandler == processHandler
 
         val attributes = if (current) {
             SimpleTextAttributes.SYNTHETIC_ATTRIBUTES
@@ -43,19 +47,25 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
             SimpleTextAttributes.GRAY_ATTRIBUTES
         }
 
+        val httpMethod = processHandler.httpMethod
+
+        val idx = httpMethod.getUserData(HttpConsts.runFileRequestIdxKey)
+
+        val idxStr = if (idx != null) "序号 $idx" else ""
+
         if (processHandler.hasError) {
-            presentation.addText(" Status: Error in the request", attributes)
+            presentation.addText(" Status: Error in the request $idxStr", attributes)
             return true
         }
 
         val status = processHandler.httpStatus ?: return false
 
-        val icon = MyPsiUtils.pickMethodIcon(processHandler.httpMethod.text)
+        val icon = MyPsiUtils.pickMethodIcon(httpMethod.text)
 
         presentation.setIcon(icon)
 
         val costTimes = processHandler.costTimes
-        presentation.addText(" Status: $status($costTimes ms)", attributes)
+        presentation.addText(" Status: $status($costTimes ms) $idxStr", attributes)
 
         return true
     }

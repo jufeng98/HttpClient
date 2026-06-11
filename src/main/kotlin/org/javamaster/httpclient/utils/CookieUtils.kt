@@ -82,8 +82,12 @@ object CookieUtils {
             .flatten()
     }
 
-    fun getValidFileCookieMap(cookiesPsiFile: CookieFile?): List<Cookie> {
-        cookiesPsiFile ?: return emptyList()
+    fun getValidFileCookieMap(project: Project): List<Cookie> {
+        val cookiesFileService = project.getService(CookiesFileService::class.java)
+
+        val cookiesFile = cookiesFileService.getCookiesFile() ?: return listOf()
+
+        val cookiesPsiFile = computeReadAction { PsiUtil.getPsiFile(project, cookiesFile) as CookieFile }
 
         val currentTimeMillis = System.currentTimeMillis()
         return cookiesPsiFile.getRecords()
@@ -104,15 +108,13 @@ object CookieUtils {
             }
     }
 
-    fun createCookiesFileIfNotExists(project: Project): CookieFile {
+    fun createCookiesFileIfNotExists(project: Project) {
         val cookiesFileService = project.getService(CookiesFileService::class.java)
 
         var cookiesFile = cookiesFileService.getCookiesFile()
         if (cookiesFile == null) {
             cookiesFile = cookiesFileService.createCookiesFile()
         }
-
-        return computeReadAction { PsiUtil.getPsiFile(project, cookiesFile) as CookieFile }
     }
 
     fun saveCookiesToFile(cookies: List<Cookie>, project: Project, cookiesPsiFile: CookieFile): String {
