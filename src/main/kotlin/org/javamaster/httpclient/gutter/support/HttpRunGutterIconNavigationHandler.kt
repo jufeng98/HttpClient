@@ -2,19 +2,19 @@ package org.javamaster.httpclient.gutter.support
 
 import com.intellij.codeInsight.daemon.GutterIconNavigationHandler
 import com.intellij.execution.runners.ProgramRunner
+import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
-import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.wm.ToolWindowId
-import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
+import com.intellij.util.application
 import org.javamaster.httpclient.HttpFileType
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.dashboard.HttpProgramRunner
 import org.javamaster.httpclient.dashboard.HttpProgramRunner.Companion.HTTP_RUNNER_ID
-import org.javamaster.httpclient.handler.RunFileHandler.runRequests
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpRunCommand
+import org.javamaster.httpclient.service.RunHttpFileService
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.NotifyUtil
@@ -28,29 +28,41 @@ object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiEleme
 
     override fun navigate(event: MouseEvent, element: PsiElement) {
         val gutterComponent = event.component as EditorGutterComponentEx?
+        val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
 
         val runCommand = element.parent as HttpRunCommand
         val path = runCommand.filePath?.text ?: return
 
-        val containingFile = runCommand.containingFile
+        val httpFile = runCommand.containingFile as HttpFile
+        val parentPath = httpFile.virtualFile.parent.path
+        val project = httpFile.project
 
-        if (HttpUtils.isRunTabName(path)) {
-            runTargetFileRequest(path, containingFile as HttpFile, gutterComponent)
-        } else {
-            runTargetFileRequests(path, containingFile, gutterComponent)
+        application.executeOnPooledThread {
+            if (HttpUtils.isRunTabName(path)) {
+                runTargetFileRequest(path, httpFile, project, parentPath, loadingRemover)
+            } else {
+                runTargetFileRequests(path, project, parentPath, loadingRemover)
+            }
         }
     }
 
-    private fun runTargetFileRequest(name: String, httpFile: HttpFile, gutterComponent: EditorGutterComponentEx?) {
+    private fun runTargetFileRequest(
+        name: String,
+        httpFile: HttpFile,
+        project: Project,
+        parentPath: String,
+        loadingRemover: Runnable?,
+    ) {
         val targetTabName = HttpUtils.getTargetTabName(name)
         if (targetTabName == null) {
-            NotifyUtil.notifyWarn(httpFile.project, nls("req.not.exists", name))
-            val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
-            loadingRemover?.run()
+            NotifyUtil.notifyWarn(project, nls("req.not.exists", name))
+
+            runInEdt { loadingRemover?.run() }
+
             return
         }
 
-        val pairs = MyPsiUtils.getImportFileHttpRequests(httpFile)
+        val pairs = MyPsiUtils.getImportFileHttpRequests(httpFile, project, parentPath)
         val method = pairs
             .firstOrNull {
                 var comment = it.first.text
@@ -60,46 +72,54 @@ object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiEleme
             ?.second
 
         if (method == null) {
-            NotifyUtil.notifyWarn(httpFile.project, nls("req.not.exists", targetTabName))
-            val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
-            loadingRemover?.run()
+            NotifyUtil.notifyWarn(project, nls("req.not.exists", targetTabName))
+
+            runInEdt { loadingRemover?.run() }
+
             return
         }
 
         val httpProgramRunner = ProgramRunner.findRunnerById(HTTP_RUNNER_ID)!! as HttpProgramRunner
-        httpProgramRunner.executeFromGutter(method, gutterComponent)
+
+        method.putUserData(HttpConsts.runFileRequestIdxKey, null)
+
+        httpProgramRunner.executeFromGutter(method, loadingRemover)
     }
 
     private fun runTargetFileRequests(
         path: String,
-        containingFile: PsiFile,
-        gutterComponent: EditorGutterComponentEx?,
+        project: Project,
+        parentPath: String,
+        loadingRemover: Runnable?,
     ) {
-        val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
-        val project = containingFile.project
-        val parentPath = containingFile.virtualFile.parent.path
         val runHttpFilePath = HttpUtils.constructFilePath(path, parentPath)
 
         val runFile = File(runHttpFilePath)
         if (runFile.extension != HttpFileType.DEFAULT_EXTENSION) {
             NotifyUtil.notifyWarn(project, nls("not.http.file"))
-            loadingRemover?.run()
+
+            runInEdt { loadingRemover?.run() }
+
             return
         }
 
         val runVirtualFile = HttpUtils.findVirtualFile(runHttpFilePath)
         if (runVirtualFile == null) {
             NotifyUtil.notifyWarn(project, nls("file.not.exists", runFile.absolutePath))
-            loadingRemover?.run()
+
+            runInEdt { loadingRemover?.run() }
+
             return
         }
 
-        runRequests(project, runVirtualFile) {
-            val toolWindowManager = ToolWindowManager.getInstance(project)
-            val msg = "<div style='font-size:12pt'>${nls("run.file.finished", runFile.name)}!</div>"
-            toolWindowManager.notifyByBalloon(ToolWindowId.SERVICES, MessageType.INFO, msg)
-            loadingRemover?.run()
-        }
+        project.getService(RunHttpFileService::class.java)
+            .runRequests(runVirtualFile) {
+                loadingRemover?.run()
+
+                if (it == 0) {
+                    NotifyUtil.notifyInfo(project, nls("run.file.finished", runVirtualFile.name))
+                }
+            }
     }
 
 }
