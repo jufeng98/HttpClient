@@ -60,13 +60,13 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
     ) {
-        val methodTypeTmp = if (redirectTimes > 0) HttpRequestEnum.GET else methodType
+        val targetMethodType = if (redirectTimes > 0) HttpRequestEnum.GET else methodType
 
-        val req = methodTypeTmp.preExecute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
+        val req = targetMethodType.preExecute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         val start = System.currentTimeMillis()
 
-        val future = methodTypeTmp.execute(paramMap, req)
+        val future = targetMethodType.execute(paramMap, req)
 
         this.future = future
 

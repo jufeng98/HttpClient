@@ -111,9 +111,9 @@ object CookieUtils {
     fun createCookiesFileIfNotExists(project: Project) {
         val cookiesFileService = project.getService(CookiesFileService::class.java)
 
-        var cookiesFile = cookiesFileService.getCookiesFile()
+        val cookiesFile = cookiesFileService.getCookiesFile()
         if (cookiesFile == null) {
-            cookiesFile = cookiesFileService.createCookiesFile()
+            cookiesFileService.createCookiesFile()
         }
     }
 

@@ -34,7 +34,7 @@ class CookiesFileService(private val project: Project) {
         return cookiesFile
     }
 
-    fun createCookiesFile(): VirtualFile {
+    fun createCookiesFile() {
         var historyFolder = historyFolderService.getHistoryFolder()
         if (historyFolder == null) {
             historyFolder = historyFolderService.createHistoryFolder()
@@ -54,7 +54,5 @@ class CookiesFileService(private val project: Project) {
         }
 
         cookiesFile = LocalFileSystem.getInstance().findFileByIoFile(file)
-
-        return cookiesFile!!
     }
 }
