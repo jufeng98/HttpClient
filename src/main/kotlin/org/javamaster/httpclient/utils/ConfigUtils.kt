@@ -3,6 +3,7 @@ package org.javamaster.httpclient.utils
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.execution.ui.RunContentManager
+import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
@@ -16,6 +17,7 @@ import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.runconfig.HttpConfigurationType
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.ws.WsRequest
 
 /**
@@ -51,7 +53,7 @@ class ConfigUtils {
             configurationSettings.isActivateToolWindowBeforeRun = false
 
             httpRunConfiguration.env = selectedEnv ?: ""
-            httpRunConfiguration.httpFilePath = httpMethod.containingFile.virtualFile.path
+            httpRunConfiguration.httpFilePath = computeReadAction { httpMethod.containingFile.virtualFile.path }
 
             if (configNotExists) {
                 runManager.addConfiguration(configurationSettings)
@@ -65,7 +67,7 @@ class ConfigUtils {
         fun checkRequestRunning(httpMethod: HttpMethod, tabName: String, project: Project): Boolean {
             val methodText = httpMethod.text
             if (methodText == HttpRequestEnum.MOCK_SERVER.name) {
-                val request = PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!!
+                val request = computeReadAction { PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!! }
                 val requestTarget = request.requestTarget
                 if (requestTarget == null) {
                     return true
@@ -95,7 +97,9 @@ class ConfigUtils {
         }
 
         private fun showServicesWindow(project: Project, tabName: String) {
-            ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
+            runInEdt {
+                ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
+            }
 
             val runContentManager = RunContentManager.getInstance(project)
 
@@ -105,7 +109,7 @@ class ConfigUtils {
                 }
 
             if (descriptor != null) {
-                runContentManager.selectRunContent(descriptor)
+                runInEdt { runContentManager.selectRunContent(descriptor) }
             }
         }
 
