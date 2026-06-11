@@ -14,7 +14,7 @@ import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
  */
 class CookieFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, CookieLanguage.INSTANCE) {
 
-    fun getRecords(): List<CookieRecord> {
+    fun getRecords(): MutableList<CookieRecord> {
         return computeReadAction { PsiTreeUtil.getChildrenOfTypeAsList(this, CookieRecord::class.java) }
     }
 
