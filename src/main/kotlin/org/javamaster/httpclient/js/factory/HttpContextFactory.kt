@@ -22,6 +22,8 @@ object HttpContextFactory : ContextFactory() {
     override fun onContextCreated(cx: Context) {
         super.onContextCreated(cx)
 
+        cx.wrapFactory = HttpWrapFactory
+
         cx.setLanguageVersion(Context.VERSION_ES6)
     }
 
