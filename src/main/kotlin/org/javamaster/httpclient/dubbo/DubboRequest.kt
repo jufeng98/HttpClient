@@ -247,7 +247,7 @@ class DubboRequest(
     }
 
     private fun findTargetMethod(psiClass: PsiClass, reqMap: LinkedHashMap<*, *>?): PsiMethod {
-        val methods = psiClass.findMethodsByName(methodName, false)
+        val methods = computeReadAction { psiClass.findMethodsByName(methodName, false) }
         if (methods.isEmpty()) {
             throw IllegalArgumentException(NlsBundle.nls("method.not.exists", methodName))
         }
