@@ -15,7 +15,6 @@ import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
-import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.JsonUtils.gson
 import org.javamaster.httpclient.utils.PsiTypeUtils
 import java.nio.charset.StandardCharsets
@@ -90,13 +89,14 @@ class DubboRequest(
 
             val targetMethod = findTargetMethod(psiClass, reqBodyMap)
 
-            val parameters = computeReadAction { targetMethod.parameterList.parameters }
+            val parameters = targetMethod.parameterList.parameters
+
             paramTypeNameArray = parameters
                 .map {
-                    val type = computeReadAction { it.type }
+                    val type = it.type
                     val psiType = PsiTypeUtils.resolvePsiType(type)
                     if (psiType != null) {
-                        val qualifiedName = computeReadAction { psiType.qualifiedName }
+                        val qualifiedName = psiType.qualifiedName
                         if (qualifiedName != null) {
                             return@map qualifiedName
                         }
@@ -247,7 +247,7 @@ class DubboRequest(
     }
 
     private fun findTargetMethod(psiClass: PsiClass, reqMap: LinkedHashMap<*, *>?): PsiMethod {
-        val methods = computeReadAction { psiClass.findMethodsByName(methodName, false) }
+        val methods = psiClass.findMethodsByName(methodName, false)
         if (methods.isEmpty()) {
             throw IllegalArgumentException(NlsBundle.nls("method.not.exists", methodName))
         }
@@ -257,20 +257,18 @@ class DubboRequest(
             method = methods[0]
         } else {
             val paramNames = reqMap.keys
-            method = computeReadAction {
-                methods.filter {
-                    val iterator = paramNames.iterator()
-                    val parameterList = it.parameterList
-                    for (i in 0 until parameterList.parametersCount) {
-                        val name = parameterList.parameters[i].name
-                        val jsonName = iterator.next()
-                        if (name != jsonName) {
-                            return@filter false
-                        }
+            method = methods.filter {
+                val iterator = paramNames.iterator()
+                val parameterList = it.parameterList
+                for (i in 0 until parameterList.parametersCount) {
+                    val name = parameterList.parameters[i].name
+                    val jsonName = iterator.next()
+                    if (name != jsonName) {
+                        return@filter false
                     }
-                    true
-                }.firstOrNull()
-            }
+                }
+                true
+            }.firstOrNull()
 
             if (method == null) {
                 throw IllegalArgumentException(NlsBundle.nls("method.not.found", paramNames, methodName))

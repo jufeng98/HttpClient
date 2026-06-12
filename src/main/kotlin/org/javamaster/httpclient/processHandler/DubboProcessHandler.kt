@@ -72,9 +72,11 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val dubboRequest: DubboHandler
         try {
-            dubboRequest = constructor.newInstance(
-                tabName, url, reqHeaderMap, reqBody, httpReqDescList, module, project, paramMap
-            ) as DubboHandler
+            dubboRequest = computeReadAction {
+                constructor.newInstance(
+                    tabName, url, reqHeaderMap, reqBody, httpReqDescList, module, project, paramMap
+                ) as DubboHandler
+            }
         } catch (e: InvocationTargetException) {
             throw e.targetException
         }
