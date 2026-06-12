@@ -7,6 +7,7 @@ import com.intellij.psi.impl.source.tree.LeafElement
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.tree.IElementType
 import org.javamaster.httpclient.psi.HttpTypes
+import org.javamaster.httpclient.psi.impl.HttpLineCommentImpl
 
 /**
  * @author yudong
@@ -17,7 +18,11 @@ class HttpASTFactory : ASTFactory() {
     )
 
     override fun createLeaf(type: IElementType, text: CharSequence): LeafElement {
-        if (type == HttpTypes.LINE_COMMENT || type == HttpTypes.BLOCK_COMMENT) {
+        if (type == HttpTypes.LINE_COMMENT) {
+            return HttpLineCommentImpl(type, text)
+        }
+
+        if (type == HttpTypes.BLOCK_COMMENT) {
             return myDefaultASTFactory.createComment(type, text)
         }
 

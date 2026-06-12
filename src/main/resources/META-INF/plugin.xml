@@ -409,8 +409,6 @@
         <lang.commenter language="http" implementationClass="org.javamaster.httpclient.commenter.HttpCommenter"/>
         <gotoDeclarationHandler id="JsStringPathGotoDeclarationHandler"
                                 implementation="org.javamaster.httpclient.reference.JsStringPathGotoDeclarationHandler"/>
-        <gotoDeclarationHandler id="HttpCommentGotoDeclarationHandler"
-                                implementation="org.javamaster.httpclient.reference.HttpCommentGotoDeclarationHandler"/>
         <psi.referenceContributor language="http"
                                   implementation="org.javamaster.httpclient.reference.HttpUrlControllerMethodPsiReferenceContributor"/>
         <psi.referenceContributor language="JSON"
