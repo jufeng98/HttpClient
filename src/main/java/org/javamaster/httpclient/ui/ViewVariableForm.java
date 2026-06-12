@@ -13,6 +13,7 @@ import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.table.JBTable;
 import kotlin.Triple;
+import org.javamaster.httpclient.action.ChooseEnvironmentAction;
 import org.javamaster.httpclient.env.EnvFileService;
 import org.javamaster.httpclient.js.JsExecutor;
 import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder;
@@ -137,8 +138,10 @@ public class ViewVariableForm extends DialogWrapper {
         Map<String, String> jsGlovalVariableMap = JsGlobalVariablesHolder.INSTANCE.getJsGlobalVariables();
         resList.add(new Triple<>(NlsBundle.INSTANCE.nls("js.variable.desc"), jsGlovalVariableMap, TYPE_JS_GLOBAL_VARIABLE));
 
-        Map<String, String> envMap = EnvFileService.Companion.getEnvMap(project, false);
-        resList.add(new Triple<>(NlsBundle.INSTANCE.nls("environment.variable.desc"), envMap, TYPE_ENV_VARIABLE));
+        if (!ChooseEnvironmentAction.Companion.isChooseEnvBeforeRun(selectedEnv)) {
+            Map<String, String> envMap = EnvFileService.Companion.getEnvMap(project, false);
+            resList.add(new Triple<>(NlsBundle.INSTANCE.nls("environment.variable.desc"), envMap, TYPE_ENV_VARIABLE));
+        }
 
         @SuppressWarnings("rawtypes")
         Map globalHeaders = JsGlobalVariablesHolder.INSTANCE.getHeaders().getDataHolder();

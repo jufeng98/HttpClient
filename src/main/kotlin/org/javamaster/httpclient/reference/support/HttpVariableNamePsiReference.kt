@@ -6,11 +6,9 @@ import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiReferenceBase
+import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
+import org.javamaster.httpclient.action.ChooseEnvironmentAction.Companion.isChooseEnvBeforeRun
 import org.javamaster.httpclient.completion.support.SlashEndInsertHandler
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
@@ -33,10 +31,18 @@ import javax.swing.Icon
  * @author yudong
  */
 class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: TextRange) :
-    PsiReferenceBase<HttpVariableName>(element, textRange) {
+    PsiPolyVariantReferenceBase<HttpVariableName>(element, textRange) {
 
     override fun resolve(): PsiElement? {
-        return tryResolveVariable(element.name, element.isBuiltin, element, true)
+        val results = multiResolve(false)
+
+        return if (results.isEmpty()) null else results[0].element
+    }
+
+    override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
+        val elements = tryResolveVariable(element.name, element.isBuiltin, element, true)
+
+        return PsiElementResolveResult.createResults(elements)
     }
 
     override fun getVariants(): Array<Any> {
@@ -103,50 +109,64 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
             builtin: Boolean,
             element: PsiElement,
             searchInPreJs: Boolean,
-        ): PsiElement? {
+        ): List<PsiElement> {
             val httpFile = element.containingFile
             val project = httpFile.project
-            val httpFileParentPath = httpFile.virtualFile?.parent?.path ?: return null
+            val httpFileParentPath = httpFile.virtualFile?.parent?.path ?: return emptyList()
 
             if (builtin) {
                 val innerVariableEnum = InnerVariableEnum.getEnum(variableName)
 
                 if (InnerVariableEnum.isFolderEnum(innerVariableEnum)) {
-                    val path = innerVariableEnum!!.exec(httpFileParentPath, project) ?: return null
+                    val path = innerVariableEnum!!.exec(httpFileParentPath, project) ?: return emptyList()
 
-                    val virtualFile = VirtualFileManager.getInstance().findFileByNioPath(Paths.get(path)) ?: return null
+                    val virtualFile = VirtualFileManager.getInstance().findFileByNioPath(Paths.get(path))
+                        ?: return emptyList()
 
-                    return PsiManager.getInstance(project).findDirectory(virtualFile)
+                    val psiDirectory = PsiManager.getInstance(project).findDirectory(virtualFile)
+                    if (psiDirectory != null) {
+                        return listOf(psiDirectory)
+                    }
                 }
 
-                return null
+                return emptyList()
             }
 
             val fileGlobalVariable = HttpFile.resolveFileGlobalVariable(variableName, httpFile)
             if (fileGlobalVariable != null) {
-                return fileGlobalVariable
+                return listOf(fileGlobalVariable)
             }
 
             val jsElement = tryResolveInJsHandler(variableName, element, httpFile, project, searchInPreJs)
             if (jsElement != null) {
-                return jsElement
+                return listOf(jsElement)
             }
 
             val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
 
-            val jsonLiteral = EnvFileService.getEnvEleLiteral(variableName, selectedEnv, httpFileParentPath, project)
+            if (isChooseEnvBeforeRun(selectedEnv)) {
+                val literals = EnvFileService.getEnvEleLiterals(variableName, httpFileParentPath, project)
 
-            val jsonProperty = PsiTreeUtil.getParentOfType(jsonLiteral, JsonProperty::class.java)
-            if (jsonProperty != null) {
-                return jsonProperty
+                if (literals.isNotEmpty()) {
+                    return literals
+                }
+            } else {
+                val jsonLiteral = EnvFileService.getEnvEleLiteral(
+                    variableName, selectedEnv, httpFileParentPath, project
+                )
+
+                val jsonProperty = PsiTreeUtil.getParentOfType(jsonLiteral, JsonProperty::class.java)
+                if (jsonProperty != null) {
+                    return listOf(jsonProperty)
+                }
             }
 
             var value = JsGlobalVariablesHolder.dataHolder[variableName]
             if (value != null) {
-                return JsGlobalVariableValueFakePsiElement(element, variableName, value.toString())
+                return listOf(JsGlobalVariableValueFakePsiElement(element, variableName, value.toString()))
             }
 
-            return null
+            return emptyList()
         }
 
         private fun tryResolveInJsHandler(
