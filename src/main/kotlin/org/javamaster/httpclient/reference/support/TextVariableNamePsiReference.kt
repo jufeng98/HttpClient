@@ -18,12 +18,6 @@ class TextVariableNamePsiReference(
     private val messageBody: HttpMessageBody?,
 ) : PsiPolyVariantReferenceBase<PsiElement>(psiElement, textRange.shiftLeft(psiElement.textRange.startOffset), true) {
 
-    override fun resolve(): PsiElement? {
-        val results = multiResolve(false)
-
-        return if (results.isEmpty()) null else results[0].element
-    }
-
     override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
         val psiElement = messageBody ?: psiElement
 

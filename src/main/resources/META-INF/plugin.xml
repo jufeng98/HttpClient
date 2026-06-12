@@ -411,8 +411,6 @@
                                 implementation="org.javamaster.httpclient.reference.JsStringPathGotoDeclarationHandler"/>
         <gotoDeclarationHandler id="HttpCommentGotoDeclarationHandler"
                                 implementation="org.javamaster.httpclient.reference.HttpCommentGotoDeclarationHandler"/>
-        <gotoDeclarationHandler id="JsonLiteralGotoDeclarationHandler"
-                                implementation="org.javamaster.httpclient.reference.JsonLiteralGotoDeclarationHandler"/>
         <psi.referenceContributor language="http"
                                   implementation="org.javamaster.httpclient.reference.HttpUrlControllerMethodPsiReferenceContributor"/>
         <psi.referenceContributor language="JSON"

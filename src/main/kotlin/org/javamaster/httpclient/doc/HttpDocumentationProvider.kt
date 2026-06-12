@@ -201,7 +201,7 @@ class HttpDocumentationProvider : DocumentationProvider {
         val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
 
         if (ChooseEnvironmentAction.isChooseEnvBeforeRun(selectedEnv)) {
-            return getDocumentation(name, "")
+            return getDocumentation(name, "Multiple values")
         } else {
             val variableResolver = VariableResolver(null, httpFile, selectedEnv, project)
 

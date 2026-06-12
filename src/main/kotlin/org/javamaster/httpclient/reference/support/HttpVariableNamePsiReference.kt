@@ -33,12 +33,6 @@ import javax.swing.Icon
 class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: TextRange) :
     PsiPolyVariantReferenceBase<HttpVariableName>(element, textRange) {
 
-    override fun resolve(): PsiElement? {
-        val results = multiResolve(false)
-
-        return if (results.isEmpty()) null else results[0].element
-    }
-
     override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
         val elements = tryResolveVariable(element.name, element.isBuiltin, element, true)
 

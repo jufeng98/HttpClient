@@ -7,6 +7,7 @@ import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiPolyVariantReferenceBase
 import org.javamaster.httpclient.inspection.fix.CreateEnvVariableQuickFix
 import org.javamaster.httpclient.inspection.fix.CreateFileVariableQuickFix
 import org.javamaster.httpclient.inspection.fix.CreateJsVariableQuickFix
@@ -59,7 +60,12 @@ object InspectionHelper {
                     continue
                 }
 
-                val resolve = reference.resolve()
+                val resolve = if (reference is PsiPolyVariantReferenceBase<*>) {
+                    val elements = reference.multiResolve(false)
+                    if (elements.isEmpty()) null else elements[0].element
+                } else {
+                    reference.resolve()
+                }
 
                 if (resolve != null) continue
 
