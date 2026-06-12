@@ -19,7 +19,7 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
         val psiJavaFile = event.file as? PsiJavaFile ?: return
 
         val project = psiJavaFile.project
-        val dumbService = DumbService.getInstance(project)
+        val dumbService = project.getService(DumbService::class.java)
         if (dumbService.isDumb) {
             return
         }

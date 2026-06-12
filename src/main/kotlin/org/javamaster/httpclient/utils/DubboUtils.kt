@@ -38,7 +38,7 @@ object DubboUtils {
         val javaPsiFacade = JavaPsiFacade.getInstance(project)
         val scope = GlobalSearchScope.projectScope(project)
 
-        return javaPsiFacade.findClass(name, scope)
+        return computeReadAction { javaPsiFacade.findClass(name, scope) }
     }
 
     fun findDubboServiceMethod(psiElement: PsiElement): PsiMethod? {

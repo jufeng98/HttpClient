@@ -3,6 +3,7 @@ package org.javamaster.httpclient.processHandler
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
@@ -45,7 +46,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     var tabName = HttpUtils.getTabName(httpMethod)
     var project = httpMethod.project
     protected val httpFile = httpMethod.containingFile as HttpFile
-    protected val httpDocument = httpFile.fileDocument
+    protected val httpDocument = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
 
     protected lateinit var parentPath: String
     protected lateinit var jsExecutor: JsExecutor

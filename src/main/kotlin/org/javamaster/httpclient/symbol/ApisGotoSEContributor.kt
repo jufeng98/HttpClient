@@ -82,7 +82,7 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
 
             val searchScope = (scope.scope as? GlobalSearchScope) ?: GlobalSearchScope.projectScope(myProject)
 
-            SpringControllerScanService.getService(project)
+            SpringControllerScanService.getService(myProject)
                 .fetchRequests(myProject, searchScope) {
                     progressIndicator.checkCanceled()
 
