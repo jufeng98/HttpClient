@@ -4,7 +4,7 @@ import com.intellij.openapi.application.runInEdt
 import org.javamaster.httpclient.consts.HttpConsts.Companion.WEB_BOUNDARY
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
-import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.CookieUtils

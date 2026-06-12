@@ -33,10 +33,10 @@ class HttpSwitchEnvironmentIntention : BaseIntentionAction() {
         val envFileService = getService(project)
         val path = file?.virtualFile?.parent?.path ?: return
 
-        val envSet = envFileService.getPresetEnvSet(path)
+        val presetEnvSet = envFileService.getPresetEnvSet(path)
 
         val popupFactory = PopupFactoryImpl.getInstance()
-        popupFactory.createPopupChooserBuilder(envSet.toList())
+        popupFactory.createPopupChooserBuilder(presetEnvSet.toList())
             .setItemChosenCallback { item -> topForm.setSelectEnv(item) }
             .createPopup()
             .showInBestPositionFor(editor!!)

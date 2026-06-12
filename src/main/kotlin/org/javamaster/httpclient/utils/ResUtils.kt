@@ -16,7 +16,7 @@ import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
-import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls

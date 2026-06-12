@@ -13,7 +13,7 @@ import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.Processor
 import org.javamaster.httpclient.enums.HttpMethod
-import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.psi.impl.RequestNavigationItem
 import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.scan.support.SpringControllerScanService

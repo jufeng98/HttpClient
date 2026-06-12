@@ -16,7 +16,7 @@ import org.javamaster.httpclient.enums.HttpMethod.Companion.parse
 import org.javamaster.httpclient.enums.SpringHttpMethod
 import org.javamaster.httpclient.enums.SpringHttpMethod.Companion.getByQualifiedName
 import org.javamaster.httpclient.enums.SpringHttpMethod.Companion.getByShortName
-import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.utils.AnnoUtils
 import org.javamaster.httpclient.utils.AnnoUtils.collectMethodAnnotations
 import org.javamaster.httpclient.utils.AnnoUtils.findAnnotationValue

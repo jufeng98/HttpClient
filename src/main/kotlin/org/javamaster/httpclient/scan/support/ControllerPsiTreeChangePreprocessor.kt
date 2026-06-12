@@ -7,7 +7,7 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
 import com.intellij.psi.impl.PsiTreeChangePreprocessor
 import com.intellij.util.concurrency.AppExecutorUtil
-import org.javamaster.httpclient.logger.logWarn
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.scan.ScanRequest
 
 /**

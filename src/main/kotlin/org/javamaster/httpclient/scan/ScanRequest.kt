@@ -9,7 +9,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.jetbrains.rd.util.concurrentMapOf
 import org.javamaster.httpclient.enums.HttpMethod
-import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.scan.support.Request
 import org.javamaster.httpclient.scan.support.SpringControllerScanService
 import org.javamaster.httpclient.utils.SpringUtils

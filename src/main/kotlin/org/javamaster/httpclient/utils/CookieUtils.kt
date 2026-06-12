@@ -8,7 +8,7 @@ import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.factory.CookiePsiFactory
 import org.javamaster.httpclient.js.support.jsObject.Cookie
-import org.javamaster.httpclient.logger.logWarn
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.CookieFile

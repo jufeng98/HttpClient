@@ -14,7 +14,7 @@ import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.io.DigestUtil
 import com.jetbrains.rd.util.concurrentMapOf
 import org.javamaster.httpclient.js.JsExecutor
-import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction

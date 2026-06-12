@@ -61,7 +61,7 @@ object HttpUtils {
             }
         }
 
-        val httpFile = requestBlock.parent as HttpFile
+        val httpFile = computeReadAction { requestBlock.parent as HttpFile }
         val requestBlocks = httpFile.getRequestBlocks()
 
         for ((index, httpRequestBlock) in requestBlocks.withIndex()) {

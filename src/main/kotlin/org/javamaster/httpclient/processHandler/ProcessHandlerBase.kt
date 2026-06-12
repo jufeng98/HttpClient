@@ -12,7 +12,7 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.js.JsExecutor
-import org.javamaster.httpclient.logger.logWarn
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpReqInfo
@@ -29,6 +29,7 @@ import java.io.OutputStream
 import java.net.http.HttpClient.Version
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 import javax.swing.JPanel
 
 /**
@@ -60,7 +61,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     protected lateinit var paramMap: Map<String, String>
 
     protected var loadingRemover: Runnable? = null
-    protected var requestFinished: Runnable? = null
+    protected var requestFinished: Consumer<Int>? = null
     protected var responseHandler: HttpResponseHandler? = null
     protected var rawBody: String? = null
     protected var outPutFilePath: String? = null
@@ -267,13 +268,13 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             }
         }
 
-        requestFinished?.run()
+        val code = if (hasError) FAILED else SUCCESS
+
+        requestFinished?.accept(code)
 
         httpMethod.putUserData(HttpConsts.gutterIconLoadingKey, null)
 
         httpMethod.putUserData(HttpConsts.requestFinishedKey, null)
-
-        val code = if (hasError) FAILED else SUCCESS
 
         notifyProcessTerminated(code)
     }

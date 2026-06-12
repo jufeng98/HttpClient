@@ -21,8 +21,8 @@ import com.intellij.util.concurrency.AppExecutorUtil
 import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.env.EnvFileService.Companion.getService
 import org.javamaster.httpclient.jsPlugin.support.JavaScript
-import org.javamaster.httpclient.logger.logInfo
-import org.javamaster.httpclient.logger.logWarn
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
 

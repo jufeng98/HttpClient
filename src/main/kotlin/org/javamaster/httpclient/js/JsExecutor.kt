@@ -15,8 +15,8 @@ import org.javamaster.httpclient.js.support.req.*
 import org.javamaster.httpclient.js.support.res.HttpClientRequestRes
 import org.javamaster.httpclient.js.support.res.HttpClientResponse
 import org.javamaster.httpclient.js.support.res.ResponseHeaders
-import org.javamaster.httpclient.logger.logInfo
-import org.javamaster.httpclient.logger.logWarn
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.HttpResInfo
