@@ -66,12 +66,18 @@ class HttpFilePathCompletionProvider : CompletionProvider<CompletionParameters>(
 
                 val psiFile = PsiUtil.getPsiFile(parentParent.project, virtualFile)
 
-                val psiDirectory = HttpVariableNamePsiReference.tryResolveVariable(
+                val elements = HttpVariableNamePsiReference.tryResolveVariable(
                     variableName.name,
                     variableName.isBuiltin,
                     psiFile,
                     false
                 )
+
+                if (elements.isEmpty()) {
+                    return@forEach
+                }
+
+                val psiDirectory = elements[0]
 
                 if (psiDirectory !is PsiDirectory) {
                     return@forEach

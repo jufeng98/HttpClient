@@ -33,11 +33,12 @@ class HttpConsts {
         val HTTP_CLIENT_ICON = NotNullLazyValue.createConstantValue(HttpIcons.FILE)
 
         val gutterIconLoadingKey: Key<Runnable?> = Key.create("org.javamaster.gutterIconLoadingKey")
-        val requestFinishedKey: Key<Runnable?> = Key.create("org.javamaster.requestFinishedKey")
+        val requestFinishedKey: Key<Consumer<Int>> = Key.create("org.javamaster.requestFinishedKey")
         val interruptFlagKey = Key.create<Boolean>("org.javamaster.interruptFlagKey")
         val runFinishedKey = Key.create<Consumer<Int>?>("org.javamaster.runFinishedKey")
         val runFileKey = Key.create<Boolean>("org.javamaster.runFileKey")
         val runFileRequestIdxKey = Key.create<Int>("org.javamaster.runFileRequestIdxKey")
+        val lastPopupEnvChooseKey = Key.create<String>("org.javamaster.lastPopupEnvChooseKey")
 
         val httpDashboardContentTypeKey = Key.create<ContentType>("org.javamaster.dashboard.httpDashboardContentType")
         val httpDashboardFoldHeaderKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardFoldHeader")

@@ -6,15 +6,20 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpFileType
+import org.javamaster.httpclient.action.ChooseEnvironmentAction.Companion.isChooseEnvBeforeRun
 import org.javamaster.httpclient.consts.HttpConsts
+import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.dashboard.HttpProgramRunner
 import org.javamaster.httpclient.dashboard.HttpProgramRunner.Companion.HTTP_RUNNER_ID
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpRunCommand
+import org.javamaster.httpclient.service.ChooseEnvBeforeRunService
 import org.javamaster.httpclient.service.RunHttpFileService
+import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.NotifyUtil
@@ -27,21 +32,44 @@ import java.io.File
 object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiElement> {
 
     override fun navigate(event: MouseEvent, element: PsiElement) {
-        val gutterComponent = event.component as EditorGutterComponentEx?
-        val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
-
         val runCommand = element.parent as HttpRunCommand
         val path = runCommand.filePath?.text ?: return
 
         val httpFile = runCommand.containingFile as HttpFile
-        val parentPath = httpFile.virtualFile.parent.path
+        val virtualFile = httpFile.virtualFile
+        val parentPath = virtualFile.parent.path
         val project = httpFile.project
+
+        val editorTopForm = HttpEditorTopForm.getSelectedEditorTopForm(project)
+        if (isChooseEnvBeforeRun(editorTopForm?.selectedEnv)) {
+            val relativePoint = RelativePoint(event)
+
+            project.getService(ChooseEnvBeforeRunService::class.java)
+                .createEnvChoosePopup(virtualFile) {
+                    executeRequests(path, httpFile, project, parentPath, event, it)
+                }
+                .show(relativePoint)
+        } else {
+            executeRequests(path, httpFile, project, parentPath, event, null)
+        }
+    }
+
+    private fun executeRequests(
+        path: String,
+        httpFile: HttpFile,
+        project: Project,
+        parentPath: String,
+        event: MouseEvent,
+        targetEnv: String?,
+    ) {
+        val gutterComponent = event.component as EditorGutterComponentEx?
+        val loadingRemover = gutterComponent?.setLoadingIconForCurrentGutterMark()
 
         application.executeOnPooledThread {
             if (HttpUtils.isRunTabName(path)) {
-                runTargetFileRequest(path, httpFile, project, parentPath, loadingRemover)
+                runTargetFileRequest(path, httpFile, project, parentPath, loadingRemover, targetEnv)
             } else {
-                runTargetFileRequests(path, project, parentPath, loadingRemover)
+                runTargetFileRequests(path, project, parentPath, loadingRemover, targetEnv)
             }
         }
     }
@@ -52,6 +80,7 @@ object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiEleme
         project: Project,
         parentPath: String,
         loadingRemover: Runnable?,
+        targetEnv: String?,
     ) {
         val targetTabName = HttpUtils.getTargetTabName(name)
         if (targetTabName == null) {
@@ -83,7 +112,7 @@ object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiEleme
 
         method.putUserData(HttpConsts.runFileRequestIdxKey, null)
 
-        httpProgramRunner.executeFromGutter(method, loadingRemover)
+        httpProgramRunner.executeFromGutter(method, loadingRemover, targetEnv)
     }
 
     private fun runTargetFileRequests(
@@ -91,6 +120,7 @@ object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiEleme
         project: Project,
         parentPath: String,
         loadingRemover: Runnable?,
+        targetEnv: String?,
     ) {
         val runHttpFilePath = HttpUtils.constructFilePath(path, parentPath)
 
@@ -113,11 +143,13 @@ object HttpRunGutterIconNavigationHandler : GutterIconNavigationHandler<PsiEleme
         }
 
         project.getService(RunHttpFileService::class.java)
-            .runRequests(runVirtualFile) {
+            .runRequests(runVirtualFile, targetEnv) {
                 loadingRemover?.run()
 
-                if (it == 0) {
+                if (it == SUCCESS) {
                     NotifyUtil.notifyInfo(project, nls("run.file.finished", runVirtualFile.name))
+                } else {
+                    NotifyUtil.notifyError(project, nls("run.file.error", runVirtualFile.name))
                 }
             }
     }

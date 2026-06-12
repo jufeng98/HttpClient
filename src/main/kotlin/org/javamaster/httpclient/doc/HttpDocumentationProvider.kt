@@ -15,6 +15,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiReference
 import com.intellij.util.SmartList
 import org.javamaster.httpclient.HttpIcons
+import org.javamaster.httpclient.action.ChooseEnvironmentAction
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getJsonLiteralValue
@@ -78,10 +79,7 @@ class HttpDocumentationProvider : DocumentationProvider {
             val parent = element.parent as HttpFileVariable
             val fileVariableValue = parent.fileVariableValue
 
-            return getDocumentation(
-                name,
-                NlsBundle.nls("value") + " " + (fileVariableValue?.text)
-            )
+            return getDocumentation(name, NlsBundle.nls("value") + " " + (fileVariableValue?.text))
         }
 
         if (element is HttpDirectionName) {
@@ -113,10 +111,7 @@ class HttpDocumentationProvider : DocumentationProvider {
                 val name = psiElement.name
                 val variableEnum = InnerVariableEnum.getEnum(name) ?: return null
 
-                return getDocumentation(
-                    name,
-                    variableEnum.typeText() + ", ${NlsBundle.nls("value")} $path"
-                )
+                return getDocumentation(name, variableEnum.typeText() + ", ${NlsBundle.nls("value")} $path")
             }
 
             if (parent is JsonStringLiteral) {
@@ -205,15 +200,19 @@ class HttpDocumentationProvider : DocumentationProvider {
 
         val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
 
-        val variableResolver = VariableResolver(null, httpFile, selectedEnv, project)
+        if (ChooseEnvironmentAction.isChooseEnvBeforeRun(selectedEnv)) {
+            return getDocumentation(name, "")
+        } else {
+            val variableResolver = VariableResolver(null, httpFile, selectedEnv, project)
 
-        val str = "{{$name}}"
-        value = variableResolver.resolve(str)
-        if (value == str) {
-            return null
+            val str = "{{$name}}"
+            value = variableResolver.resolve(str)
+            if (value == str) {
+                return null
+            }
+
+            return getDocumentation(name, NlsBundle.nls("value") + " $value")
         }
-
-        return getDocumentation(name, NlsBundle.nls("value") + " $value")
     }
 
     private fun getDocumentation(identifier: String, description: String): String {

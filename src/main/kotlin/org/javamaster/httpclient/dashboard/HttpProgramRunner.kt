@@ -29,6 +29,8 @@ import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
  * @author yudong
  */
 class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
+    private val httpExecutor = ExecutorRegistry.getInstance().getExecutorById(HTTP_EXECUTOR_ID)!!
+    private val executorIdSet = setOf(DefaultRunExecutor.EXECUTOR_ID, DefaultDebugExecutor.EXECUTOR_ID)
 
     override fun getRunnerId(): String {
         return HTTP_RUNNER_ID
@@ -39,10 +41,10 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
             return false
         }
 
-        return DefaultRunExecutor.EXECUTOR_ID == executorId || DefaultDebugExecutor.EXECUTOR_ID == executorId
+        return executorIdSet.contains(executorId)
     }
 
-    fun executeFromGutter(httpMethod: HttpMethod, loadingRemover: Runnable? = null) {
+    fun executeFromGutter(httpMethod: HttpMethod, loadingRemover: Runnable?, targetEnv: String?) {
         val project = computeReadAction { httpMethod.project }
         val tabName = HttpUtils.getTabName(httpMethod)
 
@@ -53,9 +55,7 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
 
         httpMethod.putUserData(HttpConsts.gutterIconLoadingKey, loadingRemover)
 
-        val httpExecutor = ExecutorRegistry.getInstance().getExecutorById(HTTP_EXECUTOR_ID)!!
-
-        val selectedEnv = HttpEditorTopForm.getSelectedEnv(project)
+        val selectedEnv = targetEnv ?: HttpEditorTopForm.getSelectedEnv(project)
 
         val runnerAndConfigurationSettings = ConfigUtils.saveConfiguration(tabName, project, selectedEnv, httpMethod)
 
@@ -82,6 +82,10 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         val executionResult = state.execute(environment.executor, this) ?: return null
 
         val handler = executionResult.processHandler as ProcessHandlerBase
+
+        if (environment.executor !is HttpExecutor) {
+            handler.httpMethod.putUserData(HttpConsts.runFileRequestIdxKey, null)
+        }
 
         val oldDescriptor = RunContentManager.getInstance(project).allDescriptors
             .firstOrNull {

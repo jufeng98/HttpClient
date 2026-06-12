@@ -13,6 +13,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.indexing.FileBasedIndex
+import org.javamaster.httpclient.action.ChooseEnvironmentAction.Companion.noEnv
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.factory.JsonPsiFactory
 import org.javamaster.httpclient.index.HttpEnvironmentIndex.Companion.INDEX_ID
@@ -35,6 +36,7 @@ class EnvFileService(val project: Project) {
 
     fun getPresetEnvSet(httpFileParentPath: String): MutableSet<String> {
         val envSet = LinkedHashSet<String>()
+        envSet.add(noEnv)
 
         val jsonFile = getEnvJsonFile(PRIVATE_ENV_FILE_NAME, httpFileParentPath, project)
 
@@ -329,6 +331,46 @@ class EnvFileService(val project: Project) {
                 }
 
             return map
+        }
+
+        fun getEnvEleLiterals(
+            key: String,
+            httpFileParentPath: String,
+            project: Project,
+        ): List<JsonLiteral> {
+            val presetEnvSet = getService(project).getPresetEnvSet(httpFileParentPath)
+            presetEnvSet.remove(noEnv)
+
+            val result = mutableListOf<JsonLiteral>()
+
+            var literal: JsonLiteral?
+            for (presetEnv in presetEnvSet) {
+                literal = getEnvEleLiteral(key, presetEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+                if (literal != null) {
+                    result.add(literal)
+                    continue
+                }
+
+                literal = getEnvEleLiteral(key, presetEnv, httpFileParentPath, ENV_FILE_NAME, project)
+                if (literal != null) {
+                    result.add(literal)
+                    continue
+                }
+            }
+
+            if (result.isEmpty()) {
+                literal = getEnvEleLiteral(key, COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+                if (literal != null) {
+                    result.add(literal)
+                }
+
+                literal = getEnvEleLiteral(key, COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project)
+                if (literal != null) {
+                    result.add(literal)
+                }
+            }
+
+            return result
         }
 
         fun getEnvEleLiteral(

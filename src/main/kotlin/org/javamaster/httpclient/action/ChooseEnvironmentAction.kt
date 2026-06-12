@@ -4,7 +4,7 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.actionSystem.ex.ComboBoxAction
 import com.intellij.openapi.vfs.VirtualFile
-import org.javamaster.httpclient.env.EnvFileService.Companion.getService
+import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import java.awt.BorderLayout
 import java.awt.Cursor
@@ -55,13 +55,19 @@ class ChooseEnvironmentAction(private val file: VirtualFile) : ComboBoxAction() 
 
         val path = file.parent?.path ?: return DefaultActionGroup.createPopupGroupWithEmptyText()
 
-        val envFileService = getService(project)
-        val presetEnvSet = envFileService.getPresetEnvSet(path)
+        val presetEnvSet = EnvFileService.getService(project).getPresetEnvSet(path)
 
-        val envList = mutableListOf(noEnv)
-        envList.addAll(presetEnvSet)
+        val envActions = presetEnvSet.map { MyAction(it) }
 
-        return DefaultActionGroup(envList.map { MyAction(it) })
+        val actionGroup = DefaultActionGroup(envActions)
+
+        if (presetEnvSet.size > 1) {
+            actionGroup.addSeparator()
+
+            actionGroup.add(MyAction(chooseEnvBeforeRunTxt))
+        }
+
+        return actionGroup
     }
 
     fun getSelectedEnv(): String? {
@@ -88,6 +94,12 @@ class ChooseEnvironmentAction(private val file: VirtualFile) : ComboBoxAction() 
 
     companion object {
         val noEnv = nls("no.env")
+        private val chooseEnvBeforeRunTxt = nls("choose.env.before.run")
+        private val chooseEnvBeforeRunTxtSet = setOf(chooseEnvBeforeRunTxt)
+
+        fun isChooseEnvBeforeRun(env: String?): Boolean {
+            return chooseEnvBeforeRunTxtSet.contains(env)
+        }
     }
 
 }

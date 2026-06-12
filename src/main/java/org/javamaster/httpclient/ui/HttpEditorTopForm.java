@@ -1,9 +1,6 @@
 package org.javamaster.httpclient.ui;
 
-import com.intellij.openapi.actionSystem.ActionGroup;
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.ActionToolbar;
-import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
@@ -124,6 +121,11 @@ public class HttpEditorTopForm extends JComponent {
 
         HttpEditorTopForm httpEditorTopForm = selectedEditor.getUserData(HttpEditorTopForm.KEY);
         if (httpEditorTopForm == null) {
+            return;
+        }
+
+        String selectedEnv = httpEditorTopForm.getSelectedEnv();
+        if (ChooseEnvironmentAction.Companion.isChooseEnvBeforeRun(selectedEnv)) {
             return;
         }
 

@@ -7,9 +7,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts
+import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
+import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.dashboard.HttpProgramRunner
 import org.javamaster.httpclient.dashboard.HttpProgramRunner.Companion.HTTP_RUNNER_ID
-import org.javamaster.httpclient.logger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.HttpUtils
@@ -23,7 +25,7 @@ import java.util.function.Consumer
  */
 @Service(Service.Level.PROJECT)
 class RunHttpFileService(private val project: Project) {
-    val httpProgramRunner = ProgramRunner.findRunnerById(HTTP_RUNNER_ID)!! as HttpProgramRunner
+    private val httpProgramRunner = ProgramRunner.findRunnerById(HTTP_RUNNER_ID)!! as HttpProgramRunner
 
     fun stopRunning(virtualFile: VirtualFile) {
         virtualFile.putUserData(HttpConsts.interruptFlagKey, true)
@@ -31,14 +33,14 @@ class RunHttpFileService(private val project: Project) {
 
         val runFinished = virtualFile.getUserData(HttpConsts.runFinishedKey)
         if (runFinished != null) {
-            runInEdt { runFinished.accept(-1) }
+            runInEdt { runFinished.accept(FAILED) }
         }
         virtualFile.putUserData(HttpConsts.runFinishedKey, null)
 
         logInfo("中断文件内请求: ${virtualFile.name}")
     }
 
-    fun runRequests(virtualFile: VirtualFile, runFinished: Consumer<Int>?) {
+    fun runRequests(virtualFile: VirtualFile, targetEnv: String?, runFinished: Consumer<Int>?) {
         logInfo("开始执行文件内所有请求:${virtualFile.name}")
 
         virtualFile.putUserData(HttpConsts.interruptFlagKey, null)
@@ -49,20 +51,21 @@ class RunHttpFileService(private val project: Project) {
 
         val methods = LinkedList<HttpMethod>(httpMethods)
 
-        executeRequests(methods, virtualFile, 1)
+        executeRequests(methods, virtualFile, 1, targetEnv)
     }
 
-    private fun executeRequests(methods: LinkedList<HttpMethod>, virtualFile: VirtualFile, idx: Int) {
+    private fun executeRequests(
+        methods: LinkedList<HttpMethod>,
+        virtualFile: VirtualFile,
+        idx: Int,
+        targetEnv: String?,
+    ) {
         val method = methods.poll()
         if (method == null) {
-            virtualFile.putUserData(HttpConsts.runFileKey, null)
-            virtualFile.putUserData(HttpConsts.interruptFlagKey, null)
+            handleFinished(virtualFile, SUCCESS)
 
-            val runFinished = virtualFile.getUserData(HttpConsts.runFinishedKey)
-            runInEdt { runFinished?.accept(0) }
-
-            virtualFile.putUserData(HttpConsts.runFinishedKey, null)
             logInfo("文件内所有请求都已完成:${virtualFile.name}")
+
             return
         }
 
@@ -76,7 +79,7 @@ class RunHttpFileService(private val project: Project) {
         if (!valid) {
             NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("psi.invalid"))
 
-            executeRequests(methods, virtualFile, idx)
+            executeRequests(methods, virtualFile, idx, targetEnv)
 
             return
         }
@@ -85,13 +88,18 @@ class RunHttpFileService(private val project: Project) {
         if (methodName == HttpRequestEnum.WEBSOCKET.name || methodName == HttpRequestEnum.MOCK_SERVER.name) {
             NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("skip.req"))
 
-            executeRequests(methods, virtualFile, idx)
+            executeRequests(methods, virtualFile, idx, targetEnv)
 
             return
         }
 
-        method.putUserData(HttpConsts.Companion.requestFinishedKey, Runnable {
-            executeRequests(methods, virtualFile, idx + 1)
+        method.putUserData(HttpConsts.Companion.requestFinishedKey, Consumer {
+            if (it == SUCCESS) {
+                executeRequests(methods, virtualFile, idx + 1, targetEnv)
+            } else {
+                handleFinished(virtualFile, it)
+                logInfo("请求出错了,跳过后续请求,code: $it")
+            }
         })
 
         val tabName = HttpUtils.getTabName(method)
@@ -99,7 +107,17 @@ class RunHttpFileService(private val project: Project) {
 
         method.putUserData(HttpConsts.runFileRequestIdxKey, idx)
 
-        httpProgramRunner.executeFromGutter(method)
+        httpProgramRunner.executeFromGutter(method, null, targetEnv)
+    }
+
+    private fun handleFinished(virtualFile: VirtualFile, code: Int) {
+        virtualFile.putUserData(HttpConsts.runFileKey, null)
+        virtualFile.putUserData(HttpConsts.interruptFlagKey, null)
+
+        val runFinished = virtualFile.getUserData(HttpConsts.runFinishedKey)
+        runInEdt { runFinished?.accept(code) }
+
+        virtualFile.putUserData(HttpConsts.runFinishedKey, null)
     }
 
 }
