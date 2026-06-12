@@ -4,6 +4,7 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
 import com.intellij.psi.util.PsiUtil
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.factory.CookiePsiFactory
@@ -32,7 +33,7 @@ object CookieUtils {
     ) {
         val uri = URI(url)
         val domain = uri.host
-        val path = uri.path
+        val path = StringUtils.defaultIfEmpty(uri.path, "/")
 
         val cookies = fileCookies
             .filter { domain.endsWith(it.domain) }
