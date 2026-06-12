@@ -96,7 +96,7 @@ class DubboRequest(
                     val type = computeReadAction { it.type }
                     val psiType = PsiTypeUtils.resolvePsiType(type)
                     if (psiType != null) {
-                        val qualifiedName = psiType.qualifiedName
+                        val qualifiedName = computeReadAction { psiType.qualifiedName }
                         if (qualifiedName != null) {
                             return@map qualifiedName
                         }

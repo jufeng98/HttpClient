@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.utils
 
-import com.intellij.openapi.application.ReadAction
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiType
