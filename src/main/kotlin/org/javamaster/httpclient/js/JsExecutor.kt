@@ -8,6 +8,7 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_RAW
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.exception.JsFileException
+import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.factory.HttpContextFactory
 import org.javamaster.httpclient.js.support.*
 import org.javamaster.httpclient.js.support.jsObject.Cookie
@@ -105,12 +106,12 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             return mutableListOf()
         }
 
+        val resList = mutableListOf("/*$CR_LF${nls("pre.desc")}:$CR_LF")
+
         val context = Context.enter()
         try {
             GlobalLog.setTabName(tabName)
             threadLocal.set(this)
-
-            val resList = mutableListOf("/*$CR_LF${nls("pre.desc")}:$CR_LF")
 
             val preFilePair = preJsFiles.partition { it.urlFile != null }
 
@@ -136,14 +137,15 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             }
 
             resList.add(GlobalLog.getAndClearLogs() + CR_LF)
-
             resList.add("*/$CR_LF")
 
             return resList
         } catch (e: Exception) {
-            GlobalLog.clearLogs()
+            resList.add(GlobalLog.getAndClearLogs() + CR_LF)
+            resList.add("js error: $e$CR_LF")
+            resList.add("*/$CR_LF")
 
-            throw e
+            throw JsScriptException(resList.joinToString(""), resList, true, e)
         } finally {
             threadLocal.remove()
             Context.exit()
@@ -160,10 +162,12 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         cookies: List<Cookie>,
         httpFileName: String,
         httpDocument: Document,
-    ): String? {
+    ): List<String> {
         if (jsScript == null) {
-            return null
+            return mutableListOf()
         }
+
+        val resList = mutableListOf("/*${CR_LF}${nls("post.js.executed.result")}:${CR_LF}")
 
         val context = Context.enter()
         try {
@@ -198,17 +202,18 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
             val rowNum = httpDocument.getLineNumber(jsScript.textOffset) + 1
 
-            try {
-                evalJs(jsScript.text, rowNum, httpFileName, reqScriptableObject, context)
-            } catch (e: Exception) {
-                GlobalLog.log("$e")
-            }
+            evalJs(jsScript.text, rowNum, httpFileName, reqScriptableObject, context)
 
-            return GlobalLog.getAndClearLogs()
+            resList.add(GlobalLog.getAndClearLogs() + CR_LF)
+            resList.add("*/${CR_LF}")
+
+            return resList
         } catch (e: Exception) {
-            GlobalLog.clearLogs()
+            resList.add(GlobalLog.getAndClearLogs() + CR_LF)
+            resList.add("js error: $e$CR_LF")
+            resList.add("*/${CR_LF}")
 
-            throw e
+            throw JsScriptException(resList.joinToString(""), resList, false, e)
         } finally {
             threadLocal.remove()
             Context.exit()

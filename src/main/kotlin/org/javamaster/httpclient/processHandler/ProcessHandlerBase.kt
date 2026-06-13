@@ -12,6 +12,7 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
 import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
+import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
@@ -41,7 +42,8 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     var httpStatus: Int? = null
     var costTimes: Long? = null
     var future: CompletableFuture<*>? = null
-    var hasError = false
+    var hasReqError = false
+    var jsScriptException: JsScriptException? = null
 
     var tabName = HttpUtils.getTabName(httpMethod)
     var project = httpMethod.project
@@ -204,7 +206,28 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             selectedEnv, variableResolver.fileScopeVariableMap
         )
 
-        return jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq, httpFile.name, httpDocument)
+        var results: List<String>
+        try {
+            results = jsExecutor.evalJsBeforeRequest(reqInfo.preJsFiles, jsListBeforeReq, httpFile.name, httpDocument)
+        } catch (e: JsScriptException) {
+            jsScriptException = e
+
+            results = e.list
+        }
+
+        return results
+    }
+
+    fun dealPreJsErrorResponse(httpReqDescList: MutableList<String>) {
+        try {
+            val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, jsScriptException)
+
+            dealResponse(httpInfo, parentPath)
+
+            detachProcess()
+        } catch (e: Exception) {
+            handleException(e)
+        }
     }
 
     fun dealResponse(httpInfo: HttpInfo, parentPath: String) {
@@ -223,16 +246,19 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         val virtualFile = httpFile.virtualFile
         val isRunFile = virtualFile.getUserData(HttpConsts.runFileKey) == true
 
-        val myThrowable = httpInfo.httpException
+        val myThrowable = httpInfo.httpException ?: jsScriptException
         if (myThrowable != null) {
             myThrowable.printStackTrace()
 
             val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
                 nls("req.interrupted", tabName)
             } else {
-                nls("req.failed", tabName, myThrowable)
+                if (myThrowable is JsScriptException) {
+                    nls("handle.failed", tabName, myThrowable.cause!!)
+                } else {
+                    nls("req.failed", tabName, myThrowable)
+                }
             }
-
             if (!isRunFile) {
                 NotifyUtil.notifyError(project, error)
             }
@@ -269,7 +295,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             }
         }
 
-        val code = if (hasError) FAILED else SUCCESS
+        val code = if (hasReqError || jsScriptException != null) FAILED else SUCCESS
 
         requestFinished?.accept(code)
 

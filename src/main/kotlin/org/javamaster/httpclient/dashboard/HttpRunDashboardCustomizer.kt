@@ -53,7 +53,7 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
 
         val idxStr = if (idx != null) "序号 $idx" else ""
 
-        if (processHandler.hasError) {
+        if (processHandler.hasReqError) {
             presentation.addText(" Status: Error in the request $idxStr", attributes)
             return true
         }

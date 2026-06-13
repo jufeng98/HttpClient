@@ -10,6 +10,7 @@ import org.javamaster.httpclient.dubbo.DubboHandler
 import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
@@ -81,16 +82,22 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             throw e.targetException
         }
 
+        if (jsScriptException != null) {
+            dealPreJsErrorResponse(httpReqDescList)
+
+            return
+        }
+
         val future = dubboRequest.sendAsync()
 
         this.future = future
 
         future.whenCompleteAsync { triple, throwable ->
             costTimes = triple?.third
-            hasError = throwable != null
+            hasReqError = throwable != null
 
             application.executeOnPooledThread {
-                if (hasError) {
+                if (hasReqError) {
                     try {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
@@ -121,16 +128,19 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         ContentType.APPLICATION_JSON.mimeType
                     )
 
-                    val evalJsRes = jsExecutor.evalJsAfterRequest(
-                        url, reqBody, jsAfterReq, httpResInfo, httpStatus!!,
-                        mutableMapOf(), listOf(), httpFile.name, httpDocument
-                    )
+                    var resList: List<String>
+                    try {
+                        resList = jsExecutor.evalJsAfterRequest(
+                            url, reqBody, jsAfterReq, httpResInfo, httpStatus!!,
+                            mutableMapOf(), listOf(), httpFile.name, httpDocument
+                        )
+                    } catch (e: JsScriptException) {
+                        jsScriptException = e
 
-                    if (!evalJsRes.isNullOrEmpty()) {
-                        httpResDescList.add("/*$CR_LF${nls("post.js.executed.result")}:$CR_LF")
-                        httpResDescList.add("$evalJsRes$CR_LF")
-                        httpResDescList.add("*/$CR_LF")
+                        resList = e.list
                     }
+
+                    httpResDescList.addAll(resList)
 
                     httpResDescList.add("### $tabName$CR_LF")
 

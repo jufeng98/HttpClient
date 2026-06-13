@@ -6,12 +6,14 @@ import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.CookieUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.constructMultipartBodyCurl
 import org.javamaster.httpclient.utils.HttpUtils.handleOrdinaryContentCurl
+import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.ReqUtils
 import java.util.function.Consumer
 
@@ -32,6 +34,14 @@ class CurlProcessHandler(
 
         val preJsResList = executePreJs(url, reqInfo, reqHeaderMap)
         logInfo("js执行结果:$preJsResList")
+
+        if (jsScriptException != null) {
+            val error = nls("handle.failed", tabName, jsScriptException!!.cause!!)
+
+            NotifyUtil.notifyError(project, error)
+
+            return
+        }
 
         url = variableResolver.resolve(url)
 

@@ -5,6 +5,7 @@ import com.intellij.openapi.util.text.Formats
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.enums.ParamEnum
+import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
@@ -64,6 +65,12 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val req = targetMethodType.preExecute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
+        if (jsScriptException != null) {
+            dealPreJsErrorResponse(httpReqDescList)
+
+            return
+        }
+
         val start = System.currentTimeMillis()
 
         val future = targetMethodType.execute(paramMap, req)
@@ -73,7 +80,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         future.whenCompleteAsync { response, throwable ->
             costTimes = System.currentTimeMillis() - start
             httpStatus = response?.statusCode()
-            hasError = throwable != null
+            hasReqError = throwable != null
 
             application.executeOnPooledThread {
                 if (ResUtils.shouldRedirect(httpStatus, paramMap)) {
@@ -93,7 +100,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     return@executeOnPooledThread
                 }
 
-                if (hasError) {
+                if (hasReqError) {
                     try {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
@@ -131,16 +138,19 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     httpResDescList.add("// $comment${CR_LF}")
 
-                    val evalJsRes = jsExecutor.evalJsAfterRequest(
-                        url, reqBody, jsAfterReq, httpResInfo, response.statusCode(),
-                        resHeaders.map(), cookies, httpFile.name, httpDocument
-                    )
+                    var resList: List<String>
+                    try {
+                        resList = jsExecutor.evalJsAfterRequest(
+                            url, reqBody, jsAfterReq, httpResInfo, response.statusCode(),
+                            resHeaders.map(), cookies, httpFile.name, httpDocument
+                        )
+                    } catch (e: JsScriptException) {
+                        jsScriptException = e
 
-                    if (!evalJsRes.isNullOrEmpty()) {
-                        httpResDescList.add("/*${CR_LF}${NlsBundle.nls("post.js.executed.result")}:${CR_LF}")
-                        httpResDescList.add("$evalJsRes${CR_LF}")
-                        httpResDescList.add("*/${CR_LF}")
+                        resList = e.list
                     }
+
+                    httpResDescList.addAll(resList)
 
                     val versionDesc = MyPsiUtils.Companion.getVersionDesc(response.version())
 

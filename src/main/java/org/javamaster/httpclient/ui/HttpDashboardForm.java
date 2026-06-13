@@ -30,6 +30,7 @@ import org.javamaster.httpclient.action.dashboard.*;
 import org.javamaster.httpclient.action.ws.*;
 import org.javamaster.httpclient.consts.HttpConsts;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
+import org.javamaster.httpclient.exception.JsScriptException;
 import org.javamaster.httpclient.key.HttpKey;
 import org.javamaster.httpclient.messageBus.WsLangChangeNotifier;
 import org.javamaster.httpclient.model.HttpInfo;
@@ -97,9 +98,14 @@ public class HttpDashboardForm implements Disposable {
         VirtualFile resVirtualFile;
         Throwable throwable = httpInfo.getHttpException();
         if (throwable != null) {
-            String msg = ExceptionUtils.getStackTrace(throwable);
-            resVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(Lists.newArrayList(msg),
-                    "error.log", tabName, noLog, project);
+            if (throwable instanceof JsScriptException error && error.getBefore()) {
+                resVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(httpInfo.getHttpResDescList(),
+                        "res.http", tabName, noLog, project);
+            } else {
+                String msg = ExceptionUtils.getStackTrace(throwable);
+                resVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(Lists.newArrayList(msg),
+                        "error.log", tabName, noLog, project);
+            }
         } else {
             resVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(httpInfo.getHttpResDescList(),
                     "res.http", tabName, noLog, project);

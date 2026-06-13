@@ -63,7 +63,7 @@ class WsRequest(
 
                 wsRunningSet.remove(tabName)
 
-                processHandler.hasError = true
+                processHandler.hasReqError = true
                 processHandler.detachProcess()
 
                 returnResMsg(NlsBundle.nls("connected.failed") + ExceptionUtils.getStackTrace(ex) + "\n")
