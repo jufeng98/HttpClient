@@ -9,7 +9,6 @@ import com.intellij.openapi.vfs.pointers.VirtualFilePointer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiLanguageInjectionHost;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.util.PsiTreeUtil;
 import org.javamaster.httpclient.jsPlugin.support.HttpRequestHandlerApiDefinitionFilesHolder;
 import org.javamaster.httpclient.jsPlugin.support.JavaScript;
 import org.javamaster.httpclient.psi.HttpResponseScript;
@@ -25,6 +24,12 @@ import java.util.List;
  * @author yudong
  */
 public class JSElementResolveScopeProviderInvocationHandler implements InvocationHandler {
+
+    private static final List<VirtualFile> COMMON_LIBS = getLibraryFiles(
+            HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getCommonLibraryFilePointer(),
+            HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getCryptoLibraryFilePointer(),
+            HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getDynamicVariablesFilePointer()
+    );
 
     @Override
     public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
@@ -52,26 +57,17 @@ public class JSElementResolveScopeProviderInvocationHandler implements Invocatio
             return null;
         }
 
-        HttpRequestHandlerApiDefinitionFilesHolder filesHolder = HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE;
-
         LightFilePointer filePointer;
         if (insideResponseHandler(injectionHost)) {
-            filePointer = filesHolder.getResponseLibraryFilePointer();
-
+            filePointer = HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getResponseLibraryFilePointer();
         } else {
-            filePointer = filesHolder.getPreRequestLibraryFilePointer();
+            filePointer = HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getPreRequestLibraryFilePointer();
         }
 
         List<VirtualFile> virtualFiles = Lists.newArrayList();
         virtualFiles.add(filePointer.getFile());
 
-        List<VirtualFile> commonLibs = getLibraryFiles(
-                filesHolder.getCommonLibraryFilePointer(),
-                filesHolder.getCryptoLibraryFilePointer(),
-                filesHolder.getDynamicVariablesFilePointer()
-        );
-
-        virtualFiles.addAll(commonLibs);
+        virtualFiles.addAll(COMMON_LIBS);
 
         virtualFiles.addAll(JavaScript.INSTANCE.getCoreJsStubLib());
 
@@ -82,8 +78,8 @@ public class JSElementResolveScopeProviderInvocationHandler implements Invocatio
         return Arrays.stream(filePointers).map(VirtualFilePointer::getFile).toList();
     }
 
-    private static boolean insideResponseHandler(PsiElement element) {
-        return PsiTreeUtil.getParentOfType(element, HttpResponseScript.class) != null;
+    private static boolean insideResponseHandler(PsiElement scriptBody) {
+        return scriptBody.getParent() instanceof HttpResponseScript;
     }
 
 }

@@ -5,6 +5,7 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.popup.PopupFactoryImpl;
 import kotlin.Pair;
 import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder;
+import org.javamaster.httpclient.logger.HttpRequestLogger;
 import org.javamaster.httpclient.parser.HttpFile;
 import org.javamaster.httpclient.ui.PropertyForm;
 import org.javamaster.httpclient.ui.ViewVariableForm;
@@ -86,9 +87,9 @@ public class VariableFormBtnClickListener implements ActionListener {
                 viewVariableForm.initTable();
             }
         } catch (Exception e) {
-            //noinspection CallToPrintStackTrace
-            e.printStackTrace();
-            NotifyUtil.INSTANCE.notifyWarn(project, e.getMessage());
+            HttpRequestLogger.INSTANCE.logWarn("error", e);
+
+            NotifyUtil.INSTANCE.notifyError(project, e.getMessage());
         }
     }
 
