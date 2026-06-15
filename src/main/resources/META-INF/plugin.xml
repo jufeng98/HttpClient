@@ -296,6 +296,18 @@
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="httpclient-web-calm.xml">ris58h.webcalm</depends>
 
+    <projectListeners>
+        <listener class="org.javamaster.httpclient.listener.HttpProjectManagerListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+        <listener class="org.javamaster.httpclient.listener.HttpFileEditorManagerListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
+    <applicationListeners>
+        <listener class="org.javamaster.httpclient.listener.HttpDynamicPluginListener"
+                  topic="com.intellij.ide.plugins.DynamicPluginListener"/>
+    </applicationListeners>
+
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="org.javamaster.httpclient.startup.HttpPostStartupActivity"/>
 
