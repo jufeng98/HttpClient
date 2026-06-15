@@ -7,6 +7,7 @@ import com.intellij.psi.util.PsiUtil
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
+import org.javamaster.httpclient.exception.UrlVariableException
 import org.javamaster.httpclient.factory.CookiePsiFactory
 import org.javamaster.httpclient.js.support.jsObject.Cookie
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
@@ -17,6 +18,7 @@ import org.javamaster.httpclient.service.CookiesFileService
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.net.HttpCookie
 import java.net.URI
+import java.net.URISyntaxException
 import java.net.http.HttpHeaders
 import java.util.*
 
@@ -31,7 +33,13 @@ object CookieUtils {
         reqHeaderMap: LinkedMultiValueMap<String, String?>,
         fileCookies: List<Cookie>,
     ) {
-        val uri = URI(url)
+        val uri: URI
+        try {
+            uri = URI(url)
+        } catch (e: URISyntaxException) {
+            throw UrlVariableException(url, e)
+        }
+
         val domain = uri.host
         val path = StringUtils.defaultIfEmpty(uri.path, "/")
 

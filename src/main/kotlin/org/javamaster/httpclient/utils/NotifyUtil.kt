@@ -2,6 +2,7 @@ package org.javamaster.httpclient.utils
 
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.wm.ToolWindowId
@@ -44,8 +45,10 @@ object NotifyUtil {
         STICKY_STICKY_BALLOON.createNotification("Tip", message, NotificationType.WARNING).notify(project)
     }
 
-    fun notifyCornerError(project: Project, message: String) {
-        STICKY_STICKY_BALLOON.createNotification("Tip", message, NotificationType.ERROR).notify(project)
+    fun notifyCornerError(project: Project, message: String, vararg actions: AnAction) {
+        STICKY_STICKY_BALLOON.createNotification("Tip", message, NotificationType.ERROR)
+            .addActions(actions.toList())
+            .notify(project)
     }
 
 }

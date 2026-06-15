@@ -1,8 +1,11 @@
 package org.javamaster.httpclient.processHandler
 
 import com.intellij.execution.process.ProcessHandler
+import com.intellij.notification.NotificationAction
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
@@ -13,6 +16,8 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.exception.JsScriptException
+import org.javamaster.httpclient.exception.UrlVariableException
+import org.javamaster.httpclient.inspection.fix.CreateJsVariableQuickFix
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
@@ -22,10 +27,12 @@ import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
+import org.javamaster.httpclient.psi.impl.HttpVariableNameImpl
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.service.RunHttpFileService
 import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.*
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.HttpUtils.runReadAction
 import java.io.OutputStream
 import java.net.http.HttpClient.Version
@@ -219,15 +226,11 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     }
 
     fun dealPreJsErrorResponse(httpReqDescList: MutableList<String>) {
-        try {
-            val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, jsScriptException)
+        val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, jsScriptException)
 
-            dealResponse(httpInfo, parentPath)
+        dealResponse(httpInfo, parentPath)
 
-            detachProcess()
-        } catch (e: Exception) {
-            handleException(e)
-        }
+        detachProcess()
     }
 
     fun dealResponse(httpInfo: HttpInfo, parentPath: String) {
@@ -248,7 +251,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
         val myThrowable = httpInfo.httpException ?: jsScriptException
         if (myThrowable != null) {
-            myThrowable.printStackTrace()
+            logWarn("出错了", myThrowable)
 
             val error = if (myThrowable is CancellationException || myThrowable.cause is CancellationException) {
                 nls("req.interrupted", tabName)
@@ -272,13 +275,96 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     }
 
     fun handleException(e: Exception) {
+        hasReqError = true
+
         logWarn("处理出错了", e)
 
         runInEdt { httpDashboardForm.resetDashboardForm() }
 
-        NotifyUtil.notifyError(project, "$e")
+        if (e is UrlVariableException) {
+            val url = e.url
+            if (!createUrlActionNotify(url)) {
+                NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
+            }
+        } else {
+            NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
+        }
 
         detachProcess()
+    }
+
+    private fun createUrlActionNotify(url: String): Boolean {
+        val idxStart = url.indexOf("{{")
+        if (idxStart == -1) return false
+
+        val idxEnd = url.indexOf("}}", idxStart)
+        if (idxEnd == -1) return false
+
+        val variableName = url.substring(idxStart + 2, idxEnd)
+
+        val nameElement = computeReadAction {
+            PsiTreeUtil.findChildrenOfType(requestTarget, HttpVariableName::class.java)
+                .firstOrNull { it.text == variableName } as? HttpVariableNameImpl?
+        } ?: return false
+
+        val offset = nameElement.textOffset
+        val lineNumber = httpDocument.getLineNumber(offset)
+        val lineStartOffset = httpDocument.getLineStartOffset(lineNumber)
+        val column = offset - lineStartOffset
+        val content = "Goto ${httpFile.name}:${lineNumber + 1}:${column + 1}"
+
+        val actionJumpTo = NotificationAction.createSimple(content) {
+            runInEdt { if (nameElement.isValid) nameElement.navigate(true) }
+        }
+
+        val actionFix1 = NotificationAction.createSimpleExpiring(nls("unsolved.variable", "")) {
+            runInEdt {
+                WriteCommandAction.runWriteCommandAction(project) {
+                    EnvFileUtils.createJsonProperty(project, variableName, false)
+                }
+            }
+        }
+
+        val actionFix2 = NotificationAction.createSimpleExpiring(nls("unsolved.variable", "private")) {
+            runInEdt {
+                WriteCommandAction.runWriteCommandAction(project) {
+                    EnvFileUtils.createJsonProperty(project, variableName, true)
+                }
+            }
+        }
+
+        val actionFix3 = NotificationAction.createSimpleExpiring(nls("unsolved.file.variable")) {
+            runInEdt {
+                WriteCommandAction.runWriteCommandAction(project) {
+                    val elementNew = HttpFile.createFileVariableAndInsert(variableName, "ju", project)
+
+                    (elementNew?.lastChild as? Navigatable?)?.navigate(true)
+                }
+            }
+        }
+
+        val actionFix4 = NotificationAction.createSimpleExpiring(nls("unsolved.handler.variable", nls("global"))) {
+            runInEdt {
+                WriteCommandAction.runWriteCommandAction(project) {
+                    CreateJsVariableQuickFix(true, variableName).createJsVariable(project, nameElement)
+                }
+            }
+        }
+
+        val actionFix5 = NotificationAction.createSimpleExpiring(nls("unsolved.handler.variable", nls("pre.request"))) {
+            runInEdt {
+                WriteCommandAction.runWriteCommandAction(project) {
+                    CreateJsVariableQuickFix(false, variableName).createJsVariable(project, nameElement)
+                }
+            }
+        }
+
+        NotifyUtil.notifyCornerError(
+            project, nls("invalid.request", variableName, tabName),
+            actionJumpTo, actionFix1, actionFix2, actionFix3, actionFix4, actionFix5
+        )
+
+        return true
     }
 
     fun getComponent(): JPanel {
