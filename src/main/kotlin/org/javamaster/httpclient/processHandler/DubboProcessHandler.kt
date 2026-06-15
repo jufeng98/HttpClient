@@ -97,21 +97,17 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             hasReqError = throwable != null
 
             application.executeOnPooledThread {
-                if (hasReqError) {
-                    try {
+                try {
+                    if (hasReqError) {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
                         dealResponse(httpInfo, parentPath)
 
                         detachProcess()
-                    } catch (e: Exception) {
-                        handleException(e)
+
+                        return@executeOnPooledThread
                     }
 
-                    return@executeOnPooledThread
-                }
-
-                try {
                     httpStatus = 200
 
                     val bodyBytes = triple!!.first

@@ -8,6 +8,7 @@ import com.intellij.execution.ui.RunContentManager
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.psi.PsiElement
 import com.intellij.ui.SimpleTextAttributes
+import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
@@ -41,20 +42,27 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
 
         val current = runContentManager.selectedContent?.processHandler == processHandler
 
+        val hasError = processHandler.hasReqError || processHandler.jsScriptException != null
+
         val attributes = if (current) {
             SimpleTextAttributes.SYNTHETIC_ATTRIBUTES
         } else {
-            SimpleTextAttributes.GRAY_ATTRIBUTES
+            if (hasError) {
+                SimpleTextAttributes.ERROR_ATTRIBUTES
+            } else {
+                SimpleTextAttributes.GRAY_ATTRIBUTES
+            }
         }
 
         val httpMethod = processHandler.httpMethod
 
         val idx = httpMethod.getUserData(HttpConsts.runFileRequestIdxKey)
 
-        val idxStr = if (idx != null) "序号 $idx" else ""
+        val idxStr = if (idx != null) " 序号 $idx" else ""
 
-        if (processHandler.hasReqError || processHandler.jsScriptException != null) {
-            presentation.addText(" Status: Error in the request $idxStr", attributes)
+        if (hasError) {
+            presentation.addText(" Status: Error in the request$idxStr", attributes)
+            presentation.setIcon(HttpIcons.ERROR)
             return true
         }
 

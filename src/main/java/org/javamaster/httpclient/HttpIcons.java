@@ -1,5 +1,6 @@
 package org.javamaster.httpclient;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
 
 import javax.swing.*;
@@ -19,7 +20,7 @@ public class HttpIcons {
     public static final Icon WS = IconLoader.getIcon("/icons/ws.svg", HttpIcons.class);
 
     public static final Icon RUN_ALL = IconLoader.getIcon("/icons/runAll.svg", HttpIcons.class);
-    public static final Icon STOP = IconLoader.getIcon("/icons/stop.svg", HttpIcons.class);
+    public static final Icon ERROR = AllIcons.General.Error;
 
     public static final Icon SCROLL_UP = IconLoader.getIcon("/icons/scrollUp.svg", HttpIcons.class);
     public static final Icon SCROLL_DOWN = IconLoader.getIcon("/icons/scrollDown.svg", HttpIcons.class);

@@ -100,28 +100,24 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     return@executeOnPooledThread
                 }
 
-                if (hasReqError) {
-                    try {
+                try {
+                    if (hasReqError) {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
                         dealResponse(httpInfo, parentPath)
 
                         detachProcess()
-                    } catch (e: Exception) {
-                        handleException(e)
+
+                        return@executeOnPooledThread
                     }
 
-                    return@executeOnPooledThread
-                }
+                    val cookies = CookieUtils.parseAll(url, response.headers())
 
-                val cookies = CookieUtils.parseAll(url, response.headers())
+                    var cookieSaveDesc = ""
+                    if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
+                        cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project)
+                    }
 
-                var cookieSaveDesc = ""
-                if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
-                    cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project)
-                }
-
-                try {
                     val resHeaders = response.headers()
                     val resHeaderList = ResUtils.convertResponseHeaders(resHeaders)
 
