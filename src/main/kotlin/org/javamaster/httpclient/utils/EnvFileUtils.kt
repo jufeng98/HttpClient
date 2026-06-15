@@ -5,12 +5,15 @@ import com.intellij.json.psi.JsonBooleanLiteral
 import com.intellij.json.psi.JsonNumberLiteral
 import com.intellij.json.psi.JsonObject
 import com.intellij.json.psi.JsonProperty
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.rename.RenameProcessor
 import org.javamaster.httpclient.env.EnvFileService
+import org.javamaster.httpclient.env.EnvFileService.Companion.ENV_FILE_NAME
+import org.javamaster.httpclient.env.EnvFileService.Companion.PRIVATE_ENV_FILE_NAME
 import org.javamaster.httpclient.env.EnvFileService.Companion.createEnvFile
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvEleLiteral
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvJsonProperty
@@ -30,8 +33,35 @@ class EnvFileUtils {
 
     companion object {
 
+        fun createJsonProperty(project: Project, variableName: String, isPrivate: Boolean) {
+            if (!ApplicationManager.getApplication().isDispatchThread) {
+                return
+            }
+
+            val topForm = HttpEditorTopForm.getSelectedEditorTopForm(project) ?: return
+
+            val envFileName = if (isPrivate) PRIVATE_ENV_FILE_NAME else ENV_FILE_NAME
+
+            val httpFileParentPath = topForm.file.parent.path
+
+            val jsonFile = EnvFileService.getEnvJsonFile(envFileName, httpFileParentPath, project)
+            if (jsonFile == null) {
+                createAndReInitEnvCompo(isPrivate, project)
+                topForm.setSelectEnv("dev")
+            } else {
+                topForm.selectedEnv ?: return
+                val fileEditorManager = FileEditorManager.getInstance(project)
+                fileEditorManager.openFile(jsonFile.virtualFile, true)
+            }
+
+            val selectEnv = topForm.selectedEnv!!
+            val envFileService = EnvFileService.getService(project)
+
+            envFileService.createEnvValue(variableName, selectEnv, httpFileParentPath, envFileName)
+        }
+
         fun createAndReInitEnvCompo(isPrivate: Boolean, project: Project) {
-            val envFileName = if (isPrivate) EnvFileService.PRIVATE_ENV_FILE_NAME else EnvFileService.ENV_FILE_NAME
+            val envFileName = if (isPrivate) PRIVATE_ENV_FILE_NAME else ENV_FILE_NAME
 
             val envFile = createEnvFile(envFileName, isPrivate, project)
             if (envFile == null) {

@@ -74,11 +74,9 @@ object InspectionHelper {
                     CreateEnvVariableQuickFix(true, variableName, PriorityAction.Priority.HIGH),
                 )
 
-                if (reference is HttpVariableNamePsiReference) {
-                    if (JsFacade.isAvailable()) {
-                        fixes.add(CreateJsVariableQuickFix(true, variableName))
-                        fixes.add(CreateJsVariableQuickFix(false, variableName))
-                    }
+                if (JsFacade.isAvailable()) {
+                    fixes.add(CreateJsVariableQuickFix(true, variableName))
+                    fixes.add(CreateJsVariableQuickFix(false, variableName))
                 }
 
                 fixes.add(CreateFileVariableQuickFix(variableName))

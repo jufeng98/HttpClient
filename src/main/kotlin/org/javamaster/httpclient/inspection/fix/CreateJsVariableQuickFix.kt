@@ -3,7 +3,6 @@ package org.javamaster.httpclient.inspection.fix
 import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
-import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -12,6 +11,7 @@ import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.PsiPlainTextFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.javamaster.httpclient.HttpLanguage
@@ -38,7 +38,7 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
         createJsVariable(project, descriptor.psiElement)
     }
 
-    private fun createJsVariable(project: Project, psiElement: PsiElement) {
+    fun createJsVariable(project: Project, psiElement: PsiElement) {
         if (!ApplicationManager.getApplication().isDispatchThread) {
             return
         }
@@ -48,7 +48,7 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
                 PsiTreeUtil.getParentOfType(psiElement, HttpRequestBlock::class.java)!!
             }
 
-            is JsonStringLiteral -> {
+            is PsiPlainTextFile -> {
                 val element = InjectedLanguageManager.getInstance(project).getInjectionHost(psiElement)
                 PsiTreeUtil.getParentOfType(element, HttpRequestBlock::class.java)!!
             }
@@ -103,8 +103,12 @@ class CreateJsVariableQuickFix(private val global: Boolean, private val variable
             val newGlobalHandler = PsiTreeUtil.findChildOfType(tmpFile, HttpGlobalHandler::class.java)!!
 
             val directionComments = httpFile.getDirectionComments()
+            val globalImports = httpFile.getGlobalImports()
+
             val globalHandler = if (directionComments.isNotEmpty()) {
                 httpFile.addAfter(newGlobalHandler, directionComments.last().nextSibling) as HttpGlobalHandler
+            } else if (globalImports.isNotEmpty()) {
+                httpFile.addAfter(newGlobalHandler, globalImports.last().nextSibling) as HttpGlobalHandler
             } else {
                 httpFile.addBefore(newGlobalHandler, httpFile.firstChild) as HttpGlobalHandler
             }

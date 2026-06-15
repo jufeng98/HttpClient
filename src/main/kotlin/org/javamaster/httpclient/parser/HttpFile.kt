@@ -98,24 +98,22 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
 
             val directionComments = getDirectionComments()
             val globalHandler = getGlobalHandler()
+            val globalImports = getGlobalImports()
 
-            val elementCopy = if (directionComments.isNotEmpty()) {
+            val elementNew = if (directionComments.isNotEmpty()) {
                 addAfter(newGlobalVariable, directionComments.last().nextSibling)
+            } else if (globalImports.isNotEmpty()) {
+                addAfter(newGlobalVariable, globalImports.last().nextSibling)
             } else if (globalHandler != null) {
-                addAfter(newGlobalVariable, globalHandler)
+                addAfter(newGlobalVariable, globalHandler.nextSibling)
             } else {
                 addBefore(newGlobalVariable, firstChild)
             }
 
-            val whitespace = newGlobalVariable.nextSibling
-            elementCopy.add(whitespace)
+            val cr = newGlobalVariable.nextSibling
+            addAfter(cr, elementNew)
 
-            val cr = whitespace.nextSibling
-            if (cr != null) {
-                elementCopy.add(cr)
-            }
-
-            elementCopy
+            elementNew
         })
     }
 
