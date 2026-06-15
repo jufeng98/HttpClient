@@ -3,17 +3,18 @@ package org.javamaster.httpclient.dubbo
 import com.alibaba.dubbo.config.ApplicationConfig
 import com.alibaba.dubbo.config.ReferenceConfig
 import com.alibaba.dubbo.config.RegistryConfig
+import com.alibaba.dubbo.config.utils.ReferenceConfigCache
 import com.alibaba.dubbo.rpc.service.GenericService
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiPrimitiveType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
+import org.javamaster.httpclient.dubbo.support.HttpKeyGenerator
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
+import org.javamaster.httpclient.utils.DubboUtils.findTargetMethod
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.JsonUtils.gson
 import org.javamaster.httpclient.utils.PsiTypeUtils
@@ -48,6 +49,10 @@ class DubboRequest(
     }
     private val version by lazy {
         val values = reqHeaderMap[DubboUtils.VERSION] ?: return@lazy null
+        values[0]
+    }
+    private val group by lazy {
+        val values = reqHeaderMap[DubboUtils.GROUP] ?: return@lazy null
         values[0]
     }
     private val registry by lazy {
@@ -87,7 +92,7 @@ class DubboRequest(
                     )
             }
 
-            val targetMethod = findTargetMethod(psiClass, reqBodyMap)
+            val targetMethod = findTargetMethod(psiClass, methodName, reqBodyMap)
 
             val parameters = targetMethod.parameterList.parameters
 
@@ -193,15 +198,10 @@ class DubboRequest(
 
                 val referenceConfig = createReferenceConfig()
 
-                val genericService = referenceConfig.get()
+                val genericService = referenceConfigCache.get(referenceConfig)
 
                 val start = System.currentTimeMillis()
-                val result: Any?
-                try {
-                    result = genericService.`$invoke`(methodName, paramTypeNameArray, paramValueArray)
-                } finally {
-                    referenceConfig.destroy()
-                }
+                val result: Any? = genericService.`$invoke`(methodName, paramTypeNameArray, paramValueArray)
                 val consumeTimes = System.currentTimeMillis() - start
 
                 val resJsonStr = gson.toJson(result)
@@ -232,6 +232,10 @@ class DubboRequest(
             reference.version = version
         }
 
+        if (!group.isNullOrBlank()) {
+            reference.group = group
+        }
+
         if (registry.isNullOrBlank()) {
             reference.url = url
         } else {
@@ -246,43 +250,12 @@ class DubboRequest(
         return reference
     }
 
-    private fun findTargetMethod(psiClass: PsiClass, reqMap: LinkedHashMap<*, *>?): PsiMethod {
-        val methods = psiClass.findMethodsByName(methodName, false)
-        if (methods.isEmpty()) {
-            throw IllegalArgumentException(NlsBundle.nls("method.not.exists", methodName))
-        }
-
-        val method: PsiMethod?
-        if (reqMap == null) {
-            method = methods[0]
-        } else {
-            val paramNames = reqMap.keys
-            method = methods.filter {
-                val iterator = paramNames.iterator()
-                val parameterList = it.parameterList
-                for (i in 0 until parameterList.parametersCount) {
-                    val name = parameterList.parameters[i].name
-                    val jsonName = iterator.next()
-                    if (name != jsonName) {
-                        return@filter false
-                    }
-                }
-                true
-            }.firstOrNull()
-
-            if (method == null) {
-                throw IllegalArgumentException(NlsBundle.nls("method.not.found", paramNames, methodName))
-            }
-        }
-
-        return method!!
-    }
-
     companion object {
+        val referenceConfigCache: ReferenceConfigCache = ReferenceConfigCache.getCache("_DEFAULT_", HttpKeyGenerator)
         private val application = ApplicationConfig()
 
         init {
-            application.name = "HttpClient"
+            application.name = "HttpRequest"
             application.qosEnable = false
             application.logger = "slf4j"
         }

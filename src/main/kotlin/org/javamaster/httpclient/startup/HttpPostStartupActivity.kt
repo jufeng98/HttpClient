@@ -14,11 +14,14 @@ import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.project.ProjectManagerListener
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.application
 import com.intellij.util.concurrency.AppExecutorUtil
 import org.javamaster.httpclient.HttpFileType
+import org.javamaster.httpclient.dubbo.DubboRequest
 import org.javamaster.httpclient.env.EnvFileService.Companion.getService
 import org.javamaster.httpclient.jsPlugin.support.JavaScript
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
@@ -32,7 +35,7 @@ import org.javamaster.httpclient.utils.HttpUtils
  *
  * @author yudong
  */
-class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
+class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity, ProjectManagerListener {
     @Volatile
     private var jsonAssociated = false
 
@@ -44,6 +47,7 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
         }
 
         project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this)
+        project.messageBus.connect().subscribe(ProjectManager.TOPIC, this)
 
         if (JavaScript.isAvailable()) {
             if (JavaScript.isTsLibraryNotInstalled(project)) {
@@ -61,6 +65,14 @@ class HttpPostStartupActivity : FileEditorManagerListener, ProjectActivity {
                     logWarn("注册element scope provider错误", t)
                 }
             }
+        }
+    }
+
+    override fun projectClosing(project: Project) {
+        try {
+            DubboRequest.referenceConfigCache.destroyAll()
+        } catch (t: Throwable) {
+            logWarn("销毁 dubbo 出错", t)
         }
     }
 

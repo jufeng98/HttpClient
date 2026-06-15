@@ -15,6 +15,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
+import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
@@ -25,7 +26,42 @@ object DubboUtils {
     const val INTERFACE_NAME = "Interface-Name"
     const val METHOD_KEY = "Method"
     const val VERSION = "Version"
+    const val GROUP = "Group"
     const val REGISTRY = "Registry"
+
+    fun findTargetMethod(psiClass: PsiClass, methodName: String, reqMap: LinkedHashMap<*, *>?): PsiMethod {
+        val methods = psiClass.findMethodsByName(methodName, false)
+        if (methods.isEmpty()) {
+            throw IllegalArgumentException(NlsBundle.nls("method.not.exists", methodName))
+        }
+
+        val method: PsiMethod?
+        if (reqMap == null) {
+            method = methods[0]
+        } else {
+            val paramNames = reqMap.keys
+            method = computeReadAction {
+                methods.filter {
+                    val iterator = paramNames.iterator()
+                    val parameterList = it.parameterList
+                    for (i in 0 until parameterList.parametersCount) {
+                        val name = parameterList.parameters[i].name
+                        val jsonName = iterator.next()
+                        if (name != jsonName) {
+                            return@filter false
+                        }
+                    }
+                    true
+                }.firstOrNull()
+            }
+
+            if (method == null) {
+                throw IllegalArgumentException(NlsBundle.nls("method.not.found", paramNames, methodName))
+            }
+        }
+
+        return method!!
+    }
 
     fun findInterface(module: Module, name: String): PsiClass? {
         val javaPsiFacade = JavaPsiFacade.getInstance(module.project)
