@@ -142,7 +142,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             return resList
         } catch (e: Exception) {
             resList.add(GlobalLog.getAndClearLogs() + CR_LF)
-            resList.add("js error: $e$CR_LF")
+            resList.add("$e$CR_LF")
             resList.add("*/$CR_LF")
 
             throw JsScriptException(resList.joinToString(""), resList, true, e)
@@ -210,7 +210,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             return resList
         } catch (e: Exception) {
             resList.add(GlobalLog.getAndClearLogs() + CR_LF)
-            resList.add("js error: $e$CR_LF")
+            resList.add("$e$CR_LF")
             resList.add("*/${CR_LF}")
 
             throw JsScriptException(resList.joinToString(""), resList, false, e)

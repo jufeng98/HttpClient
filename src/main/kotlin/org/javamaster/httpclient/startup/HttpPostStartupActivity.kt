@@ -1,9 +1,11 @@
 package org.javamaster.httpclient.startup
 
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import org.javamaster.httpclient.jsPlugin.support.JavaScript
+import org.javamaster.httpclient.listener.HttpFileEditorManagerListener
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.utils.FileTopUtils.initFileStatus
 
@@ -21,6 +23,9 @@ class HttpPostStartupActivity : ProjectActivity {
         fileEditorManager.openFiles.forEach {
             initFileStatus(fileEditorManager, it)
         }
+
+        project.messageBus.connect()
+            .subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, HttpFileEditorManagerListener)
 
         if (JavaScript.isAvailable()) {
             if (JavaScript.isTsLibraryNotInstalled(project)) {

@@ -10,7 +10,7 @@ import org.javamaster.httpclient.utils.FileTopUtils.initFileStatus
 /**
  * @author yudong
  */
-class HttpFileEditorManagerListener : FileEditorManagerListener {
+object HttpFileEditorManagerListener : FileEditorManagerListener {
 
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         application.executeOnPooledThread {

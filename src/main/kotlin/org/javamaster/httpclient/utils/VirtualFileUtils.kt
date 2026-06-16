@@ -143,6 +143,7 @@ object VirtualFileUtils {
 
         var virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)!!
 
+        // 当文件位于忽略列表或被排除时,此时无法构建 psi 文件
         val psiFile = computeReadAction { virtualFile.findPsiFile(project) }
         if (psiFile == null) {
             virtualFile = LightVirtualFile(virtualFile.name, descContent)

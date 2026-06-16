@@ -1,6 +1,7 @@
 package org.javamaster.httpclient
 
 import com.google.common.net.HttpHeaders
+import com.intellij.openapi.application.ex.ApplicationInfoEx
 import com.intellij.openapi.util.text.Formats
 import org.javamaster.httpclient.consts.HttpConsts.Companion.CONNECT_TIMEOUT
 import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
@@ -185,6 +186,19 @@ enum class HttpRequestEnum(val icon: Icon) {
 
         val bodyPublisher = pair.first
         val multipartLength = pair.second
+
+        if (!reqHttpHeaders.contains(HttpHeaders.USER_AGENT)) {
+            val appInfo = ApplicationInfoEx.getInstanceEx()
+            reqHttpHeaders.add(HttpHeaders.USER_AGENT, "IntelliJ HTTP Request/${appInfo.fullApplicationName}")
+        }
+
+        if (!reqHttpHeaders.contains(HttpHeaders.ACCEPT_ENCODING)) {
+            reqHttpHeaders.add(HttpHeaders.ACCEPT_ENCODING, "br, deflate, gzip, x-gzip")
+        }
+
+        if (!reqHttpHeaders.contains(HttpHeaders.ACCEPT)) {
+            reqHttpHeaders.add(HttpHeaders.ACCEPT, "*/*")
+        }
 
         val request = createRequest(url, version, reqHttpHeaders, bodyPublisher, paramMap)
 

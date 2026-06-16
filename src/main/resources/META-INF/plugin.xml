@@ -299,8 +299,6 @@
     <projectListeners>
         <listener class="org.javamaster.httpclient.listener.HttpProjectManagerListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
-        <listener class="org.javamaster.httpclient.listener.HttpFileEditorManagerListener"
-                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
 
     <applicationListeners>
@@ -327,7 +325,7 @@
                 implementationClass="org.javamaster.httpclient.CookieFileType"
                 fieldName="INSTANCE"
                 language="cookies"
-                extensions="cookies"/>
+                fileNames="http-client.cookies"/>
         <lang.parserDefinition
                 language="http"
                 implementationClass="org.javamaster.httpclient.parser.HttpParserDefinition"/>
@@ -382,6 +380,8 @@
                    implementationClass="org.javamaster.httpclient.annotator.TextVariableAnnotator"/>
         <annotator language="http"
                    implementationClass="org.javamaster.httpclient.annotator.HttpAnnotator"/>
+        <annotator language="cookies"
+                   implementationClass="org.javamaster.httpclient.annotator.CookiesAnnotator"/>
         <localInspection groupKey="inspection.http.group.name" language="http"
                          shortName="HttpInspection" enabledByDefault="true" level="WARNING"
                          implementationClass="org.javamaster.httpclient.inspection.HttpInspection"

@@ -28,13 +28,23 @@ class HttpLineCommentPsiReferenceProvider : PsiReferenceProvider() {
             return createReference(key2, lineComment, comment)
         }
 
+        val key3 = "// " + nls("cookie.saved.failed.ignored", "")
+        if (comment.startsWith(key3)) {
+            return createReference(key3, lineComment, comment)
+        }
+
+        val key4 = "// " + nls("cookie.saved.failed.excluded", "")
+        if (comment.startsWith(key4)) {
+            return createReference(key4, lineComment, comment)
+        }
+
         return emptyArray()
     }
 
     private fun createReference(key: String, lineComment: HttpLineComment, comment: String): Array<PsiReference> {
         val keyLength = key.length
         val range = TextRange(keyLength, comment.length)
-        val filePath = comment.substring(keyLength)
+        val filePath = comment.substring(keyLength).trimEnd()
         return arrayOf(HttpLineCommentPsiReference(lineComment, range, filePath))
     }
 
