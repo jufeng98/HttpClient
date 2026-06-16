@@ -21,11 +21,14 @@ public class CookieSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final Map<IElementType, TextAttributesKey> ATTRIBUTE_MAP = Maps.newHashMap();
 
     public static final TextAttributesKey COOKIE_LINE_COMMENT;
+    public static final TextAttributesKey COOKIE_TOKEN;
 
     static {
         COOKIE_LINE_COMMENT = createTextAttributesKey("COOKIE_LINE_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+        COOKIE_TOKEN = TextAttributesKey.createTextAttributesKey("COOKIE_TOKEN", DefaultLanguageHighlighterColors.IDENTIFIER);
 
         fillMap(ATTRIBUTE_MAP, COOKIE_LINE_COMMENT, CookieTypes.LINE_COMMENT);
+        fillMap(ATTRIBUTE_MAP, COOKIE_TOKEN, CookieTypes.COOKIE_TOKEN);
     }
 
     public @NotNull Lexer getHighlightingLexer() {
