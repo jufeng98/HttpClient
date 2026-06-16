@@ -46,11 +46,11 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             url = ReqUtils.Companion.encodeUrl(url)
         }
 
-        val reqBody = ReqUtils.Companion.resolveReqBodyAgain(reqInfo.reqBody, variableResolver)
-
         CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
 
         reqHeaderMap.addAll(GlobalHeaders.dataHolder)
+
+        val reqBody = ReqUtils.Companion.resolveReqBodyAgain(reqInfo.reqBody, variableResolver)
 
         handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
     }

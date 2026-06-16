@@ -3,6 +3,7 @@ package org.javamaster.httpclient.utils
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import org.intellij.markdown.html.urlEncode
+import org.javamaster.httpclient.exception.BodyVariableException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
@@ -95,10 +96,24 @@ class ReqUtils {
             }
 
             if (reqBody is String) {
-                return resolver.resolve(reqBody)
+                val resolved = resolver.resolve(reqBody)
+
+                checkVariable(resolved)
             }
 
             return reqBody
+        }
+
+        fun checkVariable(content: String): String {
+            val idxStart = content.indexOf("{{")
+            if (idxStart == -1) return content
+
+            val idxEnd = content.indexOf("}}", idxStart)
+            if (idxEnd == -1) return content
+
+            val variableName = content.substring(idxStart + 2, idxEnd)
+
+            throw BodyVariableException(variableName)
         }
 
         fun getReqBodyDesc(reqBody: Any?): MutableList<String> {

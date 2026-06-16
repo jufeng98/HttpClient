@@ -4,8 +4,6 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
@@ -15,9 +13,10 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
 import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
+import org.javamaster.httpclient.exception.BodyVariableException
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.exception.UrlVariableException
-import org.javamaster.httpclient.inspection.fix.CreateJsVariableQuickFix
+import org.javamaster.httpclient.fake.FakeVariableElement
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
@@ -286,6 +285,10 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             if (!createUrlActionNotify(url)) {
                 NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
             }
+        } else if (e is BodyVariableException) {
+            if (!createBodyActionNotify(e.variableName)) {
+                NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
+            }
         } else {
             NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
         }
@@ -317,51 +320,47 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             runInEdt { if (nameElement.isValid) nameElement.navigate(true) }
         }
 
-        val actionFix1 = NotificationAction.createSimpleExpiring(nls("unsolved.variable", "")) {
-            runInEdt {
-                WriteCommandAction.runWriteCommandAction(project) {
-                    EnvFileUtils.createJsonProperty(project, variableName, false)
-                }
-            }
-        }
+        NotifyUtil.notifyCornerError(
+            project, nls("invalid.request", variableName, tabName), actionJumpTo
+        )
 
-        val actionFix2 = NotificationAction.createSimpleExpiring(nls("unsolved.variable", "private")) {
-            runInEdt {
-                WriteCommandAction.runWriteCommandAction(project) {
-                    EnvFileUtils.createJsonProperty(project, variableName, true)
-                }
-            }
-        }
+        return true
+    }
 
-        val actionFix3 = NotificationAction.createSimpleExpiring(nls("unsolved.file.variable")) {
-            runInEdt {
-                WriteCommandAction.runWriteCommandAction(project) {
-                    val elementNew = HttpFile.createFileVariableAndInsert(variableName, "ju", project)
-
-                    (elementNew?.lastChild as? Navigatable?)?.navigate(true)
+    private fun createBodyActionNotify(variableName: String): Boolean {
+        val nameElement = computeReadAction {
+            val messageBody = request.body?.requestMessagesGroup?.messageBody
+            if (messageBody != null) {
+                val idx = messageBody.text.indexOf("{{$variableName}}")
+                if (idx == -1) {
+                    return@computeReadAction null
                 }
-            }
-        }
 
-        val actionFix4 = NotificationAction.createSimpleExpiring(nls("unsolved.handler.variable", nls("global"))) {
-            runInEdt {
-                WriteCommandAction.runWriteCommandAction(project) {
-                    CreateJsVariableQuickFix(true, variableName).createJsVariable(project, nameElement)
-                }
-            }
-        }
+                val offset = messageBody.textOffset + idx + 2
+                val lineNumber = httpDocument.getLineNumber(offset)
 
-        val actionFix5 = NotificationAction.createSimpleExpiring(nls("unsolved.handler.variable", nls("pre.request"))) {
-            runInEdt {
-                WriteCommandAction.runWriteCommandAction(project) {
-                    CreateJsVariableQuickFix(false, variableName).createJsVariable(project, nameElement)
-                }
+                val lineStartOffset = httpDocument.getLineStartOffset(lineNumber)
+                val column = offset - lineStartOffset
+
+                return@computeReadAction FakeVariableElement(
+                    lineNumber, column, offset, variableName, httpFile, messageBody
+                )
             }
+
+            null
+        } ?: return false
+
+        val lineNumber = nameElement.lineNumber
+        val column = nameElement.column
+        val content = nls("goto.detail", "${httpFile.name}:${lineNumber + 1}:${column + 1}")
+
+        val actionJumpTo = NotificationAction.createSimple(content) {
+            runInEdt { if (nameElement.isValid) nameElement.navigate(true) }
         }
 
         NotifyUtil.notifyCornerError(
             project, nls("invalid.request", variableName, tabName),
-            actionJumpTo, actionFix1, actionFix2, actionFix3, actionFix4, actionFix5
+            actionJumpTo
         )
 
         return true
