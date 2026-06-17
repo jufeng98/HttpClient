@@ -278,20 +278,22 @@ object HttpUtils {
 
                 val header = it.header
 
-                header.headerFieldList
-                    .forEach { innerIt ->
-                        val headerName = innerIt.headerFieldName.text
-                        val headerValue = innerIt.headerFieldValue?.text
+                runReadAction {
+                    header.headerFieldList
+                        .forEach { innerIt ->
+                            val headerName = innerIt.headerFieldName.text
+                            val headerValue = innerIt.headerFieldValue?.text
 
-                        val value = if (headerValue.isNullOrEmpty()) {
-                            ""
-                        } else {
-                            variableResolver.resolve(headerValue)
+                            val value = if (headerValue.isNullOrEmpty()) {
+                                ""
+                            } else {
+                                variableResolver.resolve(headerValue)
+                            }
+
+                            val headerLine = "$headerName: $value$CR_LF"
+                            byteArrays.add(Pair(headerLine.toByteArray(StandardCharsets.UTF_8), headerLine))
                         }
-
-                        val headerLine = "$headerName: $value$CR_LF"
-                        byteArrays.add(Pair(headerLine.toByteArray(StandardCharsets.UTF_8), headerLine))
-                    }
+                }
 
                 byteArrays.add(Pair(CR_LF.toByteArray(StandardCharsets.UTF_8), CR_LF))
 

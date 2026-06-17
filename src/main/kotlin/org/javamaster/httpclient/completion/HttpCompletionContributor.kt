@@ -23,9 +23,8 @@ class HttpCompletionContributor : CompletionContributor() {
 
     init {
         this.extend(
-            CompletionType.BASIC, PlatformPatterns.psiElement().withParent(
-                HttpHeaderFieldName::class.java
-            ),
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement(HttpTypes.FIELD_NAME),
             HttpHeaderFieldNamesProvider()
         )
 

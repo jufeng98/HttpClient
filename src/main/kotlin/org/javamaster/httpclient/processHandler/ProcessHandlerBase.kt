@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.processHandler
 
 import com.intellij.execution.process.ProcessHandler
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
@@ -11,6 +12,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiPlainTextFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
@@ -35,7 +37,6 @@ import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
-import org.javamaster.httpclient.psi.impl.HttpVariableNameImpl
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.service.RunHttpFileService
 import org.javamaster.httpclient.ui.HttpDashboardForm
@@ -291,57 +292,53 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
         runReadAction {
             if (e is UrlUnresolvedVariableException) {
-                if (createUrlActionNotify(e.url)) return@runReadAction
+                urlActionNotify(e.url)
             } else if (e is BodyUnresolvedVariableException) {
                 bodyActionNotify(e.variableName)
-                return@runReadAction
             } else if (e is HeaderUnresolvedVariableException) {
                 headerActionNotify(e.variableName)
-                return@runReadAction
+            } else {
+                NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
             }
-
-            NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
         }
 
         detachProcess()
     }
 
-    private fun createUrlActionNotify(url: String): Boolean {
+    private fun urlActionNotify(url: String) {
         val idxStart = url.indexOf(VAR_BRACE_START)
-        if (idxStart == -1) return false
+        if (idxStart == -1) {
+            actionNotify("unknown", httpMethod)
+            return
+        }
 
         val idxEnd = url.indexOf(VAR_BRACE_END, idxStart)
-        if (idxEnd == -1) return false
+        if (idxEnd == -1) {
+            actionNotify("unknown", httpMethod)
+            return
+        }
 
         val variableName = url.substring(idxStart + VAR_BRACE_START.length, idxEnd)
 
-        val element = PsiTreeUtil.findChildrenOfType(requestTarget, HttpVariableName::class.java)
-            .firstOrNull { it.text == variableName } as? HttpVariableNameImpl? ?: return false
+        val varElement = PsiTreeUtil.findChildrenOfType(requestTarget, HttpVariableName::class.java)
+            .firstOrNull { it.text == variableName }
+        if (varElement == null) {
+            actionNotify(variableName, httpMethod)
+            return
+        }
 
-        actionNotify(variableName, httpFile.virtualFile, httpDocument, element, element.textOffset, false)
-
-        return true
+        actionNotify(variableName, varElement)
     }
 
     private fun headerActionNotify(variableName: String) {
-        val header = request.header!!
-
-        val element: PsiElement
-        val offset: Int
-        val fake: Boolean
-
-        val idx = header.text.indexOf("{{$variableName}}")
-        if (idx != -1) {
-            element = header
-            offset = header.textOffset + idx + VAR_BRACE_START.length
-            fake = true
-        } else {
-            element = httpMethod
-            offset = httpMethod.textOffset
-            fake = false
+        val varElement = PsiTreeUtil.findChildrenOfType(request.header, HttpVariableName::class.java)
+            .firstOrNull { it.text == variableName }
+        if (varElement == null) {
+            actionNotify(variableName, httpMethod)
+            return
         }
 
-        actionNotify(variableName, httpFile.virtualFile, httpDocument, element, offset, fake)
+        actionNotify(variableName, varElement)
     }
 
     private fun bodyActionNotify(variableName: String) {
@@ -353,61 +350,65 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         val inputFile = requestMessagesGroup?.inputFile
 
         if (messageBody != null) {
-            val element: PsiElement
-            val offset: Int
-            val fake: Boolean
-
-            val idx = messageBody.text.indexOf("{{$variableName}}")
-            if (idx != -1) {
-                element = messageBody
-                offset = messageBody.textOffset + idx + VAR_BRACE_START.length
-                fake = true
-            } else {
-                element = httpMethod
-                offset = httpMethod.textOffset
-                fake = false
+            val injectedPsiFiles = InjectedLanguageManager.getInstance(project).getInjectedPsiFiles(messageBody)
+            val injectedPsiTextFiles = injectedPsiFiles?.filter { it.first is PsiPlainTextFile }
+            if (injectedPsiTextFiles == null) {
+                actionNotify(variableName, httpMethod)
+                return
             }
 
-            actionNotify(variableName, httpFile.virtualFile, httpDocument, element, offset, fake)
+            if (injectedPsiFiles.size != injectedPsiTextFiles.size) {
+                val element = injectedPsiTextFiles.firstOrNull { it.first.text == "{{$variableName}}" }?.first
+                if (element != null) {
+                    actionNotify(variableName, element)
+                    return
+                }
+            }
+
+            val idx = messageBody.text.indexOf("{{$variableName}}")
+            if (idx == -1) {
+                actionNotify(variableName, httpMethod)
+                return
+            }
+
+            val element = messageBody
+            val offset = messageBody.textOffset + idx + VAR_BRACE_START.length
+
+            actionNotify(variableName, httpFile.virtualFile, httpDocument, element, offset)
         } else if (inputFile != null) {
             var filePathStr = variableResolver.resolve(inputFile.filePath!!.text)
             val path = constructFilePath(filePathStr, variableResolver.httpFileParentPath)
             var file = LocalFileSystem.getInstance().findFileByPath(path)!!
             val doc = FileDocumentManager.getInstance().getDocument(file)!!
 
-            val element: PsiElement
-            val offset: Int
-            val fake: Boolean
-
             val idx = doc.text.indexOf("{{$variableName}}")
-            if (idx != -1) {
-                element = inputFile
-                offset = idx + VAR_BRACE_START.length
-                fake = true
-            } else {
-                element = httpMethod
-                offset = httpMethod.textOffset
-                fake = false
+            if (idx == -1) {
+                actionNotify(variableName, httpMethod)
+                return
             }
 
-            actionNotify(variableName, file, doc, element, offset, fake)
+            val element = inputFile
+            val offset = idx + VAR_BRACE_START.length
+
+            actionNotify(variableName, file, doc, element, offset)
         } else if (multipartMessage != null) {
-            val element: PsiElement
-            val offset: Int
-            val fake: Boolean
+            val varElement = PsiTreeUtil.findChildrenOfType(multipartMessage, HttpVariableName::class.java)
+                .firstOrNull { it.text == variableName }
+            if (varElement != null) {
+                actionNotify(variableName, varElement)
+                return
+            }
 
             val idx = multipartMessage.text.indexOf("{{$variableName}}")
-            if (idx != -1) {
-                element = multipartMessage
-                offset = multipartMessage.textOffset + idx + VAR_BRACE_START.length
-                fake = true
-            } else {
-                element = httpMethod
-                offset = httpMethod.textOffset
-                fake = false
+            if (idx == -1) {
+                actionNotify(variableName, httpMethod)
+                return
             }
 
-            actionNotify(variableName, httpFile.virtualFile, httpDocument, element, offset, fake)
+            val element = multipartMessage
+            val offset = multipartMessage.textOffset + idx + VAR_BRACE_START.length
+
+            actionNotify(variableName, httpFile.virtualFile, httpDocument, element, offset)
         }
     }
 
@@ -417,19 +418,39 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         doc: Document,
         psiElement: PsiElement,
         offset: Int,
-        fake: Boolean,
     ) {
         val lineNumber = doc.getLineNumber(offset)
 
         val lineStartOffset = doc.getLineStartOffset(lineNumber)
         val column = offset - lineStartOffset
 
-        val element = if (fake) FakeUnsolvedVariableElement(offset, variableName, file, psiElement) else psiElement
+        val element = FakeUnsolvedVariableElement(offset, variableName, file, psiElement)
 
         val content = nls("goto.detail", "${file.name}:${lineNumber + 1}:${column + 1}")
 
         val actionJumpTo = NotificationAction.createSimple(content) {
             runInEdt { if (element.isValid) (element as Navigatable).navigate(true) }
+        }
+
+        NotifyUtil.notifyCornerError(
+            project, nls("invalid.request", variableName, tabName), actionJumpTo
+        )
+    }
+
+    private fun actionNotify(variableName: String, psiElement: PsiElement) {
+        val file = psiElement.containingFile!!
+        val doc = PsiDocumentManager.getInstance(project).getDocument(file)!!
+
+        val offset = psiElement.textOffset
+        val lineNumber = doc.getLineNumber(offset)
+
+        val lineStartOffset = doc.getLineStartOffset(lineNumber)
+        val column = offset - lineStartOffset
+
+        val content = nls("goto.detail", "${file.name}:${lineNumber + 1}:${column + 1}")
+
+        val actionJumpTo = NotificationAction.createSimple(content) {
+            runInEdt { if (psiElement.isValid) (psiElement as Navigatable).navigate(true) }
         }
 
         NotifyUtil.notifyCornerError(
