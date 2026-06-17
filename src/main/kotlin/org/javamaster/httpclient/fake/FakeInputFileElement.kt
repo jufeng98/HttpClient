@@ -3,24 +3,24 @@ package org.javamaster.httpclient.fake
 import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.FakePsiElement
-import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpMessageBody
+import org.javamaster.httpclient.psi.HttpInputFile
 
 /**
  * @author yudong
  */
-class FakeVariableElement(
+class FakeInputFileElement(
     val offset: Int,
     private val variableName: String,
-    private val httpFile: HttpFile,
-    private val messageBody: HttpMessageBody,
+    private val file: VirtualFile,
+    private val inputFile: HttpInputFile,
 ) : FakePsiElement() {
-    private val textRange = messageBody.textRange
+    private val textRange = inputFile.textRange
 
     override fun isValid(): Boolean {
-        return messageBody.isValid && messageBody.textRange == textRange
+        return inputFile.isValid && inputFile.textRange == textRange
     }
 
     override fun canNavigate(): Boolean {
@@ -28,9 +28,9 @@ class FakeVariableElement(
     }
 
     override fun navigate(requestFocus: Boolean) {
-        val fileEditorManager = FileEditorManager.getInstance(httpFile.project)
+        val fileEditorManager = FileEditorManager.getInstance(inputFile.project)
 
-        val editors = fileEditorManager.openFile(httpFile.virtualFile, requestFocus)
+        val editors = fileEditorManager.openFile(file, requestFocus)
         if (editors.isEmpty()) {
             return
         }
@@ -43,7 +43,7 @@ class FakeVariableElement(
     }
 
     override fun getParent(): PsiElement {
-        return messageBody
+        return inputFile
     }
 
     override fun getName(): String {

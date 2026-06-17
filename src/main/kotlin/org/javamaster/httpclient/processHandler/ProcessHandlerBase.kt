@@ -4,6 +4,8 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
@@ -16,6 +18,7 @@ import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.exception.BodyVariableException
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.exception.UrlVariableException
+import org.javamaster.httpclient.fake.FakeInputFileElement
 import org.javamaster.httpclient.fake.FakeVariableElement
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
@@ -31,7 +34,7 @@ import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.service.RunHttpFileService
 import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.*
-import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
+import org.javamaster.httpclient.utils.HttpUtils.constructFilePath
 import org.javamaster.httpclient.utils.HttpUtils.runReadAction
 import java.io.OutputStream
 import java.net.http.HttpClient.Version
@@ -236,7 +239,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         if (outPutFilePath != null && httpInfo.byteArray != null) {
             var path = variableResolver.resolve(outPutFilePath!!)
 
-            path = HttpUtils.constructFilePath(path, parentPath)
+            path = constructFilePath(path, parentPath)
 
             val saveResult = ResUtils.saveResBodyToFile(path, httpInfo.byteArray)
 
@@ -280,17 +283,19 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
         runInEdt { httpDashboardForm.resetDashboardForm() }
 
-        if (e is UrlVariableException) {
-            val url = e.url
-            if (!createUrlActionNotify(url)) {
+        runReadAction {
+            if (e is UrlVariableException) {
+                val url = e.url
+                if (!createUrlActionNotify(url)) {
+                    NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
+                }
+            } else if (e is BodyVariableException) {
+                if (!createBodyActionNotify(e.variableName)) {
+                    NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
+                }
+            } else {
                 NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
             }
-        } else if (e is BodyVariableException) {
-            if (!createBodyActionNotify(e.variableName)) {
-                NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
-            }
-        } else {
-            NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
         }
 
         detachProcess()
@@ -305,16 +310,14 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
         val variableName = url.substring(idxStart + 2, idxEnd)
 
-        val nameElement = computeReadAction {
-            PsiTreeUtil.findChildrenOfType(requestTarget, HttpVariableName::class.java)
-                .firstOrNull { it.text == variableName } as? HttpVariableNameImpl?
-        } ?: return false
+        val nameElement = PsiTreeUtil.findChildrenOfType(requestTarget, HttpVariableName::class.java)
+            .firstOrNull { it.text == variableName } as? HttpVariableNameImpl? ?: return false
 
         val offset = nameElement.textOffset
         val lineNumber = httpDocument.getLineNumber(offset)
         val lineStartOffset = httpDocument.getLineStartOffset(lineNumber)
         val column = offset - lineStartOffset
-        val content = "Goto ${httpFile.name}:${lineNumber + 1}:${column + 1}"
+        val content = nls("goto.detail", "${httpFile.name}:${lineNumber + 1}:${column + 1}")
 
         val actionJumpTo = NotificationAction.createSimple(content) {
             runInEdt { if (nameElement.isValid) nameElement.navigate(true) }
@@ -328,40 +331,69 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     }
 
     private fun createBodyActionNotify(variableName: String): Boolean {
-        val nameElement = computeReadAction {
-            val messageBody = request.body?.requestMessagesGroup?.messageBody
-            if (messageBody != null) {
-                val idx = messageBody.text.indexOf("{{$variableName}}")
-                if (idx == -1) {
-                    return@computeReadAction null
-                }
+        val requestMessagesGroup = request.body?.requestMessagesGroup
+        val messageBody = requestMessagesGroup?.messageBody
+        val inputFile = requestMessagesGroup?.inputFile
 
-                val offset = messageBody.textOffset + idx + 2
-                val lineNumber = httpDocument.getLineNumber(offset)
-
-                val lineStartOffset = httpDocument.getLineStartOffset(lineNumber)
-                val column = offset - lineStartOffset
-
-                return@computeReadAction FakeVariableElement(
-                    lineNumber, column, offset, variableName, httpFile, messageBody
-                )
+        if (messageBody != null) {
+            val idx = messageBody.text.indexOf("{{$variableName}}")
+            if (idx == -1) {
+                return false
             }
 
-            null
-        } ?: return false
+            val offset = messageBody.textOffset + idx + 2
+            val lineNumber = httpDocument.getLineNumber(offset)
 
-        val lineNumber = nameElement.lineNumber
-        val column = nameElement.column
-        val content = nls("goto.detail", "${httpFile.name}:${lineNumber + 1}:${column + 1}")
+            val lineStartOffset = httpDocument.getLineStartOffset(lineNumber)
+            val column = offset - lineStartOffset
 
-        val actionJumpTo = NotificationAction.createSimple(content) {
-            runInEdt { if (nameElement.isValid) nameElement.navigate(true) }
+            val fakeVariableElement = FakeVariableElement(
+                offset, variableName, httpFile, messageBody
+            )
+
+            val content = nls("goto.detail", "${httpFile.name}:${lineNumber + 1}:${column + 1}")
+
+            val actionJumpTo = NotificationAction.createSimple(content) {
+                runInEdt { if (fakeVariableElement.isValid) fakeVariableElement.navigate(true) }
+            }
+
+            NotifyUtil.notifyCornerError(
+                project, nls("invalid.request", variableName, tabName), actionJumpTo
+            )
+        } else if (inputFile != null) {
+            var filePathStr = variableResolver.resolve(inputFile.filePath?.text ?: return false)
+
+            val path = constructFilePath(filePathStr, variableResolver.httpFileParentPath)
+
+            var file = LocalFileSystem.getInstance().findFileByPath(path) ?: return false
+
+            val doc = FileDocumentManager.getInstance().getDocument(file) ?: return false
+
+            val idx = doc.text.indexOf("{{$variableName}}")
+            if (idx == -1) {
+                return false
+            }
+
+            val offset = idx + 2
+            val lineNumber = doc.getLineNumber(offset)
+
+            val lineStartOffset = doc.getLineStartOffset(lineNumber)
+            val column = offset - lineStartOffset
+
+            val fakeInputFileElement = FakeInputFileElement(
+                offset, variableName, file, inputFile
+            )
+
+            val content = nls("goto.detail", "${file.name}:${lineNumber + 1}:${column + 1}")
+
+            val actionJumpTo = NotificationAction.createSimple(content) {
+                runInEdt { if (fakeInputFileElement.isValid) fakeInputFileElement.navigate(true) }
+            }
+
+            NotifyUtil.notifyCornerError(
+                project, nls("invalid.request", variableName, tabName), actionJumpTo
+            )
         }
-
-        NotifyUtil.notifyCornerError(
-            project, nls("invalid.request", variableName, tabName),
-            actionJumpTo
-        )
 
         return true
     }

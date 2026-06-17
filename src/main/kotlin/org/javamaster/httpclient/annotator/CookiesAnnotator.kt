@@ -24,6 +24,9 @@ class CookiesAnnotator : Annotator {
 
         val value = element.date.text
         if (value == "-1") {
+            holder.newAnnotation(HighlightSeverity.INFORMATION, "Cookie never expired")
+                .range(element.date)
+                .create()
             return
         }
 
