@@ -89,7 +89,7 @@ class ReqUtils {
                     @Suppress("UNCHECKED_CAST")
                     val list = reqBody as MutableList<Triple<ByteArray?, String?, ContentType?>>
 
-                    list.filter { it.first != null }.map { it.first!! }.reduce { a, b -> a + b }
+                    list.mapNotNull { it.first }.reduce { a, b -> a + b }
                 }
 
                 else -> {
