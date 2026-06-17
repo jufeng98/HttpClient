@@ -5,4 +5,4 @@ import java.net.URISyntaxException
 /**
  * @author yudong
  */
-class UrlVariableException(val url: String, cause: URISyntaxException) : Exception(cause)
+class UrlUnresolvedVariableException(val url: String, cause: URISyntaxException) : Exception(cause)

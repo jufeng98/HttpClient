@@ -6,21 +6,20 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.FakePsiElement
-import org.javamaster.httpclient.psi.HttpInputFile
 
 /**
  * @author yudong
  */
-class FakeInputFileElement(
+class FakeUnsolvedVariableElement(
     val offset: Int,
     private val variableName: String,
     private val file: VirtualFile,
-    private val inputFile: HttpInputFile,
+    private val psiElement: PsiElement,
 ) : FakePsiElement() {
-    private val textRange = inputFile.textRange
+    private val textRange = psiElement.textRange
 
     override fun isValid(): Boolean {
-        return inputFile.isValid && inputFile.textRange == textRange
+        return psiElement.isValid && psiElement.textRange == textRange
     }
 
     override fun canNavigate(): Boolean {
@@ -28,7 +27,7 @@ class FakeInputFileElement(
     }
 
     override fun navigate(requestFocus: Boolean) {
-        val fileEditorManager = FileEditorManager.getInstance(inputFile.project)
+        val fileEditorManager = FileEditorManager.getInstance(psiElement.project)
 
         val editors = fileEditorManager.openFile(file, requestFocus)
         if (editors.isEmpty()) {
@@ -43,7 +42,7 @@ class FakeInputFileElement(
     }
 
     override fun getParent(): PsiElement {
-        return inputFile
+        return psiElement
     }
 
     override fun getName(): String {

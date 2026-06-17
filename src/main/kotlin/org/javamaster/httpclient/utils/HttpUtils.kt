@@ -23,7 +23,7 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
-import org.javamaster.httpclient.exception.HeaderVariableException
+import org.javamaster.httpclient.exception.HeaderUnresolvedVariableException
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
@@ -131,7 +131,7 @@ object HttpUtils {
                         if (idxStart != -1) {
                             val idxEnd = content.indexOf(VAR_BRACE_END, idxStart)
                             if (idxEnd != -1) {
-                                throw HeaderVariableException(
+                                throw HeaderUnresolvedVariableException(
                                     value.substring(
                                         idxStart + VAR_BRACE_START.length, idxEnd
                                     )

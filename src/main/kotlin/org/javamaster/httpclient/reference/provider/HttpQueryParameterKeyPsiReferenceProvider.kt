@@ -19,9 +19,9 @@ class HttpQueryParameterKeyPsiReferenceProvider : PsiReferenceProvider() {
 
         val request = PsiTreeUtil.getParentOfType(queryParameterKey, HttpRequest::class.java)!!
 
-        val references = request.requestTarget?.pathAbsolute?.references ?: return emptyArray()
+        val references = request.requestTarget?.pathAbsolute?.references ?: emptyArray()
         if (references.isEmpty()) {
-            return emptyArray()
+            return references
         }
 
         val controllerMethod = references[0].resolve() as PsiMethod? ?: return emptyArray()

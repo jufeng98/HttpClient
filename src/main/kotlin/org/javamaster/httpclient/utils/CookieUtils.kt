@@ -9,7 +9,7 @@ import com.intellij.psi.util.PsiUtil
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
-import org.javamaster.httpclient.exception.UrlVariableException
+import org.javamaster.httpclient.exception.UrlUnresolvedVariableException
 import org.javamaster.httpclient.factory.CookiePsiFactory
 import org.javamaster.httpclient.js.support.jsObject.Cookie
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
@@ -39,7 +39,7 @@ object CookieUtils {
         try {
             uri = URI(url)
         } catch (e: URISyntaxException) {
-            throw UrlVariableException(url, e)
+            throw UrlUnresolvedVariableException(url, e)
         }
 
         val domain = uri.host

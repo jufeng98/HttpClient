@@ -5,7 +5,7 @@ import com.intellij.psi.PsiDocumentManager
 import org.intellij.markdown.html.urlEncode
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
-import org.javamaster.httpclient.exception.BodyVariableException
+import org.javamaster.httpclient.exception.BodyUnresolvedVariableException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
@@ -13,6 +13,7 @@ import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import java.net.http.HttpRequest.BodyPublishers
+import java.nio.charset.StandardCharsets
 
 /**
  * @author yudong
@@ -100,22 +101,54 @@ class ReqUtils {
             if (reqBody is String) {
                 val resolved = resolver.resolve(reqBody)
 
-                checkVariable(resolved)
+                val variableName = extractVariable(resolved)
+                if (variableName != null) {
+                    throw BodyUnresolvedVariableException(variableName)
+                }
+
+                return resolved
+            }
+
+            if (reqBody is MutableList<*>) {
+                @Suppress("UNCHECKED_CAST")
+                val list = reqBody as MutableList<Pair<ByteArray, String>>
+
+                val newList = mutableListOf<Pair<ByteArray, String>>()
+
+                for (pair in list) {
+                    val content = pair.second
+
+                    var variableName = extractVariable(content)
+                    if (variableName == null) {
+                        newList.add(pair)
+                        continue
+                    }
+
+                    val resolved = resolver.resolve(content)
+
+                    variableName = extractVariable(resolved)
+                    if (variableName == null) {
+                        newList.add(Pair(resolved.toByteArray(StandardCharsets.UTF_8), resolved))
+                        continue
+                    }
+
+                    throw BodyUnresolvedVariableException(variableName)
+                }
+
+                return newList
             }
 
             return reqBody
         }
 
-        fun checkVariable(content: String): String {
+        fun extractVariable(content: String): String? {
             val idxStart = content.indexOf(VAR_BRACE_START)
-            if (idxStart == -1) return content
+            if (idxStart == -1) return null
 
             val idxEnd = content.indexOf(VAR_BRACE_END, idxStart)
-            if (idxEnd == -1) return content
+            if (idxEnd == -1) return null
 
-            val variableName = content.substring(idxStart + VAR_BRACE_START.length, idxEnd)
-
-            throw BodyVariableException(variableName)
+            return content.substring(idxStart + VAR_BRACE_START.length, idxEnd)
         }
 
         fun getReqBodyDesc(reqBody: Any?): MutableList<String> {
