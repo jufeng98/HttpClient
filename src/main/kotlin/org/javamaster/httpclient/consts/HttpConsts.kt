@@ -29,6 +29,8 @@ class HttpConsts {
         const val WEB_BOUNDARY = "boundary"
         const val SUCCESS = 0
         const val FAILED = 1
+        const val VAR_BRACE_START = "{{"
+        const val VAR_BRACE_END = "}}"
 
         val HTTP_CLIENT_ICON = NotNullLazyValue.createConstantValue(HttpIcons.FILE)
 

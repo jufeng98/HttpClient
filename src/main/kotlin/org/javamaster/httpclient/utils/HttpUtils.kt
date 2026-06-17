@@ -19,6 +19,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HeaderVariableException
@@ -125,11 +127,15 @@ object HttpUtils {
                         null
                     } else {
                         val content = variableResolver.resolve(value)
-                        val idxStart = content.indexOf("{{")
+                        val idxStart = content.indexOf(VAR_BRACE_START)
                         if (idxStart != -1) {
-                            val idxEnd = content.indexOf("}}", idxStart)
+                            val idxEnd = content.indexOf(VAR_BRACE_END, idxStart)
                             if (idxEnd != -1) {
-                                throw HeaderVariableException(value.substring(idxStart + 2, idxEnd))
+                                throw HeaderVariableException(
+                                    value.substring(
+                                        idxStart + VAR_BRACE_START.length, idxEnd
+                                    )
+                                )
                             }
                         }
 

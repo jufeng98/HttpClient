@@ -3,6 +3,8 @@ package org.javamaster.httpclient.utils
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import org.intellij.markdown.html.urlEncode
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
 import org.javamaster.httpclient.exception.BodyVariableException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.model.PreJsFile
@@ -105,13 +107,13 @@ class ReqUtils {
         }
 
         fun checkVariable(content: String): String {
-            val idxStart = content.indexOf("{{")
+            val idxStart = content.indexOf(VAR_BRACE_START)
             if (idxStart == -1) return content
 
-            val idxEnd = content.indexOf("}}", idxStart)
+            val idxEnd = content.indexOf(VAR_BRACE_END, idxStart)
             if (idxEnd == -1) return content
 
-            val variableName = content.substring(idxStart + 2, idxEnd)
+            val variableName = content.substring(idxStart + VAR_BRACE_START.length, idxEnd)
 
             throw BodyVariableException(variableName)
         }
@@ -202,7 +204,7 @@ class ReqUtils {
                 val list = it.split("=")
 
                 val oneSize = list.size == 1
-                if (oneSize && list[0].startsWith("{{")) {
+                if (oneSize && list[0].startsWith(VAR_BRACE_START)) {
                     return@joinToString list[0]
                 }
 

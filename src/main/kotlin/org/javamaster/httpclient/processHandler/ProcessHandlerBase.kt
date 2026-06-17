@@ -13,6 +13,8 @@ import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.consts.HttpConsts.Companion.FAILED
 import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
+import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.exception.BodyVariableException
@@ -308,13 +310,13 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     }
 
     private fun createUrlActionNotify(url: String): Boolean {
-        val idxStart = url.indexOf("{{")
+        val idxStart = url.indexOf(VAR_BRACE_START)
         if (idxStart == -1) return false
 
-        val idxEnd = url.indexOf("}}", idxStart)
+        val idxEnd = url.indexOf(VAR_BRACE_END, idxStart)
         if (idxEnd == -1) return false
 
-        val variableName = url.substring(idxStart + 2, idxEnd)
+        val variableName = url.substring(idxStart + VAR_BRACE_START.length, idxEnd)
 
         val nameElement = PsiTreeUtil.findChildrenOfType(requestTarget, HttpVariableName::class.java)
             .firstOrNull { it.text == variableName } as? HttpVariableNameImpl? ?: return false
