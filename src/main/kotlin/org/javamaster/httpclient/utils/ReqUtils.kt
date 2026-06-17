@@ -1,10 +1,12 @@
 package org.javamaster.httpclient.utils
 
+import com.google.common.net.HttpHeaders
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import org.intellij.markdown.html.urlEncode
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
+import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.BodyUnresolvedVariableException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.model.PreJsFile
@@ -115,8 +117,21 @@ class ReqUtils {
 
                 val newList = mutableListOf<Pair<ByteArray, String>>()
 
+                var contentType = ""
                 for (pair in list) {
                     val content = pair.second
+                    val trimStart = content.trimStart()
+                    if (trimStart.startsWith(HttpHeaders.CONTENT_TYPE, true)) {
+                        contentType = trimStart.substring(HttpHeaders.CONTENT_TYPE.length + 1)
+
+                        newList.add(pair)
+                        continue
+                    }
+
+                    if (!SimpleTypeEnum.isTextContentType(contentType)) {
+                        newList.add(pair)
+                        continue
+                    }
 
                     var variableName = extractVariable(content)
                     if (variableName == null) {
