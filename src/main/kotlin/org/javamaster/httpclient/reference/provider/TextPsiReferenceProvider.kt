@@ -38,7 +38,7 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
         val request = PsiTreeUtil.getParentOfType(injectionHost, HttpRequest::class.java)!!
 
         if (request.contentType == ContentType.APPLICATION_FORM_URLENCODED
-            || (parent is HttpMultipartField && parent.contentType == ContentType.APPLICATION_FORM_URLENCODED)
+            || (parent is HttpMultipartField && parent.contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType)
         ) {
             val query = UrlEncodedLazyFileElement.parse(text) ?: return emptyArray()
 

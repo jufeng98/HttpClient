@@ -182,6 +182,14 @@ object HttpUtils {
         return null
     }
 
+    fun isTxtContentType(contentType: ContentType?): Boolean {
+        if (contentType == null) {
+            return false
+        }
+
+        return SimpleTypeEnum.isTextContentType(contentType.mimeType)
+    }
+
     private fun isTxtContentType(header: HttpHeader?): Boolean {
         if (header == null) {
             return true
@@ -207,10 +215,11 @@ object HttpUtils {
         header: HttpHeader?,
         contentType: ContentType?,
         paramMap: Map<String, String>,
-    ): Any? {
+    ): Triple<ByteArray?, String?, ContentType?>? {
         requestMessagesGroup ?: return null
 
-        val formUrlEncodeReq = contentType == ContentType.APPLICATION_FORM_URLENCODED
+        val formUrlEncodeReq = contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
+
         val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
 
         var reqStr: String? = null
@@ -228,7 +237,11 @@ object HttpUtils {
             }
         }
 
-        val filePath = requestMessagesGroup.inputFile?.filePath ?: return reqStr
+        val filePath = requestMessagesGroup.inputFile?.filePath
+        if (filePath == null) {
+            val charset = contentType?.charset ?: StandardCharsets.UTF_8
+            return Triple(reqStr?.toByteArray(charset), reqStr, contentType)
+        }
 
         var filePathStr = variableResolver.resolve(filePath.text)
 
@@ -251,7 +264,8 @@ object HttpUtils {
 
             reqStr += variableResolver.resolve(str)
 
-            return reqStr
+            val charset = contentType?.charset ?: StandardCharsets.UTF_8
+            return Triple(reqStr.toByteArray(charset), reqStr, contentType)
         } else {
             val byteArray = VirtualFileUtils.readNewestBytes(file)
 
@@ -259,7 +273,7 @@ object HttpUtils {
 
             val desc = NlsBundle.nls("binary.body.desc", size, file.absolutePath)
 
-            return Pair(byteArray, desc)
+            return Triple(byteArray, desc, contentType)
         }
     }
 
@@ -268,13 +282,13 @@ object HttpUtils {
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
         paramMap: Map<String, String>,
-    ): MutableList<Pair<ByteArray, String>> {
-        val byteArrays = mutableListOf<Pair<ByteArray, String>>()
+    ): MutableList<Triple<ByteArray?, String?, ContentType?>> {
+        val list = mutableListOf<Triple<ByteArray?, String?, ContentType?>>()
 
         httpMultipartMessage.multipartFieldList
             .forEach {
                 val lineBoundary = "--$boundary$CR_LF"
-                byteArrays.add(Pair(lineBoundary.toByteArray(), lineBoundary))
+                list.add(Triple(lineBoundary.toByteArray(), lineBoundary, null))
 
                 val header = it.header
 
@@ -291,39 +305,36 @@ object HttpUtils {
                             }
 
                             val headerLine = "$headerName: $value$CR_LF"
-                            byteArrays.add(Pair(headerLine.toByteArray(StandardCharsets.UTF_8), headerLine))
+                            list.add(Triple(headerLine.toByteArray(StandardCharsets.UTF_8), headerLine, null))
                         }
                 }
 
-                byteArrays.add(Pair(CR_LF.toByteArray(StandardCharsets.UTF_8), CR_LF))
+                list.add(Triple(CR_LF.toByteArray(StandardCharsets.UTF_8), CR_LF, null))
 
-                val content = handleOrdinaryContent(
-                    it.requestMessagesGroup,
-                    variableResolver,
-                    it.header,
-                    it.contentType,
-                    paramMap
+                val triple = handleOrdinaryContent(
+                    it.requestMessagesGroup, variableResolver, it.header, it.contentType, paramMap
                 )
 
-                if (content is String) {
-                    val tmpContent = content + CR_LF
+                if (triple != null) {
+                    var first = triple.first
+                    if (first != null) {
+                        val charset = triple.third?.charset ?: StandardCharsets.UTF_8
+                        first += CR_LF.toByteArray(charset)
+                    }
 
-                    byteArrays.add(Pair(tmpContent.toByteArray(StandardCharsets.UTF_8), tmpContent))
-                } else if (content is Pair<*, *>) {
-                    @Suppress("UNCHECKED_CAST")
-                    val pair = content as Pair<ByteArray, String>
+                    var second = triple.second
+                    if (second != null) {
+                        second += CR_LF
+                    }
 
-                    val bytes = pair.first
-                    val desc = pair.second
-
-                    byteArrays.add(Pair(bytes + CR_LF.toByteArray(StandardCharsets.UTF_8), desc + CR_LF))
+                    list.add(Triple(first, second, triple.third))
                 }
             }
 
         val endBoundary = "--$boundary--"
-        byteArrays.add(Pair(endBoundary.toByteArray(StandardCharsets.UTF_8), endBoundary))
+        list.add(Triple(endBoundary.toByteArray(StandardCharsets.UTF_8), endBoundary, null))
 
-        return byteArrays
+        return list
     }
 
     fun handleOrdinaryContentCurl(
@@ -412,7 +423,7 @@ object HttpUtils {
                 if (messageBody != null) {
                     var content = variableResolver.resolve(messageBody.text)
 
-                    val formUrlEncodeReq = it.contentType == ContentType.APPLICATION_FORM_URLENCODED
+                    val formUrlEncodeReq = it.contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
                     if (formUrlEncodeReq) {
                         content = handleQueryParam(content)
                     }
@@ -745,6 +756,33 @@ object HttpUtils {
         }
 
         return psiField
+    }
+
+    fun getContentType(contentTypeHeader: String): ContentType {
+        val split = contentTypeHeader.split(";")
+        if (split.size == 1) {
+            return getByMimeType(split[0])
+        }
+
+        val strList = split[1].split("=")
+        if (strList.size != 2) {
+            return ContentType.getByMimeType(split[0])
+        }
+
+        if (strList[0] != "charset") {
+            return ContentType.getByMimeType(split[0])
+        }
+
+        return ContentType.getByMimeType(split[0]).withCharset(strList[1])
+    }
+
+    private fun getByMimeType(mimeType: String): ContentType {
+        val contentType = ContentType.getByMimeType(mimeType)
+        if (contentType != null) {
+            return contentType
+        }
+
+        return ContentType.create(mimeType)
     }
 
     fun getActiveValidProject(): Project? {

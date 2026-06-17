@@ -45,11 +45,11 @@ class MessageBodyInjectionContributor : MultiHostInjector {
             contentType = tmpParent.contentType
         }
 
-        tryInject(contentType, host, registrar)
+        tryInject(contentType?.mimeType, host, registrar)
     }
 
-    private fun tryInject(contentType: ContentType?, host: PsiLanguageInjectionHost, registrar: MultiHostRegistrar) {
-        val mimeType = contentType?.mimeType ?: ContentType.TEXT_PLAIN.mimeType
+    private fun tryInject(contentType: String?, host: PsiLanguageInjectionHost, registrar: MultiHostRegistrar) {
+        val mimeType = contentType ?: ContentType.TEXT_PLAIN.mimeType
 
         val languages = Language.findInstancesByMimeType(mimeType)
         val language = ContainerUtil.getFirstItem(languages) ?: PlainTextLanguage.INSTANCE

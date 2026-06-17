@@ -193,7 +193,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         }
 
         if (!reqHttpHeaders.contains(HttpHeaders.ACCEPT_ENCODING)) {
-            reqHttpHeaders.add(HttpHeaders.ACCEPT_ENCODING, "br, deflate, gzip, x-gzip")
+            reqHttpHeaders.add(HttpHeaders.ACCEPT_ENCODING, "deflate, gzip, x-gzip")
         }
 
         if (!reqHttpHeaders.contains(HttpHeaders.ACCEPT)) {

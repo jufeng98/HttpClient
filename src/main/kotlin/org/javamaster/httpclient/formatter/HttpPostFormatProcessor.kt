@@ -43,12 +43,12 @@ class HttpPostFormatProcessor : PostFormatProcessor {
                 var parent = it.parent?.parent ?: return@filter false
 
                 if (parent is HttpMultipartField) {
-                    return@filter parent.contentType == ContentType.APPLICATION_FORM_URLENCODED
+                    return@filter parent.contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
                 }
 
                 parent = parent.parent
                 if (parent is HttpRequest) {
-                    return@filter parent.contentType == ContentType.APPLICATION_FORM_URLENCODED
+                    return@filter parent.contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
                 }
 
                 false

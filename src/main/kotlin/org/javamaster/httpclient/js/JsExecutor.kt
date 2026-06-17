@@ -80,12 +80,12 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         val environment = reqInfo.environment
         environment["selectedEnv"] = selectedEnv ?: ""
 
-        val jsBody = ReqUtils.convertReqBody(reqInfo.reqBody)
+        val reqBodyInJs = ReqUtils.convertReqBody(reqInfo.reqBody)
 
         request = HttpClientRequest(
             environment,
             RequestUrl(url, rawUrl),
-            RequestBody(jsBody, rawBody),
+            RequestBody(reqBodyInJs, rawBody),
             method.name,
             RequestVariables(),
             fileScopeVariableMap,

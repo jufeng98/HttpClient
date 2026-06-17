@@ -11,6 +11,7 @@ import org.javamaster.httpclient.factory.HttpPsiFactory
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
 import org.javamaster.httpclient.utils.DubboUtils
+import org.javamaster.httpclient.utils.HttpUtils
 import java.net.http.HttpClient.Version
 
 /**
@@ -199,9 +200,9 @@ object HttpPsiImplUtil {
             return null
         }
 
-        val headerFieldValue = first.headerFieldValue?.firstChild?.text ?: return null
-        val value = headerFieldValue.split(";")[0]
-        return ContentType.getByMimeType(value)
+        val headerFieldValue = first.headerFieldValue?.text ?: return null
+
+        return HttpUtils.getContentType(headerFieldValue)
     }
 
     @JvmStatic

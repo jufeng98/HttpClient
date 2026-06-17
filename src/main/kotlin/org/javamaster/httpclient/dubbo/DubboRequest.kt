@@ -8,6 +8,7 @@ import com.alibaba.dubbo.rpc.service.GenericService
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiPrimitiveType
+import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.dubbo.support.HttpKeyGenerator
 import org.javamaster.httpclient.enums.ParamEnum
@@ -28,7 +29,7 @@ class DubboRequest(
     private val tabName: String,
     private val url: String,
     private val reqHeaderMap: LinkedMultiValueMap<String, String>,
-    private val reqBodyStr: Any?,
+    reqBody: Any?,
     private val httpReqDescList: MutableList<String>,
     module: Module?,
     project: Project,
@@ -59,8 +60,16 @@ class DubboRequest(
         val values = reqHeaderMap[DubboUtils.REGISTRY] ?: return@lazy null
         values[0]
     }
+    private val reqBodyStr = if (reqBody != null) {
+        @Suppress("UNCHECKED_CAST")
+        val triple = reqBody as Triple<ByteArray?, String?, ContentType?>
+
+        triple.second
+    } else {
+        null
+    }
     private val reqBodyMap: LinkedHashMap<*, *>? = if (reqBodyStr != null) {
-        gson.fromJson(reqBodyStr as String, LinkedHashMap::class.java)
+        gson.fromJson(reqBodyStr, LinkedHashMap::class.java)
     } else {
         null
     }
@@ -187,8 +196,8 @@ class DubboRequest(
 
         httpReqDescList.add(CR_LF)
 
-        if (reqBodyMap != null) {
-            httpReqDescList.add(reqBodyStr as String)
+        if (reqBodyStr != null) {
+            httpReqDescList.add(reqBodyStr)
         }
 
         return CompletableFuture.supplyAsync {

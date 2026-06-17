@@ -21,16 +21,17 @@ import javax.swing.JComponent
  * @author yudong
  */
 class ContentTypeActionGroup(private val editor: Editor) {
-    private val textAction = TextAction(setOf(ContentType.TEXT_PLAIN))
-    private val jsonAction = JsonAction(setOf(ContentType.APPLICATION_JSON))
-    private val xmlAction = XmlAction(setOf(ContentType.TEXT_XML, ContentType.APPLICATION_XML))
-    private val htmlAction = HtmlAction(setOf(ContentType.TEXT_HTML, ContentType.APPLICATION_XHTML_XML))
+    private val textAction = TextAction(setOf(ContentType.TEXT_PLAIN.mimeType))
+    private val jsonAction = JsonAction(setOf(ContentType.APPLICATION_JSON.mimeType))
+    private val xmlAction = XmlAction(setOf(ContentType.TEXT_XML.mimeType, ContentType.APPLICATION_XML.mimeType))
+    private val htmlAction =
+        HtmlAction(setOf(ContentType.TEXT_HTML.mimeType, ContentType.APPLICATION_XHTML_XML.mimeType))
 
     val actions = listOf(textAction, jsonAction, xmlAction, htmlAction)
 
-    private val allowContentTypes = mutableSetOf<ContentType>()
+    private val allowContentTypes = mutableSetOf<String>()
 
-    var contentType: ContentType?
+    var contentType: String?
 
     init {
         allowContentTypes.addAll(textAction.relateTypes)
@@ -41,7 +42,7 @@ class ContentTypeActionGroup(private val editor: Editor) {
         contentType = calContentType()
     }
 
-    private fun calContentType(): ContentType? {
+    private fun calContentType(): String? {
         val project = editor.project!!
         val document = editor.document
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document)
@@ -51,14 +52,14 @@ class ContentTypeActionGroup(private val editor: Editor) {
 
         val contentType = psiFile.getRequestBlocks()[0].request?.contentType ?: return null
 
-        if (!allowContentTypes.contains(contentType)) {
+        if (!allowContentTypes.contains(contentType.mimeType)) {
             return null
         }
 
-        return contentType
+        return contentType.mimeType
     }
 
-    private fun changeActionButtons(contentType: ContentType) {
+    private fun changeActionButtons(contentType: String) {
         this.contentType = contentType
 
         actions.forEach {
@@ -66,7 +67,7 @@ class ContentTypeActionGroup(private val editor: Editor) {
         }
     }
 
-    abstract inner class ContentTypeAction(val relateTypes: Set<ContentType>, text: String) :
+    abstract inner class ContentTypeAction(val relateTypes: Set<String>, text: String) :
         AnAction(text, null, null), CustomComponentAction {
 
         private lateinit var actionButtonWithText: ActionButtonWithText
@@ -79,7 +80,7 @@ class ContentTypeActionGroup(private val editor: Editor) {
             return actionButtonWithText
         }
 
-        fun changeActionButton(contentType: ContentType?) {
+        fun changeActionButton(contentType: String?) {
             if (contentType == null) {
                 actionButtonWithText.isEnabled = false
                 actionButtonWithText.presentation.icon = HttpIcons.BLANK
@@ -116,11 +117,11 @@ class ContentTypeActionGroup(private val editor: Editor) {
 
     }
 
-    private inner class TextAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "Text")
+    private inner class TextAction(relateTypes: Set<String>) : ContentTypeAction(relateTypes, "Text")
 
-    private inner class JsonAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "JSON")
+    private inner class JsonAction(relateTypes: Set<String>) : ContentTypeAction(relateTypes, "JSON")
 
-    private inner class XmlAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "XML")
+    private inner class XmlAction(relateTypes: Set<String>) : ContentTypeAction(relateTypes, "XML")
 
-    private inner class HtmlAction(relateTypes: Set<ContentType>) : ContentTypeAction(relateTypes, "HTML")
+    private inner class HtmlAction(relateTypes: Set<String>) : ContentTypeAction(relateTypes, "HTML")
 }

@@ -20,6 +20,7 @@ import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls
+import org.javamaster.httpclient.utils.DecompressUtils.decompressBodyBytes
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.JsonUtils.formatJson
@@ -55,14 +56,22 @@ object ResUtils {
 
     fun convertResponseBody(resBody: ByteArray, resHeaders: HttpHeaders): HttpResInfo {
         var bodyBytes = resBody
-        val contentType = resHeaders.firstValue(CONTENT_TYPE).getOrElse { ContentType.TEXT_PLAIN.mimeType }
+        val contentEncoding = resHeaders.firstValue(org.apache.http.HttpHeaders.CONTENT_ENCODING).getOrElse { null }
+        if (contentEncoding != null) {
+            bodyBytes = decompressBodyBytes(bodyBytes, contentEncoding)
+        }
 
-        val simpleTypeEnum = SimpleTypeEnum.convertContentType(contentType)
+        val contentTypeHeader = resHeaders.firstValue(CONTENT_TYPE).getOrElse { ContentType.TEXT_PLAIN.mimeType }
+
+        val contentType = HttpUtils.getContentType(contentTypeHeader)
+
+        val simpleTypeEnum = SimpleTypeEnum.convertContentType(contentType.mimeType)
 
         val bodyStr = if (simpleTypeEnum.binary) {
             null
         } else {
-            val str = String(bodyBytes, StandardCharsets.UTF_8)
+            val charset = contentType.charset ?: StandardCharsets.UTF_8
+            val str = String(bodyBytes, charset)
 
             if (simpleTypeEnum == SimpleTypeEnum.JSON) {
                 if (bodyBytes.size > RES_SIZE_LIMIT) {
@@ -82,7 +91,7 @@ object ResUtils {
             }
         }
 
-        return HttpResInfo(simpleTypeEnum, bodyBytes, bodyStr, contentType)
+        return HttpResInfo(simpleTypeEnum, bodyBytes, bodyStr, contentType.mimeType)
     }
 
     fun shouldRedirect(httpStatus: Int?, paramMap: Map<String, String>): Boolean {

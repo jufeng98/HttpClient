@@ -1,21 +1,23 @@
 package org.javamaster.httpclient.utils
 
-import com.google.common.net.HttpHeaders
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
+import org.apache.http.entity.ContentType
 import org.intellij.markdown.html.urlEncode
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
-import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.BodyUnresolvedVariableException
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import java.net.http.HttpRequest.BodyPublisher
 import java.net.http.HttpRequest.BodyPublishers
 import java.nio.charset.StandardCharsets
+import kotlin.collections.map
 
 /**
  * @author yudong
@@ -24,39 +26,40 @@ class ReqUtils {
 
     companion object {
 
-        fun convertToReqBodyPublisher(reqBody: Any?): Pair<java.net.http.HttpRequest.BodyPublisher, Long> {
+        fun convertToReqBodyPublisher(reqBody: Any?): Pair<BodyPublisher, Long> {
             if (reqBody == null) {
                 return Pair(BodyPublishers.noBody(), 0L)
             }
 
             var multipartLength = 0L
-            val bodyPublisher: java.net.http.HttpRequest.BodyPublisher
+            val bodyPublisher: BodyPublisher
 
             when (reqBody) {
-                is String -> {
-                    bodyPublisher = BodyPublishers.ofString(reqBody)
+                is Triple<*, *, *> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val triple = reqBody as Triple<ByteArray?, String?, ContentType?>
+
+                    val first = triple.first
+                    if (first != null) {
+                        bodyPublisher = BodyPublishers.ofByteArray(first)
+                    } else {
+                        bodyPublisher = BodyPublishers.noBody()
+                    }
                 }
 
-                is Pair<*, *> -> {
+                is MutableList<*> -> {
                     @Suppress("UNCHECKED_CAST")
-                    val pair = reqBody as Pair<ByteArray, String>
+                    val list = reqBody as MutableList<Triple<ByteArray?, String?, ContentType?>>
 
-                    bodyPublisher = BodyPublishers.ofByteArray(pair.first)
-                }
-
-                is List<*> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val list = reqBody as MutableList<Pair<ByteArray, String>>
-
-                    val byteArrays = list.map { it.first }
+                    val byteArrays = list.filter { it.first != null }.map { it.first }
 
                     bodyPublisher = BodyPublishers.ofByteArrays(byteArrays)
 
-                    multipartLength = byteArrays.sumOf { it.size.toLong() }
+                    multipartLength = byteArrays.sumOf { it?.size?.toLong() ?: 0 }
                 }
 
                 else -> {
-                    System.err.println(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
+                    logWarn(NlsBundle.nls("reqBody.unknown", reqBody.javaClass))
 
                     bodyPublisher = BodyPublishers.noBody()
                 }
@@ -70,23 +73,20 @@ class ReqUtils {
                 return null
             }
 
-            if (reqBody is String) {
-                return reqBody
-            }
-
             return when (reqBody) {
-                is Pair<*, *> -> {
+                is Triple<*, *, *> -> {
                     @Suppress("UNCHECKED_CAST")
-                    val pair = reqBody as Pair<ByteArray, String>
+                    val triple = reqBody as Triple<ByteArray?, String?, ContentType?>
 
-                    pair.first
+                    if (HttpUtils.isTxtContentType(triple.third)) {
+                        triple.second
+                    } else {
+                        triple.first
+                    }
                 }
 
                 is MutableList<*> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val list = reqBody as MutableList<Pair<ByteArray, String>>
-
-                    list.map { it.first }.reduce { a, b -> a + b }
+                    reqBody
                 }
 
                 else -> {
@@ -100,42 +100,52 @@ class ReqUtils {
                 return null
             }
 
-            if (reqBody is String) {
-                val resolved = resolver.resolve(reqBody)
-
-                val variableName = extractVariable(resolved)
-                if (variableName != null) {
-                    throw BodyUnresolvedVariableException(variableName)
-                }
-
-                return resolved
-            }
-
-            if (reqBody is MutableList<*>) {
+            if (reqBody is Triple<*, *, *>) {
                 @Suppress("UNCHECKED_CAST")
-                val list = reqBody as MutableList<Pair<ByteArray, String>>
+                val triple = reqBody as Triple<ByteArray?, String?, ContentType?>
 
-                val newList = mutableListOf<Pair<ByteArray, String>>()
+                val contentType = triple.third
+                if (HttpUtils.isTxtContentType(contentType)) {
+                    val second = triple.second
+                    if (second != null) {
+                        val resolved = resolver.resolve(second)
 
-                var contentType = ""
-                for (pair in list) {
-                    val content = pair.second
-                    val trimStart = content.trimStart()
-                    if (trimStart.startsWith(HttpHeaders.CONTENT_TYPE, true)) {
-                        contentType = trimStart.substring(HttpHeaders.CONTENT_TYPE.length + 1)
+                        val variableName = extractVariable(resolved)
+                        if (variableName != null) {
+                            throw BodyUnresolvedVariableException(variableName)
+                        }
 
-                        newList.add(pair)
+                        val charset = contentType?.charset ?: StandardCharsets.UTF_8
+                        return Triple(resolved.toByteArray(charset), resolved, contentType)
+                    } else {
+                        return triple
+                    }
+                } else {
+                    return triple
+                }
+            } else if (reqBody is MutableList<*>) {
+                @Suppress("UNCHECKED_CAST")
+                val list = reqBody as MutableList<Triple<ByteArray?, String?, ContentType?>>
+
+                val newList = mutableListOf<Triple<ByteArray?, String?, ContentType?>>()
+
+                for (triple in list) {
+                    val contentType = triple.third
+
+                    if (!HttpUtils.isTxtContentType(contentType)) {
+                        newList.add(triple)
                         continue
                     }
 
-                    if (!SimpleTypeEnum.isTextContentType(contentType)) {
-                        newList.add(pair)
+                    val content = triple.second
+                    if (content == null) {
+                        newList.add(triple)
                         continue
                     }
 
                     var variableName = extractVariable(content)
                     if (variableName == null) {
-                        newList.add(pair)
+                        newList.add(triple)
                         continue
                     }
 
@@ -143,7 +153,8 @@ class ReqUtils {
 
                     variableName = extractVariable(resolved)
                     if (variableName == null) {
-                        newList.add(Pair(resolved.toByteArray(StandardCharsets.UTF_8), resolved))
+                        val charset = contentType?.charset ?: StandardCharsets.UTF_8
+                        newList.add(Triple(resolved.toByteArray(charset), resolved, contentType))
                         continue
                     }
 
@@ -167,42 +178,50 @@ class ReqUtils {
         }
 
         fun getReqBodyDesc(reqBody: Any?): MutableList<String> {
-            val maxSizeLimit = 50000
             val descList = mutableListOf<String>()
 
             when (reqBody) {
-                is String -> {
-                    if (reqBody.length > maxSizeLimit) {
-                        descList.add(
-                            reqBody.substring(0, maxSizeLimit) + "$CR_LF......(${NlsBundle.nls("content.truncated")})"
-                        )
-                    } else {
-                        descList.add(reqBody)
-                    }
-                }
-
-                is Pair<*, *> -> {
+                is Triple<*, *, *> -> {
                     @Suppress("UNCHECKED_CAST")
-                    val pair = reqBody as Pair<ByteArray, String>
+                    val triple = reqBody as Triple<ByteArray?, String?, ContentType?>
 
-                    descList.add(pair.second)
+                    descList.addAll(convertTriple(triple))
                 }
 
                 is List<*> -> {
                     @Suppress("UNCHECKED_CAST")
-                    val list = reqBody as MutableList<Pair<ByteArray, String>>
+                    val list = reqBody as MutableList< Triple<ByteArray?, String?, ContentType?>>
 
                     list.forEach {
-                        val desc = it.second
-
-                        val bodyDesc = if (desc.length > maxSizeLimit) {
-                            desc + "$CR_LF......(${NlsBundle.nls("content.truncated")})$CR_LF"
-                        } else {
-                            desc
-                        }
-
-                        descList.add(bodyDesc)
+                        descList.addAll(convertTriple(it))
                     }
+                }
+            }
+
+            return descList
+        }
+
+        private fun convertTriple(triple: Triple<ByteArray?, String?, ContentType?>): MutableList<String> {
+            val descList = mutableListOf<String>()
+
+            val maxSizeLimit = 50000
+
+            val first = triple.first
+            val second = triple.second
+            val third = triple.third
+            if (HttpUtils.isTxtContentType(third)) {
+                if (second != null) {
+                    if (second.length > maxSizeLimit) {
+                        val part =
+                            second.substring(0, maxSizeLimit) + "$CR_LF......(${NlsBundle.nls("content.truncated")})"
+                        descList.add(part)
+                    } else {
+                        descList.add(second)
+                    }
+                }
+            } else {
+                if (first != null) {
+                    descList.add(second!!)
                 }
             }
 

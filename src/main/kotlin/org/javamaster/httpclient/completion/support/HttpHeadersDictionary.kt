@@ -93,7 +93,7 @@ object HttpHeadersDictionary {
         val map = createMapFromFile()
 
         for (header in knownExtraHeaders) {
-            map[header] = HttpHeaderDocumentation(header)
+            map[header.lowercase()] = HttpHeaderDocumentation(header)
         }
 
         map
@@ -141,7 +141,7 @@ object HttpHeadersDictionary {
 
             val documentation = read(element.asJsonObject) ?: continue
 
-            map[documentation.name] = documentation
+            map[documentation.name.lowercase()] = documentation
         }
 
         return map

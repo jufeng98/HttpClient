@@ -86,6 +86,6 @@ class HttpHeadersDocumentationProvider : DocumentationProvider {
 
         val name = element.name
 
-        return HttpHeadersDictionary.getDocumentation(name)
+        return HttpHeadersDictionary.getDocumentation(name.lowercase())
     }
 }

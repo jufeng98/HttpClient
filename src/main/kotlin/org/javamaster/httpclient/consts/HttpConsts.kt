@@ -42,7 +42,7 @@ class HttpConsts {
         val runFileRequestIdxKey = Key.create<Int>("org.javamaster.runFileRequestIdxKey")
         val lastPopupEnvChooseKey = Key.create<String>("org.javamaster.lastPopupEnvChooseKey")
 
-        val httpDashboardContentTypeKey = Key.create<ContentType>("org.javamaster.dashboard.httpDashboardContentType")
+        val httpDashboardContentTypeKey = Key.create<String>("org.javamaster.dashboard.httpDashboardContentType")
         val httpDashboardFoldHeaderKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardFoldHeader")
         val httpDashboardToolbarKey = Key.create<Boolean>("org.javamaster.dashboard.httpDashboardToolbar")
         val httpDashboardResTypeKey = Key.create<SimpleTypeEnum?>("org.javamaster.dashboard.httpDashboardResType")
