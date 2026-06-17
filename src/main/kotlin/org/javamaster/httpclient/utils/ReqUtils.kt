@@ -86,7 +86,10 @@ class ReqUtils {
                 }
 
                 is MutableList<*> -> {
-                    reqBody
+                    @Suppress("UNCHECKED_CAST")
+                    val list = reqBody as MutableList<Triple<ByteArray?, String?, ContentType?>>
+
+                    list.filter { it.first != null }.map { it.first!! }.reduce { a, b -> a + b }
                 }
 
                 else -> {
@@ -190,7 +193,7 @@ class ReqUtils {
 
                 is List<*> -> {
                     @Suppress("UNCHECKED_CAST")
-                    val list = reqBody as MutableList< Triple<ByteArray?, String?, ContentType?>>
+                    val list = reqBody as MutableList<Triple<ByteArray?, String?, ContentType?>>
 
                     list.forEach {
                         descList.addAll(convertTriple(it))
