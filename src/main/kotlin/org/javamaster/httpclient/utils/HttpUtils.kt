@@ -21,6 +21,7 @@ import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.exception.HeaderVariableException
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
@@ -120,10 +121,22 @@ object HttpUtils {
                 val values = it.value
 
                 values.forEach { value ->
-                    map.add(
-                        headerName,
-                        if (value == null) null else variableResolver.resolve(value)
-                    )
+                    val resolved = if (value == null) {
+                        null
+                    } else {
+                        val content = variableResolver.resolve(value)
+                        val idxStart = content.indexOf("{{")
+                        if (idxStart != -1) {
+                            val idxEnd = content.indexOf("}}", idxStart)
+                            if (idxEnd != -1) {
+                                throw HeaderVariableException(value.substring(idxStart + 2, idxEnd))
+                            }
+                        }
+
+                        content
+                    }
+
+                    map.add(headerName, resolved)
                 }
             }
 

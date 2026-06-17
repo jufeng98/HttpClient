@@ -1,6 +1,8 @@
 package org.javamaster.httpclient.exception
 
+import org.javamaster.httpclient.nls.NlsBundle
+
 /**
  * @author yudong
  */
-class BodyVariableException(val variableName: String,val msg: String) : Exception(msg)
+class BodyVariableException(val variableName: String) : Exception(NlsBundle.nls("invalid.request", variableName, ""))

@@ -113,7 +113,7 @@ class ReqUtils {
 
             val variableName = content.substring(idxStart + 2, idxEnd)
 
-            throw BodyVariableException(variableName, NlsBundle.nls("invalid.request", variableName, ""))
+            throw BodyVariableException(variableName)
         }
 
         fun getReqBodyDesc(reqBody: Any?): MutableList<String> {

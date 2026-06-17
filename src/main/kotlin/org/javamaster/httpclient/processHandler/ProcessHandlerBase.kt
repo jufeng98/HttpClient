@@ -16,10 +16,12 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.SUCCESS
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.env.EnvFileService.Companion.getEnvMap
 import org.javamaster.httpclient.exception.BodyVariableException
+import org.javamaster.httpclient.exception.HeaderVariableException
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.exception.UrlVariableException
 import org.javamaster.httpclient.fake.FakeInputFileElement
-import org.javamaster.httpclient.fake.FakeVariableElement
+import org.javamaster.httpclient.fake.FakeBodyVariableElement
+import org.javamaster.httpclient.fake.FakeHeaderVariableElement
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
@@ -293,6 +295,10 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
                 if (!createBodyActionNotify(e.variableName)) {
                     NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
                 }
+            } else if (e is HeaderVariableException) {
+                if (!createHeaderActionNotify(e.variableName)) {
+                    NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
+                }
             } else {
                 NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, e))
             }
@@ -330,6 +336,36 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         return true
     }
 
+    fun createHeaderActionNotify(variableName: String): Boolean {
+        val header = request.header!!
+        val idx = header.text.indexOf("{{$variableName}}")
+        if (idx == -1) {
+            return false
+        }
+
+        val offset = header.textOffset + idx + 2
+        val lineNumber = httpDocument.getLineNumber(offset)
+
+        val lineStartOffset = httpDocument.getLineStartOffset(lineNumber)
+        val column = offset - lineStartOffset
+
+        val fakeHeaderVariableElement = FakeHeaderVariableElement(
+            offset, variableName, httpFile, header
+        )
+
+        val content = nls("goto.detail", "${httpFile.name}:${lineNumber + 1}:${column + 1}")
+
+        val actionJumpTo = NotificationAction.createSimple(content) {
+            runInEdt { if (fakeHeaderVariableElement.isValid) fakeHeaderVariableElement.navigate(true) }
+        }
+
+        NotifyUtil.notifyCornerError(
+            project, nls("invalid.request", variableName, tabName), actionJumpTo
+        )
+
+        return true
+    }
+
     private fun createBodyActionNotify(variableName: String): Boolean {
         val requestMessagesGroup = request.body?.requestMessagesGroup
         val messageBody = requestMessagesGroup?.messageBody
@@ -347,14 +383,14 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             val lineStartOffset = httpDocument.getLineStartOffset(lineNumber)
             val column = offset - lineStartOffset
 
-            val fakeVariableElement = FakeVariableElement(
+            val fakeBodyVariableElement = FakeBodyVariableElement(
                 offset, variableName, httpFile, messageBody
             )
 
             val content = nls("goto.detail", "${httpFile.name}:${lineNumber + 1}:${column + 1}")
 
             val actionJumpTo = NotificationAction.createSimple(content) {
-                runInEdt { if (fakeVariableElement.isValid) fakeVariableElement.navigate(true) }
+                runInEdt { if (fakeBodyVariableElement.isValid) fakeBodyVariableElement.navigate(true) }
             }
 
             NotifyUtil.notifyCornerError(

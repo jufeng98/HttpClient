@@ -41,18 +41,19 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val preJsResList = executePreJs(url, reqInfo, reqHeaderMap)
 
+        // 由于 前置 js 处理器有可能新增或修改了变量,所以 url、header、body 都需要重新解析一遍
         url = variableResolver.resolve(url)
-
-        val httpReqDescList = mutableListOf<String>()
-        httpReqDescList.addAll(preJsResList)
-
-        reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
         if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
             url = ReqUtils.encodeUrl(url)
         }
 
+        reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
+
         val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver)
+
+        val httpReqDescList = mutableListOf<String>()
+        httpReqDescList.addAll(preJsResList)
 
         handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
     }

@@ -6,21 +6,21 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.FakePsiElement
 import org.javamaster.httpclient.parser.HttpFile
-import org.javamaster.httpclient.psi.HttpMessageBody
+import org.javamaster.httpclient.psi.HttpHeader
 
 /**
  * @author yudong
  */
-class FakeVariableElement(
+class FakeHeaderVariableElement(
     val offset: Int,
     private val variableName: String,
     private val httpFile: HttpFile,
-    private val messageBody: HttpMessageBody,
+    private val header: HttpHeader,
 ) : FakePsiElement() {
-    private val textRange = messageBody.textRange
+    private val textRange = header.textRange
 
     override fun isValid(): Boolean {
-        return messageBody.isValid && messageBody.textRange == textRange
+        return header.isValid && header.textRange == textRange
     }
 
     override fun canNavigate(): Boolean {
@@ -43,7 +43,7 @@ class FakeVariableElement(
     }
 
     override fun getParent(): PsiElement {
-        return messageBody
+        return header
     }
 
     override fun getName(): String {
