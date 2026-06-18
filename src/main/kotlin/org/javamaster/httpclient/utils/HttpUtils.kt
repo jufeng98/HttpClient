@@ -219,9 +219,9 @@ object HttpUtils {
         val formUrlencodedBody = requestMessagesGroup.formUrlencodedBody
 
         if (messageBody != null) {
-            reqStr = computeReadAction { variableResolver.resolve(messageBody.text) }
+            reqStr = variableResolver.resolve(computeReadAction { messageBody.text })
         } else if (formUrlencodedBody != null) {
-            reqStr = computeReadAction { variableResolver.resolve(formUrlencodedBody.text) }
+            reqStr = variableResolver.resolve(computeReadAction { formUrlencodedBody.text })
 
             if (formUrlEncodeReq) {
                 reqStr = removeQueryParamSpaceAndCr(reqStr)
@@ -234,7 +234,7 @@ object HttpUtils {
             return Triple(reqStr?.toByteArray(charset), reqStr, contentType)
         }
 
-        var filePathStr = variableResolver.resolve(filePath.text)
+        var filePathStr = variableResolver.resolve(computeReadAction { filePath.text })
 
         val path = constructFilePath(filePathStr, variableResolver.httpFileParentPath)
 
@@ -253,7 +253,7 @@ object HttpUtils {
                 str = removeQueryParamSpaceAndCr(str)
             }
 
-            reqStr += computeReadAction { variableResolver.resolve(str) }
+            reqStr += variableResolver.resolve(str)
 
             val charset = contentType?.charset ?: StandardCharsets.UTF_8
             return Triple(reqStr.toByteArray(charset), reqStr, contentType)
@@ -340,9 +340,9 @@ object HttpUtils {
 
         var reqStr = ""
         if (messageBody != null) {
-            reqStr = computeReadAction { variableResolver.resolve(messageBody.text) }
+            reqStr = variableResolver.resolve(computeReadAction { messageBody.text })
         } else if (formUrlencodedBody != null) {
-            reqStr = computeReadAction { variableResolver.resolve(formUrlencodedBody.text) }
+            reqStr = variableResolver.resolve(computeReadAction { formUrlencodedBody.text })
 
             if (formUrlEncodeReq) {
                 reqStr = removeQueryParamSpaceAndCr(reqStr)
@@ -362,7 +362,10 @@ object HttpUtils {
             }
         }
 
-        val path = constructFilePath(variableResolver.resolve(filePath.text), variableResolver.httpFileParentPath)
+        val path = constructFilePath(
+            variableResolver.resolve(computeReadAction { filePath.text }),
+            variableResolver.httpFileParentPath
+        )
 
         if (!isTxtContentType(header)) {
             return ""
@@ -420,7 +423,7 @@ object HttpUtils {
 
                 val bodyEle = messageBody ?: formUrlencodedBody
                 if (bodyEle != null) {
-                    var content = computeReadAction { variableResolver.resolve(bodyEle.text) }
+                    var content = variableResolver.resolve(computeReadAction { bodyEle.text })
 
                     val formUrlEncodeReq = it.contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
                     if (formUrlEncodeReq) {
@@ -441,10 +444,12 @@ object HttpUtils {
                     )
                 }
 
-                val filePath = requestMessagesGroup.inputFile?.filePath?.text
+                val filePath = requestMessagesGroup.inputFile?.filePath
                 if (filePath != null) {
-                    val path =
-                        constructFilePath(variableResolver.resolve(filePath), variableResolver.httpFileParentPath)
+                    val path = constructFilePath(
+                        variableResolver.resolve(computeReadAction { filePath.text }),
+                        variableResolver.httpFileParentPath
+                    )
 
                     val file = File(path)
 
