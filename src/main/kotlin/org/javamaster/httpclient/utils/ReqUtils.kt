@@ -17,7 +17,6 @@ import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import java.net.http.HttpRequest.BodyPublisher
 import java.net.http.HttpRequest.BodyPublishers
 import java.nio.charset.StandardCharsets
-import kotlin.collections.map
 
 /**
  * @author yudong
@@ -51,11 +50,11 @@ class ReqUtils {
                     @Suppress("UNCHECKED_CAST")
                     val list = reqBody as MutableList<Triple<ByteArray?, String?, ContentType?>>
 
-                    val byteArrays = list.filter { it.first != null }.map { it.first }
+                    val byteArrays = list.mapNotNull { it.first }
 
                     bodyPublisher = BodyPublishers.ofByteArrays(byteArrays)
 
-                    multipartLength = byteArrays.sumOf { it?.size?.toLong() ?: 0 }
+                    multipartLength = byteArrays.sumOf { it.size.toLong() }
                 }
 
                 else -> {
@@ -291,7 +290,8 @@ class ReqUtils {
 
             return split.joinToString("&") {
                 val list = it.split("=")
-                urlEncode(list[0]) + "=" + urlEncode(list[1])
+
+                if (list.size > 1) urlEncode(list[0]) + "=" + urlEncode(list[1]) else urlEncode(list[0])
             }
         }
 

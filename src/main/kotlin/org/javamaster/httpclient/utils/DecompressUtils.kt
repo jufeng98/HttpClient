@@ -16,10 +16,9 @@ object DecompressUtils {
         var bytes = bodyBytes
 
         when (contentEncoding) {
-            "gzip", "x-gzip" -> GZIPInputStream(ByteArrayInputStream(bodyBytes))
-                .use {
-                    bytes = it.readAllBytes()
-                }
+            "gzip", "x-gzip" -> GZIPInputStream(ByteArrayInputStream(bodyBytes)).use {
+                bytes = it.readAllBytes()
+            }
 
             "deflate" -> bytes = decompressDeflate(bodyBytes)
 
@@ -31,10 +30,11 @@ object DecompressUtils {
 
     fun decompressDeflate(compressedData: ByteArray): ByteArray {
         try {
-            val inflaterInputStream = InflaterInputStream(ByteArrayInputStream(compressedData), Inflater(false))
-            return inflaterInputStream.readAllBytes()
+            return InflaterInputStream(ByteArrayInputStream(compressedData), Inflater(false)).use {
+                it.readAllBytes()
+            }
         } catch (e: Exception) {
-            logWarn("decompressDeflate error", e)
+            logWarn("InflaterInputStream error", e)
         }
 
         try {
@@ -42,32 +42,32 @@ object DecompressUtils {
             val inflater = Inflater(false)
             inflater.setInput(compressedData)
             try {
-                ByteArrayOutputStream().use { out ->
+                ByteArrayOutputStream().use {
                     val buffer = ByteArray(1024)
                     while (!inflater.finished()) {
-                        val count: Int = inflater.inflate(buffer)
-                        out.write(buffer, 0, count)
+                        val count = inflater.inflate(buffer)
+                        it.write(buffer, 0, count)
                     }
-                    return out.toByteArray()
+                    return it.toByteArray()
                 }
             } finally {
                 inflater.end()
             }
         } catch (e: Exception) {
-            logWarn("decompressDeflate error", e)
+            logWarn("Inflater(false) error", e)
         }
 
         // 2. 如果报错（通常为 header 校验失败），尝试原始 deflate 数据（nowrap = true）
         val inflater = Inflater(true)
         inflater.setInput(compressedData)
         try {
-            ByteArrayOutputStream().use { out ->
+            ByteArrayOutputStream().use {
                 val buffer = ByteArray(1024)
                 while (!inflater.finished()) {
-                    val count: Int = inflater.inflate(buffer)
-                    out.write(buffer, 0, count)
+                    val count = inflater.inflate(buffer)
+                    it.write(buffer, 0, count)
                 }
-                return out.toByteArray()
+                return it.toByteArray()
             }
         } finally {
             inflater.end()

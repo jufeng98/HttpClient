@@ -1,35 +1,27 @@
 package org.javamaster.httpclient.js.support
 
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import com.jetbrains.rd.util.threadLocalWithInitial
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * Collect js executed log
  */
 object GlobalLog {
-    private var tabName: String? = null
-    private val logsMap = LinkedMultiValueMap<String, String>()
-
-    fun setTabName(tmpKey: String) {
-        tabName = tmpKey
-    }
+    private val logThreadLocal = threadLocalWithInitial { mutableListOf<String>() }
 
     fun log(msg: String?) {
-        tabName ?: return
-
-        logsMap.add(tabName!!, msg ?: "null")
+        val str = msg ?: "null"
+        logInfo(str)
+        logThreadLocal.get().add(str)
     }
 
     fun getAndClearLogs(): String {
-        val logs = logsMap[tabName] ?: emptyList()
+        val logs = logThreadLocal.get()
 
-        clearLogs()
+        logThreadLocal.remove()
 
         return logs.joinToString(HttpUtils.CR_LF)
     }
 
-    fun clearLogs() {
-        logsMap.remove(tabName)
-        tabName = null
-    }
 }

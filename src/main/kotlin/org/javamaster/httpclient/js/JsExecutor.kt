@@ -110,7 +110,6 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
         val context = Context.enter()
         try {
-            GlobalLog.setTabName(tabName)
             threadLocal.set(this)
 
             val preFilePair = preJsFiles.partition { it.urlFile != null }
@@ -171,7 +170,6 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
         val context = Context.enter()
         try {
-            GlobalLog.setTabName(tabName)
             threadLocal.set(this)
 
             val reqBodyInJs = ReqUtils.convertReqBody(reqBody)
@@ -278,7 +276,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         try {
             context.evaluateString(scriptableObject, jsStr, fileName, rowNum, null)
         } catch (e: WrappedException) {
-            logWarn("WrappedException")
+            logWarn("发生 WrappedException")
 
             val cause = e.cause
             if (cause is FileNotFoundException || cause is IllegalArgumentException || cause is HttpFileException) {
@@ -291,11 +289,11 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
             throw EvaluatorException(e.wrappedException.toString(), fileName, e.lineNumber())
         } catch (e: JavaScriptException) {
-            logWarn("JavaScriptException")
+            logWarn("发生 JavaScriptException")
 
             rethrowException(e.stackTrace, e.toString(), fileName)
         } catch (e: Exception) {
-            logWarn("Exception")
+            logWarn("发生 Exception")
 
             throw e
         }

@@ -14,6 +14,6 @@ class HttpClientRequestRes(private val url: String, private val jsBody: Any?) {
     }
 
     override fun toString(): String {
-        return "HttpClientRequestRes(url='$url', jsBody=$jsBody)"
+        return "HttpClientRequestRes(url='$url', \njsBody=$jsBody)"
     }
 }

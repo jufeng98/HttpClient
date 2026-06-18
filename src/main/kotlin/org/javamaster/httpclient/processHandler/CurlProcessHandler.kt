@@ -43,9 +43,8 @@ class CurlProcessHandler(
             return
         }
 
+        // 由于 前置 js 处理器有可能新增或修改了变量,所以 url、header、body 都需要重新解析一遍
         url = variableResolver.resolve(url)
-
-        reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
         if (paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)) {
             url = ReqUtils.encodeUrl(url)
@@ -54,6 +53,8 @@ class CurlProcessHandler(
         CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
 
         reqHeaderMap.addAll(GlobalHeaders.dataHolder)
+
+        reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
         handleCurl(raw, url, reqHeaderMap)
     }

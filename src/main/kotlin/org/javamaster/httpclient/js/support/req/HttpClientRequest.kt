@@ -14,6 +14,7 @@ class HttpClientRequest(
     val headers: RequestHeaders,
 ) {
     override fun toString(): String {
-        return "HttpClientRequest(environment=$environment, url=$url, body=$body, method='$method', variables=$variables, fileVariables=$fileVariables, headers=$headers)"
+        return "HttpClientRequest(environment=$environment, \nurl=$url, \nbody=$body, \nmethod='$method', " +
+                "\nvariables=$variables, \nfileVariables=$fileVariables, \nheaders=$headers)"
     }
 }

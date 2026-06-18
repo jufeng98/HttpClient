@@ -17,6 +17,7 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.nls.NlsBundle.nls
@@ -142,7 +143,8 @@ object ResUtils {
 
             return "// ${nls("save.to.file", file.normalize().absolutePath)}$CR_LF"
         } catch (e: Exception) {
-            e.printStackTrace()
+            logWarn("保存响应体到文件失败: $e")
+
             return "// ${nls("save.failed")}: $e$CR_LF"
         }
     }
@@ -186,7 +188,8 @@ object ResUtils {
             }
         }
 
-        val suffix = SimpleTypeEnum.Companion.getSuffix(httpInfo.type!!, httpInfo.contentType!!)
+        val suffix = SimpleTypeEnum.getSuffix(httpInfo.type!!, httpInfo.contentType!!)
+
         return DateFormatUtils.format(Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix
     }
 
@@ -228,9 +231,7 @@ object ResUtils {
         Files.write(file.toPath(), content)
         logInfo("响应体已保存到文件: $absolutePath")
 
-        val virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)!!
-
-        return virtualFile
+        return LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)!!
     }
 
 }

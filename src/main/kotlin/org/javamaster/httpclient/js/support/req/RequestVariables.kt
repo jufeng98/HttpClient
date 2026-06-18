@@ -10,7 +10,7 @@ import org.javamaster.httpclient.nls.NlsBundle
  */
 @Suppress("unused")
 class RequestVariables {
-    val dataHolder: MutableMap<String, Any?> = Maps.newConcurrentMap()
+    private val dataHolder: MutableMap<String, Any?> = Maps.newConcurrentMap()
 
     fun isEmpty(): Boolean {
         return dataHolder.size == 0

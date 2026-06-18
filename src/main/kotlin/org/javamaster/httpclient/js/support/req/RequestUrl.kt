@@ -15,7 +15,7 @@ class RequestUrl(private val url: String, private val rawUrl: String) {
     }
 
     override fun toString(): String {
-        return "RequestUrl(url='$url', rawUrl='$rawUrl')"
+        return "RequestUrl(url='$url', \nrawUrl='$rawUrl')"
     }
 
 }

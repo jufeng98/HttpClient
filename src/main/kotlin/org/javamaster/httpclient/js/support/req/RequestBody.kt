@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets
 @Suppress("unused")
 class RequestBody(
     private val jsBody: Any?,
-    val rawBody: String?,
+    private val rawBody: String?,
 ) {
 
     fun getRaw(): String? {
@@ -45,6 +45,6 @@ class RequestBody(
     }
 
     override fun toString(): String {
-        return "RequestBody(jsBody=$jsBody, rawBody=$rawBody)"
+        return "RequestBody(jsBody=$jsBody, \nrawBody=$rawBody)"
     }
 }

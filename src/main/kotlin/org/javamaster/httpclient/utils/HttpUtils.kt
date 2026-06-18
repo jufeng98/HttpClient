@@ -5,7 +5,6 @@ import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.psi.JsonProperty
 import com.intellij.json.psi.JsonStringLiteral
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
@@ -99,7 +98,7 @@ object HttpUtils {
 
         val map = LinkedMultiValueMap<String, String?>()
 
-        ReadAction.run<Exception> {
+        runReadAction {
             headerFields.stream()
                 .forEach {
                     val headerName = it.headerFieldName.text
@@ -127,14 +126,13 @@ object HttpUtils {
                         null
                     } else {
                         val content = variableResolver.resolve(value)
+
                         val idxStart = content.indexOf(VAR_BRACE_START)
                         if (idxStart != -1) {
                             val idxEnd = content.indexOf(VAR_BRACE_END, idxStart)
                             if (idxEnd != -1) {
                                 throw HeaderUnresolvedVariableException(
-                                    value.substring(
-                                        idxStart + VAR_BRACE_START.length, idxEnd
-                                    )
+                                    content.substring(idxStart + VAR_BRACE_START.length, idxEnd)
                                 )
                             }
                         }
@@ -210,14 +208,12 @@ object HttpUtils {
     }
 
     private fun handleOrdinaryContent(
-        requestMessagesGroup: HttpRequestMessagesGroup?,
+        requestMessagesGroup: HttpRequestMessagesGroup,
         variableResolver: VariableResolver,
         header: HttpHeader?,
         contentType: ContentType?,
         paramMap: Map<String, String>,
     ): Triple<ByteArray?, String?, ContentType?>? {
-        requestMessagesGroup ?: return null
-
         val formUrlEncodeReq = contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
 
         val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
@@ -257,6 +253,10 @@ object HttpUtils {
             }
 
             var str = VirtualFileUtils.readNewestContent(file)
+
+            if (formUrlEncodeReq) {
+                str = handleQueryParam(str)
+            }
 
             if (shouldEncode) {
                 str = encodeQueryParam(str)
@@ -298,11 +298,7 @@ object HttpUtils {
                             val headerName = innerIt.headerFieldName.text
                             val headerValue = innerIt.headerFieldValue?.text
 
-                            val value = if (headerValue.isNullOrEmpty()) {
-                                ""
-                            } else {
-                                variableResolver.resolve(headerValue)
-                            }
+                            val value = if (headerValue.isNullOrEmpty()) "" else variableResolver.resolve(headerValue)
 
                             val headerLine = "$headerName: $value$CR_LF"
                             list.add(Triple(headerLine.toByteArray(StandardCharsets.UTF_8), headerLine, null))
@@ -346,6 +342,7 @@ object HttpUtils {
         raw: Boolean,
     ): String {
         val formUrlEncodeReq = request.contentType == ContentType.APPLICATION_FORM_URLENCODED
+
         val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
 
         var reqStr = ""
@@ -363,16 +360,16 @@ object HttpUtils {
             }
         }
 
-        val filePath = requestMessagesGroup.inputFile?.filePath?.text
-            ?: return if (raw) {
+        val filePath = requestMessagesGroup.inputFile?.filePath
+        if (filePath == null) {
+            return if (raw) {
                 reqStr + CR_LF
             } else {
                 reqStr.replace("\n", "\n    ").replace("'", "'\\''")
             }
+        }
 
-        val path = constructFilePath(variableResolver.resolve(filePath), variableResolver.httpFileParentPath)
-
-        val file = File(path)
+        val path = constructFilePath(variableResolver.resolve(filePath.text), variableResolver.httpFileParentPath)
 
         if (!isTxtContentType(header)) {
             return ""
@@ -380,13 +377,19 @@ object HttpUtils {
 
         reqStr += CR_LF
 
+        val file = File(path)
+
         var str = VirtualFileUtils.readNewestContent(file)
 
-        str = variableResolver.resolve(str)
+        if (formUrlEncodeReq) {
+            str = handleQueryParam(str)
+        }
 
         if (shouldEncode) {
-            reqStr += encodeQueryParam(str)
+            str += encodeQueryParam(str)
         }
+
+        reqStr += variableResolver.resolve(str)
 
         return if (raw) {
             reqStr + CR_LF

@@ -28,7 +28,7 @@ class HttpClientResponse(
     }
 
     override fun toString(): String {
-        return "HttpClientResponse(status=$status, headers=$headers, body=$body, cookies=$cookies, contentType=$contentType)"
+        return "HttpClientResponse(status=$status, \nheaders=$headers, \nbody=$body, \ncookies=$cookies, \ncontentType=$contentType)"
     }
 
 }

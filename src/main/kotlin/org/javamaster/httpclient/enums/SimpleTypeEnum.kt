@@ -7,6 +7,7 @@ enum class SimpleTypeEnum(val type: String, val binary: Boolean) {
     XML("xml", false),
     TXT("txt", false),
     TEXT("text", false),
+    URL_ENCODED("urlencoded", false),
 
     STREAM("stream", true),
     IMAGE("image", true),
@@ -43,6 +44,10 @@ enum class SimpleTypeEnum(val type: String, val binary: Boolean) {
 
             if (contentType.contains(HTML.type)) {
                 return HTML
+            }
+
+            if (contentType.contains(URL_ENCODED.type)) {
+                return URL_ENCODED
             }
 
             if (contentType.contains(XML.type)) {

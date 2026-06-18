@@ -286,6 +286,11 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     fun handleException(e: Exception) {
         hasReqError = true
 
+        if (jsScriptException != null) {
+            logWarn("出错了", jsScriptException!!.cause)
+            NotifyUtil.notifyCornerError(project, nls("handle.failed", tabName, jsScriptException!!.cause!!))
+        }
+
         logWarn("处理出错了", e)
 
         runInEdt { httpDashboardForm.resetDashboardForm() }
