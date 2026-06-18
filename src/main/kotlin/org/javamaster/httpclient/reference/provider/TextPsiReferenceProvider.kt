@@ -37,20 +37,23 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
 
         val request = PsiTreeUtil.getParentOfType(injectionHost, HttpRequest::class.java)!!
 
-        if (request.contentType == ContentType.APPLICATION_FORM_URLENCODED
-            || (parent is HttpMultipartField && parent.contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType)
-        ) {
-            val query = UrlEncodedLazyFileElement.parse(text) ?: return emptyArray()
+        if (false) {
+            // 不再需要,已经从 flex 语法层去识别 form-urlencoded 的元素
+            if (request.contentType == ContentType.APPLICATION_FORM_URLENCODED
+                || (parent is HttpMultipartField && parent.contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType)
+            ) {
+                val query = UrlEncodedLazyFileElement.parse(text) ?: return emptyArray()
 
-            val references = request.requestTarget?.pathAbsolute?.references ?: emptyArray()
+                val references = request.requestTarget?.pathAbsolute?.references ?: emptyArray()
 
-            val controllerMethod = if (references.isNotEmpty()) {
-                references[0].resolve() as PsiMethod?
-            } else {
-                null
+                val controllerMethod = if (references.isNotEmpty()) {
+                    references[0].resolve() as PsiMethod?
+                } else {
+                    null
+                }
+
+                return createUrlEncodedReferences(plainTextFile, injectionHost, query, delta, controllerMethod)
             }
-
-            return createUrlEncodedReferences(plainTextFile, injectionHost, query, delta, controllerMethod)
         }
 
         return createTextVariableReferences(plainTextFile, injectionHost, text, delta)
