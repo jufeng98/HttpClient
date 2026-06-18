@@ -197,7 +197,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     abstract fun startProcess()
 
     fun createHttpReqInfo(): HttpReqInfo {
-        var reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
+        var reqBody = HttpUtils.convertToReqBody(request, variableResolver)
 
         val environment = getEnvMap(project, false)
 
@@ -352,6 +352,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         val multipartMessage = body.multipartMessage
 
         val messageBody = requestMessagesGroup?.messageBody
+        val formUrlencodedBody = requestMessagesGroup?.formUrlencodedBody
         val inputFile = requestMessagesGroup?.inputFile
 
         if (messageBody != null) {
@@ -376,10 +377,26 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
                 return
             }
 
-            val element = messageBody
             val offset = messageBody.textOffset + idx + VAR_BRACE_START.length
 
-            actionNotify(variableName, httpFile.virtualFile, httpDocument, element, offset)
+            actionNotify(variableName, httpFile.virtualFile, httpDocument, messageBody, offset)
+        }else if (formUrlencodedBody != null) {
+            val varElement = PsiTreeUtil.findChildrenOfType(formUrlencodedBody, HttpVariableName::class.java)
+                .firstOrNull { it.text == variableName }
+            if (varElement != null) {
+                actionNotify(variableName, varElement)
+                return
+            }
+
+            val idx = formUrlencodedBody.text.indexOf("{{$variableName}}")
+            if (idx == -1) {
+                actionNotify(variableName, httpMethod)
+                return
+            }
+
+            val offset = formUrlencodedBody.textOffset + idx + VAR_BRACE_START.length
+
+            actionNotify(variableName, httpFile.virtualFile, httpDocument, formUrlencodedBody, offset)
         } else if (inputFile != null) {
             var filePathStr = variableResolver.resolve(inputFile.filePath!!.text)
             val path = constructFilePath(filePathStr, variableResolver.httpFileParentPath)
@@ -392,10 +409,9 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
                 return
             }
 
-            val element = inputFile
             val offset = idx + VAR_BRACE_START.length
 
-            actionNotify(variableName, file, doc, element, offset)
+            actionNotify(variableName, file, doc, inputFile, offset)
         } else if (multipartMessage != null) {
             val varElement = PsiTreeUtil.findChildrenOfType(multipartMessage, HttpVariableName::class.java)
                 .firstOrNull { it.text == variableName }
@@ -410,10 +426,9 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
                 return
             }
 
-            val element = multipartMessage
             val offset = multipartMessage.textOffset + idx + VAR_BRACE_START.length
 
-            actionNotify(variableName, httpFile.virtualFile, httpDocument, element, offset)
+            actionNotify(variableName, httpFile.virtualFile, httpDocument, multipartMessage, offset)
         }
     }
 

@@ -33,7 +33,7 @@ import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.runconfig.HttpRunConfiguration
 import org.javamaster.httpclient.service.HistoryFolderService
 import org.javamaster.httpclient.utils.ReqUtils.Companion.encodeQueryParam
-import org.javamaster.httpclient.utils.ReqUtils.Companion.handleQueryParam
+import org.javamaster.httpclient.utils.ReqUtils.Companion.removeQueryParamSpaceAndCr
 import java.io.File
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -150,7 +150,6 @@ object HttpUtils {
     fun convertToReqBody(
         request: HttpRequest,
         variableResolver: VariableResolver,
-        paramMap: Map<String, String>,
     ): Any? {
         if (request.contentLength != null) {
             throw IllegalArgumentException(NlsBundle.nls("content.length.error"))
@@ -164,8 +163,7 @@ object HttpUtils {
                 requestMessagesGroup,
                 variableResolver,
                 request.header,
-                request.contentType,
-                paramMap
+                request.contentType
             )
         }
 
@@ -174,7 +172,7 @@ object HttpUtils {
             val boundary = request.contentTypeBoundary
                 ?: throw IllegalArgumentException(NlsBundle.nls("lack.boundary", CONTENT_TYPE))
 
-            return constructMultipartBody(boundary, httpMultipartMessage, variableResolver, paramMap)
+            return constructMultipartBody(boundary, httpMultipartMessage, variableResolver)
         }
 
         return null
@@ -212,24 +210,21 @@ object HttpUtils {
         variableResolver: VariableResolver,
         header: HttpHeader?,
         contentType: ContentType?,
-        paramMap: Map<String, String>,
     ): Triple<ByteArray?, String?, ContentType?>? {
         val formUrlEncodeReq = contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
-
-        val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
 
         var reqStr: String? = null
 
         val messageBody = requestMessagesGroup.messageBody
+        val formUrlencodedBody = requestMessagesGroup.formUrlencodedBody
+
         if (messageBody != null) {
-            reqStr = variableResolver.resolve(messageBody.text)
+            reqStr = computeReadAction { variableResolver.resolve(messageBody.text) }
+        } else if (formUrlencodedBody != null) {
+            reqStr = computeReadAction { variableResolver.resolve(formUrlencodedBody.text) }
 
             if (formUrlEncodeReq) {
-                reqStr = handleQueryParam(reqStr)
-            }
-
-            if (shouldEncode) {
-                reqStr = encodeQueryParam(reqStr)
+                reqStr = removeQueryParamSpaceAndCr(reqStr)
             }
         }
 
@@ -255,14 +250,10 @@ object HttpUtils {
             var str = VirtualFileUtils.readNewestContent(file)
 
             if (formUrlEncodeReq) {
-                str = handleQueryParam(str)
+                str = removeQueryParamSpaceAndCr(str)
             }
 
-            if (shouldEncode) {
-                str = encodeQueryParam(str)
-            }
-
-            reqStr += variableResolver.resolve(str)
+            reqStr += computeReadAction { variableResolver.resolve(str) }
 
             val charset = contentType?.charset ?: StandardCharsets.UTF_8
             return Triple(reqStr.toByteArray(charset), reqStr, contentType)
@@ -281,7 +272,6 @@ object HttpUtils {
         boundary: String,
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
-        paramMap: Map<String, String>,
     ): MutableList<Triple<ByteArray?, String?, ContentType?>> {
         val list = mutableListOf<Triple<ByteArray?, String?, ContentType?>>()
 
@@ -308,7 +298,7 @@ object HttpUtils {
                 list.add(Triple(CR_LF.toByteArray(StandardCharsets.UTF_8), CR_LF, null))
 
                 val triple = handleOrdinaryContent(
-                    it.requestMessagesGroup, variableResolver, it.header, it.contentType, paramMap
+                    it.requestMessagesGroup, variableResolver, it.header, it.contentType
                 )
 
                 if (triple != null) {
@@ -345,14 +335,17 @@ object HttpUtils {
 
         val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
 
-        var reqStr = ""
-
         val messageBody = requestMessagesGroup.messageBody
+        val formUrlencodedBody = requestMessagesGroup.formUrlencodedBody
+
+        var reqStr = ""
         if (messageBody != null) {
-            reqStr = variableResolver.resolve(messageBody.text)
+            reqStr = computeReadAction { variableResolver.resolve(messageBody.text) }
+        } else if (formUrlencodedBody != null) {
+            reqStr = computeReadAction { variableResolver.resolve(formUrlencodedBody.text) }
 
             if (formUrlEncodeReq) {
-                reqStr = handleQueryParam(reqStr)
+                reqStr = removeQueryParamSpaceAndCr(reqStr)
             }
 
             if (shouldEncode) {
@@ -382,7 +375,7 @@ object HttpUtils {
         var str = VirtualFileUtils.readNewestContent(file)
 
         if (formUrlEncodeReq) {
-            str = handleQueryParam(str)
+            str = removeQueryParamSpaceAndCr(str)
         }
 
         if (shouldEncode) {
@@ -423,12 +416,15 @@ object HttpUtils {
                 }
 
                 val messageBody = requestMessagesGroup.messageBody
-                if (messageBody != null) {
-                    var content = variableResolver.resolve(messageBody.text)
+                val formUrlencodedBody = requestMessagesGroup.formUrlencodedBody
+
+                val bodyEle = messageBody ?: formUrlencodedBody
+                if (bodyEle != null) {
+                    var content = computeReadAction { variableResolver.resolve(bodyEle.text) }
 
                     val formUrlEncodeReq = it.contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
                     if (formUrlEncodeReq) {
-                        content = handleQueryParam(content)
+                        content = removeQueryParamSpaceAndCr(content)
                     }
 
                     val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)

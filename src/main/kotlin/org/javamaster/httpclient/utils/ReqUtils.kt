@@ -6,6 +6,7 @@ import org.apache.http.entity.ContentType
 import org.intellij.markdown.html.urlEncode
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.exception.BodyUnresolvedVariableException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
@@ -97,7 +98,7 @@ class ReqUtils {
             }
         }
 
-        fun resolveReqBodyAgain(reqBody: Any?, resolver: VariableResolver): Any? {
+        fun resolveReqBodyAgain(reqBody: Any?, resolver: VariableResolver, paramMap: Map<String, String>): Any? {
             if (reqBody == null) {
                 return null
             }
@@ -110,11 +111,17 @@ class ReqUtils {
                 if (HttpUtils.isTxtContentType(contentType)) {
                     val second = triple.second
                     if (second != null) {
-                        val resolved = resolver.resolve(second)
+                        var resolved = resolver.resolve(second)
 
                         val variableName = extractVariable(resolved)
                         if (variableName != null) {
                             throw BodyUnresolvedVariableException(variableName)
+                        }
+
+                        val formUrlEncodeReq = contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
+                        val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
+                        if (shouldEncode) {
+                            resolved = encodeQueryParam(resolved)
                         }
 
                         val charset = contentType?.charset ?: StandardCharsets.UTF_8
@@ -151,16 +158,25 @@ class ReqUtils {
                         continue
                     }
 
-                    val resolved = resolver.resolve(content)
+                    var resolved = resolver.resolve(content)
 
                     variableName = extractVariable(resolved)
-                    if (variableName == null) {
-                        val charset = contentType?.charset ?: StandardCharsets.UTF_8
-                        newList.add(Triple(resolved.toByteArray(charset), resolved, contentType))
-                        continue
+                    if (variableName != null) {
+                        throw BodyUnresolvedVariableException(variableName)
                     }
 
-                    throw BodyUnresolvedVariableException(variableName)
+                    val formUrlEncodeReq = contentType?.mimeType == ContentType.APPLICATION_FORM_URLENCODED.mimeType
+                    val shouldEncode = formUrlEncodeReq && paramMap.containsKey(ParamEnum.AUTO_ENCODING.param)
+                    if (shouldEncode) {
+                        // 先移除尾部的\r\n
+                        resolved = resolved.trimEnd()
+                        resolved = encodeQueryParam(resolved)
+                        // 重新加回尾部的\r\n
+                        resolved = resolved + CR_LF
+                    }
+
+                    val charset = contentType?.charset ?: StandardCharsets.UTF_8
+                    newList.add(Triple(resolved.toByteArray(charset), resolved, contentType))
                 }
 
                 return newList
@@ -254,7 +270,7 @@ class ReqUtils {
                 return url
             }
 
-            return split[0] + "?" + handleQueryParam(split[1])
+            return split[0] + "?" + removeQueryParamSpaceAndCr(split[1])
         }
 
         fun encodeUrl(url: String): String {
@@ -266,7 +282,10 @@ class ReqUtils {
             return split[0] + "?" + encodeQueryParam(split[1])
         }
 
-        fun handleQueryParam(queryParam: String): String {
+        /**
+         * 移除查询参数多余的空格和换行符
+         */
+        fun removeQueryParamSpaceAndCr(queryParam: String): String {
             val split = queryParam.split("&")
 
             return split.joinToString("&") {

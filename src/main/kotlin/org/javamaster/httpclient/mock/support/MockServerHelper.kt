@@ -257,7 +257,7 @@ object MockServerHelper {
         paramMap: Map<String, String>,
     ): Pair<Any?, LinkedMultiValueMap<String, String?>> {
         return application.runReadAction<Pair<Any?, LinkedMultiValueMap<String, String?>>> {
-            val reqBody = HttpUtils.convertToReqBody(request, variableResolver, paramMap)
+            val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
 
             val httpHeaderFields = request.header?.headerFieldList
             val reqHeaderMap = HttpUtils.convertToReqHeaderMap(httpHeaderFields, variableResolver)

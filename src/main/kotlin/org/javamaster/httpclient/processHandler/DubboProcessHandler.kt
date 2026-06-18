@@ -50,7 +50,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         reqHeaderMap = HttpUtils.resolveReqHeaderMapAgain(reqHeaderMap, variableResolver)
 
-        val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver)
+        val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver, paramMap)
 
         val httpReqDescList = mutableListOf<String>()
         httpReqDescList.addAll(preJsResList)
