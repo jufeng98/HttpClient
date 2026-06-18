@@ -2,10 +2,28 @@ package org.javamaster.httpclient.utils;
 
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
+import org.apache.http.entity.ContentType;
 import org.javamaster.httpclient._HttpLexer;
 import org.javamaster.httpclient.psi.HttpTypes;
 
+/**
+ * @author yudong
+ */
 public class LexerUtils {
+    private static final String mimeType = ContentType.APPLICATION_FORM_URLENCODED.getMimeType();
+
+    public static boolean calUrlEncodedFlag(CharSequence matchText, _HttpLexer lexer) {
+        if (lexer.formUrlEncodedFlag) {
+            return true;
+        }
+
+        boolean equals = matchText.equals(mimeType);
+        if (equals) {
+            lexer.nameFlag = true;
+        }
+
+        return equals;
+    }
 
     public static int detectBoundaryState(CharSequence matchText, _HttpLexer lexer) {
         int length = matchText.length();
