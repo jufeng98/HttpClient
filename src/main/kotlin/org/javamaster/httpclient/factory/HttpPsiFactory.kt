@@ -38,6 +38,18 @@ object HttpPsiFactory {
         return PsiTreeUtil.findChildOfType(psiFile, HttpMessageBody::class.java)!!
     }
 
+    fun createFilePath(project: Project, path: String): HttpFilePath {
+        val str = "import $path"
+        val psiFile = createDummyFile(project, str)
+        return PsiTreeUtil.findChildOfType(psiFile, HttpFilePath::class.java)!!
+    }
+
+    fun createDirectionValue(project: Project, path: String): HttpDirectionValue {
+        val str = "# @import $path"
+        val psiFile = createDummyFile(project, str)
+        return PsiTreeUtil.findChildOfType(psiFile, HttpDirectionValue::class.java)!!
+    }
+
     fun createScriptBody(project: Project, content: String): HttpScriptBody {
         val str = """
 <! {%

@@ -763,20 +763,22 @@ object HttpUtils {
 
     fun getContentType(contentTypeHeader: String): ContentType {
         val split = contentTypeHeader.split(";")
+
+        val mimeType = split[0]
         if (split.size == 1) {
-            return getByMimeType(split[0])
+            return getByMimeType(mimeType)
         }
 
         val strList = split[1].split("=")
         if (strList.size != 2) {
-            return ContentType.getByMimeType(split[0])
+            return ContentType.getByMimeType(mimeType)
         }
 
-        if (strList[0] != "charset") {
-            return ContentType.getByMimeType(split[0])
+        if (!strList[0].trim().equals("charset", true)) {
+            return ContentType.getByMimeType(mimeType)
         }
 
-        return ContentType.getByMimeType(split[0]).withCharset(strList[1])
+        return ContentType.getByMimeType(mimeType).withCharset(strList[1].trim())
     }
 
     private fun getByMimeType(mimeType: String): ContentType {
