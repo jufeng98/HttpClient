@@ -56,7 +56,7 @@ object HttpUtils {
     fun getTabName(requestBlock: HttpRequestBlock): String {
         val comment = requestBlock.comment
         if (comment != null) {
-            val text = comment.text
+            val text = computeReadAction { comment.text }
             val tabName = text.substring(3).trim()
             if (tabName.isNotEmpty()) {
                 return tabName
@@ -280,10 +280,8 @@ object HttpUtils {
                 val lineBoundary = "--$boundary$CR_LF"
                 list.add(Triple(lineBoundary.toByteArray(), lineBoundary, null))
 
-                val header = it.header
-
                 runReadAction {
-                    header.headerFieldList
+                    it.header.headerFieldList
                         .forEach { innerIt ->
                             val headerName = innerIt.headerFieldName.text
                             val headerValue = innerIt.headerFieldValue?.text
@@ -405,7 +403,6 @@ object HttpUtils {
 
         httpMultipartMessage.multipartFieldList
             .forEach {
-                val requestMessagesGroup = it.requestMessagesGroup
                 val header = it.header
 
                 if (raw) {
@@ -418,6 +415,7 @@ object HttpUtils {
                     list.add(CR_LF)
                 }
 
+                val requestMessagesGroup = it.requestMessagesGroup
                 val messageBody = requestMessagesGroup.messageBody
                 val formUrlencodedBody = requestMessagesGroup.formUrlencodedBody
 
