@@ -30,7 +30,7 @@ key4 = value4 &
 key5 = value5
 
 ### Request body with builtin methods and builtin variables
-POST https://miao.baidu.com/abdr
+POST https://chat.baidu.com/aichat/api/messages/list
 Content-Type: application/json
 
 {
@@ -47,7 +47,7 @@ Content-Type: application/json
 ### Complex multipart request
 # @connectTimeout 6
 # @readTimeout 6
-POST https://miao.baidu.com/abdr
+POST https://chat.baidu.com/aichat/api/messages/list
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary

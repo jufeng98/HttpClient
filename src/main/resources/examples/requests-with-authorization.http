@@ -12,7 +12,7 @@ GET https://www.baidu.com
 Authorization: Basic {{username}} {{password}}
 
 ### with token json param
-POST https://miao.baidu.com/abdr
+POST https://chat.baidu.com/aichat/api/messages/list
 Content-Type: application/json
 
 {
