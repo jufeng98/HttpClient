@@ -68,6 +68,14 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>8.1.0</b></li>
+                <ul>
+                    <li>调整 http 请求逻辑,支持 Content-Type 里的 charset,不再固定使用 UTF-8 编码</li>
+                    <li>调整 http 请求逻辑,对于 url、header、body 里的未解析变量,不再直接发起请求,而是报错提示</li>
+                    <li>调整 http 响应逻辑,新增 Content-Encoding 属性支持,支持 deflate, gzip, x-gzip 编码的响应体</li>
+                    <li>Cookies 文件新增 cookie 过期提示和快速修复动作</li>
+                    <li>bug修复及其他功能优化等等</li>
+                </ul>
                 <li><b>8.0.0</b></li>
                 <ul>
                     <li>重构 http 请求逻辑，大量耗时操作从 UI 线程移出，改为在线程池中执行，使得 IDEA 界面操作更加流畅</li>

@@ -3,6 +3,7 @@ package org.javamaster.httpclient.utils
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.UnsupportedEncodingException
 import java.util.zip.GZIPInputStream
 import java.util.zip.Inflater
 import java.util.zip.InflaterInputStream
@@ -22,7 +23,7 @@ object DecompressUtils {
 
             "deflate" -> bytes = decompressDeflate(bodyBytes)
 
-            else -> logWarn("unknown contentEncoding: $contentEncoding")
+            else -> throw UnsupportedEncodingException("Unknown Content-Encoding: $contentEncoding, only support deflate, gzip, x-gzip")
         }
 
         return bytes

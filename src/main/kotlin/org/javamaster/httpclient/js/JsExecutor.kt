@@ -127,7 +127,6 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             }
 
             if (jsListBeforeReq.isNotEmpty()) {
-
                 jsListBeforeReq.forEach {
                     val rowNum = httpDocument.getLineNumber(it.textOffset) + 1
 
@@ -177,19 +176,18 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             val resBodyStr = httpResInfo.bodyStr
             val typeEnum = httpResInfo.simpleTypeEnum
 
-            val body: Any
-            when (typeEnum) {
-                SimpleTypeEnum.JSON -> body = JsonParser(context, globalScriptableObject).parseValue(resBodyStr!!)
+            val body = when (typeEnum) {
+                SimpleTypeEnum.JSON -> JsonParser(context, globalScriptableObject).parseValue(resBodyStr!!)
 
-                SimpleTypeEnum.HTML -> body = resBodyStr!!
+                SimpleTypeEnum.HTML -> resBodyStr!!
 
-                SimpleTypeEnum.XML -> body = XmlUtils.parseXml(resBodyStr!!)
+                SimpleTypeEnum.XML -> XmlUtils.parseXml(resBodyStr!!)
 
-                SimpleTypeEnum.TEXT -> body = resBodyStr!!
+                SimpleTypeEnum.TEXT -> resBodyStr!!
 
-                SimpleTypeEnum.TXT -> body = resBodyStr!!
+                SimpleTypeEnum.TXT -> resBodyStr!!
 
-                else -> body = httpResInfo.bodyBytes
+                else -> httpResInfo.bodyBytes
             }
 
             val response = HttpClientResponse(statusCode, ResponseHeaders(headerMap), body, cookies)
