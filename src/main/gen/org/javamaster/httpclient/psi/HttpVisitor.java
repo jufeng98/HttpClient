@@ -52,6 +52,10 @@ public class HttpVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitFormUrlencodedBody(@NotNull HttpFormUrlencodedBody o) {
+    visitPsiElement(o);
+  }
+
   public void visitFragment(@NotNull HttpFragment o) {
     visitPsiElement(o);
   }

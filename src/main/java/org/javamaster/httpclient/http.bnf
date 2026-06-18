@@ -197,7 +197,7 @@ headerFieldValue ::= (FIELD_VALUE | variable | FIELD_VALUE variable | variable F
     ]
 }
 body ::= requestMessagesGroup | multipartMessage
-requestMessagesGroup ::= inputFile | messageBody
+requestMessagesGroup ::= inputFile | messageBody | formUrlencodedBody
 
 inputFile ::= INPUT_FILE_SIGN filePath {
     pin = 1
@@ -220,6 +220,8 @@ filePathContent ::= FILE_PATH_PART
 messageBody ::= MESSAGE_TEXT {
     mixin="org.javamaster.httpclient.inject.HttpMessageBodyLanguageInjectionHost"
 }
+
+formUrlencodedBody ::= queryParameter (AND queryParameter)*
 
 multipartMessage ::= (MESSAGE_BOUNDARY multipartField?)+
 multipartField ::= header requestMessagesGroup {

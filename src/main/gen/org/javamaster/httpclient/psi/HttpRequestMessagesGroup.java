@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface HttpRequestMessagesGroup extends PsiElement {
 
   @Nullable
+  HttpFormUrlencodedBody getFormUrlencodedBody();
+
+  @Nullable
   HttpInputFile getInputFile();
 
   @Nullable

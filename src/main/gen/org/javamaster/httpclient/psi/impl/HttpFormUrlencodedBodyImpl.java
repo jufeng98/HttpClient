@@ -11,14 +11,14 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import org.javamaster.httpclient.psi.*;
 
-public class HttpRequestMessagesGroupImpl extends ASTWrapperPsiElement implements HttpRequestMessagesGroup {
+public class HttpFormUrlencodedBodyImpl extends ASTWrapperPsiElement implements HttpFormUrlencodedBody {
 
-  public HttpRequestMessagesGroupImpl(@NotNull ASTNode node) {
+  public HttpFormUrlencodedBodyImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull HttpVisitor visitor) {
-    visitor.visitRequestMessagesGroup(this);
+    visitor.visitFormUrlencodedBody(this);
   }
 
   @Override
@@ -28,21 +28,9 @@ public class HttpRequestMessagesGroupImpl extends ASTWrapperPsiElement implement
   }
 
   @Override
-  @Nullable
-  public HttpFormUrlencodedBody getFormUrlencodedBody() {
-    return findChildByClass(HttpFormUrlencodedBody.class);
-  }
-
-  @Override
-  @Nullable
-  public HttpInputFile getInputFile() {
-    return findChildByClass(HttpInputFile.class);
-  }
-
-  @Override
-  @Nullable
-  public HttpMessageBody getMessageBody() {
-    return findChildByClass(HttpMessageBody.class);
+  @NotNull
+  public List<HttpQueryParameter> getQueryParameterList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, HttpQueryParameter.class);
   }
 
 }

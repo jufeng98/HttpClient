@@ -254,6 +254,41 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // queryParameter (AND queryParameter)*
+  public static boolean formUrlencodedBody(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "formUrlencodedBody")) return false;
+    if (!nextTokenIs(b, "<form urlencoded body>", QUERY_NAME, START_VARIABLE_BRACE)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, FORM_URLENCODED_BODY, "<form urlencoded body>");
+    r = queryParameter(b, l + 1);
+    r = r && formUrlencodedBody_1(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // (AND queryParameter)*
+  private static boolean formUrlencodedBody_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "formUrlencodedBody_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!formUrlencodedBody_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "formUrlencodedBody_1", c)) break;
+    }
+    return true;
+  }
+
+  // AND queryParameter
+  private static boolean formUrlencodedBody_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "formUrlencodedBody_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, AND);
+    r = r && queryParameter(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // FRAGMENT_PART
   public static boolean fragment(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fragment")) return false;
@@ -961,14 +996,14 @@ public class HttpParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // inputFile | messageBody
+  // inputFile | messageBody | formUrlencodedBody
   public static boolean requestMessagesGroup(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "requestMessagesGroup")) return false;
-    if (!nextTokenIs(b, "<request messages group>", INPUT_FILE_SIGN, MESSAGE_TEXT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, REQUEST_MESSAGES_GROUP, "<request messages group>");
     r = inputFile(b, l + 1);
     if (!r) r = messageBody(b, l + 1);
+    if (!r) r = formUrlencodedBody(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }

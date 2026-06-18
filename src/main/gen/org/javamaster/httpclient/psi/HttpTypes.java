@@ -19,6 +19,7 @@ public interface HttpTypes {
   IElementType FILE_VARIABLE = new HttpElementType("FILE_VARIABLE");
   IElementType FILE_VARIABLE_NAME = new HttpElementType("FILE_VARIABLE_NAME");
   IElementType FILE_VARIABLE_VALUE = new HttpElementType("FILE_VARIABLE_VALUE");
+  IElementType FORM_URLENCODED_BODY = new HttpElementType("FORM_URLENCODED_BODY");
   IElementType FRAGMENT = new HttpElementType("FRAGMENT");
   IElementType GLOBAL_HANDLER = new HttpElementType("GLOBAL_HANDLER");
   IElementType GLOBAL_IMPORT = new HttpElementType("GLOBAL_IMPORT");
@@ -149,6 +150,9 @@ public interface HttpTypes {
       }
       else if (type == FILE_VARIABLE_VALUE) {
         return new HttpFileVariableValueImpl(node);
+      }
+      else if (type == FORM_URLENCODED_BODY) {
+        return new HttpFormUrlencodedBodyImpl(node);
       }
       else if (type == FRAGMENT) {
         return new HttpFragmentImpl(node);
