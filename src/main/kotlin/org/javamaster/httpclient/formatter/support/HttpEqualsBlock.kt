@@ -6,24 +6,13 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
-import org.javamaster.httpclient.psi.HttpTypes
 
-class HttpRequestMessagesGroupBlock(
-    node: ASTNode,
-    private val mySettings: CodeStyleSettings,
-) :
-    HttpRequestBaseBlock(node), SettingsAwareBlock {
-
-    override fun createBlock(node: ASTNode): Block {
-        val type = node.elementType
-        return if (type === HttpTypes.MESSAGE_BODY) {
-            HttpRequestMessageBodyBlock(node, mySettings)
-        } else if (type == HttpTypes.FORM_URLENCODED_BODY) {
-            HttpRequestFormUrlEncodedBodyBlock(node, mySettings)
-        } else {
-            super.createBlock(node)
-        }
-    }
+/**
+ * @author yudong
+ */
+class HttpEqualsBlock(node: ASTNode, private val mySettings: CodeStyleSettings) :
+    HttpRequestBaseBlock(node),
+    SettingsAwareBlock {
 
     override fun getWrap(): Wrap? {
         return null
@@ -34,10 +23,11 @@ class HttpRequestMessagesGroupBlock(
     }
 
     override fun isLeaf(): Boolean {
-        return false
+        return true
     }
 
     override fun getSettings(): CodeStyleSettings {
         return mySettings
     }
+
 }
