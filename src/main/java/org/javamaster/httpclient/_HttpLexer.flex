@@ -18,6 +18,8 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
         public int matchTimes;
         public CharSequence lastMatch;
 
+        public boolean formUrlEncodedFlag;
+
         public _HttpLexer() {
           this((java.io.Reader)null);
         }
@@ -35,7 +37,7 @@ import static org.javamaster.httpclient.psi.HttpTypes.*;
 %unicode
 //%debug
 %state IN_GLOBAL_SCRIPT, IN_GLOBAL_SCRIPT_END, IN_PRE_SCRIPT, IN_PRE_SCRIPT_END, IN_DIRECTION_NAME, IN_DIRECTION_VALUE, IN_RUN, IN_IMPORT
-%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_MULTILINE_QUERY, IN_BODY_QUERY, IN_FRAGMENT, IN_BODY, IN_TRIM_PREFIX_SPACE, IN_TRIM_PREFIX_ONLY_SPACE
+%state IN_FIRST_LINE, IN_HOST, IN_PORT, IN_QUERY, IN_MULTILINE_QUERY, IN_BODY_QUERY, IN_FRAGMENT, IN_FORM_URLENCODE_BODY, IN_BODY, IN_TRIM_PREFIX_SPACE, IN_TRIM_PREFIX_ONLY_SPACE
 %xstate IN_PATH, IN_JSON_VALUE
 %state IN_HEADER, IN_HEADER_FIELD_NAME, IN_HEADER_FIELD_VALUE, IN_HEADER_FIELD_VALUE_NO_SPACE
 %state IN_POST_SCRIPT, IN_POST_SCRIPT_END
@@ -223,7 +225,7 @@ STRING=('([^'])*'|\"([^\"])*\")
   {EOL_MULTI}         { yybegin(IN_HEADER); return WHITE_SPACE; }
 }
 
-// 用于延迟解析，见 UrlEncodedLazyParseableElementType
+// 用于延迟解析，见 UrlEncodedLazyParseableElementType (不再需要了,已经从语法层面去识别 form-urlencoded 的元素)
 <IN_BODY_QUERY> {
   "&"                 { nameFlag = true; return AND; }
   "="                 { nameFlag = false; return EQUALS; }
@@ -247,7 +249,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 
 <IN_HEADER> {
   [^\r\n]              { yypushback(yylength()); yybegin(IN_HEADER_FIELD_NAME); }
-  [ ]*{EOL}            { matchTimes = 0; lastMatch = ""; yybegin(IN_BODY); return WHITE_SPACE; }
+  [ ]*{EOL}            { matchTimes = 0; lastMatch = ""; yybegin(formUrlEncodedFlag ? IN_FORM_URLENCODE_BODY : IN_BODY); formUrlEncodedFlag = false; return WHITE_SPACE; }
   {REQUEST_COMMENT}    { yypushback(yylength()); yybegin(YYINITIAL); }
 }
 
@@ -266,12 +268,27 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_HEADER_FIELD_VALUE_NO_SPACE> {
-  {FIELD_VALUE}                         { }
+  {FIELD_VALUE}                         { formUrlEncodedFlag = calUrlEncodedFlag(yytext(), this); }
   "{"                                   { }
   {ONLY_SPACE}                          { }
   "{{"                                  { yypushback(yylength()); yybegin(IN_HEADER_FIELD_VALUE); return FIELD_VALUE; }
   [ ]*{EOL}                             { yypushback(yylength()); yybegin(IN_HEADER_FIELD_VALUE); return FIELD_VALUE; }
   <<EOF>>                               { yybegin(YYINITIAL); return FIELD_VALUE; }
+}
+
+<IN_FORM_URLENCODE_BODY> {
+  "&"                                { nameFlag = true; return AND; }
+  "="                                { nameFlag = false; return EQUALS; }
+  "{{"                               { nextState = IN_FORM_URLENCODE_BODY; yybegin(IN_VARIABLE); return START_VARIABLE_BRACE; }
+  {QUERY_PART}                       { if(nameFlag) return QUERY_NAME; else return QUERY_VALUE; }
+  {WHITE_SPACE}                      { return WHITE_SPACE; }
+  "< "                               { yybegin(IN_INPUT_FILE_PATH); return INPUT_FILE_SIGN; }
+  ">> "                              { yypushback(yylength()); yybegin(IN_OUTPUT_FILE_PATH); }
+  "> {%"                             { yypushback(yylength()); yybegin(IN_POST_SCRIPT); }
+  {MESSAGE_BOUNDARY}\s*              { yypushback(yylength()); yybegin(IN_MULTIPART); }
+  {REQUEST_COMMENT}                  { yypushback(yylength()); yybegin(YYINITIAL); }
+  {LINE_COMMENT}{EOL}                { yybegin(YYINITIAL); return LINE_COMMENT; }
+  <<EOF>>                            { yybegin(YYINITIAL); return WHITE_SPACE; }
 }
 
 <IN_BODY> {
