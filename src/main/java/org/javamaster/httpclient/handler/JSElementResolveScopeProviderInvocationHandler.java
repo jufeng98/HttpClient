@@ -25,12 +25,6 @@ import java.util.List;
  */
 public class JSElementResolveScopeProviderInvocationHandler implements InvocationHandler {
 
-    private static final List<VirtualFile> COMMON_LIBS = getLibraryFiles(
-            HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getCommonLibraryFilePointer(),
-            HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getCryptoLibraryFilePointer(),
-            HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getDynamicVariablesFilePointer()
-    );
-
     @Override
     public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
         Class<?> returnType = method.getReturnType();
@@ -57,17 +51,25 @@ public class JSElementResolveScopeProviderInvocationHandler implements Invocatio
             return null;
         }
 
+        HttpRequestHandlerApiDefinitionFilesHolder filesHolder = HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE;
+
         LightFilePointer filePointer;
         if (insideResponseHandler(injectionHost)) {
-            filePointer = HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getResponseLibraryFilePointer();
+            filePointer = filesHolder.getResponseLibraryFilePointer();
         } else {
-            filePointer = HttpRequestHandlerApiDefinitionFilesHolder.INSTANCE.getPreRequestLibraryFilePointer();
+            filePointer = filesHolder.getPreRequestLibraryFilePointer();
         }
 
         List<VirtualFile> virtualFiles = Lists.newArrayList();
         virtualFiles.add(filePointer.getFile());
 
-        virtualFiles.addAll(COMMON_LIBS);
+        List<VirtualFile> commonLibs = getLibraryFiles(
+                filesHolder.getCommonLibraryFilePointer(),
+                filesHolder.getCryptoLibraryFilePointer(),
+                filesHolder.getDynamicVariablesFilePointer()
+        );
+
+        virtualFiles.addAll(commonLibs);
 
         virtualFiles.addAll(JavaScript.INSTANCE.getCoreJsStubLib());
 
