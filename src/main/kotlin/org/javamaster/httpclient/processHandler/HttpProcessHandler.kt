@@ -42,7 +42,9 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             url = ReqUtils.encodeUrl(url)
         }
 
-        CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
+        if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
+            CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
+        }
 
         reqHeaderMap.addAll(GlobalHeaders.dataHolder)
 

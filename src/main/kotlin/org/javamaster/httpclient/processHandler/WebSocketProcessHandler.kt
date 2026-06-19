@@ -3,6 +3,7 @@ package org.javamaster.httpclient.processHandler
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.CookieUtils
@@ -24,7 +25,9 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
 
-        CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
+        if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
+            CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
+        }
 
         reqHeaderMap.addAll(GlobalHeaders.dataHolder)
 
