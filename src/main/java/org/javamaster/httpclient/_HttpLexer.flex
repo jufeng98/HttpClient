@@ -255,6 +255,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 
 <IN_HEADER_FIELD_NAME> {
   {FIELD_NAME}               { return FIELD_NAME; }
+  ":"{FIELD_NAME}            { return FIELD_NAME; }
   {ONLY_SPACE}               { return WHITE_SPACE; }
   ":"                        { yybegin(IN_HEADER_FIELD_VALUE); return COLON; }
 }
