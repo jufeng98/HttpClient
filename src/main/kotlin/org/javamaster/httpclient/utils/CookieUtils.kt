@@ -104,7 +104,7 @@ object CookieUtils {
                 return@computeReadAction true
             }
 
-            if (Registry.`is`("ide.hide.excluded.files")
+            if (Registry.getInstance().getBundleValueOrNull("ide.hide.excluded.files") == "true"
                 && FileIndexFacade.getInstance(project).isExcludedFile(cookiesFile)
             ) {
                 logWarn("cookies文件: ${cookiesFile.path} 已被标记排除!")
@@ -162,7 +162,7 @@ object CookieUtils {
                 return@computeReadAction nls("cookie.saved.failed.ignored", cookiesFile.path)
             }
 
-            if (Registry.`is`("ide.hide.excluded.files")
+            if (Registry.getInstance().getBundleValueOrNull("ide.hide.excluded.files") == "true"
                 && FileIndexFacade.getInstance(project).isExcludedFile(cookiesFile)
             ) {
                 return@computeReadAction nls("cookie.saved.failed.excluded", cookiesFile.path)
