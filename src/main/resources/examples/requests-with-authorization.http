@@ -16,5 +16,20 @@ POST https://chat.baidu.com/aichat/api/messages/list
 Content-Type: application/json
 
 {
-  "token": "my-secret-token"
+  "type": "starMap",
+  "ids": [
+    "260181"
+  ]
+}
+
+> {%
+    client.global.set("auth_token", response.body.logid);
+%}
+
+### Use token
+POST https://baike.baidu.com/api/activity/resource?tk=fda90026557974f384a8e5f687d13edb
+Content-Type: application/json
+
+{
+  "token": "{{auth_token}}"
 }

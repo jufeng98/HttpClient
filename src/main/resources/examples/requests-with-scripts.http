@@ -11,7 +11,7 @@
 <! {%
     // Global js previous handler 全局js前置处理器
     console.log("Call moment format:", moment().format())
-    client.global.clearAll();
+
     client.global.set('globalName', 'jufeng98');
     request.variables.set('requestName', 'jufeng9878');
 
@@ -24,10 +24,6 @@
 
     const secret = "RHDcnjfmkES"
     const signSource = secret + request.body.tryGetSubstituted() + secret;
-    // Use builtin crypto object 使用内置的 crypto 对象
-    const sign = crypto.md5().updateWithText(signSource).digest().toHex();
-    request.variables.set('sign', sign);
-    console.log("md5(calculate by java):", sign);
 
     // Use npm js library 使用 npm js库依赖
     const signTmp = CryptoJS.MD5(signSource).toString()
@@ -50,6 +46,11 @@
 
 ### use variable
 < {%
+    // Use builtin crypto object 使用内置的 crypto 对象
+    const sign = crypto.md5().updateWithText(signSource).digest().toHex();
+    request.variables.set('sign', sign);
+    console.log("md5(calculate by java):", sign);
+
     // pre-request js handler 预请求js前置处理器
     request.variables.set('cnName', 'jufeng987878');
     console.log("Call lodash capitalize:", _.capitalize('FRED'))
@@ -71,6 +72,38 @@ Cn-Name: {{cnName}}
 
 >> {{$historyFolder}}/result.json
 
+### Constructing Hash from request body with crypto
+< {%
+    const hash = crypto.sha256()
+        .updateWithText(request.body.tryGetSubstituted())
+        .digest().toHex();
+    request.variables.set("hash", hash)
+%}
+POST https://baike.baidu.com/api/activity/resource
+X-My-Hash: {{hash}}
+Content-Type: application/json
+
+{
+  "prop": "value"
+}
+
+### Constructing HMAC from request body with crypto
+< {%
+    const signature = crypto.hmac.sha256()
+        // get variable from http-client.private.env.json
+        .withTextSecret(request.environment.get("secret") || 'RHDcnjfmkES')
+        .updateWithText(request.body.tryGetSubstituted())
+        .digest().toHex();
+    request.variables.set("signature", signature)
+%}
+POST https://baike.baidu.com/api/activity/resource
+X-My-Signature: {{signature}}
+Content-Type: application/json
+
+{
+  "prop": "value"
+}
+
 ### post js handler
 GET https://baike.baidu.com/api/activity/resource
 
@@ -89,7 +122,7 @@ GET https://baike.baidu.com/api/activity/resource
 
 > {%
     client.test("Headers option exists", () => {
-        client.assert(response.body.hasOwnProperty("data"), "Cannot find 'data' option in response");
+        client.assert(response.body.hasOwnProperty("errno"), "Cannot find 'errno' option in response");
     })
 %}
 
@@ -113,3 +146,15 @@ GET https://examples.http-client.intellij.net/xml
     const result = xpath(response.body, "/slideshow/slide/title")
     console.log("xPath result:", result)
 %}
+
+### Tip: clear global variables before the request
+< {%
+    client.global.clearAll()
+    client.global.set("my-variable", "I will not be deleted!")
+%}
+POST https://baike.baidu.com/api/activity/resource
+Content-Type: application/json
+
+{
+    "my-variable": "{{my-variable}}"
+}

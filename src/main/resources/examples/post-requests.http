@@ -20,7 +20,7 @@ Content-Type: application/json
 }
 
 ### mulitline query body
-POST https://ijhttp-examples.jetbrains.com/post
+POST https://chat.baidu.com/aichat/api/messages/list
 Content-Type: application/x-www-form-urlencoded
 
 key1 = value1 &
@@ -47,7 +47,7 @@ Content-Type: application/json
 ### Complex multipart request
 # @connectTimeout 6
 # @readTimeout 6
-POST https://chat.baidu.com/aichat/api/messages/list
+POST https://examples.http-client.intellij.net/post
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary

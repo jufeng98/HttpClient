@@ -13,6 +13,11 @@ Accept: text/html
 GET {{host}}/lemma/api/home/module?show_env={{show_env}}
 Accept: application/json
 
+### Saved response to specific file
+GET {{host}}/lemma/api/home/module?show_env={{show_env}}
+
+>> {{$historyFolder}}/res.json
+
 ### With cookie
 GET https://www.baidu.com
 Cookie: uid=123456789
@@ -25,3 +30,14 @@ GET https://www.baidu.com?
     firstname=John&
     lastname=Doe&
     town=Freetown
+
+### GET request with auto redirect
+# @auto-redirect
+GET https://www.baidu.com/my/index
+
+### GET request without cookies
+# @no-cookie-jar
+GET https://www.baidu.com
+
+### GET request with HTTP/2 protocol
+GET https://examples.http-client.intellij.net/get HTTP/2
