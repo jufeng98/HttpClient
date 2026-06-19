@@ -4,8 +4,9 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.FileIndexFacade
-import com.intellij.openapi.util.registry.Registry
+import com.intellij.openapi.util.registry.RegistryManager
 import com.intellij.psi.util.PsiUtil
+import com.intellij.util.application
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.javamaster.httpclient.consts.HttpConsts
@@ -104,7 +105,7 @@ object CookieUtils {
                 return@computeReadAction true
             }
 
-            if (Registry.getInstance().getBundleValueOrNull("ide.hide.excluded.files") == "true"
+            if (application.getService(RegistryManager::class.java).get("ide.hide.excluded.files").asBoolean()
                 && FileIndexFacade.getInstance(project).isExcludedFile(cookiesFile)
             ) {
                 logWarn("cookies文件: ${cookiesFile.path} 已被标记排除!")
@@ -162,7 +163,7 @@ object CookieUtils {
                 return@computeReadAction nls("cookie.saved.failed.ignored", cookiesFile.path)
             }
 
-            if (Registry.getInstance().getBundleValueOrNull("ide.hide.excluded.files") == "true"
+            if (application.getService(RegistryManager::class.java).get("ide.hide.excluded.files").asBoolean()
                 && FileIndexFacade.getInstance(project).isExcludedFile(cookiesFile)
             ) {
                 return@computeReadAction nls("cookie.saved.failed.excluded", cookiesFile.path)
