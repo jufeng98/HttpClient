@@ -5,11 +5,12 @@
 
     <description>
         <![CDATA[
-            Provides the ability to edit and execute HTTP requests from the code editor of IDEA.<br>
+            Provides the ability to edit and execute HTTP / WebSocket / Dubbo requests from the code editor of IDEA.<br>
             <ul>
                 <li>Support sending GET, POST and other requests</li>
                 <li>Support sending WebSocket request</li>
                 <li>Support sending Dubbo request</li>
+                <li>Support cookie, save cookies locally and send them with subsequent requests</li>
                 <li>Support Environment, build-in variable and build-in method</li>
                 <li>Support jump to SpringMVC Controller method from url</li>
                 <li>Show SpringMVC Controller method information when hover in url</li>
@@ -34,11 +35,12 @@
                 <li>Type gtr or ptr to trigger live templates and quickly create HTTP requests</li>
                 <li>Click the run button on the left side of the editor to sending request and view the response</li>
             </ol>
-            提供从 IDEA Editor 编写和执行 HTTP 请求的能力：<br>
+            提供从 IDEA Editor 编写和执行 HTTP / WebSocket / Dubbo 请求的能力。<br>
             <ul>
                 <li>支持发起 GET、POST 等请求</li>
                 <li>支持发起 WebSocket 请求</li>
                 <li>支持发起 Dubbo 请求</li>
+                <li>支持 Cookie 功能，支持保存 Cookie 到本地并随着后续请求发送</li>
                 <li>支持环境变量、内置变量和内置方法</li>
                 <li>支持从 url 跳转到对应的 SpringMVC Controller 方法</li>
                 <li>url 悬浮提示对应的 SpringMVC Controller 方法信息</li>
@@ -68,7 +70,7 @@
     <change-notes>
         <![CDATA[
             <ul>
-                <li><b>8.1.0</b></li>
+                <li><b>8.2.0</b></li>
                 <ul>
                     <li>调整 http 请求逻辑,支持 Content-Type 里的 charset,不再固定使用 UTF-8 编码</li>
                     <li>调整 http 请求逻辑,对于 url、header、body 里的未解析变量,不再直接发起请求,而是报错提示</li>

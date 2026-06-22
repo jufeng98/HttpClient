@@ -6,6 +6,7 @@
 - Support sending GET, POST and other requests
 - Support sending WebSocket request
 - Support sending Dubbo request
+- Support cookie, save cookies locally and send them with subsequent requests
 - Support Environment, build-in variable and build-in method
 - Support jump to SpringMVC Controller method from url
 - Show SpringMVC Controller method information when hover in url
@@ -31,9 +32,10 @@
 
 ### 主要功能如下：
 
-- 支持发起 GET、POST 等请求
+- 支持发起 GET、POST 等全部的 HTTP 请求类型
 - 支持发起 WebSocket 请求
 - 支持发起 Dubbo 请求
+- 支持 Cookie 功能，支持保存 Cookie 到本地并随着后续请求发送
 - 支持环境变量、内置变量和内置方法
 - 支持从 url 跳转到对应的 SpringMVC Controller 方法
 - url 悬浮提示对应的 SpringMVC Controller 方法信息
@@ -77,6 +79,10 @@
 #### 环境变量跳转
 
 ![variable-jump.gif](./images/variable-jump.gif)
+
+#### url 输入智能提示 SpringMVC Controller 方法
+
+![url-completion.png](images/url-completion.png)
 
 #### url 跳转 SpringMVC Controller 方法
 
