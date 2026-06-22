@@ -18,6 +18,8 @@ import javax.swing.SwingConstants
  * @author yudong
  */
 class ChooseEnvironmentAction(private val file: VirtualFile) : ComboBoxAction() {
+    var presetEnvSet: MutableSet<String>? = null
+
     private var comboBoxButton: ComboBoxButton? = null
 
     private var selectedEnv: String? = null
@@ -56,6 +58,8 @@ class ChooseEnvironmentAction(private val file: VirtualFile) : ComboBoxAction() 
         val path = file.parent?.path ?: return DefaultActionGroup.createPopupGroupWithEmptyText()
 
         val presetEnvSet = EnvFileService.getService(project).getPresetEnvSet(path)
+
+        this.presetEnvSet = presetEnvSet
 
         val envActions = presetEnvSet.map { MyAction(it) }
 

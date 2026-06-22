@@ -14,19 +14,15 @@ import java.util.zip.InflaterInputStream
 object DecompressUtils {
 
     fun decompressBodyBytes(bodyBytes: ByteArray, contentEncoding: String): ByteArray {
-        var bytes = bodyBytes
-
-        when (contentEncoding) {
+        return when (contentEncoding) {
             "gzip", "x-gzip" -> GZIPInputStream(ByteArrayInputStream(bodyBytes)).use {
-                bytes = it.readAllBytes()
+                it.readAllBytes()
             }
 
-            "deflate" -> bytes = decompressDeflate(bodyBytes)
+            "deflate" -> decompressDeflate(bodyBytes)
 
             else -> throw UnsupportedEncodingException("Unknown Content-Encoding: $contentEncoding, only support deflate, gzip, x-gzip")
         }
-
-        return bytes
     }
 
     fun decompressDeflate(compressedData: ByteArray): ByteArray {

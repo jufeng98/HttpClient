@@ -33,6 +33,7 @@ public class HttpEditorTopForm extends JComponent {
 
     private final @Nullable Module module;
 
+
     public HttpEditorTopForm(VirtualFile file, @Nullable Module module, FileEditor fileEditor) {
         this.file = file;
         this.module = module;
@@ -66,6 +67,8 @@ public class HttpEditorTopForm extends JComponent {
     }
 
     public void initEnvCombo(Set<String> presetEnvSet) {
+        chooseEnvironmentAction.setPresetEnvSet(presetEnvSet);
+
         if (presetEnvSet.contains("dev")) {
             setSelectEnv("dev");
         }
@@ -77,6 +80,10 @@ public class HttpEditorTopForm extends JComponent {
 
     public void setSelectEnv(String env) {
         chooseEnvironmentAction.setSelectEnv(env);
+    }
+
+    public ChooseEnvironmentAction getChooseEnvironmentAction() {
+        return chooseEnvironmentAction;
     }
 
     public static @Nullable String getSelectedEnv(Project project) {

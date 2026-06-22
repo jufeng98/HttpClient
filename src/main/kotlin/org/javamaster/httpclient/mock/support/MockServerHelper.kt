@@ -254,7 +254,6 @@ object MockServerHelper {
     fun computeResBody(
         request: HttpRequest,
         variableResolver: VariableResolver,
-        paramMap: Map<String, String>,
     ): Pair<Any?, LinkedMultiValueMap<String, String?>> {
         return application.runReadAction<Pair<Any?, LinkedMultiValueMap<String, String?>>> {
             val reqBody = HttpUtils.convertToReqBody(request, variableResolver)

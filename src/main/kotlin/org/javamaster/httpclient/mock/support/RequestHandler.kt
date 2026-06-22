@@ -87,7 +87,7 @@ class RequestHandler(
             }
         } else {
             if (reqPath == path) {
-                val resBody = computeResBody(request, variableResolver, paramMap)
+                val resBody = computeResBody(request, variableResolver)
 
                 val status = responseStatus ?: HttpStatus.SC_OK
                 writeResBody(resBody, exchange, status, resHeaders, resConsumer)

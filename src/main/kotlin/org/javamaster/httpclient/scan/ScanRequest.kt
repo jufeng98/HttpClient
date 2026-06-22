@@ -3,6 +3,7 @@ package org.javamaster.httpclient.scan
 import com.google.common.collect.Maps
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
@@ -106,6 +107,11 @@ class ScanRequest(private val project: Project) {
     }
 
     fun handleFileChange(javaFile: PsiJavaFile, module: Module) {
+        val dumbService = project.getService(DumbService::class.java)
+        if (dumbService.isDumb) {
+            return
+        }
+
         val moduleName = module.name
 
         var cacheRequestMap = moduleControllerMap[moduleName]
@@ -116,8 +122,13 @@ class ScanRequest(private val project: Project) {
             return
         }
 
+
         for (psiClass in javaFile.classes) {
             val qualifiedName = psiClass.qualifiedName ?: continue
+
+            if (dumbService.isDumb) {
+                return
+            }
 
             if (cacheRequestMap.containsKey(qualifiedName) || SpringUtils.isSpringController(javaFile)) {
                 val requestsNew = controllerScanService.findRequests(project, GlobalSearchScope.fileScope(javaFile))

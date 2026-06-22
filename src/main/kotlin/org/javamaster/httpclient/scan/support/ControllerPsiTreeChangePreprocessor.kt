@@ -25,20 +25,22 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
         }
 
         val code = event.code
-        if (code == PsiTreeChangeEventImpl.PsiEventType.CHILDREN_CHANGED) {
-            val scanRequest = project.getService(ScanRequest::class.java)
+        if (code != PsiTreeChangeEventImpl.PsiEventType.CHILDREN_CHANGED) return
 
-            dumbService.runWhenSmart {
-                ReadAction
-                    .nonBlocking<Unit> {
-                        val module = ModuleUtilCore.findModuleForFile(psiJavaFile) ?: return@nonBlocking
-
-                        scanRequest.handleFileChange(psiJavaFile, module)
+        dumbService.runWhenSmart {
+            ReadAction
+                .nonBlocking<Unit> {
+                    if (dumbService.isDumb) {
+                        return@nonBlocking
                     }
-                    .expireWhen { !psiJavaFile.isValid }
-                    .submit(AppExecutorUtil.getAppExecutorService())
-                    .onError { logWarn("scanRequest failed", it) }
-            }
+
+                    val module = ModuleUtilCore.findModuleForFile(psiJavaFile) ?: return@nonBlocking
+
+                    project.getService(ScanRequest::class.java).handleFileChange(psiJavaFile, module)
+                }
+                .expireWhen { !psiJavaFile.isValid }
+                .submit(AppExecutorUtil.getAppExecutorService())
+                .onError { logWarn("scanRequest failed", it) }
         }
     }
 

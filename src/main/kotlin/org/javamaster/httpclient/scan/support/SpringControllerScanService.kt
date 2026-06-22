@@ -1,6 +1,7 @@
 package org.javamaster.httpclient.scan.support
 
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
@@ -45,12 +46,21 @@ class SpringControllerScanService {
 
         val filterScope = JavaSourceFilterScope(scope)
 
+        val dumbService = project.getService(DumbService::class.java)
+        if (dumbService.isDumb) {
+            return
+        }
+
         val controllerAnnotations = StubIndex.getElements(
             annotationIndex.key, Control.Controller.simpleName, project, filterScope,
             PsiAnnotation::class.java
         )
 
         iterateControllerAnnotations(controllerAnnotations, consumer)
+
+        if (dumbService.isDumb) {
+            return
+        }
 
         val restControllerAnnotations = StubIndex.getElements(
             annotationIndex.key, Control.RestController.simpleName, project, filterScope,
