@@ -3,9 +3,11 @@ package org.javamaster.httpclient.annotator
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.psi.PsiElement
+import org.javamaster.httpclient.annotator.VariableAnnotator.annotateHeaderField
 import org.javamaster.httpclient.annotator.VariableAnnotator.annotateRequestName
 import org.javamaster.httpclient.annotator.VariableAnnotator.annotateVariableName
 import org.javamaster.httpclient.psi.HttpComment
+import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.psi.HttpVariableName
 
 /**
@@ -18,6 +20,8 @@ class HttpAnnotator : Annotator {
             annotateVariableName(element.isBuiltin, element.textRange, holder)
         } else if (element is HttpComment) {
             annotateRequestName(element.textRange, holder)
+        } else if (element is HttpHeaderField) {
+            annotateHeaderField(element, holder)
         }
     }
 

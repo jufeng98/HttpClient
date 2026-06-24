@@ -1,11 +1,15 @@
 package org.javamaster.httpclient.annotator
 
+import com.google.common.net.HttpHeaders
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.util.TextRange
+import org.javamaster.httpclient.inspection.fix.HeaderIntentionAction
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.psi.HttpHeaderField
 import org.javamaster.httpclient.psi.HttpVariableArg
+import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * @author yudong
@@ -65,6 +69,23 @@ object VariableAnnotator {
         holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES)
             .range(TextRange(range.startOffset, range.startOffset + 3))
             .textAttributes(DefaultLanguageHighlighterColors.LINE_COMMENT)
+            .create()
+    }
+
+    fun annotateHeaderField(headerField: HttpHeaderField, holder: AnnotationHolder) {
+        if (!headerField.name.equals(HttpHeaders.CONTENT_LENGTH, true)) {
+            return
+        }
+
+        if (HttpUtils.isFileInHistoryDir(headerField.containingFile.virtualFile, headerField.project)) {
+            return
+        }
+
+        holder.newAnnotation(HighlightSeverity.WARNING, NlsBundle.nls("redundant.header"))
+            .range(headerField.textRange)
+            .textAttributes(DefaultLanguageHighlighterColors.LINE_COMMENT)
+            .newFix(HeaderIntentionAction(headerField))
+            .registerFix()
             .create()
     }
 

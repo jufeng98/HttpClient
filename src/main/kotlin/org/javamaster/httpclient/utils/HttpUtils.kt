@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.utils
 
+import com.google.common.net.HttpHeaders
 import com.intellij.execution.RunManager
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.json.psi.JsonProperty
@@ -24,6 +25,7 @@ import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.HeaderUnresolvedVariableException
 import org.javamaster.httpclient.exception.HttpFileException
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
@@ -102,6 +104,11 @@ object HttpUtils {
             headerFields.stream()
                 .forEach {
                     val headerName = it.headerFieldName.text
+                    if (headerName.equals(HttpHeaders.CONTENT_LENGTH, true)) {
+                        logWarn("忽略 $headerName 请求头")
+                        return@forEach
+                    }
+
                     val headerValue = it.headerFieldValue?.text ?: ""
                     map.add(headerName, variableResolver.resolve(headerValue))
                 }
@@ -151,10 +158,6 @@ object HttpUtils {
         request: HttpRequest,
         variableResolver: VariableResolver,
     ): Any? {
-        if (request.contentLength != null) {
-            throw IllegalArgumentException(NlsBundle.nls("content.length.error"))
-        }
-
         val body = request.body
 
         val requestMessagesGroup = body?.requestMessagesGroup
