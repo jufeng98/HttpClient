@@ -4,6 +4,7 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.util.text.Formats
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
+import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
@@ -86,6 +87,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             hasReqError = throwable != null
 
             application.executeOnPooledThread {
+                val resHeaders = response.headers()
+
                 if (ResUtils.shouldRedirect(httpStatus, paramMap)) {
                     redirectTimes++
                     if (redirectTimes > 3) {
@@ -96,7 +99,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     httpReqDescList.add("${CR_LF}// ${NlsBundle.nls("redirect.times.req", redirectTimes)}${CR_LF}")
 
-                    val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
+                    val locationUrl = ResUtils.resolveLocationUrl(url, resHeaders)
 
                     handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList)
 
@@ -107,27 +110,29 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     if (hasReqError) {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
-                        dealResponse(httpInfo, parentPath)
+                        dealResponse(httpInfo)
 
                         detachProcess()
 
                         return@executeOnPooledThread
                     }
 
-                    val cookies = CookieUtils.parseAll(url, response.headers())
+                    val cookies = CookieUtils.parseAll(url, resHeaders)
 
                     var cookieSaveDesc = ""
                     if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
                         cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project)
                     }
 
-                    val resHeaders = response.headers()
                     val resHeaderList = ResUtils.convertResponseHeaders(resHeaders)
 
-                    val httpResInfo = ResUtils.convertResponseBody(response.body(), resHeaders)
+                    val resBody = response.body()
+                    val httpResInfo = ResUtils.convertResponseBody(resBody, resHeaders)
 
-                    val size = Formats.formatFileSize(response.body().size.toLong())
-                    val comment = NlsBundle.nls("res.desc", response.statusCode(), costTimes!!, size)
+                    val statusCode = response.statusCode()
+                    val size = Formats.formatFileSize(resBody.size.toLong())
+
+                    val comment = NlsBundle.nls("res.desc", statusCode, costTimes!!, size)
 
                     val httpResDescList = mutableListOf<String>()
 
@@ -140,7 +145,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     var resList: List<String>
                     try {
                         resList = jsExecutor.evalJsAfterRequest(
-                            url, reqBody, jsAfterReq, httpResInfo, response.statusCode(),
+                            url, reqBody, jsAfterReq, httpResInfo, statusCode,
                             resHeaders.map(), cookies, httpFile.name, httpDocument
                         )
                     } catch (e: JsScriptException) {
@@ -172,15 +177,19 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     if (simpleTypeEnum.binary) {
                         httpResDescList.add(NlsBundle.nls("res.binary.data", size))
                     } else {
-                        httpResDescList.add(bodyStr!!)
+                        if (bodyStr!!.length > RES_SIZE_LIMIT) {
+                            httpResDescList.add("")
+                        } else {
+                            httpResDescList.add(bodyStr)
+                        }
                     }
 
                     val httpInfo = HttpInfo(
                         httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
-                        null, contentType, resHeaders
+                        null, contentType, resHeaders, resolveOutputFilePath()
                     )
 
-                    dealResponse(httpInfo, parentPath)
+                    dealResponse(httpInfo)
 
                     detachProcess()
                 } catch (e: Exception) {
