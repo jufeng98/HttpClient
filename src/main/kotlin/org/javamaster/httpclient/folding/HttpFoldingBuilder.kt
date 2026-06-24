@@ -14,7 +14,6 @@ import com.intellij.util.containers.toArray
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.psi.HttpHeader
 import org.javamaster.httpclient.psi.HttpMultipartField
-import org.javamaster.httpclient.psi.HttpOutputFile
 import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getHeaderFieldOption
 import org.javamaster.httpclient.psi.impl.HttpPsiImplUtil.getMultipartFieldDescription
@@ -67,11 +66,6 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
         } else if (type == HttpTypes.HEADER) {
             val contentType = (node.psi as HttpHeader).contentTypeField?.text ?: ""
             return "(Headers)...${contentType}..."
-        } else if (type == HttpTypes.OUTPUT_FILE) {
-            val filePath = (node.psi as HttpOutputFile).filePath
-            if (filePath != null) {
-                return HttpUtils.getFilePathText(filePath)
-            }
         } else if (type == HttpTypes.BLOCK_COMMENT) {
             return "/* ... */"
         }
@@ -129,11 +123,6 @@ class HttpFoldingBuilder : FoldingBuilder, DumbAware {
             val header = requestNode.findChildByType(HttpTypes.HEADER)
             if (header != null) {
                 descriptors.add(FoldingDescriptor(header, header.textRange))
-            }
-
-            val filePath = requestNode.findChildByType(HttpTypes.OUTPUT_FILE)
-            if (filePath != null) {
-                descriptors.add(FoldingDescriptor(filePath, filePath.textRange))
             }
         }
 
