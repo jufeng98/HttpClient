@@ -38,9 +38,6 @@ class HttpPsiReferenceContributor : PsiReferenceContributor() {
             PlatformPatterns.psiElement(HttpQueryParameterKey::class.java), HttpQueryParameterKeyPsiReferenceProvider()
         )
 
-        registrar.registerReferenceProvider(
-            PlatformPatterns.psiElement(HttpLineComment::class.java), HttpLineCommentPsiReferenceProvider()
-        )
     }
 
 }
