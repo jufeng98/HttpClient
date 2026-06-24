@@ -139,8 +139,6 @@ public class HttpDashboardForm implements Disposable {
             Editor resEditor = EditorUtils.INSTANCE.createEditor(resVirtualFile, resDocument, true,
                     project, false, simpleTypeEnum, editorList);
 
-            InlayProperties inlayProperties = new InlayProperties();
-
             if (renderResBodyFileName) {
                 RenderUtils.INSTANCE.renderResBodyFileName(resEditor, resDocument, resBodyFile, project);
             }
