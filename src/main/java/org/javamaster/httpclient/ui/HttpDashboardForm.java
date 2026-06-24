@@ -32,9 +32,12 @@ import org.javamaster.httpclient.consts.HttpConsts;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.exception.JsScriptException;
 import org.javamaster.httpclient.key.HttpKey;
+import org.javamaster.httpclient.listener.HttpEditorMouseListener;
+import org.javamaster.httpclient.listener.HttpEditorMouseMotionListener;
 import org.javamaster.httpclient.messageBus.WsLangChangeNotifier;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
+import org.javamaster.httpclient.renderer.HttpEditorCustomElementRenderer;
 import org.javamaster.httpclient.utils.*;
 import org.javamaster.httpclient.ws.WsRequest;
 
@@ -88,7 +91,10 @@ public class HttpDashboardForm implements Disposable {
     }
 
     public void initHttpResContent(HttpInfo httpInfo, boolean noLog) {
-        VirtualFile resBodyFile = ResUtils.INSTANCE.saveResBodyToFile(httpInfo, tabName, noLog, project);
+        kotlin.Pair<VirtualFile, Boolean> pair = ResUtils.INSTANCE.saveResBodyToFile(httpInfo, tabName, noLog, project);
+
+        VirtualFile resBodyFile = pair.getFirst();
+        Boolean renderResBodyFileName = pair.getSecond();
 
         VirtualFile reqVirtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(httpInfo.getHttpReqDescList(),
                 "req.http", tabName, noLog, project);
@@ -130,6 +136,22 @@ public class HttpDashboardForm implements Disposable {
 
             Editor resEditor = EditorUtils.INSTANCE.createEditor(resVirtualFile, resDocument, true,
                     project, false, simpleTypeEnum, editorList);
+
+            if (renderResBodyFileName) {
+                HttpEditorCustomElementRenderer renderer = new HttpEditorCustomElementRenderer(resEditor, resBodyFile);
+                int signWidth = renderer.getSignWidth();
+
+                InlayProperties inlayProperties = new InlayProperties();
+
+                Inlay<HttpEditorCustomElementRenderer> resBodyInlay = resEditor.getInlayModel()
+                        .addBlockElement(resDocument.getTextLength(), inlayProperties, renderer);
+
+                if (resBodyInlay != null) {
+                    resEditor.addEditorMouseListener(new HttpEditorMouseListener(resBodyInlay, resBodyFile, project, signWidth));
+
+                    resEditor.addEditorMouseMotionListener(new HttpEditorMouseMotionListener(resBodyInlay, resEditor, signWidth));
+                }
+            }
 
             GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
             GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
