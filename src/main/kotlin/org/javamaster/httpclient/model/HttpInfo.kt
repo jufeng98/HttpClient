@@ -13,7 +13,8 @@ data class HttpInfo(
     val byteArray: ByteArray?,
     val httpException: Throwable?,
     var contentType: String? = null,
-    val resHeaders: HttpHeaders? = null
+    val resHeaders: HttpHeaders? = null,
+    val outputFilePathText: String? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -24,12 +25,11 @@ data class HttpInfo(
         if (httpReqDescList != other.httpReqDescList) return false
         if (httpResDescList != other.httpResDescList) return false
         if (type != other.type) return false
-        if (byteArray != null) {
-            if (other.byteArray == null) return false
-            if (!byteArray.contentEquals(other.byteArray)) return false
-        } else if (other.byteArray != null) return false
+        if (!byteArray.contentEquals(other.byteArray)) return false
         if (httpException != other.httpException) return false
         if (contentType != other.contentType) return false
+        if (resHeaders != other.resHeaders) return false
+        if (outputFilePathText != other.outputFilePathText) return false
 
         return true
     }
@@ -41,7 +41,8 @@ data class HttpInfo(
         result = 31 * result + (byteArray?.contentHashCode() ?: 0)
         result = 31 * result + (httpException?.hashCode() ?: 0)
         result = 31 * result + (contentType?.hashCode() ?: 0)
+        result = 31 * result + (resHeaders?.hashCode() ?: 0)
+        result = 31 * result + (outputFilePathText?.hashCode() ?: 0)
         return result
     }
-
 }

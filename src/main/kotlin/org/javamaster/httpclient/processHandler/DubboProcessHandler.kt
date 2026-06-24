@@ -102,7 +102,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     if (hasReqError) {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
 
-                        dealResponse(httpInfo, parentPath)
+                        dealResponse(httpInfo)
 
                         detachProcess()
 
@@ -164,10 +164,12 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         SimpleTypeEnum.JSON,
                         bodyBytes,
                         null,
-                        ContentType.APPLICATION_JSON.mimeType
+                        ContentType.APPLICATION_JSON.mimeType,
+                        null,
+                        resolveOutputFilePath()
                     )
 
-                    dealResponse(httpInfo, parentPath)
+                    dealResponse(httpInfo)
 
                     detachProcess()
                 } catch (e: Exception) {

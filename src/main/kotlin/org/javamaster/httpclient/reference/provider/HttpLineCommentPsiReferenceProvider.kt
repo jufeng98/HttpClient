@@ -18,11 +18,6 @@ class HttpLineCommentPsiReferenceProvider : PsiReferenceProvider() {
         val lineComment = element as HttpLineComment
         val comment = lineComment.text
 
-        val key1 = "// " + nls("save.to.file", "")
-        if (comment.startsWith(key1)) {
-            return createReference(key1, lineComment, comment)
-        }
-
         val key2 = "// " + nls("cookie.saved", "")
         if (comment.startsWith(key2)) {
             return createReference(key2, lineComment, comment)

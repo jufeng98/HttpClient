@@ -237,22 +237,20 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     fun dealPreJsErrorResponse(httpReqDescList: MutableList<String>) {
         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, jsScriptException)
 
-        dealResponse(httpInfo, parentPath)
+        dealResponse(httpInfo)
 
         detachProcess()
     }
 
-    fun dealResponse(httpInfo: HttpInfo, parentPath: String) {
-        if (outPutFilePath != null && httpInfo.byteArray != null) {
-            var path = variableResolver.resolve(outPutFilePath!!)
+    fun resolveOutputFilePath(): String? {
+        if (outPutFilePath == null) return null
 
-            path = constructFilePath(path, parentPath)
+        var path = variableResolver.resolve(outPutFilePath!!)
 
-            val saveResult = ResUtils.saveResBodyToFile(path, httpInfo.byteArray)
+        return constructFilePath(path, parentPath)
+    }
 
-            httpInfo.httpResDescList.add(0, saveResult)
-        }
-
+    fun dealResponse(httpInfo: HttpInfo) {
         httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param))
 
         val virtualFile = httpFile.virtualFile
@@ -380,7 +378,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
             val offset = messageBody.textOffset + idx + VAR_BRACE_START.length
 
             actionNotify(variableName, httpFile.virtualFile, httpDocument, messageBody, offset)
-        }else if (formUrlencodedBody != null) {
+        } else if (formUrlencodedBody != null) {
             val varElement = PsiTreeUtil.findChildrenOfType(formUrlencodedBody, HttpVariableName::class.java)
                 .firstOrNull { it.text == variableName }
             if (varElement != null) {
