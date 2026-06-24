@@ -70,6 +70,13 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>8.3.0</b></li>
+                <ul>
+                    <li>调整响应窗口逻辑,当 http / dubbo 响应体太大时,不再显示在响应窗口,避免 IDEA 卡顿</li>
+                    <li>调整响应窗口逻辑,简化响应体文件展示逻辑,以及鼠标可直接点击打开响应体文件</li>
+                    <li>调整请求逻辑,对于存在 Content-Length 请求头时,不仅置灰显示,而且发起请求时不再报错,而是忽略</li>
+                    <li>bug修复及其他功能优化等等</li>
+                </ul>
                 <li><b>8.2.0</b></li>
                 <ul>
                     <li>调整 http 请求逻辑,支持 Content-Type 里的 charset,不再固定使用 UTF-8 编码</li>
