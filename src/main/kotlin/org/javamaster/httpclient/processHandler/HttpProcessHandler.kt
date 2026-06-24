@@ -2,6 +2,7 @@ package org.javamaster.httpclient.processHandler
 
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.util.text.Formats
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
@@ -119,9 +120,9 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val cookies = CookieUtils.parseAll(url, resHeaders)
 
-                    var cookieSaveDesc = ""
+                    var cookieSavePair: Pair<String, VirtualFile>? = null
                     if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
-                        cookieSaveDesc = CookieUtils.saveCookiesToFile(cookies, project)
+                        cookieSavePair = CookieUtils.saveCookiesToFile(cookies, project)
                     }
 
                     val resHeaderList = ResUtils.convertResponseHeaders(resHeaders)
@@ -135,10 +136,6 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     val comment = NlsBundle.nls("res.desc", statusCode, costTimes!!, size)
 
                     val httpResDescList = mutableListOf<String>()
-
-                    if (cookieSaveDesc.isNotEmpty()) {
-                        httpResDescList.add("// $cookieSaveDesc${CR_LF}")
-                    }
 
                     httpResDescList.add("// $comment${CR_LF}")
 
@@ -186,7 +183,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val httpInfo = HttpInfo(
                         httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
-                        null, contentType, resHeaders, resolveOutputFilePath()
+                        null, contentType, resHeaders, resolveOutputFilePath(), cookieSavePair
                     )
 
                     dealResponse(httpInfo)

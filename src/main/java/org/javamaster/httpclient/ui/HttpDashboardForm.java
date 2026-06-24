@@ -26,18 +26,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.javamaster.httpclient.action.dashboard.*;
-import org.javamaster.httpclient.action.ws.*;
+import org.javamaster.httpclient.action.dashboard.PreviewFileAction;
+import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
+import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
+import org.javamaster.httpclient.action.ws.ChooseWsLangAction;
+import org.javamaster.httpclient.action.ws.SendWsAction;
+import org.javamaster.httpclient.action.ws.WsInputNextHistoryAction;
+import org.javamaster.httpclient.action.ws.WsInputPreviousHistoryAction;
 import org.javamaster.httpclient.consts.HttpConsts;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.exception.JsScriptException;
 import org.javamaster.httpclient.key.HttpKey;
-import org.javamaster.httpclient.listener.HttpEditorMouseListener;
-import org.javamaster.httpclient.listener.HttpEditorMouseMotionListener;
 import org.javamaster.httpclient.messageBus.WsLangChangeNotifier;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
-import org.javamaster.httpclient.renderer.HttpEditorCustomElementRenderer;
 import org.javamaster.httpclient.utils.*;
 import org.javamaster.httpclient.ws.WsRequest;
 
@@ -137,20 +139,15 @@ public class HttpDashboardForm implements Disposable {
             Editor resEditor = EditorUtils.INSTANCE.createEditor(resVirtualFile, resDocument, true,
                     project, false, simpleTypeEnum, editorList);
 
+            InlayProperties inlayProperties = new InlayProperties();
+
             if (renderResBodyFileName) {
-                HttpEditorCustomElementRenderer renderer = new HttpEditorCustomElementRenderer(resEditor, resBodyFile);
-                int signWidth = renderer.getSignWidth();
+                RenderUtils.INSTANCE.renderResBodyFileName(resEditor, resDocument, resBodyFile, project);
+            }
 
-                InlayProperties inlayProperties = new InlayProperties();
-
-                Inlay<HttpEditorCustomElementRenderer> resBodyInlay = resEditor.getInlayModel()
-                        .addBlockElement(resDocument.getTextLength(), inlayProperties, renderer);
-
-                if (resBodyInlay != null) {
-                    resEditor.addEditorMouseListener(new HttpEditorMouseListener(resBodyInlay, resBodyFile, project, signWidth));
-
-                    resEditor.addEditorMouseMotionListener(new HttpEditorMouseMotionListener(resBodyInlay, resEditor, signWidth));
-                }
+            kotlin.Pair<String, VirtualFile> cookieSavePair = httpInfo.getCookieSavePair();
+            if (cookieSavePair != null) {
+                RenderUtils.INSTANCE.renderCookieFilePath(resEditor, resDocument, cookieSavePair, project);
             }
 
             GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();

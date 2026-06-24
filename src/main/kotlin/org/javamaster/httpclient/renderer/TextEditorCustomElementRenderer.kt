@@ -3,10 +3,7 @@ package org.javamaster.httpclient.renderer
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
-import com.intellij.openapi.editor.colors.EditorColorsManager
-import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.markup.TextAttributes
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.JBColor
 import java.awt.Graphics
 import java.awt.Rectangle
@@ -14,19 +11,13 @@ import java.awt.Rectangle
 /**
  * @author yudong
  */
-class HttpEditorCustomElementRenderer(editor: Editor, resBodyFile: VirtualFile) :
+class TextEditorCustomElementRenderer(editor: Editor, private val text: String) :
     EditorCustomElementRenderer {
-    private val sign = ">> "
-    private val name = resBodyFile.name
-    private val text = sign + name
-
-    private val editorFont = EditorColorsManager.getInstance().globalScheme.getFont(EditorFontType.PLAIN)
+    private val editorFont = editor.contentComponent.font
     private val fontMetrics = editor.contentComponent.getFontMetrics(editorFont)
 
     private val width = fontMetrics.stringWidth(text)
     private val height = fontMetrics.height
-
-    val signWidth = fontMetrics.stringWidth(sign)
 
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
         return width
@@ -40,12 +31,11 @@ class HttpEditorCustomElementRenderer(editor: Editor, resBodyFile: VirtualFile) 
         val x = targetRegion.x
         val y = targetRegion.y + targetRegion.height
 
-        g.drawString(sign, x, y)
+        g.color = JBColor.BLACK
 
-        g.color = JBColor.BLUE
+        g.font = editorFont
 
-        g.drawString(name, x + signWidth, y)
-        g.drawLine(x + signWidth, y + 2, x + targetRegion.width, y + 2)
+        g.drawString(text, x, y)
     }
 
 }

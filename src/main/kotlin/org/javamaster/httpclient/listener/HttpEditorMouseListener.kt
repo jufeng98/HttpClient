@@ -6,14 +6,14 @@ import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import org.javamaster.httpclient.renderer.HttpEditorCustomElementRenderer
+import org.javamaster.httpclient.renderer.FileEditorCustomElementRenderer
 import java.awt.Rectangle
 
 /**
  * @author yudong
  */
 class HttpEditorMouseListener(
-    private val resBodyInlay: Inlay<HttpEditorCustomElementRenderer>,
+    private val resBodyInlay: Inlay<FileEditorCustomElementRenderer>,
     private val resBodyFile: VirtualFile,
     private val project: Project,
     private val signWidth: Int,
@@ -28,7 +28,7 @@ class HttpEditorMouseListener(
 
         val boundsCp = Rectangle(bounds.x + signWidth, bounds.y, bounds.width - signWidth, bounds.height)
 
-        if (boundsCp.contains(point)) {
+        if (boundsCp.contains(point) && resBodyFile.isValid) {
             FileEditorManager.getInstance(project).openFile(resBodyFile)
         }
     }

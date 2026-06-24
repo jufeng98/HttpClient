@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.model
 
+import com.intellij.openapi.vfs.VirtualFile
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import java.net.http.HttpHeaders
 
@@ -15,6 +16,7 @@ data class HttpInfo(
     var contentType: String? = null,
     val resHeaders: HttpHeaders? = null,
     val outputFilePathText: String? = null,
+    val cookieSavePair: Pair<String, VirtualFile>? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

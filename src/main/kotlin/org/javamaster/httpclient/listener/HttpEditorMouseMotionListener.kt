@@ -4,7 +4,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseMotionListener
-import org.javamaster.httpclient.renderer.HttpEditorCustomElementRenderer
+import org.javamaster.httpclient.renderer.FileEditorCustomElementRenderer
 import java.awt.Cursor
 import java.awt.Rectangle
 
@@ -12,25 +12,37 @@ import java.awt.Rectangle
  * @author yudong
  */
 class HttpEditorMouseMotionListener(
-    private val resBodyInlay: Inlay<HttpEditorCustomElementRenderer>,
+    private val resBodyInlay: Inlay<FileEditorCustomElementRenderer>,
     private val resEditor: Editor,
     private val signWidth: Int,
 ) : EditorMouseMotionListener {
 
+    private var lastContains = false
+
     override fun mouseMoved(e: EditorMouseEvent) {
-        val point = e.mouseEvent.getPoint()
         val bounds = resBodyInlay.bounds
-        if (bounds == null) {
-            return
+
+        val boundsCp = if (bounds == null) {
+            null
+        } else {
+            Rectangle(bounds.x + signWidth, bounds.y, bounds.width - signWidth, bounds.height)
         }
 
-        val boundsCp = Rectangle(bounds.x + signWidth, bounds.y, bounds.width - signWidth, bounds.height)
+        val contains = boundsCp?.contains(e.mouseEvent.point) == true
 
-        val contains = boundsCp.contains(point)
+        // 仅在状态变化时更新光标，避免持续设置
+        if (contains != lastContains) {
+            lastContains = contains
 
-        val cursor = if (contains) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) else Cursor.getDefaultCursor()
+            // 2. 移出时用 TEXT_CURSOR（I型）替代 DEFAULT_CURSOR（箭头）
+            val cursor = if (contains) {
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            } else {
+                Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
+            }
 
-        resEditor.contentComponent.setCursor(cursor)
+            resEditor.contentComponent.cursor = cursor
+        }
     }
 
 }

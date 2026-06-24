@@ -5,6 +5,7 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.FileIndexFacade
 import com.intellij.openapi.util.registry.RegistryManager
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.application
 import org.apache.commons.lang3.StringUtils
@@ -149,31 +150,31 @@ object CookieUtils {
         }
     }
 
-    fun saveCookiesToFile(cookies: List<Cookie>, project: Project): String {
+    fun saveCookiesToFile(cookies: List<Cookie>, project: Project): Pair<String, VirtualFile>? {
         if (cookies.isEmpty()) {
-            return ""
+            return null
         }
 
         val cookiesFileService = project.getService(CookiesFileService::class.java)
 
-        val cookiesFile = cookiesFileService.getCookiesFile() ?: return ""
+        val cookiesFile = cookiesFileService.getCookiesFile() ?: return null
 
         val msg = computeReadAction {
             if (FileIndexFacade.getInstance(project).isUnderIgnored(cookiesFile)) {
-                return@computeReadAction nls("cookie.saved.failed.ignored", cookiesFile.path)
+                return@computeReadAction nls("cookie.saved.failed.ignored")
             }
 
             if (application.getService(RegistryManager::class.java).get("ide.hide.excluded.files").asBoolean()
                 && FileIndexFacade.getInstance(project).isExcludedFile(cookiesFile)
             ) {
-                return@computeReadAction nls("cookie.saved.failed.excluded", cookiesFile.path)
+                return@computeReadAction nls("cookie.saved.failed.excluded")
             }
 
             null
         }
 
         if (msg != null) {
-            return msg
+            return Pair(msg, cookiesFile)
         }
 
         val cookiesPsiFile = computeReadAction { PsiUtil.getPsiFile(project, cookiesFile) as CookieFile }
@@ -218,7 +219,7 @@ object CookieUtils {
                             }
                         }
 
-                        resultMessage = nls("cookie.saved", cookiesPsiFile.virtualFile.path)
+                        resultMessage = nls("cookie.saved")
                     } catch (e: Exception) {
                         logWarn("处理cookie出错", e)
 
@@ -228,7 +229,7 @@ object CookieUtils {
             }
         }
 
-        return resultMessage
+        return Pair(resultMessage, cookiesFile)
     }
 
 }
