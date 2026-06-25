@@ -2,8 +2,6 @@
 
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.net.URI
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 plugins {
     id("java")
@@ -83,10 +81,23 @@ tasks {
         autoReload = false
     }
 
-    prepareSandbox {
-        doLast {
-            copyDubboLib()
-        }
+    register<Copy>("copyDubboLibToSandbox") {
+        dependsOn("prepareSandbox")
+        from("dubboLib")
+        include("**/*.jar")
+        into(layout.buildDirectory.dir("idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/dubboLib"))
+    }
+
+    register<Delete>("deleteDubboLibOfSandbox") {
+        delete(layout.buildDirectory.dir("idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/dubboLib"))
+    }
+
+    named("runIde") {
+        dependsOn("copyDubboLibToSandbox")
+    }
+
+    named("buildPlugin") {
+        dependsOn("deleteDubboLibOfSandbox")
     }
 
     jar {
@@ -102,28 +113,5 @@ tasks {
 
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
-    }
-}
-
-fun copyDubboLib() {
-    val bundlesDir = File(project.projectDir, "/dubboLib")
-    val targetDir = File(project.projectDir, "/build/idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/dubboLib")
-    copyDirectory(bundlesDir.toPath(), targetDir.toPath())
-}
-
-fun copyDirectory(sourceDir: java.nio.file.Path, destDir: java.nio.file.Path) {
-    Files.createDirectories(destDir)
-
-    for (path in Files.newDirectoryStream(sourceDir)) {
-        val relativePath = sourceDir.relativize(path)
-        val destPath = destDir.resolve(relativePath)
-        if (Files.isRegularFile(path)) {
-            // 如果是文件，则复制文件
-            Files.copy(path, destPath, StandardCopyOption.REPLACE_EXISTING)
-            println("完成复制文件:$path 到 $destPath")
-        } else {
-            // 如果是目录，则递归调用
-            copyDirectory(path, destPath)
-        }
     }
 }
