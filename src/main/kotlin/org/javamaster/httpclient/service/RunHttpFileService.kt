@@ -85,7 +85,10 @@ class RunHttpFileService(private val project: Project) {
         }
 
         val methodName = method.text
-        if (methodName == HttpRequestEnum.WEBSOCKET.name || methodName == HttpRequestEnum.MOCK_SERVER.name) {
+        if (
+            methodName == HttpRequestEnum.WEBSOCKET.name || methodName == HttpRequestEnum.MOCK_SERVER.name
+            || methodName == HttpRequestEnum.MOCK_DUBBO.name || methodName == HttpRequestEnum.MOCK_WS.name
+        ) {
             NotifyUtil.notifyCornerWarn(project, NlsBundle.nls("skip.req"))
 
             executeRequests(methods, virtualFile, idx, targetEnv)

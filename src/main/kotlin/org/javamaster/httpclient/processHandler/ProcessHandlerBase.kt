@@ -538,6 +538,8 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
                 HttpRequestEnum.MOCK_SERVER -> MockServerProcessHandler(httpMethod, selectedEnv)
 
+                HttpRequestEnum.MOCK_DUBBO -> MockDubboProcessHandler(httpMethod, selectedEnv)
+
                 else -> HttpProcessHandler(httpMethod, selectedEnv)
             }
         }

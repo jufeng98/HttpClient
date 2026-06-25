@@ -29,9 +29,11 @@ allprojects {
     }
 }
 
+val ideaVersion = "2024.3"
+
 dependencies {
     intellijPlatform {
-        create("IC", "2024.3")
+        create("IC", ideaVersion)
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.modules.json")
@@ -105,7 +107,7 @@ tasks {
 
 fun copyDubboLib() {
     val bundlesDir = File(project.projectDir, "/dubboLib")
-    val targetDir = File(project.projectDir, "/build/idea-sandbox/plugins/${project.name}/lib/dubboLib")
+    val targetDir = File(project.projectDir, "/build/idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/dubboLib")
     copyDirectory(bundlesDir.toPath(), targetDir.toPath())
 }
 
@@ -118,6 +120,7 @@ fun copyDirectory(sourceDir: java.nio.file.Path, destDir: java.nio.file.Path) {
         if (Files.isRegularFile(path)) {
             // 如果是文件，则复制文件
             Files.copy(path, destPath, StandardCopyOption.REPLACE_EXISTING)
+            println("完成复制文件:$path 到 $destPath")
         } else {
             // 如果是目录，则递归调用
             copyDirectory(path, destPath)

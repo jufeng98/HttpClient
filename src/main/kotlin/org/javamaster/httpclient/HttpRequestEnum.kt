@@ -146,6 +146,28 @@ enum class HttpRequestEnum(val icon: Icon) {
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
+    },
+    MOCK_WS(HttpIcons.FILE) {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
+            bodyPublisher: HttpRequest.BodyPublisher,
+            paramMap: Map<String, String>,
+        ): HttpRequest {
+            throw UnsupportedOperationException()
+        }
+    },
+    MOCK_DUBBO(HttpIcons.FILE) {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: LinkedMultiValueMap<String, String?>,
+            bodyPublisher: HttpRequest.BodyPublisher,
+            paramMap: Map<String, String>,
+        ): HttpRequest {
+            throw UnsupportedOperationException()
+        }
     }
     ;
 

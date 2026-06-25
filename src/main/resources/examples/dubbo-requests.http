@@ -30,3 +30,17 @@ Arg0-Type: org.javamaster.api.serviceorder.dto.GetOrderListDto
     "shopOrderId": "602495678454930066"
   }
 }
+
+### Test mock dubbo
+DUBBO dubbo://localhost:20888
+Content-Type: application/json
+Interface-Name: org.javamaster.api.serviceorder.dubbo.IMHServiceOrderDubboService
+Method: getOrderList
+Version: 1.0.0
+Arg0-Type: org.javamaster.api.serviceorder.dto.GetOrderListDto
+
+{
+  "Arg0-Type": {
+    "shopOrderId": "602495678454930066"
+  }
+}

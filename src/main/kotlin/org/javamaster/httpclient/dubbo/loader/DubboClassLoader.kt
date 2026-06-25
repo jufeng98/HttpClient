@@ -11,7 +11,8 @@ class DubboClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(u
         "org.javamaster.httpclient.map.LinkedMultiValueMap",
         "org.javamaster.httpclient.dubbo.support.DubboRequest",
         "org.javamaster.httpclient.mock.support.MockDubboServer",
-        )
+        "org.javamaster.httpclient.mock.support.DubboResultGenerator",
+    )
 
     override fun loadClass(name: String): Class<*> {
         synchronized(getClassLoadingLock(name)) {

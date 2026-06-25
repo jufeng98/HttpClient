@@ -12,6 +12,7 @@ import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.mock.MockServer
 import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.processHandler.MockDubboProcessHandler
 import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequest
@@ -75,6 +76,19 @@ class ConfigUtils {
 
                 val port = MockServerHelper.resolvePort(requestTarget.port)
                 if (MockServer.isRunning(port)) {
+                    NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
+                    showServicesWindow(project, tabName)
+                    return true
+                }
+            } else if (methodText == HttpRequestEnum.MOCK_DUBBO.name) {
+                val request = computeReadAction { PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!! }
+                val requestTarget = request.requestTarget
+                if (requestTarget == null) {
+                    return true
+                }
+
+                val port = MockServerHelper.resolvePort(requestTarget.port)
+                if (MockDubboProcessHandler.isRunning(port)) {
                     NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
                     showServicesWindow(project, tabName)
                     return true

@@ -21,3 +21,16 @@ Message-ID: {{$random.alphanumeric(32)}}
 ### mock server3
 # @staticFolder D:\
 MOCK_SERVER http://localhost
+
+### mock dubbo
+# @timeout 3500
+MOCK_DUBBO dubbo://localhost:20888
+Content-Type: application/json
+Interface-Name: org.javamaster.api.serviceorder.dubbo.IMHServiceOrderDubboService
+Method: getOrderList
+Version: 1.0.0
+
+{
+  "title": "{{$random.book.title}}",
+  "time": "{{$datetime}}"
+}
