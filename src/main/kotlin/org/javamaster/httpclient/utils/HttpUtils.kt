@@ -66,15 +66,16 @@ object HttpUtils {
         }
 
         val httpFile = computeReadAction { requestBlock.parent as HttpFile }
+        val name = httpFile.virtualFile.nameWithoutExtension
         val requestBlocks = httpFile.getRequestBlocks()
 
         for ((index, httpRequestBlock) in requestBlocks.withIndex()) {
             if (requestBlock == httpRequestBlock) {
-                return "HTTP Request ▏#${index + 1}"
+                return "$name ▏#${index + 1}"
             }
         }
 
-        return "HTTP Request ▏#0"
+        return "$name ▏#0"
     }
 
     fun getFilePathText(filePath: HttpFilePath?): String {
@@ -768,28 +769,19 @@ object HttpUtils {
 
         val mimeType = split[0]
         if (split.size == 1) {
-            return getByMimeType(mimeType)
+            return ContentType.create(mimeType)
         }
 
         val strList = split[1].split("=")
         if (strList.size != 2) {
-            return ContentType.getByMimeType(mimeType)
+            return ContentType.create(mimeType)
         }
 
         if (!strList[0].trim().equals("charset", true)) {
-            return ContentType.getByMimeType(mimeType)
+            return ContentType.create(mimeType)
         }
 
-        return ContentType.getByMimeType(mimeType).withCharset(strList[1].trim())
-    }
-
-    private fun getByMimeType(mimeType: String): ContentType {
-        val contentType = ContentType.getByMimeType(mimeType)
-        if (contentType != null) {
-            return contentType
-        }
-
-        return ContentType.create(mimeType)
+        return ContentType.create(mimeType).withCharset(strList[1].trim())
     }
 
     fun getActiveValidProject(): Project? {

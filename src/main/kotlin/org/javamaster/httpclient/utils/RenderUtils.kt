@@ -104,11 +104,7 @@ object RenderUtils {
         resEditor.addEditorMouseListener(OpenFileEditorMouseListener(resBodyInlay, resBodyFile, project, signWidth))
 
         resEditor.addEditorMouseMotionListener(
-            ChangeCursorEditorMouseMotionListener(
-                resBodyInlay,
-                resEditor,
-                signWidth
-            )
+            ChangeCursorEditorMouseMotionListener(resBodyInlay, resEditor, signWidth)
         )
     }
 
