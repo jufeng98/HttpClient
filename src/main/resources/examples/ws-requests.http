@@ -4,3 +4,6 @@ Cookie: JSESSIONID=1AB59E3B890BB3015F8176472883731A; b1wash_client=wx;
 
 ### ws test 2
 WEBSOCKET ws://localhost:8898/cameraPreview
+
+### test mock ws
+WEBSOCKET ws://localhost:8999/server/business

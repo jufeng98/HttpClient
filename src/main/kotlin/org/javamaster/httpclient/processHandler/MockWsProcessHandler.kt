@@ -1,0 +1,96 @@
+package org.javamaster.httpclient.processHandler
+
+import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.editor.Caret
+import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.editor.ScrollingModel
+import com.intellij.openapi.wm.ToolWindowId
+import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.util.DocumentUtil
+import org.javamaster.httpclient.mock.MockWsServerImpl
+import org.javamaster.httpclient.mock.support.MockServerHelper
+import org.javamaster.httpclient.mock.support.MockWsServer
+import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.psi.HttpMethod
+import org.javamaster.httpclient.psi.HttpRequest
+import org.javamaster.httpclient.resolve.VariableResolver
+import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
+import org.javamaster.httpclient.utils.NotifyUtil
+import java.util.function.Consumer
+
+/**
+ * @author yudong
+ */
+class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
+    ProcessHandlerBase(httpMethod, selectedEnv) {
+
+    private var mockWsServer: MockWsServer? = null
+    private var port: Int? = null
+
+    override fun startProcess() {
+        port = MockServerHelper.resolvePort(requestTarget.port)
+
+        mockServerRunningSet.add(port!!)
+
+        var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
+
+        val path = computeReadAction { resolvePath(request, variableResolver) }
+
+        httpDashboardForm.initMockServerForm { editor ->
+            try {
+                loadingRemover?.run()
+
+                val document = editor.document
+
+                mockWsServer = MockWsServerImpl(
+                    port!!, path, reqHeaderMap, Consumer<String> { log ->
+                        runInEdt {
+                            DocumentUtil.writeInRunUndoTransparentAction {
+                                document.insertString(document.textLength, log)
+                                val caret: Caret = editor.caretModel.primaryCaret
+                                caret.moveToOffset(document.textLength)
+
+                                val scrollingModel: ScrollingModel = editor.scrollingModel
+                                scrollingModel.scrollToCaret(ScrollType.RELATIVE)
+                            }
+                        }
+                    }
+                )
+
+                mockWsServer!!.startServer(request, variableResolver, paramMap)
+
+                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.server.start", port!!))
+
+                ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
+            } catch (e: Exception) {
+                handleException(e)
+            }
+        }
+    }
+
+    override fun destroyProcessImpl() {
+        mockServerRunningSet.remove(port)
+
+        mockWsServer?.stopServer()
+
+        super.destroyProcessImpl()
+    }
+
+    private fun resolvePath(request: HttpRequest, variableResolver: VariableResolver): String {
+        val pathAbsolute = request.requestTarget!!.pathAbsolute
+        return if (pathAbsolute != null) {
+            variableResolver.resolve(pathAbsolute.text)
+        } else {
+            "/"
+        }
+    }
+
+    companion object {
+        private val mockServerRunningSet = mutableSetOf<Int>()
+
+        fun isRunning(port: Int): Boolean {
+            return mockServerRunningSet.contains(port)
+        }
+    }
+}

@@ -41,9 +41,9 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                 val document = editor.document
 
                 val clsName = "org.javamaster.httpclient.mock.MockDubboServerImpl"
-                val dubboRequestClazz = DubboJars.dubboClassLoader.loadClass(clsName)
+                val mockDubboServerImpl = DubboJars.dubboClassLoader.loadClass(clsName)
 
-                val constructor = dubboRequestClazz.declaredConstructors[0]
+                val constructor = mockDubboServerImpl.declaredConstructors[0]
                 constructor.isAccessible = true
 
                 try {
