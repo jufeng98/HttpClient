@@ -231,7 +231,10 @@ enum class HttpRequestEnum(val icon: Icon) {
 
         val size = Formats.formatFileSize(contentLength)
 
-        httpReqDescList.add(httpReqDescList.size - insertIdx, "// ${NlsBundle.nls("req.size", size)}$CR_LF")
+        httpReqDescList.add(
+            httpReqDescList.size - insertIdx,
+            "// ${NlsBundle.nls("req.size", contentLength, size)}$CR_LF"
+        )
 
         httpReqDescList.add(CR_LF)
 

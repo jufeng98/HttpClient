@@ -88,8 +88,6 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             hasReqError = throwable != null
 
             application.executeOnPooledThread {
-                val resHeaders = response.headers()
-
                 if (ResUtils.shouldRedirect(httpStatus, paramMap)) {
                     redirectTimes++
                     if (redirectTimes > 3) {
@@ -100,7 +98,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     httpReqDescList.add("${CR_LF}// ${NlsBundle.nls("redirect.times.req", redirectTimes)}${CR_LF}")
 
-                    val locationUrl = ResUtils.resolveLocationUrl(url, resHeaders)
+                    val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
 
                     handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList)
 
@@ -118,6 +116,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         return@executeOnPooledThread
                     }
 
+                    val resHeaders = response.headers()
+
                     val cookies = CookieUtils.parseAll(url, resHeaders)
 
                     var cookieSavePair: Pair<String, VirtualFile>? = null
@@ -131,13 +131,6 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     val httpResInfo = ResUtils.convertResponseBody(resBody, resHeaders)
 
                     val statusCode = response.statusCode()
-                    val size = Formats.formatFileSize(resBody.size.toLong())
-
-                    val comment = NlsBundle.nls("res.desc", statusCode, costTimes!!, size)
-
-                    val httpResDescList = mutableListOf<String>()
-
-                    httpResDescList.add("// $comment${CR_LF}")
 
                     var resList: List<String>
                     try {
@@ -151,6 +144,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         resList = e.list
                     }
 
+                    val httpResDescList = mutableListOf<String>()
                     httpResDescList.addAll(resList)
 
                     val versionDesc = MyPsiUtils.Companion.getVersionDesc(response.version())
@@ -172,6 +166,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     val contentType = httpResInfo.contentType
 
                     if (simpleTypeEnum.binary) {
+                        val size = Formats.formatFileSize(resBody.size.toLong())
                         httpResDescList.add(NlsBundle.nls("res.binary.data", size))
                     } else {
                         if (bodyStr!!.length > RES_SIZE_LIMIT) {
@@ -183,7 +178,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val httpInfo = HttpInfo(
                         httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
-                        null, contentType, resHeaders, resolveOutputFilePath(), cookieSavePair
+                        null, contentType, resHeaders, resolveOutputFilePath(), cookieSavePair,
+                        statusCode, costTimes, resBody.size
                     )
 
                     dealResponse(httpInfo)

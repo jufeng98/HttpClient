@@ -17,7 +17,7 @@ class TextEditorCustomElementRenderer(editor: Editor, private val text: String) 
     private val fontMetrics = editor.contentComponent.getFontMetrics(editorFont)
 
     private val width = fontMetrics.stringWidth(text)
-    private val height = fontMetrics.height
+    private val height = fontMetrics.height + 6
 
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
         return width
@@ -29,7 +29,7 @@ class TextEditorCustomElementRenderer(editor: Editor, private val text: String) 
 
     override fun paint(inlay: Inlay<*>, g: Graphics, targetRegion: Rectangle, textAttributes: TextAttributes) {
         val x = targetRegion.x
-        val y = targetRegion.y + targetRegion.height
+        val y = targetRegion.y + targetRegion.height - 6
 
         g.color = JBColor.BLACK
 

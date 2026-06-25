@@ -17,6 +17,9 @@ data class HttpInfo(
     val resHeaders: HttpHeaders? = null,
     val outputFilePathText: String? = null,
     val cookieSavePair: Pair<String, VirtualFile>? = null,
+    val statusCode: Int? = null,
+    val costTimes: Long? = null,
+    val contentLength: Int? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

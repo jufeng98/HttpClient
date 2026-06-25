@@ -139,6 +139,11 @@ public class HttpDashboardForm implements Disposable {
             Editor resEditor = EditorUtils.INSTANCE.createEditor(resVirtualFile, resDocument, true,
                     project, false, simpleTypeEnum, editorList);
 
+            Integer statusCode = httpInfo.getStatusCode();
+            if (statusCode != null) {
+                RenderUtils.INSTANCE.renderResDesc(resEditor, statusCode, httpInfo.getCostTimes(), httpInfo.getContentLength());
+            }
+
             if (renderResBodyFileName) {
                 RenderUtils.INSTANCE.renderResBodyFileName(resEditor, resDocument, resBodyFile, project);
             }

@@ -1,5 +1,7 @@
 package org.javamaster.httpclient.utils;
 
+import org.apache.http.HttpStatus;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -43,6 +45,27 @@ public class ReflectionUtils {
         }
 
         return null;
+    }
+
+    public static String findStatusDesc(int statusCode) {
+        try {
+            Class<HttpStatus> clz = HttpStatus.class;
+            Field[] declaredFields = clz.getDeclaredFields();
+            for (Field declaredField : declaredFields) {
+                declaredField.setAccessible(true);
+                int code = (int) declaredField.get(null);
+                if (code != statusCode) {
+                    continue;
+                }
+
+                String name = declaredField.getName();
+                return name.replace("SC_", "");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return "UNKNOWN";
     }
 
 }

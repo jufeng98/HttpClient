@@ -2,12 +2,8 @@ package org.javamaster.httpclient.utils
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.VfsUtil.findFileByIoFile
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.openapi.vfs.readBytes
-import com.intellij.openapi.vfs.readText
 import com.intellij.testFramework.LightVirtualFile
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.javamaster.httpclient.enums.InnerVariableEnum
@@ -18,6 +14,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import java.util.*
 import kotlin.io.path.name
 
@@ -132,16 +129,10 @@ object VirtualFileUtils {
             return lightVirtualFile
         }
 
-        val file = if (Files.exists(path)) {
-            Files.writeString(path, descContent)
-            path.toFile()
-        } else {
-            val tempFile = Files.createFile(path)
-            Files.writeString(path, descContent)
-            tempFile.toFile()
-        }
+        Files.newByteChannel(path, setOf(StandardOpenOption.CREATE, StandardOpenOption.WRITE)).close()
+        Files.writeString(path, descContent)
 
-        var virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)!!
+        var virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)!!
 
         // 当文件位于忽略列表或被排除时,此时无法构建 psi 文件
         val psiFile = computeReadAction { virtualFile.findPsiFile(project) }

@@ -3,7 +3,6 @@ package org.javamaster.httpclient.processHandler
 import com.google.common.net.HttpHeaders
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.module.ModuleUtil
-import com.intellij.openapi.util.text.Formats
 import com.intellij.util.application
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.dubbo.DubboHandler
@@ -14,7 +13,6 @@ import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
-import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
@@ -114,12 +112,6 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     val bodyBytes = triple!!.first
                     val bodyStr = triple.second
 
-                    val size = Formats.formatFileSize(bodyBytes.size.toLong())
-
-                    val comment = nls("res.desc", httpStatus!!, costTimes!!, size)
-
-                    val httpResDescList = mutableListOf("// $comment$CR_LF")
-
                     val httpResInfo = HttpResInfo(
                         SimpleTypeEnum.JSON, bodyBytes, bodyStr,
                         ContentType.APPLICATION_JSON.mimeType
@@ -137,6 +129,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         resList = e.list
                     }
 
+                    val httpResDescList = mutableListOf<String>()
                     httpResDescList.addAll(resList)
 
                     httpResDescList.add("### $tabName$CR_LF")
@@ -159,14 +152,9 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     httpResDescList.add(bodyStr)
 
                     val httpInfo = HttpInfo(
-                        httpReqDescList,
-                        httpResDescList,
-                        SimpleTypeEnum.JSON,
-                        bodyBytes,
-                        null,
-                        ContentType.APPLICATION_JSON.mimeType,
-                        null,
-                        resolveOutputFilePath()
+                        httpReqDescList, httpResDescList, SimpleTypeEnum.JSON, bodyBytes,
+                        null, ContentType.APPLICATION_JSON.mimeType, null, resolveOutputFilePath(), null,
+                        httpStatus!!, costTimes, bodyBytes.size
                     )
 
                     dealResponse(httpInfo)
