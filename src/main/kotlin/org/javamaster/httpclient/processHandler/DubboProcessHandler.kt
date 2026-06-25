@@ -5,8 +5,8 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.util.application
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.dubbo.support.DubboRequest
 import org.javamaster.httpclient.dubbo.support.DubboJars
+import org.javamaster.httpclient.dubbo.support.DubboRequest
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.JsScriptException
@@ -66,7 +66,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val module = computeReadAction { ModuleUtil.findModuleForPsiElement(httpFile) }
 
-        val clsName = "org.javamaster.httpclient.dubbo.DubboRequest"
+        val clsName = "org.javamaster.httpclient.dubbo.DubboRequestImpl"
         val dubboRequestClazz = DubboJars.dubboClassLoader.loadClass(clsName)
 
         val constructor = dubboRequestClazz.declaredConstructors[0]

@@ -29,7 +29,7 @@ import java.util.concurrent.CompletableFuture
 class DubboRequestImpl(
     private val tabName: String,
     private val url: String,
-    private val reqHeaderMap: LinkedMultiValueMap<String, String>,
+    private val reqHeaderMap: LinkedMultiValueMap<String, String?>,
     reqBody: Any?,
     private val httpReqDescList: MutableList<String>,
     module: Module?,
@@ -39,7 +39,7 @@ class DubboRequestImpl(
     private val methodName: String by lazy {
         val values =
             reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException(NlsBundle.nls("missing.header"))
-        values[0]
+        values[0] ?: throw IllegalArgumentException(NlsBundle.nls("missing.header"))
     }
     private val interfaceCls: String? by lazy {
         val values = reqHeaderMap[DubboUtils.INTERFACE_KEY] ?: return@lazy null
@@ -156,7 +156,14 @@ class DubboRequestImpl(
                     val paramName = "${entry.key}"
                     val argTypes = reqHeaderMap[paramName]
                         ?: throw IllegalArgumentException(NlsBundle.nls("dubbo.miss.header", paramName))
-                    tmpTypeList.add(argTypes[0])
+                    tmpTypeList.add(
+                        argTypes[0] ?: throw IllegalArgumentException(
+                            NlsBundle.nls(
+                                "dubbo.miss.header",
+                                paramName
+                            )
+                        )
+                    )
                     tmpValueList.add(entry.value)
                 }
 
