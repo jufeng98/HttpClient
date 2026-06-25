@@ -3,7 +3,6 @@ package org.javamaster.httpclient.dubbo
 import com.alibaba.dubbo.config.ApplicationConfig
 import com.alibaba.dubbo.config.ReferenceConfig
 import com.alibaba.dubbo.config.RegistryConfig
-import com.alibaba.dubbo.config.utils.ReferenceConfigCache
 import com.alibaba.dubbo.rpc.service.GenericService
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
@@ -11,7 +10,6 @@ import com.intellij.psi.PsiPrimitiveType
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.dubbo.support.DubboRequest
-import org.javamaster.httpclient.dubbo.support.HttpKeyGenerator
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
@@ -215,7 +213,8 @@ class DubboRequestImpl(
 
                 val referenceConfig = createReferenceConfig()
 
-                val genericService = referenceConfigCache.get(referenceConfig)
+                // val genericService = referenceConfigCache.get(referenceConfig)
+                val genericService = referenceConfig.get()
 
                 val start = System.currentTimeMillis()
                 val result: Any? = genericService.`$invoke`(methodName, paramTypeNameArray, paramValueArray)
@@ -268,7 +267,7 @@ class DubboRequestImpl(
     }
 
     companion object {
-        val referenceConfigCache: ReferenceConfigCache = ReferenceConfigCache.getCache("_DEFAULT_", HttpKeyGenerator)
+//        val referenceConfigCache: ReferenceConfigCache = ReferenceConfigCache.getCache("_DEFAULT_", HttpKeyGenerator)
         val application = ApplicationConfig()
 
         init {
