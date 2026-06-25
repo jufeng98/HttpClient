@@ -12,7 +12,7 @@ import java.awt.Rectangle
 /**
  * @author yudong
  */
-class HttpEditorMouseListener(
+class OpenFileEditorMouseListener(
     private val resBodyInlay: Inlay<FileEditorCustomElementRenderer>,
     private val resBodyFile: VirtualFile,
     private val project: Project,

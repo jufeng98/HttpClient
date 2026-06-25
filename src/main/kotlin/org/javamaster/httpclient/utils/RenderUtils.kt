@@ -6,8 +6,8 @@ import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VirtualFile
-import org.javamaster.httpclient.listener.HttpEditorMouseListener
-import org.javamaster.httpclient.listener.HttpEditorMouseMotionListener
+import org.javamaster.httpclient.listener.OpenFileEditorMouseListener
+import org.javamaster.httpclient.listener.ChangeCursorEditorMouseMotionListener
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.renderer.FileEditorCustomElementRenderer
 import org.javamaster.httpclient.renderer.TextEditorCustomElementRenderer
@@ -58,9 +58,9 @@ object RenderUtils {
 
         val signWidth = fileRenderer.signWidth
 
-        resEditor.addEditorMouseListener(HttpEditorMouseListener(resBodyInlay, resBodyFile, project, signWidth))
+        resEditor.addEditorMouseListener(OpenFileEditorMouseListener(resBodyInlay, resBodyFile, project, signWidth))
 
-        resEditor.addEditorMouseMotionListener(HttpEditorMouseMotionListener(resBodyInlay, resEditor, signWidth))
+        resEditor.addEditorMouseMotionListener(ChangeCursorEditorMouseMotionListener(resBodyInlay, resEditor, signWidth))
     }
 
     fun renderCookieFilePath(
@@ -91,9 +91,9 @@ object RenderUtils {
 
         val signWidth = fileRenderer.signWidth
 
-        resEditor.addEditorMouseListener(HttpEditorMouseListener(cookieInlay, cookiesFile, project, signWidth))
+        resEditor.addEditorMouseListener(OpenFileEditorMouseListener(cookieInlay, cookiesFile, project, signWidth))
 
-        resEditor.addEditorMouseMotionListener(HttpEditorMouseMotionListener(cookieInlay, resEditor, signWidth))
+        resEditor.addEditorMouseMotionListener(ChangeCursorEditorMouseMotionListener(cookieInlay, resEditor, signWidth))
     }
 
 }

@@ -11,7 +11,7 @@ import java.awt.Rectangle
 /**
  * @author yudong
  */
-class HttpEditorMouseMotionListener(
+class ChangeCursorEditorMouseMotionListener(
     private val resBodyInlay: Inlay<FileEditorCustomElementRenderer>,
     private val resEditor: Editor,
     private val signWidth: Int,
