@@ -5,7 +5,7 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.util.application
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.dubbo.DubboHandler
+import org.javamaster.httpclient.dubbo.support.DubboRequest
 import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
@@ -72,12 +72,12 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         val constructor = dubboRequestClazz.declaredConstructors[0]
         constructor.isAccessible = true
 
-        val dubboRequest: DubboHandler
+        val dubboRequest: DubboRequest
         try {
             dubboRequest = computeReadAction {
                 constructor.newInstance(
                     tabName, url, reqHeaderMap, reqBody, httpReqDescList, module, project, paramMap
-                ) as DubboHandler
+                ) as DubboRequest
             }
         } catch (e: InvocationTargetException) {
             throw e.targetException

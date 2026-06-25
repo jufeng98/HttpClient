@@ -9,7 +9,8 @@ import java.net.URLClassLoader
 class DubboClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(urls, parent) {
     private val needParentLoad = setOf(
         "org.javamaster.httpclient.map.LinkedMultiValueMap",
-        "org.javamaster.httpclient.dubbo.DubboHandler",
+        "org.javamaster.httpclient.dubbo.support.DubboRequest",
+        "org.javamaster.httpclient.mock.support.MockDubboServer",
         )
 
     override fun loadClass(name: String): Class<*> {

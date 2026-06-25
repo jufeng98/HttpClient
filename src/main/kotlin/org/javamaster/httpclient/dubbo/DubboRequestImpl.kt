@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiPrimitiveType
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
+import org.javamaster.httpclient.dubbo.support.DubboRequest
 import org.javamaster.httpclient.dubbo.support.HttpKeyGenerator
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
@@ -25,7 +26,7 @@ import java.util.concurrent.CompletableFuture
 /**
  * @author yudong
  */
-class DubboRequest(
+class DubboRequestImpl(
     private val tabName: String,
     private val url: String,
     private val reqHeaderMap: LinkedMultiValueMap<String, String>,
@@ -34,7 +35,7 @@ class DubboRequest(
     module: Module?,
     project: Project,
     private val paramMap: Map<String, String>,
-) : DubboHandler {
+) : DubboRequest {
     private val methodName: String by lazy {
         val values =
             reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException(NlsBundle.nls("missing.header"))
@@ -261,7 +262,7 @@ class DubboRequest(
 
     companion object {
         val referenceConfigCache: ReferenceConfigCache = ReferenceConfigCache.getCache("_DEFAULT_", HttpKeyGenerator)
-        private val application = ApplicationConfig()
+        val application = ApplicationConfig()
 
         init {
             application.name = "HttpRequest"
