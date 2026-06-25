@@ -77,8 +77,9 @@ class WsRequest(
             return
         }
 
-        webSocket!!.abort()
         returnResMsg(NlsBundle.nls("ws.disconnected") + "\n")
+
+        webSocket!!.abort()
     }
 
     fun sendWsMsg(msg: String) {
@@ -132,15 +133,16 @@ class WsListener(private val wsRequest: WsRequest, private val processHandler: P
     }
 
     override fun onClose(webSocket: WebSocket?, statusCode: Int, reason: String?): CompletionStage<*> {
+        wsRequest.returnResMsg("${NlsBundle.nls("ws.closed")},statusCode: $statusCode, reason: $reason\n")
+
         processHandler.detachProcess()
 
-        wsRequest.returnResMsg("${NlsBundle.nls("ws.closed")},statusCode: $statusCode, reason: $reason\n")
         return CompletableFuture<Void>()
     }
 
     override fun onError(webSocket: WebSocket?, error: Throwable?) {
-        processHandler.detachProcess()
-
         wsRequest.returnResMsg("${NlsBundle.nls("ws.failed")}, ${error}\n")
+
+        processHandler.detachProcess()
     }
 }

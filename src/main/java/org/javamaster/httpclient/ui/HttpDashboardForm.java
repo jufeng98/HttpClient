@@ -38,6 +38,7 @@ import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.exception.JsScriptException;
 import org.javamaster.httpclient.js.support.JsExecuteResult;
 import org.javamaster.httpclient.key.HttpKey;
+import org.javamaster.httpclient.logger.HttpRequestLogger;
 import org.javamaster.httpclient.messageBus.WsLangChangeNotifier;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
@@ -317,6 +318,7 @@ public class HttpDashboardForm implements Disposable {
 
     @Override
     public void dispose() {
+        HttpRequestLogger.INSTANCE.logInfo("开始销毁 editor");
         EditorFactory editorFactory = EditorFactory.getInstance();
         editorList.forEach(it -> {
             if (it.isDisposed()) {
@@ -324,6 +326,8 @@ public class HttpDashboardForm implements Disposable {
             }
 
             editorFactory.releaseEditor(it);
+
+            HttpRequestLogger.INSTANCE.logInfo("完成销毁 editor:" + it);
         });
 
         saveInputHistoryList();
@@ -388,20 +392,21 @@ public class HttpDashboardForm implements Disposable {
             GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
             GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
-            EditorTextField editorTextField = EditorUtils.INSTANCE.createEditor("", "ws-res.log", project);
+            String fileName = DateFormatUtils.format(new Date(), "hhmmss") + "-ws-res.log";
 
-            responsePanel.add(editorTextField, constraintsRes);
+            Editor resEditor = EditorUtils.INSTANCE.createEditor("", fileName, project, editorList);
+
+            responsePanel.add(resEditor.getComponent(), constraintsRes);
 
             wsRequest.setResConsumer(res -> {
-                        Editor resEditor = editorTextField.getEditor(true);
-                        if (resEditor == null || resEditor.isDisposed()) {
-                            System.out.println("ws res editor 已被销毁");
+                        if (resEditor.isDisposed()) {
+                            HttpRequestLogger.INSTANCE.logInfo("ws res editor 已被销毁");
                             return;
                         }
 
                         Caret caret = resEditor.getCaretModel().getPrimaryCaret();
                         ScrollingModel scrollingModel = resEditor.getScrollingModel();
-                        Document document = editorTextField.getDocument();
+                        Document document = resEditor.getDocument();
 
                         DocumentUtil.writeInRunUndoTransparentAction(() -> {
                                     String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");

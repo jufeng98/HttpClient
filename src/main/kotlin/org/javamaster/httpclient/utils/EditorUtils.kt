@@ -95,27 +95,16 @@ object EditorUtils {
         return editor
     }
 
-    fun createEditor(text: String, fileName: String, project: Project): EditorTextField {
+    fun createEditor(text: String, fileName: String, project: Project, editorList: MutableList<Editor>): Editor {
         val lightVirtualFile = LightVirtualFile(fileName, text)
         val file: PsiFile = lightVirtualFile.findPsiFile(project)!!
-        val doc = PsiDocumentManager.getInstance(project).getDocument(file)
+        val doc = PsiDocumentManager.getInstance(project).getDocument(file)!!
 
-        return object : EditorTextField(doc, project, file.language.associatedFileType) {
+        val editor = EditorFactory.getInstance().createEditor(doc, project, lightVirtualFile, true)
 
-            override fun createEditor(): EditorEx {
-                val editor = super.createEditor()
-                editor.setVerticalScrollbarVisible(true)
-                editor.isOneLineMode = false
-                editor.isViewer = true
+        editorList.add(editor)
 
-                val settings = editor.settings
-                settings.isLineNumbersShown = true
-
-                return editor
-            }
-
-        }
-
+        return editor
     }
 
     fun createEditor(text: String, placeholder: String, language: Language, project: Project): EditorTextField {
