@@ -2,6 +2,8 @@
 
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.net.URI
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 plugins {
     id("java")
@@ -79,6 +81,12 @@ tasks {
         autoReload = false
     }
 
+    prepareSandbox {
+        doLast {
+            copyDubboLib()
+        }
+    }
+
     jar {
         // kt文件不知道被哪个配置影响导致被编译了两次,所以这里暂时配置下
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -92,5 +100,27 @@ tasks {
 
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+}
+
+fun copyDubboLib() {
+    val bundlesDir = File(project.projectDir, "/dubboLib")
+    val targetDir = File(project.projectDir, "/build/idea-sandbox/plugins/${project.name}/lib/dubboLib")
+    copyDirectory(bundlesDir.toPath(), targetDir.toPath())
+}
+
+fun copyDirectory(sourceDir: java.nio.file.Path, destDir: java.nio.file.Path) {
+    Files.createDirectories(destDir)
+
+    for (path in Files.newDirectoryStream(sourceDir)) {
+        val relativePath = sourceDir.relativize(path)
+        val destPath = destDir.resolve(relativePath)
+        if (Files.isRegularFile(path)) {
+            // 如果是文件，则复制文件
+            Files.copy(path, destPath, StandardCopyOption.REPLACE_EXISTING)
+        } else {
+            // 如果是目录，则递归调用
+            copyDirectory(path, destPath)
+        }
     }
 }
