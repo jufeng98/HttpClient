@@ -11,7 +11,7 @@ import java.awt.Rectangle
 /**
  * @author yudong
  */
-class TextEditorCustomElementRenderer(editor: Editor, private val text: String) :
+open class TextEditorCustomElementRenderer(editor: Editor, val text: String) :
     EditorCustomElementRenderer {
     private val editorFont = editor.contentComponent.font
     private val fontMetrics = editor.contentComponent.getFontMetrics(editorFont)
@@ -27,13 +27,17 @@ class TextEditorCustomElementRenderer(editor: Editor, private val text: String) 
         return height
     }
 
+    open fun customizeGraphics(g: Graphics) {
+        g.color = JBColor.BLACK
+
+        g.font = editorFont
+    }
+
     override fun paint(inlay: Inlay<*>, g: Graphics, targetRegion: Rectangle, textAttributes: TextAttributes) {
         val x = targetRegion.x
         val y = targetRegion.y + targetRegion.height - 6
 
-        g.color = JBColor.BLACK
-
-        g.font = editorFont
+        customizeGraphics(g)
 
         g.drawString(text, x, y)
     }

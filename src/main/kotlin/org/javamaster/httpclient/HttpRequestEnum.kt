@@ -2,7 +2,6 @@ package org.javamaster.httpclient
 
 import com.google.common.net.HttpHeaders
 import com.intellij.openapi.application.ex.ApplicationInfoEx
-import com.intellij.openapi.util.text.Formats
 import org.javamaster.httpclient.consts.HttpConsts.Companion.CONNECT_TIMEOUT
 import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
 import org.javamaster.httpclient.enums.ParamEnum
@@ -181,7 +180,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         httpReqDescList: MutableList<String>,
         tabName: String,
         paramMap: Map<String, String>,
-    ): HttpRequest {
+    ): Pair<HttpRequest, Long> {
         val pair = ReqUtils.convertToReqBodyPublisher(reqBody)
 
         val bodyPublisher = pair.first
@@ -229,20 +228,13 @@ enum class HttpRequestEnum(val icon: Icon) {
         insertIdx++
         httpReqDescList.add("${HttpHeaders.CONTENT_LENGTH}: $contentLength$CR_LF")
 
-        val size = Formats.formatFileSize(contentLength)
-
-        httpReqDescList.add(
-            httpReqDescList.size - insertIdx,
-            "// ${NlsBundle.nls("req.size", contentLength, size)}$CR_LF"
-        )
-
         httpReqDescList.add(CR_LF)
 
         val descList = ReqUtils.getReqBodyDesc(reqBody)
 
         httpReqDescList.addAll(descList)
 
-        return request
+        return Pair(request, contentLength)
     }
 
     fun execute(paramMap: Map<String, String>, req: HttpRequest): CompletableFuture<HttpResponse<ByteArray>> {

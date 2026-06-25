@@ -2,7 +2,6 @@ package org.javamaster.httpclient.js.support
 
 import com.jetbrains.rd.util.threadLocalWithInitial
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
-import org.javamaster.httpclient.utils.HttpUtils
 
 /**
  * Collect js executed log
@@ -16,12 +15,12 @@ object GlobalLog {
         logThreadLocal.get().add(str)
     }
 
-    fun getAndClearLogs(): String {
-        val logs = logThreadLocal.get()
+    fun getAndClearLogs(): List<String> {
+        val logs = logThreadLocal.get() ?: emptyList<String>()
 
         logThreadLocal.remove()
 
-        return logs.joinToString(HttpUtils.CR_LF)
+        return logs
     }
 
 }

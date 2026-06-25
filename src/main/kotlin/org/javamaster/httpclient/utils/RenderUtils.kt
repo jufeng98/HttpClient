@@ -6,9 +6,11 @@ import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VirtualFile
-import org.javamaster.httpclient.listener.OpenFileEditorMouseListener
+import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.listener.ChangeCursorEditorMouseMotionListener
+import org.javamaster.httpclient.listener.OpenFileEditorMouseListener
 import org.javamaster.httpclient.nls.NlsBundle.nls
+import org.javamaster.httpclient.renderer.ErrorTextEditorCustomElementRenderer
 import org.javamaster.httpclient.renderer.FileEditorCustomElementRenderer
 import org.javamaster.httpclient.renderer.TextEditorCustomElementRenderer
 import java.util.*
@@ -18,12 +20,33 @@ import java.util.*
  */
 object RenderUtils {
     private val inlayProperties: InlayProperties = InlayProperties()
+    private val inlayPropertiesSec = InlayProperties()
 
     init {
         inlayProperties.showWhenFolded(true)
+
+        inlayPropertiesSec.showWhenFolded(true)
+        inlayPropertiesSec.relatesToPrecedingText(true)
+        inlayPropertiesSec.showAbove(true)
     }
 
-    fun renderResDesc(resEditor: Editor, statusCode: Int, costTimes: Long?, contentLength: Int?) {
+    fun createReqDescRender(
+        resEditor: Editor,
+        reqContentLength: Long,
+    ): TextEditorCustomElementRenderer {
+        val sizeDesc = Formats.formatFileSize(reqContentLength)
+
+        val text = nls("req.size", reqContentLength, sizeDesc)
+
+        return TextEditorCustomElementRenderer(resEditor, text)
+    }
+
+    fun createResDescRender(
+        resEditor: Editor,
+        statusCode: Int,
+        costTimes: Long?,
+        contentLength: Int?,
+    ): TextEditorCustomElementRenderer {
         val sec = costTimes!! / 1000.0
         val secDesc = "%.2f".format(Locale.getDefault(), sec)
         val sizeDesc = Formats.formatFileSize(contentLength?.toLong()!!)
@@ -33,14 +56,34 @@ object RenderUtils {
             costTimes, secDesc, contentLength, sizeDesc
         )
 
+        return TextEditorCustomElementRenderer(resEditor, text)
+    }
+
+    fun createJsExecuteResultRender(
+        editor: Editor,
+        jsExecuteResult: JsExecuteResult,
+    ): MutableList<TextEditorCustomElementRenderer> {
+        val mutableList = jsExecuteResult.resList
+            .map {
+                TextEditorCustomElementRenderer(editor, it)
+            }
+            .toMutableList()
+
+        val exception = jsExecuteResult.jsScriptException
+        if (exception != null) {
+            val cause = exception.cause!!
+            mutableList.add(ErrorTextEditorCustomElementRenderer(editor, "$cause"))
+        }
+
+        return mutableList
+    }
+
+    fun renderTop(resEditor: Editor, list: List<TextEditorCustomElementRenderer>) {
         val inlayModel = resEditor.inlayModel
 
-        val inlayProperties = InlayProperties()
-        inlayProperties.showWhenFolded(true)
-        inlayProperties.relatesToPrecedingText(true)
-        inlayProperties.showAbove(true)
-
-        inlayModel.addBlockElement(0, inlayProperties, TextEditorCustomElementRenderer(resEditor, text))
+        for (renderer in list.reversed()) {
+            inlayModel.addBlockElement(0, inlayPropertiesSec, renderer)
+        }
     }
 
     fun renderResBodyFileName(resEditor: Editor, resDocument: Document, resBodyFile: VirtualFile, project: Project) {
@@ -60,7 +103,13 @@ object RenderUtils {
 
         resEditor.addEditorMouseListener(OpenFileEditorMouseListener(resBodyInlay, resBodyFile, project, signWidth))
 
-        resEditor.addEditorMouseMotionListener(ChangeCursorEditorMouseMotionListener(resBodyInlay, resEditor, signWidth))
+        resEditor.addEditorMouseMotionListener(
+            ChangeCursorEditorMouseMotionListener(
+                resBodyInlay,
+                resEditor,
+                signWidth
+            )
+        )
     }
 
     fun renderCookieFilePath(

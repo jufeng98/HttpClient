@@ -8,6 +8,7 @@ import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.exception.JsScriptException
+import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
@@ -37,6 +38,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val preJsResList = executePreJs(url, reqInfo, reqHeaderMap)
 
+        val jsBeforeExecuteResult = JsExecuteResult(preJsResList, jsScriptException)
+
         // 由于 前置 js 处理器有可能新增或修改了变量,所以 url、header、body 都需要重新解析一遍
         url = variableResolver.resolve(url)
 
@@ -55,9 +58,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver, paramMap)
 
         val httpReqDescList = mutableListOf<String>()
-        httpReqDescList.addAll(preJsResList)
 
-        handleHttp(url, reqHeaderMap, reqBody, httpReqDescList)
+        handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult)
     }
 
     private fun handleHttp(
@@ -65,16 +67,20 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         reqHeaderMap: LinkedMultiValueMap<String, String?>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
+        jsBeforeExecuteResult: JsExecuteResult?,
     ) {
         val targetMethodType = if (redirectTimes > 0) HttpRequestEnum.GET else methodType
 
-        val req = targetMethodType.preExecute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
+        val pair = targetMethodType.preExecute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         if (jsScriptException != null) {
-            dealPreJsErrorResponse(httpReqDescList)
+            dealPreJsErrorResponse(httpReqDescList, jsBeforeExecuteResult)
 
             return
         }
+
+        val req = pair.first
+        val reqContentLength = pair.second
 
         val start = System.currentTimeMillis()
 
@@ -100,7 +106,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
 
-                    handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList)
+                    handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList, null)
 
                     return@executeOnPooledThread
                 }
@@ -108,6 +114,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                 try {
                     if (hasReqError) {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+                        httpInfo.reqContentLength = reqContentLength
 
                         dealResponse(httpInfo)
 
@@ -144,8 +151,9 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         resList = e.list
                     }
 
+                    val jsAfterExecuteResult = JsExecuteResult(resList, jsScriptException)
+
                     val httpResDescList = mutableListOf<String>()
-                    httpResDescList.addAll(resList)
 
                     val versionDesc = MyPsiUtils.Companion.getVersionDesc(response.version())
 
@@ -178,8 +186,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val httpInfo = HttpInfo(
                         httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
-                        null, contentType, resHeaders, resolveOutputFilePath(), cookieSavePair,
-                        statusCode, costTimes, resBody.size
+                        null, contentType, resHeaders, resolveOutputFilePath(), cookieSavePair, statusCode,
+                        costTimes, resBody.size, jsBeforeExecuteResult, jsAfterExecuteResult, reqContentLength
                     )
 
                     dealResponse(httpInfo)

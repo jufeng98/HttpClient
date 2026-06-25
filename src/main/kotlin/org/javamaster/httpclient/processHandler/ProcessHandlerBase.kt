@@ -29,6 +29,7 @@ import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.exception.UrlUnresolvedVariableException
 import org.javamaster.httpclient.fake.FakeUnsolvedVariableElement
 import org.javamaster.httpclient.js.JsExecutor
+import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
@@ -234,8 +235,9 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         return results
     }
 
-    fun dealPreJsErrorResponse(httpReqDescList: MutableList<String>) {
+    fun dealPreJsErrorResponse(httpReqDescList: MutableList<String>, jsBeforeExecuteResult: JsExecuteResult?) {
         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, jsScriptException)
+        httpInfo.jsBeforeExecuteResult = jsBeforeExecuteResult
 
         dealResponse(httpInfo)
 

@@ -2,6 +2,7 @@ package org.javamaster.httpclient.model
 
 import com.intellij.openapi.vfs.VirtualFile
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.js.support.JsExecuteResult
 import java.net.http.HttpHeaders
 
 /**
@@ -20,6 +21,9 @@ data class HttpInfo(
     val statusCode: Int? = null,
     val costTimes: Long? = null,
     val contentLength: Int? = null,
+    var jsBeforeExecuteResult: JsExecuteResult? = null,
+    var jsAfterExecuteResult: JsExecuteResult? = null,
+    var reqContentLength:Long? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

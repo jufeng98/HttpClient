@@ -24,7 +24,6 @@ import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpScriptBody
-import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.ReqUtils
 import org.javamaster.httpclient.utils.XmlUtils
 import org.mozilla.javascript.*
@@ -106,7 +105,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             return mutableListOf()
         }
 
-        val resList = mutableListOf("/*$CR_LF${nls("pre.desc")}:$CR_LF")
+        val resList = mutableListOf(nls("pre.desc"))
 
         val context = Context.enter()
         try {
@@ -134,14 +133,11 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
                 }
             }
 
-            resList.add(GlobalLog.getAndClearLogs() + CR_LF)
-            resList.add("*/$CR_LF")
+            resList.addAll(GlobalLog.getAndClearLogs())
 
             return resList
         } catch (e: Exception) {
-            resList.add(GlobalLog.getAndClearLogs() + CR_LF)
-            resList.add("$e$CR_LF")
-            resList.add("*/$CR_LF")
+            resList.addAll(GlobalLog.getAndClearLogs())
 
             throw JsScriptException(resList.joinToString(""), resList, true, e)
         } finally {
@@ -165,7 +161,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
             return mutableListOf()
         }
 
-        val resList = mutableListOf("/*${CR_LF}${nls("post.js.executed.result")}:${CR_LF}")
+        val resList = mutableListOf(nls("post.js.executed.result"))
 
         val context = Context.enter()
         try {
@@ -200,14 +196,11 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
             evalJs(jsScript.text, rowNum, httpFileName, reqScriptableObject, context)
 
-            resList.add(GlobalLog.getAndClearLogs() + CR_LF)
-            resList.add("*/${CR_LF}")
+            resList.addAll(GlobalLog.getAndClearLogs())
 
             return resList
         } catch (e: Exception) {
-            resList.add(GlobalLog.getAndClearLogs() + CR_LF)
-            resList.add("$e$CR_LF")
-            resList.add("*/${CR_LF}")
+            resList.addAll(GlobalLog.getAndClearLogs())
 
             throw JsScriptException(resList.joinToString(""), resList, false, e)
         } finally {

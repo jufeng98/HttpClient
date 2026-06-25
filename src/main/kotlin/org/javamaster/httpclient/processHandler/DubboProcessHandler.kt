@@ -10,6 +10,7 @@ import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.JsScriptException
+import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
@@ -39,6 +40,8 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val preJsResList = executePreJs(url, reqInfo, reqHeaderMap)
 
+        val jsBeforeExecuteResult = JsExecuteResult(preJsResList, jsScriptException)
+
         // 由于 前置 js 处理器有可能新增或修改了变量,所以 url、header、body 都需要重新解析一遍
         url = variableResolver.resolve(url)
 
@@ -50,18 +53,17 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver, paramMap)
 
-        val httpReqDescList = mutableListOf<String>()
-        httpReqDescList.addAll(preJsResList)
-
-        handleDubbo(url, reqHeaderMap, reqBody, httpReqDescList)
+        handleDubbo(url, reqHeaderMap, reqBody, jsBeforeExecuteResult)
     }
 
     private fun handleDubbo(
         url: String,
         reqHeaderMap: LinkedMultiValueMap<String, String?>,
         reqBody: Any?,
-        httpReqDescList: MutableList<String>,
+        jsBeforeExecuteResult: JsExecuteResult?,
     ) {
+        val httpReqDescList = mutableListOf<String>()
+
         val module = computeReadAction { ModuleUtil.findModuleForPsiElement(httpFile) }
 
         val clsName = "org.javamaster.httpclient.dubbo.DubboRequest"
@@ -82,7 +84,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         }
 
         if (jsScriptException != null) {
-            dealPreJsErrorResponse(httpReqDescList)
+            dealPreJsErrorResponse(httpReqDescList, jsBeforeExecuteResult)
 
             return
         }
@@ -99,6 +101,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                 try {
                     if (hasReqError) {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
+                        httpInfo.reqContentLength = triple?.first?.size?.toLong()
 
                         dealResponse(httpInfo)
 
@@ -111,6 +114,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val bodyBytes = triple!!.first
                     val bodyStr = triple.second
+                    val reqContentLength = bodyBytes.size.toLong()
 
                     val httpResInfo = HttpResInfo(
                         SimpleTypeEnum.JSON, bodyBytes, bodyStr,
@@ -129,8 +133,9 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         resList = e.list
                     }
 
+                    val jsAfterExecuteResult = JsExecuteResult(resList, jsScriptException)
+
                     val httpResDescList = mutableListOf<String>()
-                    httpResDescList.addAll(resList)
 
                     httpResDescList.add("### $tabName$CR_LF")
 
@@ -153,8 +158,8 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val httpInfo = HttpInfo(
                         httpReqDescList, httpResDescList, SimpleTypeEnum.JSON, bodyBytes,
-                        null, ContentType.APPLICATION_JSON.mimeType, null, resolveOutputFilePath(), null,
-                        httpStatus!!, costTimes, bodyBytes.size
+                        null, ContentType.APPLICATION_JSON.mimeType, null, resolveOutputFilePath(), null, httpStatus!!,
+                        costTimes, bodyBytes.size, jsBeforeExecuteResult, jsAfterExecuteResult, reqContentLength
                     )
 
                     dealResponse(httpInfo)

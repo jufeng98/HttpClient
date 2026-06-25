@@ -36,10 +36,12 @@ import org.javamaster.httpclient.action.ws.WsInputPreviousHistoryAction;
 import org.javamaster.httpclient.consts.HttpConsts;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.exception.JsScriptException;
+import org.javamaster.httpclient.js.support.JsExecuteResult;
 import org.javamaster.httpclient.key.HttpKey;
 import org.javamaster.httpclient.messageBus.WsLangChangeNotifier;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
+import org.javamaster.httpclient.renderer.TextEditorCustomElementRenderer;
 import org.javamaster.httpclient.utils.*;
 import org.javamaster.httpclient.ws.WsRequest;
 
@@ -139,10 +141,44 @@ public class HttpDashboardForm implements Disposable {
             Editor resEditor = EditorUtils.INSTANCE.createEditor(resVirtualFile, resDocument, true,
                     project, false, simpleTypeEnum, editorList);
 
+            List<TextEditorCustomElementRenderer> reqRenderers = Lists.newArrayList();
+
+            Long reqContentLength = httpInfo.getReqContentLength();
+            if (reqContentLength != null) {
+                TextEditorCustomElementRenderer render = RenderUtils.INSTANCE.createReqDescRender(resEditor, reqContentLength);
+
+                reqRenderers.add(render);
+            }
+
+            JsExecuteResult jsBeforeExecuteResult = httpInfo.getJsBeforeExecuteResult();
+            if (jsBeforeExecuteResult != null) {
+                List<TextEditorCustomElementRenderer> rendererList = RenderUtils.INSTANCE
+                        .createJsExecuteResultRender(reqEditor, jsBeforeExecuteResult);
+
+                reqRenderers.addAll(rendererList);
+            }
+
+            RenderUtils.INSTANCE.renderTop(reqEditor, reqRenderers);
+
+            List<TextEditorCustomElementRenderer> resRenderers = Lists.newArrayList();
+
             Integer statusCode = httpInfo.getStatusCode();
             if (statusCode != null) {
-                RenderUtils.INSTANCE.renderResDesc(resEditor, statusCode, httpInfo.getCostTimes(), httpInfo.getContentLength());
+                TextEditorCustomElementRenderer render = RenderUtils.INSTANCE.createResDescRender(resEditor, statusCode,
+                        httpInfo.getCostTimes(), httpInfo.getContentLength());
+
+                resRenderers.add(render);
             }
+
+            JsExecuteResult jsAfterExecuteResult = httpInfo.getJsAfterExecuteResult();
+            if (jsAfterExecuteResult != null) {
+                List<TextEditorCustomElementRenderer> rendererList = RenderUtils.INSTANCE
+                        .createJsExecuteResultRender(resEditor, jsAfterExecuteResult);
+
+                resRenderers.addAll(rendererList);
+            }
+
+            RenderUtils.INSTANCE.renderTop(resEditor, resRenderers);
 
             if (renderResBodyFileName) {
                 RenderUtils.INSTANCE.renderResBodyFileName(resEditor, resDocument, resBodyFile, project);
