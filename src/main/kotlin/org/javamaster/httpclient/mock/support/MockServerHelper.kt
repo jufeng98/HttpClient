@@ -247,7 +247,7 @@ object MockServerHelper {
             throw UnsupportedOperationException()
         }
 
-        resConsumer.accept(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length ${size}b\n"))
+        resConsumer.accept(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n"))
         resConsumer.accept("-----------------------------\n")
     }
 

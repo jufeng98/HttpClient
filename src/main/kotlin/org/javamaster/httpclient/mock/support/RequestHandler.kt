@@ -27,7 +27,7 @@ class RequestHandler(
     private val resConsumer: Consumer<String>,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
-    private val paramMap: Map<String, String>,
+    paramMap: Map<String, String>,
 ) : HttpHandler {
 
     private val path = resolvePath(request, variableResolver)
@@ -87,10 +87,10 @@ class RequestHandler(
             }
         } else {
             if (reqPath == path) {
-                val resBody = computeResBody(request, variableResolver)
+                val pair = computeResBody(request, variableResolver)
 
                 val status = responseStatus ?: HttpStatus.SC_OK
-                writeResBody(resBody, exchange, status, resHeaders, resConsumer)
+                writeResBody(pair, exchange, status, resHeaders, resConsumer)
             } else {
                 val resStr = MockServerHelper.construct404ResHtml(reqPath)
 
