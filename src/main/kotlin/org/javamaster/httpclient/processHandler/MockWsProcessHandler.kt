@@ -1,12 +1,8 @@
 package org.javamaster.httpclient.processHandler
 
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.editor.Caret
-import com.intellij.openapi.editor.ScrollType
-import com.intellij.openapi.editor.ScrollingModel
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.util.DocumentUtil
 import org.javamaster.httpclient.mock.MockWsServerImpl
 import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.mock.support.MockWsServer
@@ -17,7 +13,6 @@ import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.NotifyUtil
-import java.util.function.Consumer
 
 /**
  * @author yudong
@@ -37,26 +32,13 @@ class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val path = computeReadAction { resolvePath(request, variableResolver) }
 
-        httpDashboardForm.initMockServerForm { editor ->
+        runInEdt {
             try {
                 loadingRemover?.run()
 
-                val document = editor.document
+                httpDashboardForm.initMockServerForm()
 
-                mockWsServer = MockWsServerImpl(
-                    port!!, path, reqHeaderMap, Consumer<String> { log ->
-                        runInEdt {
-                            DocumentUtil.writeInRunUndoTransparentAction {
-                                document.insertString(document.textLength, log)
-                                val caret: Caret = editor.caretModel.primaryCaret
-                                caret.moveToOffset(document.textLength)
-
-                                val scrollingModel: ScrollingModel = editor.scrollingModel
-                                scrollingModel.scrollToCaret(ScrollType.RELATIVE)
-                            }
-                        }
-                    }
-                )
+                mockWsServer = MockWsServerImpl(port!!, path, reqHeaderMap, httpDashboardForm)
 
                 mockWsServer!!.startServer(request, variableResolver, paramMap)
 

@@ -14,6 +14,7 @@ import org.javamaster.httpclient.psi.HttpPsiUtils
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.psi.HttpTypes
 import org.javamaster.httpclient.resolve.VariableResolver
+import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.ReqUtils
@@ -22,7 +23,6 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.*
-import java.util.function.Consumer
 import javax.activation.MimetypesFileTypeMap
 
 /**
@@ -31,21 +31,21 @@ import javax.activation.MimetypesFileTypeMap
 object MockServerHelper {
     private val mimetypesFileTypeMap = MimetypesFileTypeMap()
 
-    fun printRequestInfo(exchange: HttpExchange, resConsumer: Consumer<String>) {
-        resConsumer.accept(appendTime(NlsBundle.nls("mock.server.receive", exchange.remoteAddress.port) + "\n"))
+    fun printRequestInfo(exchange: HttpExchange, httpDashboardForm: HttpDashboardForm) {
+        httpDashboardForm.showMockServerLog(appendTime(NlsBundle.nls("mock.server.receive", exchange.remoteAddress.port) + "\n"))
 
-        resConsumer.accept("${exchange.requestMethod} ${exchange.requestURI}\n")
+        httpDashboardForm.showMockServerLog("${exchange.requestMethod} ${exchange.requestURI}\n")
 
         exchange.requestHeaders.forEach {
             val key = it.key
             it.value.forEach {
-                resConsumer.accept("${key}: ${it}\n")
+                httpDashboardForm.showMockServerLog("${key}: ${it}\n")
             }
         }
-        resConsumer.accept("\n")
+        httpDashboardForm.showMockServerLog("\n")
 
         val reqBody = StreamUtils.copyToString(exchange.requestBody, StandardCharsets.UTF_8)
-        resConsumer.accept(reqBody.replace(CR_LF, "\n") + "\n")
+        httpDashboardForm.showMockServerLog(reqBody.replace(CR_LF, "\n") + "\n")
     }
 
     fun constructFileListResHtml(root: File, reqPath: String): String {
@@ -175,7 +175,7 @@ object MockServerHelper {
         exchange: HttpExchange,
         resHeaders: Headers,
         status: Int,
-        resConsumer: Consumer<String>,
+        httpDashboardForm: HttpDashboardForm,
     ) {
         resHeaders.set(HttpHeaders.CONTENT_TYPE, "text/html;charset=utf-8")
 
@@ -186,8 +186,8 @@ object MockServerHelper {
 
         exchange.responseBody.write(byteArray)
 
-        resConsumer.accept(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length ${size}b\n"))
-        resConsumer.accept("-----------------------------\n")
+        httpDashboardForm.showMockServerLog(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length ${size}b\n"))
+        httpDashboardForm.showMockServerLog("-----------------------------\n")
     }
 
     fun writeFileResBytes(
@@ -195,7 +195,7 @@ object MockServerHelper {
         exchange: HttpExchange,
         status: Int,
         resHeaders: Headers,
-        resConsumer: Consumer<String>,
+        httpDashboardForm: HttpDashboardForm,
     ) {
         val bytes = file.readBytes()
         val length = bytes.size
@@ -208,8 +208,8 @@ object MockServerHelper {
 
         exchange.responseBody.write(bytes)
 
-        resConsumer.accept("Write file bytes to client: $file\n")
-        resConsumer.accept("-----------------------------\n")
+        httpDashboardForm.showMockServerLog("Write file bytes to client: $file\n")
+        httpDashboardForm.showMockServerLog("-----------------------------\n")
     }
 
     fun writeResBody(
@@ -217,7 +217,7 @@ object MockServerHelper {
         exchange: HttpExchange,
         status: Int,
         resHeaders: Headers,
-        resConsumer: Consumer<String>,
+        httpDashboardForm: HttpDashboardForm,
     ) {
         pair.second.forEach { (t, u) ->
             u.forEach {
@@ -247,8 +247,8 @@ object MockServerHelper {
             throw UnsupportedOperationException()
         }
 
-        resConsumer.accept(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n"))
-        resConsumer.accept("-----------------------------\n")
+        httpDashboardForm.showMockServerLog(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n"))
+        httpDashboardForm.showMockServerLog("-----------------------------\n")
     }
 
     fun computeResBody(

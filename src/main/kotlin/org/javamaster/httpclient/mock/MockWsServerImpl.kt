@@ -18,7 +18,7 @@ import org.javamaster.httpclient.mock.support.MockWsServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
-import java.util.function.Consumer
+import org.javamaster.httpclient.ui.HttpDashboardForm
 
 
 /**
@@ -29,7 +29,7 @@ class MockWsServerImpl(
     private val port: Int,
     private val path: String,
     reqHeaderMap: LinkedMultiValueMap<String, String?>,
-    private val resConsumer: Consumer<String>,
+    private val httpDashboardForm: HttpDashboardForm,
 ) : MockWsServer {
     var channelFuture: ChannelFuture? = null
     var bossGroup: MultiThreadIoEventLoopGroup? = null
@@ -60,13 +60,13 @@ class MockWsServerImpl(
                     // 负责 WebSocket 的握手、协议升级以及数据帧的处理
                     pipeline.addLast(WebSocketServerProtocolHandler(path))
                     // 7. 添加自定义的业务处理器
-                    pipeline.addLast(HttpWebSocketHandler(resConsumer, request, variableResolver, paramMap))
+                    pipeline.addLast(HttpWebSocketHandler(httpDashboardForm, request, variableResolver, paramMap))
                 }
             })
 
         channelFuture = serverBootstrap.bind(port).sync()
 
-        resConsumer.accept(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
+        httpDashboardForm.showMockServerLog(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
     }
 
     override fun stopServer() {
@@ -74,7 +74,7 @@ class MockWsServerImpl(
         bossGroup?.shutdownGracefully()
         workerGroup?.shutdownGracefully()
 
-        resConsumer.accept(MockServerHelper.appendTime("Server stopped\n"))
+        httpDashboardForm.showMockServerLog(MockServerHelper.appendTime("Server stopped\n"))
     }
 
 }

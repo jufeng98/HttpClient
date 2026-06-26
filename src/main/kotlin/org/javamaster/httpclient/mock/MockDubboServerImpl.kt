@@ -6,6 +6,7 @@ import com.alibaba.dubbo.config.ServiceConfig
 import com.alibaba.dubbo.rpc.service.GenericService
 import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.dubbo.DubboRequestImpl
+import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.mock.support.DubboGenericService
 import org.javamaster.httpclient.mock.support.MockDubboServer
@@ -14,7 +15,6 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.DubboUtils
-import java.util.function.Consumer
 
 
 /**
@@ -25,7 +25,7 @@ class MockDubboServerImpl(
     private val port: Int,
     private val schema: String?,
     reqHeaderMap: LinkedMultiValueMap<String, String?>,
-    private val resConsumer: Consumer<String>,
+    private val dubboBridge: DubboBridge,
 ) : MockDubboServer {
     private val interfaceName: String? by lazy {
         val values = reqHeaderMap[DubboUtils.INTERFACE_NAME] ?: return@lazy null
@@ -47,7 +47,7 @@ class MockDubboServerImpl(
     private var serviceConfig: ServiceConfig<GenericService>? = null
 
     override fun startServer(request: HttpRequest, variableResolver: VariableResolver, paramMap: Map<String, String>) {
-        val dubboGenericService = DubboGenericService(resConsumer, request, variableResolver, paramMap)
+        val dubboGenericService = DubboGenericService(dubboBridge, request, variableResolver, paramMap)
 
         val serviceConfig = ServiceConfig<GenericService>()
         serviceConfig.application = DubboRequestImpl.application
@@ -87,13 +87,13 @@ class MockDubboServerImpl(
 
         this.serviceConfig = serviceConfig
 
-        resConsumer.accept(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
+        dubboBridge.showMockServerLog(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
     }
 
     override fun stopServer() {
         serviceConfig?.unexport()
 
-        resConsumer.accept(MockServerHelper.appendTime("Server stopped\n"))
+        dubboBridge.showMockServerLog(MockServerHelper.appendTime("Server stopped\n"))
     }
 
 }

@@ -1,12 +1,9 @@
 package org.javamaster.httpclient.processHandler
 
 import com.intellij.openapi.application.runInEdt
-import com.intellij.openapi.editor.Caret
-import com.intellij.openapi.editor.ScrollType
-import com.intellij.openapi.editor.ScrollingModel
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.util.DocumentUtil
+import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.mock.support.MockDubboServer
 import org.javamaster.httpclient.mock.support.MockServerHelper
@@ -16,7 +13,6 @@ import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.NotifyUtil
 import java.lang.reflect.InvocationTargetException
-import java.util.function.Consumer
 
 /**
  * @author yudong
@@ -34,11 +30,11 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
 
-        httpDashboardForm.initMockServerForm { editor ->
+        runInEdt {
             try {
                 loadingRemover?.run()
 
-                val document = editor.document
+                httpDashboardForm.initMockServerForm()
 
                 val clsName = "org.javamaster.httpclient.mock.MockDubboServerImpl"
                 val mockDubboServerImpl = DubboJars.dubboClassLoader.loadClass(clsName)
@@ -49,18 +45,7 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                 try {
                     mockDubboServer = computeReadAction {
                         constructor.newInstance(
-                            port, requestTarget.schema?.text, reqHeaderMap, Consumer<String> { log ->
-                                runInEdt {
-                                    DocumentUtil.writeInRunUndoTransparentAction {
-                                        document.insertString(document.textLength, log)
-                                        val caret: Caret = editor.caretModel.primaryCaret
-                                        caret.moveToOffset(document.textLength)
-
-                                        val scrollingModel: ScrollingModel = editor.scrollingModel
-                                        scrollingModel.scrollToCaret(ScrollType.RELATIVE)
-                                    }
-                                }
-                            }
+                            port, requestTarget.schema?.text, reqHeaderMap, DubboBridge(httpDashboardForm)
                         ) as MockDubboServer
                     }
                 } catch (e: InvocationTargetException) {

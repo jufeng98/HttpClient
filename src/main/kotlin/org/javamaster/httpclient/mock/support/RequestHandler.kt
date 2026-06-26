@@ -12,19 +12,19 @@ import org.javamaster.httpclient.mock.support.MockServerHelper.writeResBody
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
+import org.javamaster.httpclient.ui.HttpDashboardForm
 import java.io.File
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 
 /**
  * @author yudong
  */
 class RequestHandler(
-    private val resConsumer: Consumer<String>,
+    private val httpDashboardForm: HttpDashboardForm,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
     paramMap: Map<String, String>,
@@ -42,10 +42,10 @@ class RequestHandler(
         val method = exchange.requestMethod
         val reqPath = URLDecoder.decode(exchange.requestURI.path, StandardCharsets.UTF_8)
 
-        MockServerHelper.printRequestInfo(exchange, resConsumer)
+        MockServerHelper.printRequestInfo(exchange, httpDashboardForm)
 
         if (readTimeout != null) {
-            resConsumer.accept("Sleeping $readTimeout s......\n")
+            httpDashboardForm.showMockServerLog("Sleeping $readTimeout s......\n")
             TimeUnit.SECONDS.sleep(readTimeout)
         }
 
@@ -67,35 +67,35 @@ class RequestHandler(
                     val resHtml = MockServerHelper.constructFileListResHtml(file, reqPath)
 
                     val status = responseStatus ?: HttpStatus.SC_OK
-                    writeHtmlResAndLog(resHtml, exchange, resHeaders, status, resConsumer)
+                    writeHtmlResAndLog(resHtml, exchange, resHeaders, status, httpDashboardForm)
                 } else {
                     if (file.exists()) {
                         val status = responseStatus ?: HttpStatus.SC_OK
-                        MockServerHelper.writeFileResBytes(file, exchange, status, resHeaders, resConsumer)
+                        MockServerHelper.writeFileResBytes(file, exchange, status, resHeaders, httpDashboardForm)
                     } else {
                         val resStr = MockServerHelper.construct404ResHtml(reqPath)
 
                         val status = responseStatus ?: HttpStatus.SC_NOT_FOUND
-                        writeHtmlResAndLog(resStr, exchange, resHeaders, status, resConsumer)
+                        writeHtmlResAndLog(resStr, exchange, resHeaders, status, httpDashboardForm)
                     }
                 }
             } else {
                 val resStr = MockServerHelper.construct404ResHtml(reqPath)
 
                 val status = responseStatus ?: HttpStatus.SC_NOT_FOUND
-                writeHtmlResAndLog(resStr, exchange, resHeaders, status, resConsumer)
+                writeHtmlResAndLog(resStr, exchange, resHeaders, status, httpDashboardForm)
             }
         } else {
             if (reqPath == path) {
                 val pair = computeResBody(request, variableResolver)
 
                 val status = responseStatus ?: HttpStatus.SC_OK
-                writeResBody(pair, exchange, status, resHeaders, resConsumer)
+                writeResBody(pair, exchange, status, resHeaders, httpDashboardForm)
             } else {
                 val resStr = MockServerHelper.construct404ResHtml(reqPath)
 
                 val status = responseStatus ?: HttpStatus.SC_NOT_FOUND
-                writeHtmlResAndLog(resStr, exchange, resHeaders, status, resConsumer)
+                writeHtmlResAndLog(resStr, exchange, resHeaders, status, httpDashboardForm)
             }
         }
 

@@ -52,7 +52,6 @@ import java.awt.*;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class HttpDashboardForm implements Disposable {
     private final LinkedList<Pair<String, Language>> inputHistoryList = new LinkedList<>();
@@ -72,6 +71,7 @@ public class HttpDashboardForm implements Disposable {
 
     private final String tabName;
     private final Project project;
+    private Editor mockServerEditor;
 
     public HttpDashboardForm(String tabName, Disposable parentDisposable, Project project) {
         this.tabName = tabName;
@@ -254,7 +254,7 @@ public class HttpDashboardForm implements Disposable {
         return new WsDashboardForm();
     }
 
-    public void initMockServerForm(Consumer<Editor> editorConsumer) {
+    public void initMockServerForm() {
         FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
 
         VirtualFile virtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(Lists.newArrayList(""),
@@ -262,18 +262,20 @@ public class HttpDashboardForm implements Disposable {
 
         Document document = ReadAction.compute(() -> Objects.requireNonNull(fileDocumentManager.getDocument(virtualFile)));
 
-        ApplicationManager.getApplication().invokeLater(() -> {
-            mainPanel.remove(splitter);
-            mainPanel.remove(labelLoading);
-            mainPanel.setLayout(new BorderLayout());
+        mainPanel.remove(splitter);
+        mainPanel.remove(labelLoading);
+        mainPanel.setLayout(new BorderLayout());
 
-            var editor = EditorFactory.getInstance().createEditor(document, project, virtualFile, true);
-            editorList.add(editor);
+        var editor = EditorFactory.getInstance().createEditor(document, project, virtualFile, true);
+        editorList.add(editor);
 
-            mainPanel.add(editor.getComponent(), BorderLayout.CENTER);
+        mainPanel.add(editor.getComponent(), BorderLayout.CENTER);
 
-            editorConsumer.accept(editor);
-        });
+        this.mockServerEditor = editor;
+    }
+
+    public void showMockServerLog(String log) {
+        DocUtils.INSTANCE.appendLog(mockServerEditor, log);
     }
 
     public void saveInputHistoryList() {
