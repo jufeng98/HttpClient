@@ -13,7 +13,6 @@ import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.mock.support.HttpWebSocketHandler
-import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.mock.support.MockWsServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
@@ -66,7 +65,7 @@ class MockWsServerImpl(
 
         channelFuture = serverBootstrap.bind(port).sync()
 
-        httpDashboardForm.showMockServerLog(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
+        httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.ws.server.start", port) + "\n")
     }
 
     override fun stopServer() {
@@ -74,7 +73,7 @@ class MockWsServerImpl(
         bossGroup?.shutdownGracefully()
         workerGroup?.shutdownGracefully()
 
-        httpDashboardForm.showMockServerLog(MockServerHelper.appendTime("Server stopped\n"))
+        httpDashboardForm.showMockServerLog("Server stopped\n")
     }
 
 }

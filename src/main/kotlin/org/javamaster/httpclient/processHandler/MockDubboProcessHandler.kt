@@ -56,12 +56,18 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                 try {
                     Thread.currentThread().contextClassLoader = DubboJars.dubboClassLoader
 
-                    mockDubboServer!!.startServer(request, variableResolver, paramMap)
+                    mockDubboServer!!.startServerAsync(request, variableResolver, paramMap)
+                        .whenCompleteAsync { res, throwable ->
+                            if (throwable != null) {
+                                handleException(throwable)
+                                return@whenCompleteAsync
+                            }
+
+                            NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.dubbo.server.start", port!!))
+                        }
                 } finally {
                     Thread.currentThread().contextClassLoader = classLoader
                 }
-
-                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.dubbo.server.start", port!!))
 
                 ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
             } catch (e: Exception) {

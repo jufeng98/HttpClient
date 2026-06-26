@@ -283,7 +283,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         }
     }
 
-    fun handleException(e: Exception) {
+    fun handleException(e: Throwable) {
         hasReqError = true
 
         if (jsScriptException != null) {

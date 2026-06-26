@@ -10,11 +10,11 @@ import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.mock.support.DubboGenericService
 import org.javamaster.httpclient.mock.support.MockDubboServer
-import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.DubboUtils
+import java.util.concurrent.CompletableFuture
 
 
 /**
@@ -46,15 +46,18 @@ class MockDubboServerImpl(
 
     private var serviceConfig: ServiceConfig<GenericService>? = null
 
-    override fun startServer(request: HttpRequest, variableResolver: VariableResolver, paramMap: Map<String, String>) {
-        val dubboGenericService = DubboGenericService(dubboBridge, request, variableResolver, paramMap)
-
+    override fun startServerAsync(
+        request: HttpRequest,
+        variableResolver: VariableResolver,
+        paramMap: Map<String, String>,
+    ): CompletableFuture<Void> {
         val serviceConfig = ServiceConfig<GenericService>()
         serviceConfig.application = DubboRequestImpl.application
         serviceConfig.generic = "true"
         serviceConfig.timeout = TIMEOUT
         serviceConfig.retries = 0
-        serviceConfig.`interface` = interfaceName
+
+        val dubboGenericService = DubboGenericService(dubboBridge, request, variableResolver, paramMap)
         serviceConfig.ref = dubboGenericService
 
         val protocol = ProtocolConfig()
@@ -75,25 +78,42 @@ class MockDubboServerImpl(
 
         if (registry.isNullOrBlank()) {
             registryConfig.address = "N/A"
+            serviceConfig.`interface` = interfaceName
             registryConfig.isRegister = false
         } else {
+            // 无法解决 Unimplemented for /dubbo/com.alibaba.dubbo.rpc.service.GenericService 问题
             registryConfig.address = registry
+            serviceConfig.setInterface(GenericService::class.java)
             registryConfig.isRegister = true
         }
 
         serviceConfig.registry = registryConfig
 
-        serviceConfig.export()
+        dubboBridge.showMockServerLog("Dubbo Server starting...\n")
 
-        this.serviceConfig = serviceConfig
+        val classLoaderTmp = Thread.currentThread().contextClassLoader
 
-        dubboBridge.showMockServerLog(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
+        return CompletableFuture.runAsync {
+            val classLoader = Thread.currentThread().contextClassLoader
+
+            try {
+                Thread.currentThread().contextClassLoader = classLoaderTmp
+
+                serviceConfig.export()
+
+                this.serviceConfig = serviceConfig
+
+                dubboBridge.showMockServerLog(NlsBundle.nls("mock.dubbo.server.start", port) + "\n")
+            } finally {
+                Thread.currentThread().contextClassLoader = classLoader
+            }
+        }
     }
 
     override fun stopServer() {
         serviceConfig?.unexport()
 
-        dubboBridge.showMockServerLog(MockServerHelper.appendTime("Server stopped\n"))
+        dubboBridge.showMockServerLog("Dubbo Server stopped\n")
     }
 
 }
