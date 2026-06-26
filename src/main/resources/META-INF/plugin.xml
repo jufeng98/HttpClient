@@ -27,7 +27,9 @@
                 <li>Support preview HTML response</li>
                 <li>Support preview pdf response</li>
                 <li>Support searching SpringMVC Api in the SearchEverywhere Dialog</li>
-                <li>Support Mock Server</li>
+                <li>Support Mock Http Server</li>
+                <li>Support Mock WebSocket Server</li>
+                <li>Support Mock Dubbo Server</li>
             </ul>
             Getting Started:<br>
             <ol>
@@ -56,7 +58,9 @@
                 <li>支持预览 HTML 响应</li>
                 <li>支持预览 pdf 响应</li>
                 <li>支持在 SearchEverywhere 窗口搜索 SpringMVC Api</li>
-                <li>支持 Mock Server</li>
+                <li>支持 Mock Http Server</li>
+                <li>支持 Mock WebSocket Server</li>
+                <li>支持 Mock Dubbo Server</li>
             </ul>
             开始使用：<br>
             <ol>
@@ -75,7 +79,7 @@
                     <li>调整响应窗口逻辑,当 http / dubbo 响应体太大时,不再显示在响应窗口,避免 IDEA 卡顿</li>
                     <li>调整响应窗口逻辑,简化响应体文件展示逻辑,以及鼠标可直接点击打开响应体文件</li>
                     <li>调整请求逻辑,对于存在 Content-Length 请求头时,不仅置灰显示,而且发起请求时不再报错,而是忽略</li>
-                    <li>新增 Mock Ws 服务功能</li>
+                    <li>新增 Mock WebSocket 服务功能</li>
                     <li>新增 Mock Dubbo 服务功能</li>
                     <li>bug修复及其他功能优化等等</li>
                 </ul>

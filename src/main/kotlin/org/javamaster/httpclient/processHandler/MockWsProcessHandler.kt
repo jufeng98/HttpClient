@@ -42,7 +42,7 @@ class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                 mockWsServer!!.startServer(request, variableResolver, paramMap)
 
-                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.server.start", port!!))
+                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.ws.server.start", port!!))
 
                 ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
             } catch (e: Exception) {

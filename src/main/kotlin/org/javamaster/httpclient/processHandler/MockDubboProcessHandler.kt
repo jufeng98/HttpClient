@@ -61,7 +61,7 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     Thread.currentThread().contextClassLoader = classLoader
                 }
 
-                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.server.start", port!!))
+                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.dubbo.server.start", port!!))
 
                 ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
             } catch (e: Exception) {

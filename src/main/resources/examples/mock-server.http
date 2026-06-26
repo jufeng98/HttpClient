@@ -1,4 +1,4 @@
-### mock server1
+### mock http server1
 MOCK_SERVER http://localhost
 Content-Type: application/json
 
@@ -7,7 +7,7 @@ Content-Type: application/json
   "time": {{$timestamp}}
 }
 
-### mock server2
+### mock http server2
 # @responseStatus 201
 MOCK_SERVER http://localhost:8080
 Content-Type: application/json
@@ -18,12 +18,11 @@ Message-ID: {{$random.alphanumeric(32)}}
   "time": "{{$datetime}}"
 }
 
-### mock server3
+### mock http server3
 # @staticFolder D:\
 MOCK_SERVER http://localhost
 
-
-### mock ws
+### mock ws server
 # @timeout 300
 MOCK_WS ws://localhost:8999/server/business
 Content-Type: application/json
@@ -33,7 +32,7 @@ Content-Type: application/json
   "time": "{{$datetime}}"
 }
 
-### mock dubbo
+### mock dubbo provider
 # @timeout 1000
 MOCK_DUBBO dubbo://localhost:20888
 Content-Type: application/json
