@@ -213,18 +213,21 @@ class DubboRequestImpl(
 
                 val referenceConfig = createReferenceConfig()
 
-                // val genericService = referenceConfigCache.get(referenceConfig)
-                val genericService = referenceConfig.get()
+                try {
+                    val genericService = referenceConfig.get()
 
-                val start = System.currentTimeMillis()
-                val result: Any? = genericService.`$invoke`(methodName, paramTypeNameArray, paramValueArray)
-                val consumeTimes = System.currentTimeMillis() - start
+                    val start = System.currentTimeMillis()
+                    val result: Any? = genericService.`$invoke`(methodName, paramTypeNameArray, paramValueArray)
+                    val consumeTimes = System.currentTimeMillis() - start
 
-                val resJsonStr = gson.toJson(result)
+                    val resJsonStr = gson.toJson(result)
 
-                val byteArray = resJsonStr.toByteArray(StandardCharsets.UTF_8)
+                    val byteArray = resJsonStr.toByteArray(StandardCharsets.UTF_8)
 
-                Triple(byteArray, resJsonStr, consumeTimes)
+                    Triple(byteArray, resJsonStr, consumeTimes)
+                } finally {
+                    referenceConfig.destroy()
+                }
             } finally {
                 Thread.currentThread().contextClassLoader = classLoader
             }
@@ -267,7 +270,6 @@ class DubboRequestImpl(
     }
 
     companion object {
-//        val referenceConfigCache: ReferenceConfigCache = ReferenceConfigCache.getCache("_DEFAULT_", HttpKeyGenerator)
         val application = ApplicationConfig()
 
         init {

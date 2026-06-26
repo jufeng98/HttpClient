@@ -315,11 +315,6 @@
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="httpclient-web-calm.xml">ris58h.webcalm</depends>
 
-    <projectListeners>
-        <listener class="org.javamaster.httpclient.listener.HttpProjectManagerListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </projectListeners>
-
     <applicationListeners>
         <listener class="org.javamaster.httpclient.listener.HttpDynamicPluginListener"
                   topic="com.intellij.ide.plugins.DynamicPluginListener"/>
