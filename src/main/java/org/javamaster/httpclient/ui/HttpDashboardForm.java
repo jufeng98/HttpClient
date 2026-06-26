@@ -10,7 +10,9 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.editor.*;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
@@ -21,7 +23,6 @@ import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.util.DocumentUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -249,8 +250,8 @@ public class HttpDashboardForm implements Disposable {
         responsePanel.add(new JBScrollPane(jPanel), constraintsRes);
     }
 
-    public void initWsForm(WsRequest wsRequest) {
-        new WsDashboardForm(wsRequest);
+    public WsDashboardForm initWsForm() {
+        return new WsDashboardForm();
     }
 
     public void initMockServerForm(Consumer<Editor> editorConsumer) {
@@ -334,15 +335,15 @@ public class HttpDashboardForm implements Disposable {
     }
 
     public class WsDashboardForm {
-        private final WsRequest wsRequest;
+        private WsRequest wsRequest;
+
+        private final Editor resEditor;
         private final JPanel wsReqPanel;
 
         private int wsInputHistoryCurrentIndex = -1;
         private final Key<String> editorTextKey = Key.create("org.javamaster.ws.WsDashboardForm");
 
-        public WsDashboardForm(WsRequest wsRequest) {
-            this.wsRequest = wsRequest;
-
+        public WsDashboardForm() {
             wsReqPanel = new JPanel();
             wsReqPanel.setLayout(new BorderLayout());
 
@@ -354,10 +355,27 @@ public class HttpDashboardForm implements Disposable {
 
             initWsReqPanel();
 
-            project.getMessageBus().connect(HttpDashboardForm.this).subscribe(WsLangChangeNotifier.Companion.getWS_LANG_CHANGE_TOPIC(),
-                    (WsLangChangeNotifier) this::recreateWsReqEditor);
+            project.getMessageBus()
+                    .connect(HttpDashboardForm.this)
+                    .subscribe(
+                            WsLangChangeNotifier.Companion.getWS_LANG_CHANGE_TOPIC(),
+                            (WsLangChangeNotifier) this::recreateWsReqEditor
+                    );
 
-            initWsResPanel();
+            this.resEditor = initWsResPanel();
+        }
+
+        public void setWsRequest(WsRequest wsRequest) {
+            this.wsRequest = wsRequest;
+        }
+
+        public void showReceiveWsMsg(String wsMsg) {
+            if (resEditor.isDisposed()) {
+                HttpRequestLogger.INSTANCE.logInfo("ws res editor 已被销毁");
+                return;
+            }
+
+            DocUtils.INSTANCE.appendLog(resEditor, wsMsg);
         }
 
         private void initWsReqPanel() {
@@ -388,7 +406,7 @@ public class HttpDashboardForm implements Disposable {
             requestPanel.add(wsReqPanel, constraints);
         }
 
-        private void initWsResPanel() {
+        private Editor initWsResPanel() {
             GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();
             GridConstraints constraintsRes = layoutRes.getConstraintsForComponent(responsePanel);
 
@@ -398,28 +416,7 @@ public class HttpDashboardForm implements Disposable {
 
             responsePanel.add(resEditor.getComponent(), constraintsRes);
 
-            wsRequest.setResConsumer(res -> {
-                        if (resEditor.isDisposed()) {
-                            HttpRequestLogger.INSTANCE.logInfo("ws res editor 已被销毁");
-                            return;
-                        }
-
-                        Caret caret = resEditor.getCaretModel().getPrimaryCaret();
-                        ScrollingModel scrollingModel = resEditor.getScrollingModel();
-                        Document document = resEditor.getDocument();
-
-                        DocumentUtil.writeInRunUndoTransparentAction(() -> {
-                                    String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss,SSS");
-                                    String replace = res.replace(HttpUtils.CR_LF, "\n");
-                                    String s = time + " - " + replace;
-
-                                    document.insertString(document.getTextLength(), s);
-                                    caret.moveToOffset(document.getTextLength());
-                                    scrollingModel.scrollToCaret(ScrollType.RELATIVE);
-                                }
-                        );
-                    }
-            );
+            return resEditor;
         }
 
         public void sendWsMsg() {

@@ -31,17 +31,17 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         reqHeaderMap.addAll(GlobalHeaders.dataHolder)
 
-        wsRequest = WsRequest(url, reqHeaderMap, this, paramMap)
-
         httpDashboardForm.restoreInputHistoryList()
 
         runInEdt {
             try {
                 loadingRemover?.run()
 
-                httpDashboardForm.initWsForm(wsRequest)
+                val wsDashboardForm = httpDashboardForm.initWsForm()
 
-                wsRequest!!.connect()
+                wsRequest = WsRequest(url, reqHeaderMap, this, paramMap, wsDashboardForm)
+
+                wsRequest!!.connectAsync()
 
                 ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
             } catch (e: Exception) {

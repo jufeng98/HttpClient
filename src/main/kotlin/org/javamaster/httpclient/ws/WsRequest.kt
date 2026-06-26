@@ -1,13 +1,12 @@
 package org.javamaster.httpclient.ws
 
-import com.intellij.openapi.application.runInEdt
-import com.intellij.util.application
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.processHandler.ProcessHandlerBase
+import org.javamaster.httpclient.ui.HttpDashboardForm
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket
@@ -15,7 +14,6 @@ import java.nio.ByteBuffer
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
-import java.util.function.Consumer
 
 /**
  * Support WebSocket request
@@ -27,12 +25,16 @@ class WsRequest(
     private val reqHeaderMap: LinkedMultiValueMap<String, String?>,
     private val processHandler: ProcessHandlerBase,
     private val paramMap: Map<String, String>,
+    private val wsDashboardForm: HttpDashboardForm.WsDashboardForm
 ) {
+    init {
+        wsDashboardForm.setWsRequest(this)
+    }
+
     private var webSocket: WebSocket? = null
-    lateinit var resConsumer: Consumer<String>
     private val tabName = processHandler.tabName
 
-    fun connect() {
+    fun connectAsync() {
         wsRunningSet.add(tabName)
 
         returnResMsg(NlsBundle.nls("connecting") + " ${url}\n")
@@ -94,11 +96,7 @@ class WsRequest(
     }
 
     fun returnResMsg(msg: String) {
-        runInEdt {
-            application.runWriteAction {
-                resConsumer.accept(msg)
-            }
-        }
+        wsDashboardForm.showReceiveWsMsg(msg)
     }
 
     companion object {
@@ -116,6 +114,7 @@ class WsListener(private val wsRequest: WsRequest, private val processHandler: P
         webSocket?.request(1)
 
         wsRequest.returnResMsg("↓↓↓ ${NlsBundle.nls("text.data")}:$data\n")
+
         return CompletableFuture<Void>()
     }
 
@@ -123,6 +122,7 @@ class WsListener(private val wsRequest: WsRequest, private val processHandler: P
         webSocket?.request(1)
 
         wsRequest.returnResMsg("↓↓↓ ${NlsBundle.nls("binary.data")}:$data\n")
+
         return CompletableFuture<Void>()
     }
 
