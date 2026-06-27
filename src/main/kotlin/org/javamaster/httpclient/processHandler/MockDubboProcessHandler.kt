@@ -6,7 +6,6 @@ import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.mock.support.MockDubboServer
-import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.HttpUtils
@@ -17,16 +16,13 @@ import java.lang.reflect.InvocationTargetException
 /**
  * @author yudong
  */
-class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
+class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private val port: Int) :
     ProcessHandlerBase(httpMethod, selectedEnv) {
 
     private var mockDubboServer: MockDubboServer? = null
-    private var port: Int? = null
 
     override fun startProcess() {
-        port = MockServerHelper.resolvePort(requestTarget.port)
-
-        mockServerRunningSet.add(port!!)
+        mockServerRunningSet.add(port)
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
 
@@ -63,7 +59,7 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                                 return@whenCompleteAsync
                             }
 
-                            NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.dubbo.server.start", port!!))
+                            NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.dubbo.server.start", port))
                         }
                 } finally {
                     Thread.currentThread().contextClassLoader = classLoader

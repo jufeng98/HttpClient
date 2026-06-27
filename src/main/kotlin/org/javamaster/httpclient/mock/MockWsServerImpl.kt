@@ -73,7 +73,7 @@ class MockWsServerImpl(
         bossGroup?.shutdownGracefully()
         workerGroup?.shutdownGracefully()
 
-        httpDashboardForm.showMockServerLog("Server stopped\n")
+        httpDashboardForm.showMockServerLog("WebSocket Server stopped\n")
     }
 
 }

@@ -4,7 +4,6 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.mock.MockServer
-import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.NotifyUtil
@@ -12,13 +11,13 @@ import org.javamaster.httpclient.utils.NotifyUtil
 /**
  * @author yudong
  */
-class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
+class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private val port: Int) :
     ProcessHandlerBase(httpMethod, selectedEnv) {
 
     private var mockServer: MockServer? = null
 
     override fun startProcess() {
-        val port = MockServerHelper.resolvePort(requestTarget.port)
+        mockServerRunningSet.add(port)
 
         runInEdt {
             try {
@@ -40,8 +39,19 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
     }
 
     override fun destroyProcessImpl() {
+        mockServerRunningSet.remove(port)
+
         mockServer?.stopServer()
 
         super.destroyProcessImpl()
     }
+
+    companion object {
+        private val mockServerRunningSet = mutableSetOf<Int>()
+
+        fun isRunning(port: Int): Boolean {
+            return mockServerRunningSet.contains(port)
+        }
+    }
+
 }

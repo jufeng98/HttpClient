@@ -4,7 +4,6 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.mock.MockWsServerImpl
-import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.mock.support.MockWsServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
@@ -17,16 +16,13 @@ import org.javamaster.httpclient.utils.NotifyUtil
 /**
  * @author yudong
  */
-class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
+class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private val port: Int) :
     ProcessHandlerBase(httpMethod, selectedEnv) {
 
     private var mockWsServer: MockWsServer? = null
-    private var port: Int? = null
 
     override fun startProcess() {
-        port = MockServerHelper.resolvePort(requestTarget.port)
-
-        mockServerRunningSet.add(port!!)
+        mockServerRunningSet.add(port)
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
 
@@ -38,11 +34,11 @@ class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                 httpDashboardForm.initMockServerForm()
 
-                mockWsServer = MockWsServerImpl(port!!, path, reqHeaderMap, httpDashboardForm)
+                mockWsServer = MockWsServerImpl(port, path, reqHeaderMap, httpDashboardForm)
 
                 mockWsServer!!.startServer(request, variableResolver, paramMap)
 
-                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.ws.server.start", port!!))
+                NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.ws.server.start", port))
 
                 ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
             } catch (e: Exception) {

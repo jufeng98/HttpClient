@@ -32,6 +32,7 @@ import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.PreJsFile
@@ -536,11 +537,23 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
                 HttpRequestEnum.DUBBO -> DubboProcessHandler(httpMethod, selectedEnv)
 
-                HttpRequestEnum.MOCK_SERVER -> MockServerProcessHandler(httpMethod, selectedEnv)
+                HttpRequestEnum.MOCK_SERVER -> {
+                    val port = MockServerHelper.resolvePort(httpMethod)
 
-                HttpRequestEnum.MOCK_DUBBO -> MockDubboProcessHandler(httpMethod, selectedEnv)
+                    MockServerProcessHandler(httpMethod, selectedEnv, port)
+                }
 
-                HttpRequestEnum.MOCK_WS -> MockWsProcessHandler(httpMethod, selectedEnv)
+                HttpRequestEnum.MOCK_DUBBO -> {
+                    val port = MockServerHelper.resolvePort(httpMethod)
+
+                    MockDubboProcessHandler(httpMethod, selectedEnv, port)
+                }
+
+                HttpRequestEnum.MOCK_WS -> {
+                    val port = MockServerHelper.resolvePort(httpMethod)
+
+                    MockWsProcessHandler(httpMethod, selectedEnv, port)
+                }
 
                 else -> HttpProcessHandler(httpMethod, selectedEnv)
             }

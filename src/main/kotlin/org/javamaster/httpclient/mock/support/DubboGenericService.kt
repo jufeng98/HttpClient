@@ -3,7 +3,6 @@ package org.javamaster.httpclient.mock.support
 import com.alibaba.dubbo.rpc.service.GenericService
 import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.enums.ParamEnum
-import org.javamaster.httpclient.mock.support.MockServerHelper.appendTime
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
@@ -37,7 +36,7 @@ class DubboGenericService(
         val byteArray = bodyStr.toByteArray(StandardCharsets.UTF_8)
         val size = byteArray.size
 
-        dubboBridge.showMockServerLog(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n"))
+        dubboBridge.showMockServerLog(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n")
         dubboBridge.showMockServerLog("-----------------------------\n")
 
         return gson.fromJson(bodyStr, HashMap::class.java)

@@ -1,7 +1,6 @@
 package org.javamaster.httpclient.mock
 
 import com.sun.net.httpserver.HttpServer
-import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.mock.support.RequestHandler
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
@@ -26,24 +25,13 @@ class MockServer(private val port: Int, private val httpDashboardForm: HttpDashb
         httpServer!!.createContext("/", requestHandler)
         httpServer!!.start()
 
-        mockServerRunningSet.add(port)
-
-        httpDashboardForm.showMockServerLog(MockServerHelper.appendTime(NlsBundle.nls("mock.server.start", port) + "\n"))
+        httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.server.start", port) + "\n")
     }
 
     fun stopServer() {
-        mockServerRunningSet.remove(port)
-
         httpServer?.stop(0)
 
-        httpDashboardForm.showMockServerLog(MockServerHelper.appendTime("Server stopped\n"))
+        httpDashboardForm.showMockServerLog("Http Server stopped\n")
     }
 
-    companion object {
-        private val mockServerRunningSet = mutableSetOf<Int>()
-
-        fun isRunning(port: Int): Boolean {
-            return mockServerRunningSet.contains(port)
-        }
-    }
 }

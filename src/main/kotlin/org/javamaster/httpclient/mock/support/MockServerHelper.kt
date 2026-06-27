@@ -2,6 +2,7 @@ package org.javamaster.httpclient.mock.support
 
 import com.google.common.net.HttpHeaders
 import com.intellij.openapi.util.text.Formats
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.application
 import com.sun.net.httpserver.Headers
 import com.sun.net.httpserver.HttpExchange
@@ -9,10 +10,7 @@ import org.apache.commons.lang3.time.DateFormatUtils
 import org.intellij.markdown.html.urlEncode
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.psi.HttpPort
-import org.javamaster.httpclient.psi.HttpPsiUtils
-import org.javamaster.httpclient.psi.HttpRequest
-import org.javamaster.httpclient.psi.HttpTypes
+import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.HttpUtils
@@ -22,7 +20,6 @@ import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.*
 import javax.activation.MimetypesFileTypeMap
 
 /**
@@ -32,7 +29,7 @@ object MockServerHelper {
     private val mimetypesFileTypeMap = MimetypesFileTypeMap()
 
     fun printRequestInfo(exchange: HttpExchange, httpDashboardForm: HttpDashboardForm) {
-        httpDashboardForm.showMockServerLog(appendTime(NlsBundle.nls("mock.server.receive", exchange.remoteAddress.port) + "\n"))
+        httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.server.receive", exchange.remoteAddress.port) + "\n")
 
         httpDashboardForm.showMockServerLog("${exchange.requestMethod} ${exchange.requestURI}\n")
 
@@ -186,7 +183,7 @@ object MockServerHelper {
 
         exchange.responseBody.write(byteArray)
 
-        httpDashboardForm.showMockServerLog(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length ${size}b\n"))
+        httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.server.res") + "Content-Length ${size}b\n")
         httpDashboardForm.showMockServerLog("-----------------------------\n")
     }
 
@@ -247,7 +244,7 @@ object MockServerHelper {
             throw UnsupportedOperationException()
         }
 
-        httpDashboardForm.showMockServerLog(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n"))
+        httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n")
         httpDashboardForm.showMockServerLog("-----------------------------\n")
     }
 
@@ -265,9 +262,10 @@ object MockServerHelper {
         }
     }
 
-    fun appendTime(msg: String): String {
-        val time = DateFormatUtils.format(Date(), "yyyy-MM-dd HH:mm:ss,SSS")
-        return "$time - $msg"
+    fun resolvePort(httpMethod: HttpMethod): Int {
+        val requestTarget = PsiTreeUtil.getNextSiblingOfType(httpMethod, HttpRequestTarget::class.java)!!
+
+        return resolvePort(requestTarget.port)
     }
 
     fun resolvePort(httpPort: HttpPort?): Int {

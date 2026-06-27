@@ -9,10 +9,10 @@ import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpRequestEnum
-import org.javamaster.httpclient.mock.MockServer
 import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.processHandler.MockDubboProcessHandler
+import org.javamaster.httpclient.processHandler.MockServerProcessHandler
 import org.javamaster.httpclient.processHandler.MockWsProcessHandler
 import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.psi.HttpMethod
@@ -76,7 +76,7 @@ class ConfigUtils {
                 }
 
                 val port = MockServerHelper.resolvePort(requestTarget.port)
-                if (MockServer.isRunning(port)) {
+                if (MockServerProcessHandler.isRunning(port)) {
                     NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
                     showServicesWindow(project, tabName)
                     return true

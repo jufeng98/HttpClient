@@ -5,7 +5,6 @@ import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
-import org.javamaster.httpclient.mock.support.MockServerHelper.appendTime
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
@@ -39,7 +38,7 @@ class HttpWebSocketHandler(
         val byteArray = bodyStr.toByteArray(StandardCharsets.UTF_8)
         val size = byteArray.size
 
-        httpDashboardForm.showMockServerLog(appendTime(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n"))
+        httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n")
         httpDashboardForm.showMockServerLog("-----------------------------\n")
 
         ctx.channel().writeAndFlush(TextWebSocketFrame(bodyStr))
