@@ -43,6 +43,7 @@ import org.javamaster.httpclient.logger.HttpRequestLogger;
 import org.javamaster.httpclient.messageBus.WsLangChangeNotifier;
 import org.javamaster.httpclient.model.HttpInfo;
 import org.javamaster.httpclient.nls.NlsBundle;
+import org.javamaster.httpclient.psi.HttpRequestBlock;
 import org.javamaster.httpclient.renderer.TextEditorCustomElementRenderer;
 import org.javamaster.httpclient.utils.*;
 import org.javamaster.httpclient.ws.WsRequest;
@@ -96,7 +97,7 @@ public class HttpDashboardForm implements Disposable {
         labelLoading.setVisible(false);
     }
 
-    public void initHttpResContent(HttpInfo httpInfo, boolean noLog) {
+    public void initHttpResContent(HttpInfo httpInfo, boolean noLog, HttpRequestBlock requestBlock) {
         kotlin.Pair<VirtualFile, Boolean> pair = ResUtils.INSTANCE.saveResBodyToFile(httpInfo, tabName, noLog, project);
 
         VirtualFile resBodyFile = pair.getFirst();
@@ -188,7 +189,7 @@ public class HttpDashboardForm implements Disposable {
 
             kotlin.Pair<String, VirtualFile> cookieSavePair = httpInfo.getCookieSavePair();
             if (cookieSavePair != null) {
-                RenderUtils.INSTANCE.renderCookieFilePath(resEditor, resDocument, cookieSavePair, project);
+                RenderUtils.INSTANCE.renderCookieFilePath(resEditor, resDocument, cookieSavePair, project, requestBlock);
             }
 
             GridLayoutManager layoutRes = (GridLayoutManager) responsePanel.getParent().getLayout();

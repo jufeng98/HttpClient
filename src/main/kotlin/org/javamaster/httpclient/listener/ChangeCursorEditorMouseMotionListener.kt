@@ -1,10 +1,10 @@
 package org.javamaster.httpclient.listener
 
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseMotionListener
-import org.javamaster.httpclient.renderer.FileEditorCustomElementRenderer
 import java.awt.Cursor
 import java.awt.Rectangle
 
@@ -12,20 +12,24 @@ import java.awt.Rectangle
  * @author yudong
  */
 class ChangeCursorEditorMouseMotionListener(
-    private val resBodyInlay: Inlay<FileEditorCustomElementRenderer>,
+    private val inlay: Inlay<out EditorCustomElementRenderer>,
     private val resEditor: Editor,
-    private val signWidth: Int,
+    private val signWidth: Int? = null,
 ) : EditorMouseMotionListener {
 
     private var lastContains = false
 
     override fun mouseMoved(e: EditorMouseEvent) {
-        val bounds = resBodyInlay.bounds
+        val bounds = inlay.bounds
 
         val boundsCp = if (bounds == null) {
             null
         } else {
-            Rectangle(bounds.x + signWidth, bounds.y, bounds.width - signWidth, bounds.height)
+            if (signWidth == null) {
+                bounds
+            } else {
+                Rectangle(bounds.x + signWidth, bounds.y, bounds.width - signWidth, bounds.height)
+            }
         }
 
         val contains = boundsCp?.contains(e.mouseEvent.point) == true

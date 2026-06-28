@@ -7,11 +7,17 @@ import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
+import kotlin.jvm.java
 
 /**
  * @author yudong
  */
 object HttpPsiFactory {
+
+    fun createDirectionComment(project: Project, content: String): HttpDirectionComment {
+        val psiFile = createDummyFile(project, content)
+        return PsiTreeUtil.findChildOfType(psiFile, HttpDirectionComment::class.java)!!
+    }
 
     fun createGlobalVariableName(project: Project, content: String): HttpFileVariableName {
         val psiFile = createDummyFile(project, content)

@@ -254,7 +254,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     }
 
     fun dealResponse(httpInfo: HttpInfo) {
-        httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param))
+        httpDashboardForm.initHttpResContent(httpInfo, paramMap.containsKey(ParamEnum.NO_LOG.param), requestBlock)
 
         val virtualFile = httpFile.virtualFile
         val isRunFile = virtualFile.getUserData(HttpConsts.runFileKey) == true

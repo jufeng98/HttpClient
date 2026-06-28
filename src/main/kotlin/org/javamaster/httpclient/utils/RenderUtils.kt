@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.utils
 
+import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.InlayProperties
@@ -8,8 +9,10 @@ import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VirtualFile
 import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.listener.ChangeCursorEditorMouseMotionListener
+import org.javamaster.httpclient.listener.DisableCookiesEditorMouseListener
 import org.javamaster.httpclient.listener.OpenFileEditorMouseListener
 import org.javamaster.httpclient.nls.NlsBundle.nls
+import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.renderer.ErrorTextEditorCustomElementRenderer
 import org.javamaster.httpclient.renderer.FileEditorCustomElementRenderer
 import org.javamaster.httpclient.renderer.TextEditorCustomElementRenderer
@@ -113,6 +116,7 @@ object RenderUtils {
         resDocument: Document,
         cookieSavePair: Pair<String, VirtualFile>,
         project: Project,
+        requestBlock: HttpRequestBlock,
     ) {
         val inlayModel = resEditor.inlayModel
 
@@ -125,6 +129,15 @@ object RenderUtils {
         val labelRenderer = TextEditorCustomElementRenderer(resEditor, cookieSavePair.first)
 
         inlayModel.addBlockElement(resDocument.textLength, inlayProperties, labelRenderer)
+        val cookieDisableInlay = inlayModel.addBlockElement(
+            resDocument.textLength, inlayProperties, HintRenderer("Disable")
+        )
+
+        if (cookieDisableInlay != null) {
+            resEditor.addEditorMouseListener(DisableCookiesEditorMouseListener(cookieDisableInlay, requestBlock))
+
+            resEditor.addEditorMouseMotionListener(ChangeCursorEditorMouseMotionListener(cookieDisableInlay, resEditor))
+        }
 
         val cookiesFile = cookieSavePair.second
 
