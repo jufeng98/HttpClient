@@ -6,6 +6,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
+import com.intellij.pom.Navigatable
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -15,6 +16,8 @@ import com.intellij.psi.util.PsiUtil
 import com.intellij.refactoring.rename.RenameProcessor
 import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.HttpLanguage
+import org.javamaster.httpclient.enums.ParamEnum
+import org.javamaster.httpclient.factory.HttpPsiFactory
 import org.javamaster.httpclient.factory.HttpPsiFactory.createFileVariable
 import org.javamaster.httpclient.psi.*
 
@@ -164,6 +167,23 @@ class HttpFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, HttpL
             val textEditor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
             val httpFile = PsiUtil.getPsiFile(project, textEditor.virtualFile) as HttpFile
             return httpFile.createFileVariableAndInsert(variableName, variableValue)
+        }
+
+        fun insertReqDirectionComment(requestBlock: HttpRequestBlock, paramEnum: ParamEnum, project: Project) {
+            WriteCommandAction.runWriteCommandAction(project) {
+                val directionComment = HttpPsiFactory.createDirectionComment(project, "# @${paramEnum.param}\n")
+                val nextSibling = directionComment.nextSibling
+                val comment = requestBlock.comment
+                if (comment != null) {
+                    val elementNew = requestBlock.addAfter(directionComment, comment)
+                    requestBlock.addAfter(nextSibling, elementNew)
+                    (elementNew as Navigatable).navigate(true)
+                } else {
+                    val elementNew = requestBlock.addBefore(directionComment, requestBlock.firstChild)
+                    requestBlock.addAfter(nextSibling, elementNew)
+                    (elementNew as Navigatable).navigate(true)
+                }
+            }
         }
 
     }
