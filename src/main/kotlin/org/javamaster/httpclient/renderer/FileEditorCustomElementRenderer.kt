@@ -36,6 +36,8 @@ class FileEditorCustomElementRenderer(editor: Editor, private val name: String) 
         val x = targetRegion.x
         val y = targetRegion.y + targetRegion.height
 
+        g.color = JBColor.BLACK
+
         g.drawString(sign, x, y)
 
         g.color = JBColor.BLUE

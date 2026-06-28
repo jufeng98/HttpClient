@@ -38,11 +38,10 @@ class ChangeCursorEditorMouseMotionListener(
         if (contains != lastContains) {
             lastContains = contains
 
-            // 2. 移出时用 TEXT_CURSOR（I型）替代 DEFAULT_CURSOR（箭头）
             val cursor = if (contains) {
                 Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             } else {
-                Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
+                Cursor.getDefaultCursor()
             }
 
             resEditor.contentComponent.cursor = cursor
