@@ -9,7 +9,6 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
-import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.NotifyUtil
 
@@ -24,8 +23,6 @@ class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private
     override fun startProcess() {
         mockServerRunningSet.add(port)
 
-        var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
-
         val path = computeReadAction { resolvePath(request, variableResolver) }
 
         runInEdt {
@@ -34,7 +31,7 @@ class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private
 
                 httpDashboardForm.initMockServerForm()
 
-                mockWsServer = MockWsServerImpl(port, path, reqHeaderMap, httpDashboardForm)
+                mockWsServer = MockWsServerImpl(port, path, httpDashboardForm)
 
                 mockWsServer!!.startServer(request, variableResolver, paramMap)
 

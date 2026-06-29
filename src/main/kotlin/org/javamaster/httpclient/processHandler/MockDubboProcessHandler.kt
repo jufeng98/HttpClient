@@ -53,7 +53,7 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, priv
                     Thread.currentThread().contextClassLoader = DubboJars.dubboClassLoader
 
                     mockDubboServer!!.startServerAsync(request, variableResolver, paramMap)
-                        .whenCompleteAsync { res, throwable ->
+                        .whenCompleteAsync { _, throwable ->
                             if (throwable != null) {
                                 handleException(throwable)
                                 return@whenCompleteAsync
