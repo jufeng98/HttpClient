@@ -6,7 +6,9 @@ import com.alibaba.dubbo.config.ServiceConfig
 import com.alibaba.dubbo.rpc.service.GenericService
 import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.dubbo.DubboRequestImpl
+import org.javamaster.httpclient.dubbo.loader.ApiClassLoader
 import org.javamaster.httpclient.dubbo.support.DubboBridge
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.mock.support.DubboGenericService
 import org.javamaster.httpclient.mock.support.MockDubboServer
@@ -14,6 +16,9 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.DubboUtils
+import java.io.File
+import java.io.FileNotFoundException
+import java.net.URL
 import java.util.concurrent.CompletableFuture
 
 
@@ -27,9 +32,23 @@ class MockDubboServerImpl(
     reqHeaderMap: LinkedMultiValueMap<String, String?>,
     private val dubboBridge: DubboBridge,
 ) : MockDubboServer {
-    private val interfaceName: String? by lazy {
-        val values = reqHeaderMap[DubboUtils.INTERFACE_NAME] ?: return@lazy null
-        values[0]
+    private val interfaceName: String by lazy {
+        val values = reqHeaderMap[DubboUtils.INTERFACE_NAME] ?: throw IllegalArgumentException(
+            NlsBundle.nls(
+                "dubbo.all.blank", DubboUtils.INTERFACE_KEY, DubboUtils.INTERFACE_NAME
+            )
+        )
+
+        val name = values[0]
+        if (name.isNullOrBlank()) {
+            throw IllegalArgumentException(
+                NlsBundle.nls(
+                    "dubbo.all.blank", DubboUtils.INTERFACE_KEY, DubboUtils.INTERFACE_NAME
+                )
+            )
+        }
+
+        name
     }
     private val version by lazy {
         val values = reqHeaderMap[DubboUtils.VERSION] ?: return@lazy null
@@ -51,13 +70,31 @@ class MockDubboServerImpl(
         variableResolver: VariableResolver,
         paramMap: Map<String, String>,
     ): CompletableFuture<Void> {
+        var apiClz: Class<*>? = null
+        var apiClassLoader: ApiClassLoader? = null
+
+        val importPath = paramMap[ParamEnum.IMPORT.param]
+        if (importPath != null) {
+            val jarUrls = mutableListOf<URL>()
+            val file = File(importPath)
+            if (!file.exists()) {
+                throw FileNotFoundException(importPath)
+            }
+
+            jarUrls.add(file.toURI().toURL())
+            apiClassLoader = ApiClassLoader(jarUrls.toTypedArray(), Thread.currentThread().contextClassLoader)
+            apiClz = apiClassLoader.loadClass(interfaceName)
+        }
+
         val serviceConfig = ServiceConfig<GenericService>()
         serviceConfig.application = DubboRequestImpl.application
         serviceConfig.generic = "true"
         serviceConfig.timeout = TIMEOUT
         serviceConfig.retries = 0
 
-        val dubboGenericService = DubboGenericService(dubboBridge, request, variableResolver, paramMap)
+        val dubboGenericService = DubboGenericService(
+            dubboBridge, request, variableResolver, paramMap, apiClz, apiClassLoader
+        )
         serviceConfig.ref = dubboGenericService
 
         val protocol = ProtocolConfig()
@@ -76,14 +113,17 @@ class MockDubboServerImpl(
         val registryConfig = RegistryConfig()
         registryConfig.timeout = TIMEOUT
 
+        if (apiClz != null) {
+            serviceConfig.setInterface(apiClz)
+        } else {
+            serviceConfig.`interface` = interfaceName
+        }
+
         if (registry.isNullOrBlank()) {
             registryConfig.address = "N/A"
-            serviceConfig.`interface` = interfaceName
             registryConfig.isRegister = false
         } else {
-            // 无法解决 Unimplemented for /dubbo/com.alibaba.dubbo.rpc.service.GenericService 问题
             registryConfig.address = registry
-            serviceConfig.setInterface(GenericService::class.java)
             registryConfig.isRegister = true
         }
 
@@ -91,7 +131,7 @@ class MockDubboServerImpl(
 
         dubboBridge.showMockServerLog("Dubbo Server starting...\n")
 
-        val classLoaderTmp = Thread.currentThread().contextClassLoader
+        val classLoaderTmp = apiClassLoader ?: Thread.currentThread().contextClassLoader
 
         return CompletableFuture.runAsync {
             val classLoader = Thread.currentThread().contextClassLoader

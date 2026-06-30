@@ -1,6 +1,8 @@
 package org.javamaster.httpclient.mock.support
 
+import com.alibaba.dubbo.common.json.JSON
 import com.alibaba.dubbo.rpc.service.GenericService
+import org.javamaster.httpclient.dubbo.loader.ApiClassLoader
 import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.nls.NlsBundle
@@ -18,6 +20,8 @@ class DubboGenericService(
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
     private val paramMap: Map<String, String>,
+    private val apiClz: Class<*>?,
+    private val apiClassLoader: ApiClassLoader?,
 ) : GenericService {
 
     override fun `$invoke`(method: String, parameterTypes: Array<String>, args: Array<Any>): Any? {
@@ -38,6 +42,21 @@ class DubboGenericService(
 
         dubboBridge.showMockServerLog(NlsBundle.nls("mock.server.res") + "Content-Length $size b\n")
         dubboBridge.showMockServerLog("-----------------------------\n")
+
+        if (apiClz != null) {
+            val classes = parameterTypes.map { apiClassLoader!!.loadClass(it) }.toList().toTypedArray()
+            val declaredMethod = apiClz.getDeclaredMethod(method, *classes)
+
+            val classLoader = Thread.currentThread().contextClassLoader
+            try {
+                Thread.currentThread().contextClassLoader = apiClassLoader!!
+
+                return JSON.parse(bodyStr, declaredMethod.returnType)
+            } finally {
+                Thread.currentThread().contextClassLoader = classLoader
+            }
+
+        }
 
         return gson.fromJson(bodyStr, HashMap::class.java)
     }
