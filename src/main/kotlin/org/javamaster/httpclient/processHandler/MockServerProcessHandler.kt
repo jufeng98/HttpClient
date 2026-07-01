@@ -22,15 +22,6 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, pri
     override fun startProcess() {
         mockServerRunningSet.add(port)
 
-        var url = resolveAndHandleUrl()
-
-        val reqInfo = createHttpReqInfo()
-
-        var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
-
-        val preJsResList = executePreJs(url, reqInfo, reqHeaderMap)
-        HttpRequestLogger.logInfo("前置 js 执行结果:$preJsResList")
-
         val pair = DocUtils.createMockDoc(tabName, project)
 
         runInEdt {
@@ -39,7 +30,7 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, pri
 
                 httpDashboardForm.initMockServerForm(pair)
 
-                mockServer = MockServer(port, httpDashboardForm)
+                mockServer = MockServer(port, httpDashboardForm, this)
 
                 mockServer!!.startServer(request, variableResolver, paramMap)
 
@@ -50,6 +41,17 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, pri
                 handleException(e)
             }
         }
+    }
+
+    fun executePreJs() {
+        var url = resolveAndHandleUrl()
+
+        val reqInfo = createHttpReqInfo()
+
+        var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
+
+        val preJsResList = executePreJs(url, reqInfo, reqHeaderMap)
+        HttpRequestLogger.logInfo("前置 js 执行结果:$preJsResList")
     }
 
     override fun destroyProcessImpl() {

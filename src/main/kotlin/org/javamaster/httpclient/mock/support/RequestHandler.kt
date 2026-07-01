@@ -11,6 +11,7 @@ import org.javamaster.httpclient.mock.support.MockServerHelper.computeResBody
 import org.javamaster.httpclient.mock.support.MockServerHelper.writeHtmlResAndLog
 import org.javamaster.httpclient.mock.support.MockServerHelper.writeResBody
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.processHandler.MockServerProcessHandler
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
@@ -29,6 +30,7 @@ class RequestHandler(
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
     paramMap: MultiValueMap<String, String>,
+    private val handler: MockServerProcessHandler,
 ) : HttpHandler {
 
     private val path = resolvePath(request, variableResolver)
@@ -40,6 +42,8 @@ class RequestHandler(
     private val readTimeout = paramMap.getFirst(ParamEnum.READ_TIMEOUT_NAME.param)?.toLong()
 
     override fun handle(exchange: HttpExchange) {
+        handler.executePreJs()
+
         val method = exchange.requestMethod
         val reqPath = URLDecoder.decode(exchange.requestURI.path, StandardCharsets.UTF_8)
 
