@@ -18,7 +18,7 @@ import org.javamaster.httpclient.js.support.res.HttpClientResponse
 import org.javamaster.httpclient.js.support.res.ResponseHeaders
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpReqInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.model.PreJsFile
@@ -72,7 +72,7 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
         rawBody: String?,
         reqInfo: HttpReqInfo,
         method: HttpRequestEnum,
-        reqHeaderMap: LinkedMultiValueMap<String, String?>,
+        reqHeaderMap: MultiValueMap<String, String?>,
         selectedEnv: String?,
         fileScopeVariableMap: LinkedHashMap<String, String>,
     ) {

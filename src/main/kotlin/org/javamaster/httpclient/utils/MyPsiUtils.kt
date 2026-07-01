@@ -18,6 +18,7 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.API_MODEL_PROPERTY_
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_OPERATION_ANNO_NAME
 import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_BODY_ANNO_NAME
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.HttpPsiUtils.getNextSiblingByType
@@ -130,7 +131,7 @@ class MyPsiUtils {
             return preRequestHandler.preRequestScript.scriptBody
         }
 
-        fun getReqDirectionCommentParamMap(httpRequestBlock: HttpRequestBlock): LinkedMultiValueMap<String, String> {
+        fun getReqDirectionCommentParamMap(httpRequestBlock: HttpRequestBlock): MultiValueMap<String, String> {
             val map = LinkedMultiValueMap<String, String>()
 
             httpRequestBlock.directionCommentList

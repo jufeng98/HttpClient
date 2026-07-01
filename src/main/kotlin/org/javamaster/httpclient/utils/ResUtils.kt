@@ -15,7 +15,7 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.utils.DecompressUtils.decompressBodyBytes
@@ -92,7 +92,7 @@ object ResUtils {
         return HttpResInfo(simpleTypeEnum, bodyBytes, bodyStr, contentType.mimeType)
     }
 
-    fun shouldRedirect(httpStatus: Int?, paramMap: LinkedMultiValueMap<String, String>): Boolean {
+    fun shouldRedirect(httpStatus: Int?, paramMap: MultiValueMap<String, String>): Boolean {
         httpStatus ?: return false
 
         if (httpStatus != HttpStatus.SC_MOVED_TEMPORARILY && httpStatus != HttpStatus.SC_MOVED_PERMANENTLY) {

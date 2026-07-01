@@ -6,7 +6,7 @@ import com.sun.net.httpserver.HttpHandler
 import org.apache.http.HttpStatus
 import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.enums.ParamEnum
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.mock.support.MockServerHelper.computeResBody
 import org.javamaster.httpclient.mock.support.MockServerHelper.writeHtmlResAndLog
 import org.javamaster.httpclient.mock.support.MockServerHelper.writeResBody
@@ -28,7 +28,7 @@ class RequestHandler(
     private val httpDashboardForm: HttpDashboardForm,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
-    paramMap: LinkedMultiValueMap<String, String>,
+    paramMap: MultiValueMap<String, String>,
 ) : HttpHandler {
 
     private val path = resolvePath(request, variableResolver)

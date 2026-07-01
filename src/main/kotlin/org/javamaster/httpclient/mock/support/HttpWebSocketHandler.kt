@@ -5,7 +5,7 @@ import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
@@ -20,7 +20,7 @@ class HttpWebSocketHandler(
     private val httpDashboardForm: HttpDashboardForm,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
-    private val paramMap: LinkedMultiValueMap<String, String>,
+    private val paramMap: MultiValueMap<String, String>,
 ) :
     SimpleChannelInboundHandler<TextWebSocketFrame>() {
 

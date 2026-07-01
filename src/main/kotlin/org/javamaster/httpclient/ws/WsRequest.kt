@@ -3,7 +3,7 @@ package org.javamaster.httpclient.ws
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.enums.ParamEnum
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.ui.HttpDashboardForm
@@ -22,9 +22,9 @@ import java.util.concurrent.CompletionStage
  */
 class WsRequest(
     private val url: String,
-    private val reqHeaderMap: LinkedMultiValueMap<String, String?>,
+    private val reqHeaderMap: MultiValueMap<String, String?>,
     private val processHandler: ProcessHandlerBase,
-    private val paramMap: LinkedMultiValueMap<String, String>,
+    private val paramMap: MultiValueMap<String, String>,
     private val wsDashboardForm: HttpDashboardForm.WsDashboardForm
 ) {
     init {

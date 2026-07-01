@@ -5,7 +5,7 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.WEB_BOUNDARY
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.CookieUtils
@@ -62,7 +62,7 @@ class CurlProcessHandler(
     private fun handleCurl(
         raw: Boolean,
         url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String?>,
+        reqHeaderMap: MultiValueMap<String, String?>,
     ) {
         val list = mutableListOf<String>()
 

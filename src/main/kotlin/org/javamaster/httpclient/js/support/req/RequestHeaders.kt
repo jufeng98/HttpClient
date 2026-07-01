@@ -1,14 +1,14 @@
 package org.javamaster.httpclient.js.support.req
 
 import org.javamaster.httpclient.js.support.GlobalLog
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 
 /**
  * @author yudong
  */
 @Suppress("unused")
-class RequestHeaders(private val headers: LinkedMultiValueMap<String, String?>) {
+class RequestHeaders(private val headers: MultiValueMap<String, String?>) {
 
     fun all(): List<RequestHeader> {
         return headers.map {

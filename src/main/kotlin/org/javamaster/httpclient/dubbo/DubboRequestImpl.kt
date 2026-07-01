@@ -11,7 +11,7 @@ import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.TIMEOUT
 import org.javamaster.httpclient.dubbo.support.DubboRequest
 import org.javamaster.httpclient.enums.ParamEnum
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.DubboUtils.findTargetMethod
@@ -27,12 +27,12 @@ import java.util.concurrent.CompletableFuture
 class DubboRequestImpl(
     private val tabName: String,
     private val url: String,
-    private val reqHeaderMap: LinkedMultiValueMap<String, String?>,
+    private val reqHeaderMap: MultiValueMap<String, String?>,
     reqBody: Any?,
     private val httpReqDescList: MutableList<String>,
     module: Module?,
     project: Project,
-    private val paramMap: LinkedMultiValueMap<String, String>,
+    private val paramMap: MultiValueMap<String, String>,
 ) : DubboRequest {
     private val methodName: String by lazy {
         val values =

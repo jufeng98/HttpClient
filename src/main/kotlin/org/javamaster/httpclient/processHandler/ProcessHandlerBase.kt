@@ -31,7 +31,7 @@ import org.javamaster.httpclient.fake.FakeUnsolvedVariableElement
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpReqInfo
@@ -79,7 +79,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     protected lateinit var version: Version
     protected lateinit var preJsFiles: List<PreJsFile>
     protected lateinit var jsListBeforeReq: List<HttpScriptBody>
-    protected lateinit var paramMap: LinkedMultiValueMap<String, String>
+    protected lateinit var paramMap: MultiValueMap<String, String>
 
     protected var loadingRemover: Runnable? = null
     protected var requestFinished: Consumer<Int>? = null
@@ -217,7 +217,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     fun executePreJs(
         url: String,
         reqInfo: HttpReqInfo,
-        reqHeaderMap: LinkedMultiValueMap<String, String?>,
+        reqHeaderMap: MultiValueMap<String, String?>,
     ): List<String> {
         jsExecutor.initJsRequestObj(
             url, rawUrl, rawBody, reqInfo, methodType, reqHeaderMap,

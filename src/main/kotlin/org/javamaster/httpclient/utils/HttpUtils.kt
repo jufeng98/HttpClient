@@ -27,6 +27,7 @@ import org.javamaster.httpclient.exception.HeaderUnresolvedVariableException
 import org.javamaster.httpclient.exception.HttpFileException
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
@@ -96,7 +97,7 @@ object HttpUtils {
     fun convertToReqHeaderMap(
         headerFields: List<HttpHeaderField>?,
         variableResolver: VariableResolver,
-    ): LinkedMultiValueMap<String, String?> {
+    ): MultiValueMap<String, String?> {
         if (headerFields.isNullOrEmpty()) return LinkedMultiValueMap()
 
         val map = LinkedMultiValueMap<String, String?>()
@@ -119,9 +120,9 @@ object HttpUtils {
     }
 
     fun resolveReqHeaderMapAgain(
-        reqHeaderMap: LinkedMultiValueMap<String, String?>,
+        reqHeaderMap: MultiValueMap<String, String?>,
         variableResolver: VariableResolver,
-    ): LinkedMultiValueMap<String, String?> {
+    ): MultiValueMap<String, String?> {
         val map = LinkedMultiValueMap<String, String?>()
 
         reqHeaderMap.entries.stream()
@@ -330,7 +331,7 @@ object HttpUtils {
         variableResolver: VariableResolver,
         request: HttpRequest,
         header: HttpHeader?,
-        paramMap: LinkedMultiValueMap<String, String>,
+        paramMap: MultiValueMap<String, String>,
         raw: Boolean,
     ): String {
         val formUrlEncodeReq = request.contentType == ContentType.APPLICATION_FORM_URLENCODED
@@ -399,7 +400,7 @@ object HttpUtils {
     fun constructMultipartBodyCurl(
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
-        paramMap: LinkedMultiValueMap<String, String>,
+        paramMap: MultiValueMap<String, String>,
         boundary: String,
         raw: Boolean,
     ): MutableList<String> {

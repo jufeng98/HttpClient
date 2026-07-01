@@ -1,7 +1,7 @@
 package org.javamaster.httpclient.mock
 
 import com.sun.net.httpserver.HttpServer
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.mock.support.RequestHandler
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
@@ -20,7 +20,7 @@ class MockServer(private val port: Int, private val httpDashboardForm: HttpDashb
     fun startServer(
         request: HttpRequest,
         variableResolver: VariableResolver,
-        paramMap: LinkedMultiValueMap<String, String>,
+        paramMap: MultiValueMap<String, String>,
     ) {
         val requestHandler = RequestHandler(httpDashboardForm, request, variableResolver, paramMap)
 

@@ -3,6 +3,7 @@ package org.javamaster.httpclient.js.support.jsObject
 import org.javamaster.httpclient.js.support.GlobalLog
 import org.javamaster.httpclient.js.support.req.RequestHeader
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 
 /**
@@ -10,7 +11,7 @@ import org.javamaster.httpclient.nls.NlsBundle
  */
 @Suppress("unused")
 object GlobalHeaders {
-    val dataHolder: LinkedMultiValueMap<String, String> = LinkedMultiValueMap()
+    val dataHolder: MultiValueMap<String, String?> = LinkedMultiValueMap()
 
     fun all(): List<RequestHeader> {
         return dataHolder.map {

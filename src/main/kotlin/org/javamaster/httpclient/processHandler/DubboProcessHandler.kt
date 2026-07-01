@@ -11,7 +11,7 @@ import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.support.JsExecuteResult
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.psi.HttpMethod
@@ -58,7 +58,7 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
     private fun handleDubbo(
         url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String?>,
+        reqHeaderMap: MultiValueMap<String, String?>,
         reqBody: Any?,
         jsBeforeExecuteResult: JsExecuteResult?,
     ) {

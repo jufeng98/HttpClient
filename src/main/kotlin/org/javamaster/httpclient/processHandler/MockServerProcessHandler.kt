@@ -3,10 +3,12 @@ package org.javamaster.httpclient.processHandler
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
+import org.javamaster.httpclient.logger.HttpRequestLogger
 import org.javamaster.httpclient.mock.MockServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.DocUtils
+import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.NotifyUtil
 
 /**
@@ -19,6 +21,15 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, pri
 
     override fun startProcess() {
         mockServerRunningSet.add(port)
+
+        var url = resolveAndHandleUrl()
+
+        val reqInfo = createHttpReqInfo()
+
+        var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
+
+        val preJsResList = executePreJs(url, reqInfo, reqHeaderMap)
+        HttpRequestLogger.logInfo("前置 js 执行结果:$preJsResList")
 
         val pair = DocUtils.createMockDoc(tabName, project)
 

@@ -5,7 +5,7 @@ import org.javamaster.httpclient.dubbo.loader.ApiClassLoader
 import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.dubbo.support.PrimitiveMapper
 import org.javamaster.httpclient.enums.ParamEnum
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
@@ -20,7 +20,7 @@ class DubboGenericService(
     private val dubboBridge: DubboBridge,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
-    private val paramMap: LinkedMultiValueMap<String, String>,
+    private val paramMap: MultiValueMap<String, String>,
     private val apiClz: Class<*>?,
     private val apiClassLoader: ApiClassLoader?,
     private val methodName: String,

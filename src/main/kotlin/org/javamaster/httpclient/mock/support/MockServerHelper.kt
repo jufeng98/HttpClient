@@ -8,7 +8,7 @@ import com.sun.net.httpserver.Headers
 import com.sun.net.httpserver.HttpExchange
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.intellij.markdown.html.urlEncode
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.resolve.VariableResolver
@@ -210,7 +210,7 @@ object MockServerHelper {
     }
 
     fun writeResBody(
-        pair: Pair<Any?, LinkedMultiValueMap<String, String?>>,
+        pair: Pair<Any?, MultiValueMap<String, String?>>,
         exchange: HttpExchange,
         status: Int,
         resHeaders: Headers,
@@ -251,8 +251,8 @@ object MockServerHelper {
     fun computeResBody(
         request: HttpRequest,
         variableResolver: VariableResolver,
-    ): Pair<Any?, LinkedMultiValueMap<String, String?>> {
-        return application.runReadAction<Pair<Any?, LinkedMultiValueMap<String, String?>>> {
+    ): Pair<Any?, MultiValueMap<String, String?>> {
+        return application.runReadAction<Pair<Any?, MultiValueMap<String, String?>>> {
             val reqBody = HttpUtils.convertToReqBody(request, variableResolver)
 
             val httpHeaderFields = request.header?.headerFieldList

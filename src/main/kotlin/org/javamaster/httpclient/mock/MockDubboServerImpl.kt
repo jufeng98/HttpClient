@@ -9,7 +9,7 @@ import org.javamaster.httpclient.dubbo.DubboRequestImpl
 import org.javamaster.httpclient.dubbo.loader.ApiClassLoader
 import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.enums.ParamEnum
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.mock.support.DubboGenericService
 import org.javamaster.httpclient.mock.support.MockDubboServer
 import org.javamaster.httpclient.nls.NlsBundle
@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture
 class MockDubboServerImpl(
     private val port: Int,
     private val schema: String?,
-    reqHeaderMap: LinkedMultiValueMap<String, String?>,
+    reqHeaderMap: MultiValueMap<String, String?>,
     private val dubboBridge: DubboBridge,
 ) : MockDubboServer {
     private val interfaceName: String by lazy {
@@ -72,7 +72,7 @@ class MockDubboServerImpl(
     override fun startServerAsync(
         request: HttpRequest,
         variableResolver: VariableResolver,
-        paramMap: LinkedMultiValueMap<String, String>,
+        paramMap: MultiValueMap<String, String>,
     ): CompletableFuture<Void> {
         var apiClz: Class<*>? = null
         var apiClassLoader: ApiClassLoader? = null

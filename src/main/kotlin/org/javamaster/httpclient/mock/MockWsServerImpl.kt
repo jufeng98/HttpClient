@@ -9,7 +9,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
-import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.mock.support.HttpWebSocketHandler
 import org.javamaster.httpclient.mock.support.MockWsServer
 import org.javamaster.httpclient.nls.NlsBundle
@@ -35,7 +35,7 @@ class MockWsServerImpl(
     override fun startServer(
         request: HttpRequest,
         variableResolver: VariableResolver,
-        paramMap: LinkedMultiValueMap<String, String>,
+        paramMap: MultiValueMap<String, String>,
     ) {
         @Suppress("DEPRECATION")
         group = io.netty.channel.nio.NioEventLoopGroup(3)

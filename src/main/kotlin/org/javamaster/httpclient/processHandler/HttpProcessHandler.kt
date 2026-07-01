@@ -11,6 +11,7 @@ import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
 import org.javamaster.httpclient.map.LinkedMultiValueMap
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
@@ -64,7 +65,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
     private fun handleHttp(
         url: String,
-        reqHeaderMap: LinkedMultiValueMap<String, String?>,
+        reqHeaderMap: MultiValueMap<String, String?>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
         jsBeforeExecuteResult: JsExecuteResult?,
