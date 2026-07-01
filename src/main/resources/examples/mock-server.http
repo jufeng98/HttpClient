@@ -32,6 +32,7 @@ Content-Type: application/json
   "time": "{{$datetime}}"
 }
 
+// 不存在实际的接口,每次调用返回值类型为 HashMap
 ### mock dubbo provider
 # @timeout 1000
 MOCK_DUBBO dubbo://localhost:20888
@@ -43,4 +44,22 @@ Version: 1.0.0
 {
   "title": "{{$random.book.title}}",
   "time": "{{$datetime}}"
+}
+
+// 存在实际的接口
+// 这里 import 用于导入 dubbo 的 api jar 包,接口将从 jar 包中加载
+### mock dubbo provider1
+# @timeout 300
+# @import D:\my_opensource_project\HttpRequestCp\build\idea-sandbox\IC-2024.3\plugins\HttpRequest\lib\HttpRequest-8.3.0.jar
+MOCK_DUBBO dubbo://localhost:20888
+Content-Type: application/json
+Interface-Name: org.javamaster.httpclient.dubbo.fake.ServiceExchangeDubboService
+Method: getExchangeDetail1
+Version: 1.0.0
+
+{
+  "data": {
+    "activityExchangeId": {{$randomInt}},
+    "serviceStatus": {{$randomInt}}
+  }
 }
