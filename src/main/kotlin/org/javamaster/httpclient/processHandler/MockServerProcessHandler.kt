@@ -6,6 +6,7 @@ import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.mock.MockServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
+import org.javamaster.httpclient.utils.DocUtils
 import org.javamaster.httpclient.utils.NotifyUtil
 
 /**
@@ -19,11 +20,13 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, pri
     override fun startProcess() {
         mockServerRunningSet.add(port)
 
+        val pair = DocUtils.createMockDoc(tabName, project)
+
         runInEdt {
             try {
                 loadingRemover?.run()
 
-                httpDashboardForm.initMockServerForm()
+                httpDashboardForm.initMockServerForm(pair)
 
                 mockServer = MockServer(port, httpDashboardForm)
 

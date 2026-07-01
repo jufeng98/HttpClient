@@ -8,6 +8,7 @@ import org.javamaster.httpclient.dubbo.support.DubboJars
 import org.javamaster.httpclient.mock.support.MockDubboServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
+import org.javamaster.httpclient.utils.DocUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.NotifyUtil
@@ -25,12 +26,13 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, priv
         mockServerRunningSet.add(port)
 
         var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
+        val pair = DocUtils.createMockDoc(tabName, project)
 
         runInEdt {
             try {
                 loadingRemover?.run()
 
-                httpDashboardForm.initMockServerForm()
+                httpDashboardForm.initMockServerForm(pair)
 
                 val clsName = "org.javamaster.httpclient.mock.MockDubboServerImpl"
                 val mockDubboServerImpl = DubboJars.dubboClassLoader.loadClass(clsName)

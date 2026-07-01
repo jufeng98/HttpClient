@@ -9,6 +9,7 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
+import org.javamaster.httpclient.utils.DocUtils
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.NotifyUtil
 
@@ -24,12 +25,13 @@ class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private
         mockServerRunningSet.add(port)
 
         val path = computeReadAction { resolvePath(request, variableResolver) }
+        val pair = DocUtils.createMockDoc(tabName, project)
 
         runInEdt {
             try {
                 loadingRemover?.run()
 
-                httpDashboardForm.initMockServerForm()
+                httpDashboardForm.initMockServerForm(pair)
 
                 mockWsServer = MockWsServerImpl(port, path, httpDashboardForm)
 

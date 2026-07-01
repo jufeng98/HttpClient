@@ -9,11 +9,7 @@ import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.editor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
@@ -27,13 +23,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.javamaster.httpclient.action.dashboard.PreviewFileAction;
-import org.javamaster.httpclient.action.dashboard.SoftWrapAction;
-import org.javamaster.httpclient.action.dashboard.ViewSettingsAction;
-import org.javamaster.httpclient.action.ws.ChooseWsLangAction;
-import org.javamaster.httpclient.action.ws.SendWsAction;
-import org.javamaster.httpclient.action.ws.WsInputNextHistoryAction;
-import org.javamaster.httpclient.action.ws.WsInputPreviousHistoryAction;
+import org.javamaster.httpclient.action.dashboard.*;
+import org.javamaster.httpclient.action.ws.*;
 import org.javamaster.httpclient.consts.HttpConsts;
 import org.javamaster.httpclient.enums.SimpleTypeEnum;
 import org.javamaster.httpclient.exception.JsScriptException;
@@ -255,19 +246,12 @@ public class HttpDashboardForm implements Disposable {
         return new WsDashboardForm();
     }
 
-    public void initMockServerForm() {
-        FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
-
-        VirtualFile virtualFile = VirtualFileUtils.INSTANCE.createDescListVirtualFile(Lists.newArrayList(""),
-                "mock-server.log", tabName, false, project);
-
-        Document document = ReadAction.compute(() -> Objects.requireNonNull(fileDocumentManager.getDocument(virtualFile)));
-
+    public void initMockServerForm(kotlin.Pair<VirtualFile, Document> pair) {
         mainPanel.remove(splitter);
         mainPanel.remove(labelLoading);
         mainPanel.setLayout(new BorderLayout());
 
-        var editor = EditorFactory.getInstance().createEditor(document, project, virtualFile, true);
+        var editor = EditorFactory.getInstance().createEditor(pair.getSecond(), project, pair.getFirst(), true);
         editorList.add(editor);
 
         mainPanel.add(editor.getComponent(), BorderLayout.CENTER);
