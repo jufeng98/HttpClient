@@ -32,7 +32,7 @@ class DubboRequestImpl(
     private val httpReqDescList: MutableList<String>,
     module: Module?,
     project: Project,
-    private val paramMap: Map<String, String>,
+    private val paramMap: LinkedMultiValueMap<String, String>,
 ) : DubboRequest {
     private val methodName: String by lazy {
         val values =
@@ -240,7 +240,7 @@ class DubboRequestImpl(
         reference.application = application
         reference.setInterface(targetInterfaceName)
 
-        val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toInt() ?: TIMEOUT
+        val timeout = paramMap.getFirst(ParamEnum.TIMEOUT_NAME.param)?.toInt() ?: TIMEOUT
         reference.timeout = timeout
 
         reference.retries = 0

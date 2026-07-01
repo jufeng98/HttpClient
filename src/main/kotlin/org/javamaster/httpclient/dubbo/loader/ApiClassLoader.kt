@@ -14,10 +14,17 @@ class ApiClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(url
 
             if (c != null) return c
 
-            try {
-                c = findClass(name)
+            if (name.startsWith("org.javamaster.httpclient")) {
+                try {
+                    return parent.loadClass(name)
+                } catch (_: ClassNotFoundException) {
+                }
+            }
+
+            c = try {
+                findClass(name)
             } catch (_: ClassNotFoundException) {
-                c = parent.loadClass(name)
+                parent.loadClass(name)
             }
 
             return c

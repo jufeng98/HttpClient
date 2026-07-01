@@ -330,7 +330,7 @@ object HttpUtils {
         variableResolver: VariableResolver,
         request: HttpRequest,
         header: HttpHeader?,
-        paramMap: Map<String, String>,
+        paramMap: LinkedMultiValueMap<String, String>,
         raw: Boolean,
     ): String {
         val formUrlEncodeReq = request.contentType == ContentType.APPLICATION_FORM_URLENCODED
@@ -399,7 +399,7 @@ object HttpUtils {
     fun constructMultipartBodyCurl(
         httpMultipartMessage: HttpMultipartMessage,
         variableResolver: VariableResolver,
-        paramMap: Map<String, String>,
+        paramMap: LinkedMultiValueMap<String, String>,
         boundary: String,
         raw: Boolean,
     ): MutableList<String> {

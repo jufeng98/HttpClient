@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpHandler
 import org.apache.http.HttpStatus
 import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.enums.ParamEnum
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.mock.support.MockServerHelper.computeResBody
 import org.javamaster.httpclient.mock.support.MockServerHelper.writeHtmlResAndLog
 import org.javamaster.httpclient.mock.support.MockServerHelper.writeResBody
@@ -27,16 +28,16 @@ class RequestHandler(
     private val httpDashboardForm: HttpDashboardForm,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
-    paramMap: Map<String, String>,
+    paramMap: LinkedMultiValueMap<String, String>,
 ) : HttpHandler {
 
     private val path = resolvePath(request, variableResolver)
 
-    private val staticFolder = checkStaticFolder(paramMap[ParamEnum.STATIC_FOLDER.param])
+    private val staticFolder = checkStaticFolder(paramMap.getFirst(ParamEnum.STATIC_FOLDER.param))
 
-    private val responseStatus = paramMap[ParamEnum.RESPONSE_STATUS.param]?.toInt()
+    private val responseStatus = paramMap.getFirst(ParamEnum.RESPONSE_STATUS.param)?.toInt()
 
-    private val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong()
+    private val readTimeout = paramMap.getFirst(ParamEnum.READ_TIMEOUT_NAME.param)?.toLong()
 
     override fun handle(exchange: HttpExchange) {
         val method = exchange.requestMethod

@@ -18,7 +18,6 @@ import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.DubboUtils
 import java.io.File
 import java.io.FileNotFoundException
-import java.net.URL
 import java.util.concurrent.CompletableFuture
 
 
@@ -50,6 +49,11 @@ class MockDubboServerImpl(
 
         name
     }
+    private val methodName: String by lazy {
+        val values =
+            reqHeaderMap[DubboUtils.METHOD_KEY] ?: throw IllegalArgumentException(NlsBundle.nls("missing.header"))
+        values[0] ?: throw IllegalArgumentException(NlsBundle.nls("missing.header"))
+    }
     private val version by lazy {
         val values = reqHeaderMap[DubboUtils.VERSION] ?: return@lazy null
         values[0]
@@ -68,20 +72,21 @@ class MockDubboServerImpl(
     override fun startServerAsync(
         request: HttpRequest,
         variableResolver: VariableResolver,
-        paramMap: Map<String, String>,
+        paramMap: LinkedMultiValueMap<String, String>,
     ): CompletableFuture<Void> {
         var apiClz: Class<*>? = null
         var apiClassLoader: ApiClassLoader? = null
 
-        val importPath = paramMap[ParamEnum.IMPORT.param]
-        if (importPath != null) {
-            val jarUrls = mutableListOf<URL>()
-            val file = File(importPath)
-            if (!file.exists()) {
-                throw FileNotFoundException(importPath)
+        val importPaths = paramMap[ParamEnum.IMPORT.param]
+        if (importPaths != null) {
+            val jarUrls = importPaths.map {
+                val file = File(it)
+                if (!file.exists()) {
+                    throw FileNotFoundException(it)
+                }
+                file.toURI().toURL()
             }
 
-            jarUrls.add(file.toURI().toURL())
             apiClassLoader = ApiClassLoader(jarUrls.toTypedArray(), Thread.currentThread().contextClassLoader)
             apiClz = apiClassLoader.loadClass(interfaceName)
         }
@@ -93,7 +98,7 @@ class MockDubboServerImpl(
         serviceConfig.retries = 0
 
         val dubboGenericService = DubboGenericService(
-            dubboBridge, request, variableResolver, paramMap, apiClz, apiClassLoader
+            dubboBridge, request, variableResolver, paramMap, apiClz, apiClassLoader, methodName
         )
         serviceConfig.ref = dubboGenericService
 
@@ -131,13 +136,13 @@ class MockDubboServerImpl(
 
         dubboBridge.showMockServerLog("Dubbo Server starting...\n")
 
-        val classLoaderTmp = apiClassLoader ?: Thread.currentThread().contextClassLoader
+        val targetClassLoader = apiClassLoader ?: Thread.currentThread().contextClassLoader
 
         return CompletableFuture.runAsync {
             val classLoader = Thread.currentThread().contextClassLoader
 
             try {
-                Thread.currentThread().contextClassLoader = classLoaderTmp
+                Thread.currentThread().contextClassLoader = targetClassLoader
 
                 serviceConfig.export()
 

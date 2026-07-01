@@ -32,7 +32,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).GET().build()
         }
@@ -43,7 +43,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).POST(bodyPublisher).build()
         }
@@ -54,7 +54,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, bodyPublisher).build()
         }
@@ -65,7 +65,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).PUT(bodyPublisher).build()
         }
@@ -76,7 +76,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
         }
@@ -87,7 +87,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, bodyPublisher).build()
         }
@@ -98,7 +98,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
         }
@@ -109,7 +109,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
         }
@@ -120,7 +120,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
@@ -131,7 +131,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
@@ -142,7 +142,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
@@ -153,7 +153,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
@@ -164,7 +164,7 @@ enum class HttpRequestEnum(val icon: Icon) {
             version: Version,
             reqHeaderMap: LinkedMultiValueMap<String, String?>,
             bodyPublisher: HttpRequest.BodyPublisher,
-            paramMap: Map<String, String>,
+            paramMap: LinkedMultiValueMap<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
@@ -175,9 +175,9 @@ enum class HttpRequestEnum(val icon: Icon) {
         url: String,
         reqHeaderMap: LinkedMultiValueMap<String, String?>,
         version: Version,
-        paramMap: Map<String, String>,
+        paramMap: LinkedMultiValueMap<String, String>,
     ): HttpRequest.Builder {
-        val readTimeout = paramMap[ParamEnum.READ_TIMEOUT_NAME.param]?.toLong() ?: READ_TIMEOUT
+        val readTimeout = paramMap.getFirst(ParamEnum.READ_TIMEOUT_NAME.param)?.toLong() ?: READ_TIMEOUT
 
         val builder = HttpRequest.newBuilder()
             .version(version)
@@ -201,7 +201,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
         tabName: String,
-        paramMap: Map<String, String>,
+        paramMap: LinkedMultiValueMap<String, String>,
     ): Pair<HttpRequest, Long> {
         val pair = ReqUtils.convertToReqBodyPublisher(reqBody)
 
@@ -259,9 +259,9 @@ enum class HttpRequestEnum(val icon: Icon) {
         return Pair(request, contentLength)
     }
 
-    fun execute(paramMap: Map<String, String>, req: HttpRequest): CompletableFuture<HttpResponse<ByteArray>> {
+    fun execute(paramMap: LinkedMultiValueMap<String, String>, req: HttpRequest): CompletableFuture<HttpResponse<ByteArray>> {
         try {
-            val connectTimeout = paramMap[ParamEnum.CONNECT_TIMEOUT_NAME.param]?.toLong() ?: CONNECT_TIMEOUT
+            val connectTimeout = paramMap.getFirst(ParamEnum.CONNECT_TIMEOUT_NAME.param)?.toLong() ?: CONNECT_TIMEOUT
 
             val client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeout))
@@ -278,7 +278,7 @@ enum class HttpRequestEnum(val icon: Icon) {
         version: Version,
         reqHeaderMap: LinkedMultiValueMap<String, String?>,
         bodyPublisher: HttpRequest.BodyPublisher,
-        paramMap: Map<String, String>,
+        paramMap: LinkedMultiValueMap<String, String>,
     ): HttpRequest
 
     companion object {

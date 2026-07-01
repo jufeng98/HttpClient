@@ -5,6 +5,7 @@ import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
@@ -19,7 +20,7 @@ class HttpWebSocketHandler(
     private val httpDashboardForm: HttpDashboardForm,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
-    private val paramMap: Map<String, String>,
+    private val paramMap: LinkedMultiValueMap<String, String>,
 ) :
     SimpleChannelInboundHandler<TextWebSocketFrame>() {
 
@@ -27,7 +28,7 @@ class HttpWebSocketHandler(
         val reqStr = msg.text()
         httpDashboardForm.showMockServerLog("收到消息: $reqStr\n")
 
-        val timeout = paramMap[ParamEnum.TIMEOUT_NAME.param]?.toLong()
+        val timeout = paramMap.getFirst(ParamEnum.TIMEOUT_NAME.param)?.toLong()
         if (timeout != null) {
             httpDashboardForm.showMockServerLog("Sleeping: $timeout ms\n")
             TimeUnit.MILLISECONDS.sleep(timeout)

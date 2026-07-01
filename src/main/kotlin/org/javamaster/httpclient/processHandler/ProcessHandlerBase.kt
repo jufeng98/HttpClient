@@ -79,7 +79,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     protected lateinit var version: Version
     protected lateinit var preJsFiles: List<PreJsFile>
     protected lateinit var jsListBeforeReq: List<HttpScriptBody>
-    protected lateinit var paramMap: Map<String, String>
+    protected lateinit var paramMap: LinkedMultiValueMap<String, String>
 
     protected var loadingRemover: Runnable? = null
     protected var requestFinished: Consumer<Int>? = null

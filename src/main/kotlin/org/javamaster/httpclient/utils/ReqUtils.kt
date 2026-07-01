@@ -10,6 +10,7 @@ import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.exception.BodyUnresolvedVariableException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
@@ -98,7 +99,11 @@ class ReqUtils {
             }
         }
 
-        fun resolveReqBodyAgain(reqBody: Any?, resolver: VariableResolver, paramMap: Map<String, String>): Any? {
+        fun resolveReqBodyAgain(
+            reqBody: Any?,
+            resolver: VariableResolver,
+            paramMap: LinkedMultiValueMap<String, String>,
+        ): Any? {
             if (reqBody == null) {
                 return null
             }

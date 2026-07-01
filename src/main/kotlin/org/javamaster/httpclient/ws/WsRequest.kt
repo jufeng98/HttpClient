@@ -24,7 +24,7 @@ class WsRequest(
     private val url: String,
     private val reqHeaderMap: LinkedMultiValueMap<String, String?>,
     private val processHandler: ProcessHandlerBase,
-    private val paramMap: Map<String, String>,
+    private val paramMap: LinkedMultiValueMap<String, String>,
     private val wsDashboardForm: HttpDashboardForm.WsDashboardForm
 ) {
     init {
@@ -41,7 +41,7 @@ class WsRequest(
 
         val uri = URI(url)
 
-        val connectTimeout = paramMap[ParamEnum.CONNECT_TIMEOUT_NAME.param]?.toLong() ?: HttpConsts.CONNECT_TIMEOUT
+        val connectTimeout = paramMap.getFirst(ParamEnum.CONNECT_TIMEOUT_NAME.param)?.toLong() ?: HttpConsts.CONNECT_TIMEOUT
 
         val client = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(connectTimeout))
