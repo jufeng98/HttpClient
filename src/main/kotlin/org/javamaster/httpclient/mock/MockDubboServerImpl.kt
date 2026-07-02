@@ -68,6 +68,7 @@ class MockDubboServerImpl(
     }
 
     private var serviceConfig: ServiceConfig<GenericService>? = null
+    private var apiClassLoader: ApiClassLoader? = null
 
     override fun startServerAsync(
         request: HttpRequest,
@@ -75,7 +76,6 @@ class MockDubboServerImpl(
         paramMap: MultiValueMap<String, String>,
     ): CompletableFuture<Void> {
         var apiClz: Class<*>? = null
-        var apiClassLoader: ApiClassLoader? = null
 
         val importPaths = paramMap[ParamEnum.IMPORT.param]
         if (importPaths != null) {
@@ -88,7 +88,7 @@ class MockDubboServerImpl(
             }
 
             apiClassLoader = ApiClassLoader(jarUrls.toTypedArray(), Thread.currentThread().contextClassLoader)
-            apiClz = apiClassLoader.loadClass(interfaceName)
+            apiClz = apiClassLoader!!.loadClass(interfaceName)
         }
 
         val serviceConfig = ServiceConfig<GenericService>()
@@ -156,6 +156,8 @@ class MockDubboServerImpl(
     }
 
     override fun stopServer() {
+        apiClassLoader?.close()
+
         serviceConfig?.unexport()
 
         dubboBridge.showMockServerLog("Dubbo Server stopped\n")

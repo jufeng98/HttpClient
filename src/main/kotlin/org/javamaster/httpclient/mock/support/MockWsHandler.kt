@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 /**
  * @author yudong
  */
-class HttpWebSocketHandler(
+class MockWsHandler(
     private val httpDashboardForm: HttpDashboardForm,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,

@@ -11,7 +11,7 @@ import org.javamaster.httpclient.mock.support.MockServerHelper.computeResBody
 import org.javamaster.httpclient.mock.support.MockServerHelper.writeHtmlResAndLog
 import org.javamaster.httpclient.mock.support.MockServerHelper.writeResBody
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.processHandler.MockServerProcessHandler
+import org.javamaster.httpclient.processHandler.MockHttpProcessHandler
 import org.javamaster.httpclient.psi.HttpRequest
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.ui.HttpDashboardForm
@@ -25,12 +25,12 @@ import java.util.concurrent.TimeUnit
 /**
  * @author yudong
  */
-class RequestHandler(
+class MockHttpRequestHandler(
     private val httpDashboardForm: HttpDashboardForm,
     private val request: HttpRequest,
     private val variableResolver: VariableResolver,
     paramMap: MultiValueMap<String, String>,
-    private val handler: MockServerProcessHandler,
+    private val handler: MockHttpProcessHandler,
 ) : HttpHandler {
 
     private val path = resolvePath(request, variableResolver)

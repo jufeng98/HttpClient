@@ -12,18 +12,10 @@ object DubboResultGenerator {
     fun generate(request: HttpRequest, variableResolver: VariableResolver): String {
         val pair = MockServerHelper.computeResBody(request, variableResolver)
 
-        val convertReqBody = ReqUtils.convertReqBody(pair.first) ?: return """
-            {
-                "error":"no response body"
-            }
-        """.trimIndent()
+        val convertReqBody = ReqUtils.convertReqBody(pair.first) ?: return ""
 
         if (convertReqBody !is String) {
-            return """
-            {
-                "error":"response body not string"
-            }
-        """.trimIndent()
+            throw IllegalArgumentException("body not string")
         }
 
         return convertReqBody

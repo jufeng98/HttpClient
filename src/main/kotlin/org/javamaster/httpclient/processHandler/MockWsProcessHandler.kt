@@ -63,11 +63,4 @@ class MockWsProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private
         }
     }
 
-    companion object {
-        private val mockServerRunningSet = mutableSetOf<Int>()
-
-        fun isRunning(port: Int): Boolean {
-            return mockServerRunningSet.contains(port)
-        }
-    }
 }

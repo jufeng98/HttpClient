@@ -10,7 +10,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
 import org.javamaster.httpclient.map.MultiValueMap
-import org.javamaster.httpclient.mock.support.HttpWebSocketHandler
+import org.javamaster.httpclient.mock.support.MockWsHandler
 import org.javamaster.httpclient.mock.support.MockWsServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpRequest
@@ -21,7 +21,6 @@ import org.javamaster.httpclient.ui.HttpDashboardForm
 /**
  * @author yudong
  */
-@Suppress("unused")
 class MockWsServerImpl(
     private val port: Int,
     private val path: String,
@@ -51,7 +50,7 @@ class MockWsServerImpl(
                     pipeline.addLast(HttpServerCodec())
                     pipeline.addLast(HttpObjectAggregator(65536))
                     pipeline.addLast(WebSocketServerProtocolHandler(path))
-                    pipeline.addLast(HttpWebSocketHandler(httpDashboardForm, request, variableResolver, paramMap))
+                    pipeline.addLast(MockWsHandler(httpDashboardForm, request, variableResolver, paramMap))
                 }
             })
 

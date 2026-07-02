@@ -97,11 +97,4 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, priv
         super.destroyProcessImpl()
     }
 
-    companion object {
-        private val mockServerRunningSet = mutableSetOf<Int>()
-
-        fun isRunning(port: Int): Boolean {
-            return mockServerRunningSet.contains(port)
-        }
-    }
 }

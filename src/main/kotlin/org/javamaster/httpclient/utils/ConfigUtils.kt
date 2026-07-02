@@ -11,9 +11,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.mock.support.MockServerHelper
 import org.javamaster.httpclient.nls.NlsBundle
-import org.javamaster.httpclient.processHandler.MockDubboProcessHandler
-import org.javamaster.httpclient.processHandler.MockServerProcessHandler
-import org.javamaster.httpclient.processHandler.MockWsProcessHandler
 import org.javamaster.httpclient.processHandler.ProcessHandlerBase
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.psi.HttpRequest
@@ -28,6 +25,9 @@ import org.javamaster.httpclient.ws.WsRequest
 class ConfigUtils {
 
     companion object {
+        private val mockSet = setOf(
+            HttpRequestEnum.MOCK_SERVER.name, HttpRequestEnum.MOCK_DUBBO.name, HttpRequestEnum.MOCK_WS.name
+        )
 
         fun saveConfiguration(
             tabName: String,
@@ -68,7 +68,7 @@ class ConfigUtils {
 
         fun checkRequestRunning(httpMethod: HttpMethod, tabName: String, project: Project): Boolean {
             val methodText = httpMethod.text
-            if (methodText == HttpRequestEnum.MOCK_SERVER.name) {
+            if (mockSet.contains(methodText)) {
                 val request = computeReadAction { PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!! }
                 val requestTarget = request.requestTarget
                 if (requestTarget == null) {
@@ -76,33 +76,7 @@ class ConfigUtils {
                 }
 
                 val port = MockServerHelper.resolvePort(requestTarget.port)
-                if (MockServerProcessHandler.isRunning(port)) {
-                    NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
-                    showServicesWindow(project, tabName)
-                    return true
-                }
-            } else if (methodText == HttpRequestEnum.MOCK_DUBBO.name) {
-                val request = computeReadAction { PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!! }
-                val requestTarget = request.requestTarget
-                if (requestTarget == null) {
-                    return true
-                }
-
-                val port = MockServerHelper.resolvePort(requestTarget.port)
-                if (MockDubboProcessHandler.isRunning(port)) {
-                    NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
-                    showServicesWindow(project, tabName)
-                    return true
-                }
-            }else if (methodText == HttpRequestEnum.MOCK_WS.name) {
-                val request = computeReadAction { PsiTreeUtil.getParentOfType(httpMethod, HttpRequest::class.java)!! }
-                val requestTarget = request.requestTarget
-                if (requestTarget == null) {
-                    return true
-                }
-
-                val port = MockServerHelper.resolvePort(requestTarget.port)
-                if (MockWsProcessHandler.isRunning(port)) {
+                if (ProcessHandlerBase.isRunning(port)) {
                     NotifyUtil.notifyWarn(project, NlsBundle.nls("mock.server.running", port))
                     showServicesWindow(project, tabName)
                     return true

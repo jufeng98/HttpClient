@@ -524,9 +524,14 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
     companion object {
         internal val requestRunningSet = mutableSetOf<String>()
+        internal val mockServerRunningSet = mutableSetOf<Int>()
 
         fun isRunning(tabName: String): Boolean {
             return requestRunningSet.contains(tabName)
+        }
+
+        fun isRunning(port: Int): Boolean {
+            return mockServerRunningSet.contains(port)
         }
 
         fun createProcessHandler(httpMethod: HttpMethod, selectedEnv: String?): ProcessHandlerBase {
@@ -540,19 +545,19 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
                 HttpRequestEnum.MOCK_SERVER -> {
                     val port = MockServerHelper.resolvePort(httpMethod)
 
-                    MockServerProcessHandler(httpMethod, selectedEnv, port)
-                }
-
-                HttpRequestEnum.MOCK_DUBBO -> {
-                    val port = MockServerHelper.resolvePort(httpMethod)
-
-                    MockDubboProcessHandler(httpMethod, selectedEnv, port)
+                    MockHttpProcessHandler(httpMethod, selectedEnv, port)
                 }
 
                 HttpRequestEnum.MOCK_WS -> {
                     val port = MockServerHelper.resolvePort(httpMethod)
 
                     MockWsProcessHandler(httpMethod, selectedEnv, port)
+                }
+
+                HttpRequestEnum.MOCK_DUBBO -> {
+                    val port = MockServerHelper.resolvePort(httpMethod)
+
+                    MockDubboProcessHandler(httpMethod, selectedEnv, port)
                 }
 
                 else -> HttpProcessHandler(httpMethod, selectedEnv)

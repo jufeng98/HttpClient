@@ -4,7 +4,7 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.logger.HttpRequestLogger
-import org.javamaster.httpclient.mock.MockServer
+import org.javamaster.httpclient.mock.MockHttpServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.DocUtils
@@ -14,10 +14,10 @@ import org.javamaster.httpclient.utils.NotifyUtil
 /**
  * @author yudong
  */
-class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private val port: Int) :
+class MockHttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, private val port: Int) :
     ProcessHandlerBase(httpMethod, selectedEnv) {
 
-    private var mockServer: MockServer? = null
+    private var mockHttpServer: MockHttpServer? = null
 
     override fun startProcess() {
         mockServerRunningSet.add(port)
@@ -30,9 +30,9 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, pri
 
                 httpDashboardForm.initMockServerForm(pair)
 
-                mockServer = MockServer(port, httpDashboardForm, this)
+                mockHttpServer = MockHttpServer(port, httpDashboardForm, this)
 
-                mockServer!!.startServer(request, variableResolver, paramMap)
+                mockHttpServer!!.startServer(request, variableResolver, paramMap)
 
                 NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.server.start", port))
 
@@ -57,17 +57,9 @@ class MockServerProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, pri
     override fun destroyProcessImpl() {
         mockServerRunningSet.remove(port)
 
-        mockServer?.stopServer()
+        mockHttpServer?.stopServer()
 
         super.destroyProcessImpl()
-    }
-
-    companion object {
-        private val mockServerRunningSet = mutableSetOf<Int>()
-
-        fun isRunning(port: Int): Boolean {
-            return mockServerRunningSet.contains(port)
-        }
     }
 
 }
