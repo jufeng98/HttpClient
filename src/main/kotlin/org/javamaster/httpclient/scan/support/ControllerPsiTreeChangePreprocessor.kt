@@ -5,6 +5,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
 import com.intellij.psi.impl.PsiTreeChangePreprocessor
+import org.javamaster.httpclient.logger.HttpRequestLogger
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Supplier
@@ -35,6 +36,14 @@ class ControllerPsiTreeChangePreprocessor : Thread("controllerPsiTreeChangePrepr
         val code = event.code
         if (code != PsiTreeChangeEventImpl.PsiEventType.CHILDREN_CHANGED) return
 
+        if (tasks.size() > 500) {
+            HttpRequestLogger.logWarn("任务堆积数量已超 500, 直接清除")
+
+            tasks.clear()
+
+            return
+        }
+
         val psiRunnable = PsiRunnable(psiJavaFile, project)
 
         if (tasks.contains(psiRunnable)) {
@@ -46,9 +55,9 @@ class ControllerPsiTreeChangePreprocessor : Thread("controllerPsiTreeChangePrepr
 
     override fun run() {
         while (true) {
-            val runnable = tasks.take()
+            TimeUnit.SECONDS.sleep(2)
 
-            TimeUnit.SECONDS.sleep(3)
+            val runnable = tasks.take()
 
             runnable.run()
         }
@@ -59,6 +68,16 @@ class ControllerPsiTreeChangePreprocessor : Thread("controllerPsiTreeChangePrepr
 
         private val lock = ReentrantLock()
         private val notEmpty = lock.newCondition()
+
+        fun size(): Int {
+            return map.size
+        }
+
+        fun clear() {
+            computeInLock {
+                map.clear()
+            }
+        }
 
         fun contains(element: Runnable): Boolean {
             val psiRunnable = element as PsiRunnable
@@ -125,6 +144,7 @@ class ControllerPsiTreeChangePreprocessor : Thread("controllerPsiTreeChangePrepr
 
             return null
         }
+
     }
 
 }
