@@ -112,6 +112,10 @@ class ScanRequest(private val project: Project) {
             return
         }
 
+        if (!javaFile.isValid) {
+            return
+        }
+
         val moduleName = module.name
 
         var cacheRequestMap = moduleControllerMap[moduleName]

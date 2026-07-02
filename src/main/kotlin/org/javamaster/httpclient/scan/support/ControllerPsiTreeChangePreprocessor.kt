@@ -1,19 +1,27 @@
 package org.javamaster.httpclient.scan.support
 
-import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.module.ModuleUtilCore
+import com.google.common.collect.Maps
 import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
 import com.intellij.psi.impl.PsiTreeChangePreprocessor
-import com.intellij.util.concurrency.AppExecutorUtil
-import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
-import org.javamaster.httpclient.scan.ScanRequest
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import java.util.function.Supplier
 
 /**
  * @author yudong
  */
-class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
+class ControllerPsiTreeChangePreprocessor : Thread("controllerPsiTreeChangePreprocessorThread"),
+    PsiTreeChangePreprocessor {
+    private val tasks = TaskConcurrentMap()
+
+    init {
+        setDaemon(true)
+        priority = MIN_PRIORITY
+
+        start()
+    }
 
     override fun treeChanged(event: PsiTreeChangeEventImpl) {
         val psiJavaFile = event.file as? PsiJavaFile ?: return
@@ -27,20 +35,95 @@ class ControllerPsiTreeChangePreprocessor : PsiTreeChangePreprocessor {
         val code = event.code
         if (code != PsiTreeChangeEventImpl.PsiEventType.CHILDREN_CHANGED) return
 
-        dumbService.runWhenSmart {
-            ReadAction
-                .nonBlocking<Unit> {
-                    if (dumbService.isDumb) {
-                        return@nonBlocking
-                    }
+        val psiRunnable = PsiRunnable(psiJavaFile, project)
 
-                    val module = ModuleUtilCore.findModuleForFile(psiJavaFile) ?: return@nonBlocking
+        if (tasks.contains(psiRunnable)) {
+            tasks.remove(psiRunnable)
+        }
 
-                    project.getService(ScanRequest::class.java).handleFileChange(psiJavaFile, module)
+        tasks.add(psiRunnable)
+    }
+
+    override fun run() {
+        while (true) {
+            val runnable = tasks.take()
+
+            TimeUnit.SECONDS.sleep(3)
+
+            runnable.run()
+        }
+    }
+
+    private class TaskConcurrentMap {
+        private val map = Maps.newHashMap<String, Runnable>()
+
+        private val lock = ReentrantLock()
+        private val notEmpty = lock.newCondition()
+
+        fun contains(element: Runnable): Boolean {
+            val psiRunnable = element as PsiRunnable
+
+            return computeInLock {
+                map.contains(psiRunnable.psiJavaFile.virtualFile.path)
+            }
+        }
+
+        fun remove(element: Runnable): Boolean {
+            val psiRunnable = element as PsiRunnable
+
+            return computeInLock {
+                val runnable = map.remove(psiRunnable.psiJavaFile.virtualFile.path)
+
+                runnable != null
+            }
+        }
+
+        fun add(element: Runnable): Boolean {
+            val psiRunnable = element as PsiRunnable
+
+            computeInLock {
+                map.put(psiRunnable.psiJavaFile.virtualFile.path, element)
+
+                notEmpty.signal()
+            }
+
+            return true
+        }
+
+        fun take(): Runnable {
+            return computeInLock {
+                var ele = pickRandomAndRemove()
+
+                while (ele == null) {
+                    notEmpty.await()
+
+                    ele = pickRandomAndRemove()
                 }
-                .expireWhen { !psiJavaFile.isValid }
-                .submit(AppExecutorUtil.getAppExecutorService())
-                .onError { logWarn("scanRequest failed", it) }
+
+                ele
+            }
+        }
+
+        private fun <T> computeInLock(supplier: Supplier<T>): T {
+            lock.lock()
+            try {
+                return supplier.get()
+            } finally {
+                lock.unlock()
+            }
+        }
+
+        private fun pickRandomAndRemove(): Runnable? {
+            val iterator = map.values.iterator()
+            if (iterator.hasNext()) {
+                val runnable = iterator.next()
+
+                iterator.remove()
+
+                return runnable
+            }
+
+            return null
         }
     }
 
