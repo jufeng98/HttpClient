@@ -31,9 +31,11 @@ class HttpMethodsProvider : CompletionProvider<CompletionParameters>() {
         }
 
         result.addElement(
-            LookupElementBuilder.create("import")
-                .withTypeText("引入 http 文件", true)
-                .withInsertHandler(AddSpaceInsertHandler.INSTANCE)
+            PrioritizedLookupElement.withPriority(
+                LookupElementBuilder.create("import")
+                    .withTypeText("引入 http 文件", true)
+                    .withInsertHandler(AddSpaceInsertHandler.INSTANCE), 100.0
+            )
         )
 
         result.addElement(

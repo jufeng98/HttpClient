@@ -38,7 +38,7 @@ internal class PsiRunnable(
                 scanRequest.handleFileChange(psiJavaFile, module)
             }
         } catch (t: Throwable) {
-            HttpRequestLogger.logInfo("处理路径错误:" + t.message)
+            HttpRequestLogger.logWarn("处理路径错误:" + t.message)
         }
     }
 
