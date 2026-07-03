@@ -6,6 +6,7 @@ import com.intellij.psi.PsiJavaFile
 import org.javamaster.httpclient.logger.HttpRequestLogger
 import org.javamaster.httpclient.scan.ScanRequest
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 
 internal class PsiRunnable(
     internal val psiJavaFile: PsiJavaFile,
@@ -26,7 +27,7 @@ internal class PsiRunnable(
 
     override fun run() {
         try {
-            if (!psiJavaFile.isValid) {
+            if (!computeReadAction { psiJavaFile.isValid }) {
                 return
             }
 
