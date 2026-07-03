@@ -108,7 +108,7 @@ public interface HttpTypes {
   IElementType RUN = new HttpTokenType("RUN");
   IElementType SCHEMA_PART = new HttpTokenType("SCHEMA_PART");
   IElementType SCHEMA_SEPARATE = new HttpTokenType("://");
-  IElementType SCRIPT_BODY_PAET = new HttpTokenType("SCRIPT_BODY_PAET");
+  IElementType SCRIPT_BODY_PART = new HttpTokenType("SCRIPT_BODY_PART");
   IElementType SEGMENT = new HttpTokenType("SEGMENT");
   IElementType SLASH = new HttpTokenType("/");
   IElementType START_VARIABLE_BRACE = new HttpTokenType("{{");
