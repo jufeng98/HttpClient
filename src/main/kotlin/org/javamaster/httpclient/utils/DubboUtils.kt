@@ -183,7 +183,7 @@ object DubboUtils {
                 val typeText = it.type.presentableText
 
                 val builder = LookupElementBuilder
-                    .create(wrap + it.name + wrap)
+                    .create(it, wrap + it.name + wrap)
                     .withTypeText(typeText, true)
 
                 completionResultSet.addElement(builder)
@@ -198,7 +198,7 @@ object DubboUtils {
                 val typeText = it.type.presentableText
 
                 val builder = LookupElementBuilder
-                    .create("\"" + it.name + "\"")
+                    .create(it, "\"" + it.name + "\"")
                     .withTypeText(typeText, true)
 
                 result.addElement(builder)

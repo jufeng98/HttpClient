@@ -7,6 +7,7 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.TokenType
 import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiTreeUtil
 import org.javamaster.httpclient.completion.provider.*
@@ -24,6 +25,25 @@ class HttpCompletionContributor : CompletionContributor() {
     init {
         this.extend(
             CompletionType.BASIC,
+            PlatformPatterns.psiElement(HttpTypes.REQUEST_METHOD),
+            HttpMethodsProvider()
+        )
+
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement(HttpTypes.SCHEMA_PART),
+            HttpSchemaProvider()
+        )
+
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement(TokenType.BAD_CHARACTER)
+                .withSuperParent(2, HttpRequestBlock::class.java),
+            HttpVersionProvider()
+        )
+
+        this.extend(
+            CompletionType.BASIC,
             PlatformPatterns.psiElement(HttpTypes.FIELD_NAME),
             HttpHeaderFieldNamesProvider()
         )
@@ -33,11 +53,6 @@ class HttpCompletionContributor : CompletionContributor() {
                 HttpHeaderFieldValue::class.java
             ),
             HttpHeaderFieldValuesProvider()
-        )
-
-        this.extend(
-            CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.REQUEST_METHOD),
-            HttpMethodsProvider()
         )
 
         this.extend(
