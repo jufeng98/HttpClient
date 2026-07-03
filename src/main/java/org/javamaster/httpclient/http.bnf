@@ -87,7 +87,7 @@ directionComment ::= DIRECTION_COMMENT_START directionName directionValue? {
 directionName ::= DIRECTION_NAME_PART {
     name = "direction name"
 }
-directionValue ::= variable directionValueContent | variable | directionValueContent {
+directionValue ::= variable directionValueContent? | directionValueContent {
     methods = [
         getReferences
     ]
@@ -113,12 +113,15 @@ method ::= REQUEST_METHOD {
     mixin = "org.javamaster.httpclient.psi.impl.HttpMethodBase"
 }
 
-requestTarget ::= (variable | schema SCHEMA_SEPARATE) host? port? pathAbsolute? (QUESTION query)? (HASH fragment)?  {
+requestTarget ::= (variable | schemaWithSeparate) host? port? pathAbsolute? (QUESTION query)? (HASH fragment)?  {
     methods = [
         getUrl
         getReferences
     ]
     name = "url"
+}
+private schemaWithSeparate ::= schema SCHEMA_SEPARATE {
+    pin = 1
 }
 schema ::= SCHEMA_PART
 host ::= HOST_VALUE | variable
@@ -191,7 +194,7 @@ private colonFlag ::= COLON {
     name = ":"
 }
 headerFieldName ::= FIELD_NAME
-headerFieldValue ::= (FIELD_VALUE | variable | FIELD_VALUE variable | variable FIELD_VALUE)+ {
+headerFieldValue ::= (FIELD_VALUE | variable)+ {
     methods = [
         getReferences
     ]
@@ -234,7 +237,7 @@ responseHandler ::= responseScript
 responseScript ::= OUT_START_SCRIPT_BRACE scriptBody END_SCRIPT_BRACE {
     pin = 1
 }
-scriptBody ::= SCRIPT_BODY_PAET {
+scriptBody ::= SCRIPT_BODY_PART {
   mixin="org.javamaster.httpclient.inject.HttpScriptBodyInjectionHost"
   name = "script body"
 }

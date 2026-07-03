@@ -25,9 +25,21 @@ class HttpCompletionContributor : CompletionContributor() {
     init {
         this.extend(
             CompletionType.BASIC,
-            PlatformPatterns.psiElement(TokenType.BAD_CHARACTER)
-                .afterLeaf(PlatformPatterns.psiElement(HttpTypes.SCHEMA_PART)),
+            PlatformPatterns.psiElement(HttpTypes.REQUEST_METHOD),
+            HttpMethodsProvider()
+        )
+
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement(HttpTypes.SCHEMA_PART),
             HttpSchemaProvider()
+        )
+
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement(TokenType.BAD_CHARACTER)
+                .withSuperParent(2, HttpRequestBlock::class.java),
+            HttpVersionProvider()
         )
 
         this.extend(
@@ -41,11 +53,6 @@ class HttpCompletionContributor : CompletionContributor() {
                 HttpHeaderFieldValue::class.java
             ),
             HttpHeaderFieldValuesProvider()
-        )
-
-        this.extend(
-            CompletionType.BASIC, PlatformPatterns.psiElement(HttpTypes.REQUEST_METHOD),
-            HttpMethodsProvider()
         )
 
         this.extend(

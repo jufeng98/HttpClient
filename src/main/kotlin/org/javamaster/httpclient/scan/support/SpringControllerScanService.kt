@@ -85,14 +85,16 @@ class SpringControllerScanService {
                     SpringHttpMethod.REQUEST_MAPPING.qualifiedName
                 )
 
+                val controllerQualifiedName = controllerClass.qualifiedName ?: return@forEach
+
                 var parentRequests: List<Request> = mutableListOf()
 
                 if (classRequestMappingAnno != null) {
-                    parentRequests = getRequests(classRequestMappingAnno, null, controllerClass)
+                    parentRequests = getRequests(classRequestMappingAnno, null, controllerQualifiedName)
                 }
 
                 val requests = controllerClass.allMethods
-                    .map { getRequests(it, controllerClass) }
+                    .map { getRequests(it, controllerQualifiedName) }
                     .flatten()
 
                 val childrenRequests: MutableList<Request> = mutableListOf()
@@ -112,18 +114,18 @@ class SpringControllerScanService {
             }
     }
 
-    private fun getRequests(controllerMethod: PsiMethod, controllerClass: PsiClass): List<Request> {
+    private fun getRequests(controllerMethod: PsiMethod, controllerQualifiedName: String): List<Request> {
         val methodAnnotations = collectMethodAnnotations(controllerMethod)
 
         return methodAnnotations
-            .map { getRequests(it, controllerMethod, controllerClass) }
+            .map { getRequests(it, controllerMethod, controllerQualifiedName) }
             .flatten()
     }
 
     private fun getRequests(
         controllerMethodAnno: PsiAnnotation,
         controllerMethod: PsiMethod?,
-        controllerClass: PsiClass,
+        controllerQualifiedName: String,
     ): List<Request> {
         var springMethod = getByQualifiedName(controllerMethodAnno.qualifiedName)
 
@@ -151,8 +153,10 @@ class SpringControllerScanService {
         for (attribute in controllerMethodAnno.attributes) {
             val name = attribute.attributeName
 
+            val attributeValue = attribute.attributeValue
+
             if (methods.contains(HttpMethod.REQUEST) && "method" == name) {
-                val value = AnnoUtils.getAttributeValue(attribute.attributeValue)
+                val value = AnnoUtils.getAttributeValue(attributeValue)
                 if (value is String) {
                     methods.add(parse(value))
                 } else if (value is List<*>) {
@@ -178,7 +182,7 @@ class SpringControllerScanService {
                 continue
             }
 
-            when (val value = AnnoUtils.getAttributeValue(attribute.attributeValue)) {
+            when (val value = AnnoUtils.getAttributeValue(attributeValue)) {
                 is String -> {
                     paths.add(formatPath(value))
                 }
@@ -207,7 +211,7 @@ class SpringControllerScanService {
             .map {
                 methods
                     .filter { it != HttpMethod.REQUEST || methods.size <= 1 }
-                    .map { method -> Request(method, it, controllerMethod, null, controllerClass.qualifiedName!!) }
+                    .map { method -> Request(method, it, controllerMethod, null, controllerQualifiedName) }
             }
             .flatten()
     }

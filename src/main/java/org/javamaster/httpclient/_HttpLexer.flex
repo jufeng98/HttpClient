@@ -58,7 +58,7 @@ REQUEST_COMMENT=###.*
 REQUEST_METHOD=[A-Za-z_]+
 RUN=run[ ]*
 IMPORT=import[ ]*
-SCHEMA_PART=[a-z]+
+SCHEMA_PART=[a-zA-Z]+
 HOST_VALUE=[a-zA-Z0-9\-.]+
 PORT_SEGMENT=[0-9]+
 SEGMENT=[a-zA-Z_0-9]+
@@ -100,7 +100,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_GLOBAL_SCRIPT> {
-  "%}"                      { yypushback(yylength()); yybegin(IN_GLOBAL_SCRIPT_END); return SCRIPT_BODY_PAET; }
+  "%}"                      { yypushback(yylength()); yybegin(IN_GLOBAL_SCRIPT_END); return SCRIPT_BODY_PART; }
   [^%]+                     {  }
   "%"                       {  }
   {WHITE_SPACE}             {  }
@@ -138,7 +138,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_DYNAMIC_VARIABLE_ARGS> {
-  {NUMBER}                    { return NUMBER; }
+  {NUMBER}                     { return NUMBER; }
   {STRING}                     { return STRING; }
   ","                          { return COMMA; }
   ")"                          { yybegin(IN_DYNAMIC_VARIABLE); return RIGHT_BRACKET; }
@@ -146,7 +146,7 @@ STRING=('([^'])*'|\"([^\"])*\")
 }
 
 <IN_PRE_SCRIPT> {
-  "%}"                      { yypushback(yylength()); yybegin(IN_PRE_SCRIPT_END); return SCRIPT_BODY_PAET; }
+  "%}"                      { yypushback(yylength()); yybegin(IN_PRE_SCRIPT_END); return SCRIPT_BODY_PART; }
   [^%]+                     {  }
   "%"                       {  }
   {WHITE_SPACE}             {  }
@@ -334,8 +334,8 @@ STRING=('([^'])*'|\"([^\"])*\")
 
 <IN_POST_SCRIPT> {
   "> {%"{EOL_MULTI}                { return OUT_START_SCRIPT_BRACE; }
-  "%}"\s*                          { yypushback(yylength()); yybegin(IN_POST_SCRIPT_END); return SCRIPT_BODY_PAET; }
-  <<EOF>>                          { yybegin(YYINITIAL); return SCRIPT_BODY_PAET; }
+  "%}"\s*                          { yypushback(yylength()); yybegin(IN_POST_SCRIPT_END); return SCRIPT_BODY_PART; }
+  <<EOF>>                          { yybegin(YYINITIAL); return SCRIPT_BODY_PART; }
   [^%]+                            {  }
   "%"                              {  }
   {WHITE_SPACE}                    {  }

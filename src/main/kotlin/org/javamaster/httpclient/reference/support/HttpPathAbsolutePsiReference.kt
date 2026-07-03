@@ -47,12 +47,16 @@ class HttpPathAbsolutePsiReference(
 
         return requests
             .mapNotNull {
-                val name = it.psiElement?.containingClass?.name ?: return@mapNotNull null
+                val psiMethod = it.psiElement
+                val name = psiMethod?.containingClass?.name ?: return@mapNotNull null
+
+                val hasDeprecated = psiMethod.hasAnnotation("java.lang.Deprecated")
 
                 LookupElementBuilder
-                    .create(it.path)
+                    .create(psiMethod, it.path)
                     .appendTailText("[${it.method.name}]", true)
                     .withIcon(HttpIcons.REQUEST_MAPPING)
+                    .withStrikeoutness(hasDeprecated)
                     .withTypeText(name)
             }
             .toTypedArray()
