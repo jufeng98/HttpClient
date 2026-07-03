@@ -1,6 +1,7 @@
 package org.javamaster.httpclient
 
 import com.google.common.net.HttpHeaders
+import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.application.ex.ApplicationInfoEx
 import org.javamaster.httpclient.consts.HttpConsts.Companion.CONNECT_TIMEOUT
 import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
@@ -36,6 +37,10 @@ enum class HttpRequestEnum(val icon: Icon) {
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).GET().build()
         }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
+        }
     },
     POST(HttpIcons.POST) {
         override fun createRequest(
@@ -46,6 +51,10 @@ enum class HttpRequestEnum(val icon: Icon) {
             paramMap: MultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).POST(bodyPublisher).build()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
         }
     },
     DELETE(HttpIcons.DELETE) {
@@ -58,6 +67,10 @@ enum class HttpRequestEnum(val icon: Icon) {
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, bodyPublisher).build()
         }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
+        }
     },
     PUT(HttpIcons.PUT) {
         override fun createRequest(
@@ -68,6 +81,10 @@ enum class HttpRequestEnum(val icon: Icon) {
             paramMap: MultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).PUT(bodyPublisher).build()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
         }
     },
     OPTIONS(HttpIcons.FILE) {
@@ -80,6 +97,10 @@ enum class HttpRequestEnum(val icon: Icon) {
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
         }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
+        }
     },
     PATCH(HttpIcons.FILE) {
         override fun createRequest(
@@ -90,6 +111,10 @@ enum class HttpRequestEnum(val icon: Icon) {
             paramMap: MultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, bodyPublisher).build()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
         }
     },
     HEAD(HttpIcons.FILE) {
@@ -102,6 +127,10 @@ enum class HttpRequestEnum(val icon: Icon) {
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
         }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
+        }
     },
     TRACE(HttpIcons.FILE) {
         override fun createRequest(
@@ -112,6 +141,10 @@ enum class HttpRequestEnum(val icon: Icon) {
             paramMap: MultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
         }
     },
     WEBSOCKET(HttpIcons.WS) {
@@ -124,6 +157,10 @@ enum class HttpRequestEnum(val icon: Icon) {
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(wsList)
+        }
     },
     DUBBO(HttpIcons.DUBBO) {
         override fun createRequest(
@@ -134,6 +171,10 @@ enum class HttpRequestEnum(val icon: Icon) {
             paramMap: MultiValueMap<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(dubboList)
         }
     },
     MOCK_SERVER(HttpIcons.FILE) {
@@ -146,6 +187,10 @@ enum class HttpRequestEnum(val icon: Icon) {
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
+        }
     },
     MOCK_WS(HttpIcons.FILE) {
         override fun createRequest(
@@ -157,6 +202,10 @@ enum class HttpRequestEnum(val icon: Icon) {
         ): HttpRequest {
             throw UnsupportedOperationException()
         }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(wsList)
+        }
     },
     MOCK_DUBBO(HttpIcons.FILE) {
         override fun createRequest(
@@ -167,6 +216,10 @@ enum class HttpRequestEnum(val icon: Icon) {
             paramMap: MultiValueMap<String, String>,
         ): HttpRequest {
             throw UnsupportedOperationException()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(dubboList)
         }
     }
     ;
@@ -281,7 +334,23 @@ enum class HttpRequestEnum(val icon: Icon) {
         paramMap: MultiValueMap<String, String>,
     ): HttpRequest
 
+    abstract fun getVariants(): List<LookupElementBuilder>
+
     companion object {
+        @Suppress("HttpUrlsUsage")
+        private val httpList = listOf("http://", "https://")
+        private val wsList = listOf("ws://", "wss://")
+        private val dubboList = listOf("dubbo://")
+
+        private fun getVariants(schemaList: List<String>): List<LookupElementBuilder> {
+            val list = mutableListOf<LookupElementBuilder>()
+
+            schemaList.forEach { list.add(LookupElementBuilder.create(it)) }
+            schemaList.forEach { list.add(LookupElementBuilder.create(it + "localhost")) }
+            schemaList.forEach { list.add(LookupElementBuilder.create(it + "localhost:8080")) }
+
+            return list
+        }
 
         fun getInstance(methodName: String): HttpRequestEnum {
             try {

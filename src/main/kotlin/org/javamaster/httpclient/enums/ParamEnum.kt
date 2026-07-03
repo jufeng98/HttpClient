@@ -34,12 +34,12 @@ enum class ParamEnum(val param: String, val desc: String) {
     },
     REQUIRE("require", NlsBundle.nls("require.desc")) {
         override fun insertHandler(): InsertHandler<LookupElement> {
-            return AddSpaceInsertHandler.INSTANCE
+            return AddSpaceInsertHandler.INSTANCE_WITH_AUTO_POPUP
         }
     },
     IMPORT("import", NlsBundle.nls("import.desc")) {
         override fun insertHandler(): InsertHandler<LookupElement> {
-            return AddSpaceInsertHandler.INSTANCE
+            return AddSpaceInsertHandler.INSTANCE_WITH_AUTO_POPUP
         }
     },
     RESPONSE_STATUS("responseStatus", NlsBundle.nls("response.status.desc")) {
@@ -49,7 +49,7 @@ enum class ParamEnum(val param: String, val desc: String) {
     },
     STATIC_FOLDER("staticFolder", NlsBundle.nls("static.folder.desc")) {
         override fun insertHandler(): InsertHandler<LookupElement> {
-            return AddSpaceInsertHandler.INSTANCE
+            return AddSpaceInsertHandler.INSTANCE_WITH_AUTO_POPUP
         }
     },
     ;
