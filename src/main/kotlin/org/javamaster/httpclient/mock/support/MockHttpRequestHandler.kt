@@ -54,12 +54,6 @@ class MockHttpRequestHandler(
             TimeUnit.SECONDS.sleep(readTimeout)
         }
 
-        if (HttpMethod.HEAD.name == method) {
-            exchange.sendResponseHeaders(200, -1)
-            exchange.close()
-            return
-        }
-
         val resHeaders = exchange.responseHeaders
         resHeaders.set(HttpHeaders.DATE, ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME))
         resHeaders.set(HttpHeaders.SERVER, "MockWebServer/1.0 (Java 17)")

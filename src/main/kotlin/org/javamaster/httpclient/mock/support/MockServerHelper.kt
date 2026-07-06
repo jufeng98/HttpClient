@@ -200,6 +200,7 @@ object MockServerHelper {
 
         resHeaders.set(HttpHeaders.CONTENT_TYPE, mimeType)
         resHeaders.set(HttpHeaders.CONTENT_DISPOSITION, "name=\"attachment\"; filename=\"$filename\"")
+        resHeaders.set(HttpHeaders.CONTENT_LENGTH, "" + length)
         exchange.sendResponseHeaders(status, length.toLong())
 
         httpDashboardForm.showMockServerLog("Write file bytes to client: $file\n")
