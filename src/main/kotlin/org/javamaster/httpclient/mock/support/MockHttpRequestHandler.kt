@@ -76,7 +76,11 @@ class MockHttpRequestHandler(
                 } else {
                     if (file.exists()) {
                         val status = responseStatus ?: HttpStatus.SC_OK
-                        MockServerHelper.writeFileResBytes(file, exchange, status, resHeaders, httpDashboardForm)
+                        if (method == "HEAD") {
+                            MockServerHelper.writeHeaders(file, exchange, status, resHeaders, httpDashboardForm)
+                        } else {
+                            MockServerHelper.writeFileResBytes(file, exchange, status, resHeaders, httpDashboardForm)
+                        }
                     } else {
                         val resStr = MockServerHelper.construct404ResHtml(reqPath)
 

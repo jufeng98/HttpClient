@@ -187,6 +187,25 @@ object MockServerHelper {
         httpDashboardForm.showMockServerLog("-----------------------------\n")
     }
 
+     fun writeHeaders(
+        file: File,
+        exchange: HttpExchange,
+        status: Int,
+        resHeaders: Headers,
+        httpDashboardForm: HttpDashboardForm,
+    ) {
+        val length = file.length()
+        val mimeType = mimetypesFileTypeMap.getContentType(file.name)
+        val filename = urlEncode(file.name)
+
+        resHeaders.set(HttpHeaders.CONTENT_TYPE, mimeType)
+        resHeaders.set(HttpHeaders.CONTENT_DISPOSITION, "name=\"attachment\"; filename=\"$filename\"")
+        exchange.sendResponseHeaders(status, length.toLong())
+
+        httpDashboardForm.showMockServerLog("Write file bytes to client: $file\n")
+        httpDashboardForm.showMockServerLog("-----------------------------\n")
+    }
+
     fun writeFileResBytes(
         file: File,
         exchange: HttpExchange,
@@ -281,4 +300,5 @@ object MockServerHelper {
             80
         }
     }
+
 }
