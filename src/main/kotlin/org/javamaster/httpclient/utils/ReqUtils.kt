@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.utils
 
-import com.google.common.net.HttpHeaders
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import org.apache.http.entity.ContentType
@@ -24,8 +23,7 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.time.Duration
-import java.util.function.IntConsumer
-import kotlin.jvm.optionals.getOrNull
+import java.util.concurrent.CompletableFuture
 
 /**
  * @author yudong
@@ -331,8 +329,7 @@ class ReqUtils {
             version: HttpClient.Version,
             reqHeaderMap: MultiValueMap<String, String?>,
             paramMap: MultiValueMap<String, String>,
-            consumer: IntConsumer,
-        ) {
+        ): CompletableFuture<HttpResponse<ByteArray>> {
             val client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(3))
                 .build()
@@ -341,20 +338,7 @@ class ReqUtils {
                 url, version, reqHeaderMap, BodyPublishers.noBody(), paramMap
             )
 
-            client.sendAsync(headRequest, HttpResponse.BodyHandlers.ofByteArray())
-                .whenComplete { response, throwable ->
-                    if (throwable != null) {
-                        logWarn("获取长度错误", throwable)
-                        consumer.accept(-1)
-                    } else {
-                        val length = response.headers().firstValue(HttpHeaders.CONTENT_LENGTH).getOrNull()
-                        if (length == null) {
-                            consumer.accept(-1)
-                        } else {
-                            consumer.accept(length.toInt())
-                        }
-                    }
-                }
+            return client.sendAsync(headRequest, HttpResponse.BodyHandlers.ofByteArray())
         }
     }
 }

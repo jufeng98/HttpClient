@@ -1,5 +1,6 @@
 package org.javamaster.httpclient.processHandler
 
+import com.google.common.net.HttpHeaders
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VirtualFile
@@ -10,6 +11,7 @@ import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
+import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
@@ -19,6 +21,7 @@ import org.javamaster.httpclient.utils.*
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import kotlin.jvm.optionals.getOrNull
 
 
 /**
@@ -65,8 +68,20 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         val httpReqDescList = mutableListOf<String>()
 
         if (methodType == HttpRequestEnum.GET) {
-            ReqUtils.getContentLength(url, version, reqHeaderMap, paramMap) {
-                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, it)
+            val future = ReqUtils.getContentLength(url, version, reqHeaderMap, paramMap)
+
+            this.future = future
+
+            future.whenCompleteAsync { response, throwable ->
+                var length = if (throwable != null) {
+                    logWarn("获取长度错误", throwable)
+                    -1
+                } else {
+                    val length = response.headers().firstValue(HttpHeaders.CONTENT_LENGTH).getOrNull()
+                    length?.toInt() ?: -1
+                }
+
+                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, length)
             }
         } else {
             handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, -1)
