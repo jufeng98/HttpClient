@@ -60,6 +60,8 @@ public class HttpDashboardForm implements Disposable {
     private JPanel resPanel;
     private JBSplitter splitter;
     private JLabel labelLoading;
+    private String labelLoadingTxt;
+    private JProgressBar progressBar;
 
     private final String tabName;
     private final Project project;
@@ -69,6 +71,9 @@ public class HttpDashboardForm implements Disposable {
         this.tabName = tabName;
         this.project = project;
 
+        labelLoading.setVisible(false);
+        progressBar.setVisible(false);
+
         Disposer.register(parentDisposable, this);
 
         splitter.setSplitterProportionKey("httpRequestCustomProportionKey");
@@ -77,15 +82,42 @@ public class HttpDashboardForm implements Disposable {
     public void initLabelLoading(String tabName, String url) {
         splitter.setVisible(false);
         labelLoading.setVisible(true);
+        progressBar.setVisible(true);
 
         String str = StringUtils.substringBefore(url, "?");
         str = str.length() > 60 ? str.substring(0, 60) + "..." : str;
-        labelLoading.setText(tabName + " " + labelLoading.getText() + " " + str);
+
+        labelLoadingTxt = tabName + " " + labelLoading.getText() + " " + str;
+
+        labelLoading.setText("0 s " + labelLoadingTxt);
+    }
+
+    public void updateLabelLoading(int elapseTime) {
+        labelLoading.setText(elapseTime + " s " + labelLoadingTxt);
+    }
+
+    public void initProgress(int resContentLength) {
+        progressBar.setStringPainted(true);
+        if (resContentLength != -1) {
+            progressBar.setMaximum(resContentLength);
+        } else {
+            progressBar.setIndeterminate(true);
+        }
+    }
+
+    public void updateProgress(int byteLength, int resContentLength) {
+        if (resContentLength != -1) {
+            progressBar.setValue(byteLength);
+            progressBar.setString("received " + (byteLength / 1024) + " kb / " + (resContentLength / 1024) + " kb");
+        } else {
+            progressBar.setString("received " + byteLength / 1024 + " kb");
+        }
     }
 
     public void resetDashboardForm() {
         splitter.setVisible(true);
         labelLoading.setVisible(false);
+        progressBar.setVisible(false);
     }
 
     public void initHttpResContent(HttpInfo httpInfo, boolean noLog, HttpRequestBlock requestBlock) {
@@ -249,6 +281,7 @@ public class HttpDashboardForm implements Disposable {
     public void initMockServerForm(kotlin.Pair<VirtualFile, Document> pair) {
         mainPanel.remove(splitter);
         mainPanel.remove(labelLoading);
+        mainPanel.remove(progressBar);
         mainPanel.setLayout(new BorderLayout());
 
         var editor = EditorFactory.getInstance().createEditor(pair.getSecond(), project, pair.getFirst(), true);
@@ -336,6 +369,7 @@ public class HttpDashboardForm implements Disposable {
 
             splitter.setVisible(true);
             labelLoading.setVisible(false);
+            progressBar.setVisible(false);
 
             reqPanel.remove(reqVerticalToolbarPanel);
             resPanel.remove(resVerticalToolbarPanel);

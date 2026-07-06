@@ -17,6 +17,9 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.*
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
+
 
 /**
  * @author yudong
@@ -25,6 +28,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
     ProcessHandlerBase(httpMethod, selectedEnv) {
 
     private var redirectTimes = 0
+    private var elapseTimeFuture: ScheduledFuture<*>? = null
 
     override fun startProcess() {
         requestRunningSet.add(tabName)
@@ -60,7 +64,13 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val httpReqDescList = mutableListOf<String>()
 
-        handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult)
+        if (methodType == HttpRequestEnum.GET) {
+            ReqUtils.getContentLength(url, version, reqHeaderMap, paramMap) {
+                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, it)
+            }
+        } else {
+            handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, -1)
+        }
     }
 
     private fun handleHttp(
@@ -69,6 +79,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
         jsBeforeExecuteResult: JsExecuteResult?,
+        resContentLength: Int,
     ) {
         val targetMethodType = if (redirectTimes > 0) HttpRequestEnum.GET else methodType
 
@@ -85,7 +96,16 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val start = System.currentTimeMillis()
 
-        val future = targetMethodType.execute(paramMap, req)
+        var elapseTime = 0
+        elapseTimeFuture = ExecutorUtils.scheduledExecutor.scheduleAtFixedRate(Runnable {
+            runInEdt { httpDashboardForm.updateLabelLoading(++elapseTime) }
+        }, 1, 1, TimeUnit.SECONDS)
+
+        runInEdt { httpDashboardForm.initProgress(resContentLength) }
+
+        val future = targetMethodType.execute(paramMap, req) {
+            runInEdt { httpDashboardForm.updateProgress(it, resContentLength) }
+        }
 
         this.future = future
 
@@ -107,7 +127,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
 
-                    handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList, null)
+                    handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList, null, -1)
 
                     return@executeOnPooledThread
                 }
@@ -205,6 +225,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         runInEdt { loadingRemover?.run() }
 
         requestRunningSet.remove(tabName)
+
+        elapseTimeFuture?.cancel(true)
 
         super.destroyProcessImpl()
     }

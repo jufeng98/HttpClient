@@ -14,6 +14,10 @@ import java.util.zip.InflaterInputStream
 object DecompressUtils {
 
     fun decompressBodyBytes(bodyBytes: ByteArray, contentEncoding: String): ByteArray {
+        if (bodyBytes.isEmpty()) {
+            return bodyBytes
+        }
+
         return when (contentEncoding) {
             "gzip", "x-gzip" -> GZIPInputStream(ByteArrayInputStream(bodyBytes)).use {
                 it.readAllBytes()

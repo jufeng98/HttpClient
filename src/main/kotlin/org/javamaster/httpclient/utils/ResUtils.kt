@@ -143,6 +143,9 @@ object ResUtils {
         project: Project,
     ): Pair<VirtualFile?, Boolean> {
         val content = httpInfo.byteArray ?: return Pair(null, false)
+        if (content.isEmpty()) {
+            return Pair(null, false)
+        }
 
         val outputFilePathText = httpInfo.outputFilePathText
         if (outputFilePathText != null) {

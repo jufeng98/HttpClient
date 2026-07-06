@@ -7,7 +7,6 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.startOffset
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.psi.HttpRequestBlock
 import org.javamaster.httpclient.psi.HttpRequestTarget
@@ -54,7 +53,7 @@ class HttpVersionProvider : CompletionProvider<CompletionParameters>() {
         val psiFile = position.containingFile
 
         var endOffset = offsetInFile - 1
-        var i = whiteSpace.startOffset
+        var i = whiteSpace.textRange.startOffset
         while (i++ < endOffset) {
             val elementAt = psiFile.findElementAt(i)
             txt += elementAt?.text ?: ""

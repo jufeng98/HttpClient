@@ -1,9 +1,11 @@
 package org.javamaster.httpclient.utils
 
+import com.google.common.net.HttpHeaders
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import org.apache.http.entity.ContentType
 import org.intellij.markdown.html.urlEncode
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
 import org.javamaster.httpclient.enums.ParamEnum
@@ -16,9 +18,14 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import java.net.http.HttpClient
 import java.net.http.HttpRequest.BodyPublisher
 import java.net.http.HttpRequest.BodyPublishers
+import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.util.function.IntConsumer
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * @author yudong
@@ -319,5 +326,35 @@ class ReqUtils {
             }
         }
 
+        fun getContentLength(
+            url: String,
+            version: HttpClient.Version,
+            reqHeaderMap: MultiValueMap<String, String?>,
+            paramMap: MultiValueMap<String, String>,
+            consumer: IntConsumer,
+        ) {
+            val client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build()
+
+            val headRequest = HttpRequestEnum.HEAD.createRequest(
+                url, version, reqHeaderMap, BodyPublishers.noBody(), paramMap
+            )
+
+            client.sendAsync(headRequest, HttpResponse.BodyHandlers.ofByteArray())
+                .whenComplete { response, throwable ->
+                    if (throwable != null) {
+                        logWarn("获取长度错误", throwable)
+                        consumer.accept(-1)
+                    } else {
+                        val length = response.headers().firstValue(HttpHeaders.CONTENT_LENGTH).getOrNull()
+                        if (length == null) {
+                            consumer.accept(-1)
+                        } else {
+                            consumer.accept(length.toInt())
+                        }
+                    }
+                }
+        }
     }
 }

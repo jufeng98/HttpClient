@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ex.ApplicationInfoEx
 import org.javamaster.httpclient.consts.HttpConsts.Companion.CONNECT_TIMEOUT
 import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
 import org.javamaster.httpclient.enums.ParamEnum
+import org.javamaster.httpclient.handler.ProgressBodyHandler
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
@@ -19,6 +20,7 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import java.util.function.IntConsumer
 import javax.swing.Icon
 
 /**
@@ -276,22 +278,18 @@ enum class HttpRequestEnum(val icon: Icon) {
 
         val request = createRequest(url, version, reqHttpHeaders, bodyPublisher, paramMap)
 
-        var insertIdx = 1
         httpReqDescList.add("### $tabName$CR_LF")
 
         if (paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
-            insertIdx++
             httpReqDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}$CR_LF")
         }
 
-        insertIdx++
         httpReqDescList.add(request.method() + " " + request.uri() + " " + getVersionDesc(version) + CR_LF)
 
         request.headers()
             .map()
             .forEach { entry ->
                 entry.value.forEach {
-                    insertIdx++
                     httpReqDescList.add(entry.key + ": " + it + CR_LF)
                 }
             }
@@ -300,7 +298,6 @@ enum class HttpRequestEnum(val icon: Icon) {
 
         val contentLength = if (tmpLength == -1L) multipartLength else tmpLength
 
-        insertIdx++
         httpReqDescList.add("${HttpHeaders.CONTENT_LENGTH}: $contentLength$CR_LF")
 
         httpReqDescList.add(CR_LF)
@@ -312,7 +309,11 @@ enum class HttpRequestEnum(val icon: Icon) {
         return Pair(request, contentLength)
     }
 
-    fun execute(paramMap: MultiValueMap<String, String>, req: HttpRequest): CompletableFuture<HttpResponse<ByteArray>> {
+    fun execute(
+        paramMap: MultiValueMap<String, String>,
+        req: HttpRequest,
+        progressCallback: IntConsumer,
+    ): CompletableFuture<HttpResponse<ByteArray>> {
         try {
             val connectTimeout = paramMap.getFirst(ParamEnum.CONNECT_TIMEOUT_NAME.param)?.toLong() ?: CONNECT_TIMEOUT
 
@@ -320,7 +321,11 @@ enum class HttpRequestEnum(val icon: Icon) {
                 .connectTimeout(Duration.ofSeconds(connectTimeout))
                 .build()
 
-            return client.sendAsync(req, HttpResponse.BodyHandlers.ofByteArray())
+            val progressBodyHandler = ProgressBodyHandler.ofProgress(
+                1024, HttpResponse.BodyHandlers.ofByteArray(), progressCallback
+            )
+
+            return client.sendAsync(req, progressBodyHandler)
         } catch (e: Throwable) {
             return CompletableFuture.failedFuture(e)
         }
