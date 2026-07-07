@@ -192,7 +192,10 @@ object ResUtils {
 
         val suffix = SimpleTypeEnum.getSuffix(httpInfo.type!!, httpInfo.contentType!!)
 
-        return DateFormatUtils.format(Date(), "yyyy-MM-dd'T'HHmmss") + "." + suffix
+        val statusCode = httpInfo.statusCode
+        val statusStr = if (statusCode != null) "$statusCode." else ""
+
+        return DateFormatUtils.format(Date(), "yyyy-MM-dd'T'HHmmss") + ".$statusStr" + suffix
     }
 
     fun getDocument(virtualFile: VirtualFile): Document {

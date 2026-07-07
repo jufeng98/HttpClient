@@ -19,7 +19,6 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.*
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
-import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import kotlin.jvm.optionals.getOrNull
 
@@ -31,7 +30,6 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
     ProcessHandlerBase(httpMethod, selectedEnv) {
 
     private var redirectTimes = 0
-    private var elapseTimeFuture: ScheduledFuture<*>? = null
 
     override fun startProcess() {
         requestRunningSet.add(tabName)
@@ -240,8 +238,6 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         runInEdt { loadingRemover?.run() }
 
         requestRunningSet.remove(tabName)
-
-        elapseTimeFuture?.cancel(true)
 
         super.destroyProcessImpl()
     }

@@ -11,6 +11,7 @@ import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.exception.BodyUnresolvedVariableException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
+import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
@@ -331,11 +332,15 @@ class ReqUtils {
             paramMap: MultiValueMap<String, String>,
         ): CompletableFuture<HttpResponse<ByteArray>> {
             val client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(3))
+                .connectTimeout(Duration.ofSeconds(1))
                 .build()
 
+            val map = LinkedMultiValueMap<String, String>(paramMap)
+            map.remove(ParamEnum.READ_TIMEOUT_NAME.param)
+            map.add(ParamEnum.READ_TIMEOUT_NAME.param, "1")
+
             val headRequest = HttpRequestEnum.HEAD.createRequest(
-                url, version, reqHeaderMap, BodyPublishers.noBody(), paramMap
+                url, version, reqHeaderMap, BodyPublishers.noBody(), map
             )
 
             return client.sendAsync(headRequest, HttpResponse.BodyHandlers.ofByteArray())

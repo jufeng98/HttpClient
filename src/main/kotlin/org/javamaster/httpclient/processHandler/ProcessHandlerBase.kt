@@ -49,6 +49,7 @@ import java.io.OutputStream
 import java.net.http.HttpClient.Version
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ScheduledFuture
 import java.util.function.Consumer
 import javax.swing.JPanel
 
@@ -87,6 +88,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
     protected var rawBody: String? = null
     protected var outPutFilePath: String? = null
     protected var jsAfterReq: HttpScriptBody? = null
+    protected var elapseTimeFuture: ScheduledFuture<*>? = null
 
     protected val httpDashboardForm by lazy {
         HttpDashboardForm(tabName, this, project)
@@ -500,6 +502,8 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         httpMethod.putUserData(HttpConsts.gutterIconLoadingKey, null)
 
         httpMethod.putUserData(HttpConsts.requestFinishedKey, null)
+
+        elapseTimeFuture?.cancel(true)
 
         notifyProcessTerminated(code)
     }

@@ -96,7 +96,7 @@ object VirtualFileUtils {
     fun createHistoryHttpVirtualFile(project: Project, legalTabName: String): VirtualFile {
         val parentDir = getDateHistoryDir(project)
 
-        val path = Path.of(parentDir.toString(), "tmp-$legalTabName-history.http")
+        val path = Path.of(parentDir.toString(), "$legalTabName-history.http")
 
         val file = if (Files.exists(path)) {
             path.toFile()
@@ -122,7 +122,7 @@ object VirtualFileUtils {
         val parentDir = getDateHistoryDir(project)
 
         val str = legalTabName + "-" + DateFormatUtils.format(Date(), "hhmmss")
-        val path = Path.of(parentDir.toString(), "tmp-$str.$suffix")
+        val path = Path.of(parentDir.toString(), "$str.$suffix")
 
         if (noLog) {
             val lightVirtualFile = LightVirtualFile(path.name, descContent)

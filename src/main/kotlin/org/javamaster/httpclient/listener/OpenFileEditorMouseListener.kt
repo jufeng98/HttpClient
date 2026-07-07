@@ -1,13 +1,17 @@
 package org.javamaster.httpclient.listener
 
+import com.intellij.ide.actions.RevealFileAction
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiManager
 import org.javamaster.httpclient.renderer.FileEditorCustomElementRenderer
 import java.awt.Rectangle
+import java.io.File
 
 /**
  * @author yudong
@@ -29,7 +33,21 @@ class OpenFileEditorMouseListener(
         val boundsCp = Rectangle(bounds.x + signWidth, bounds.y, bounds.width - signWidth, bounds.height)
 
         if (boundsCp.contains(point) && resBodyFile.isValid) {
-            FileEditorManager.getInstance(project).openFile(resBodyFile)
+            val editors = FileEditorManager.getInstance(project).openFile(resBodyFile)
+            if (editors.isEmpty()) {
+                val pathname = project.basePath
+                if (pathname != null && VfsUtil.isAncestor(File(pathname), resBodyFile.toNioPath().toFile(), true)) {
+                    val psiFile = PsiManager.getInstance(project).findFile(resBodyFile)
+                    if (psiFile != null) {
+                        psiFile.navigate(true)
+                    } else {
+                        val psiDirectory = PsiManager.getInstance(project).findDirectory(resBodyFile.parent)
+                        psiDirectory?.navigate(true)
+                    }
+                } else {
+                    RevealFileAction.openFile(resBodyFile.toNioPath())
+                }
+            }
         }
     }
 

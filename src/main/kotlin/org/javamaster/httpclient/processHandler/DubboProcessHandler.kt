@@ -15,11 +15,13 @@ import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
 import org.javamaster.httpclient.psi.HttpMethod
+import org.javamaster.httpclient.utils.ExecutorUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.ReqUtils
 import java.lang.reflect.InvocationTargetException
+import java.util.concurrent.TimeUnit
 
 /**
  * @author yudong
@@ -32,7 +34,10 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         var url = resolveAndHandleUrl()
 
-        runInEdt { httpDashboardForm.initLabelLoading(tabName, url) }
+        runInEdt {
+            httpDashboardForm.initLabelLoading(tabName, url)
+            httpDashboardForm.initProgress(-1)
+        }
 
         val reqInfo = createHttpReqInfo()
 
@@ -88,6 +93,11 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
             return
         }
+
+        var elapseTime = 0
+        elapseTimeFuture = ExecutorUtils.scheduledExecutor.scheduleAtFixedRate(Runnable {
+            runInEdt { httpDashboardForm.updateLabelLoading(++elapseTime) }
+        }, 1, 1, TimeUnit.SECONDS)
 
         val future = dubboRequest.sendAsync()
 
