@@ -17,6 +17,7 @@ import com.intellij.psi.*
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
+import com.intellij.testFramework.LightVirtualFile
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
@@ -602,6 +603,10 @@ object HttpUtils {
 
     fun isFileInHistoryDir(virtualFile: VirtualFile?, project: Project): Boolean {
         virtualFile ?: return false
+
+        if (virtualFile is LightVirtualFile) {
+            return true
+        }
 
         val ideaDirFile = project.getService(HistoryFolderService::class.java).getHistoryFolder()
 

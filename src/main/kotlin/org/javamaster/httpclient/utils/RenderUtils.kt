@@ -7,9 +7,10 @@ import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VirtualFile
+import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.listener.ChangeCursorEditorMouseMotionListener
-import org.javamaster.httpclient.listener.DisableCookiesEditorMouseListener
+import org.javamaster.httpclient.listener.DisableDirectionEditorMouseListener
 import org.javamaster.httpclient.listener.OpenFileEditorMouseListener
 import org.javamaster.httpclient.nls.NlsBundle.nls
 import org.javamaster.httpclient.psi.HttpRequestBlock
@@ -89,12 +90,28 @@ object RenderUtils {
         }
     }
 
-    fun renderResBodyFileName(resEditor: Editor, resDocument: Document, resBodyFile: VirtualFile, project: Project) {
+    fun renderResBodyFileName(
+        resEditor: Editor,
+        resDocument: Document,
+        resBodyFile: VirtualFile,
+        project: Project,
+        requestBlock: HttpRequestBlock,
+    ) {
         val inlayModel = resEditor.inlayModel
 
         val labelRenderer = TextEditorCustomElementRenderer(resEditor, nls("res.body.saved"))
 
         inlayModel.addBlockElement(resDocument.textLength, inlayProperties, labelRenderer)
+
+        val disableInlay = inlayModel.addBlockElement(resDocument.textLength, inlayProperties, HintRenderer("Disable"))
+
+        if (disableInlay != null) {
+            val listener = DisableDirectionEditorMouseListener(disableInlay, requestBlock, ParamEnum.NO_LOG)
+
+            resEditor.addEditorMouseListener(listener)
+
+            resEditor.addEditorMouseMotionListener(ChangeCursorEditorMouseMotionListener(disableInlay, resEditor))
+        }
 
         val fileRenderer = FileEditorCustomElementRenderer(resEditor, resBodyFile.name)
 
@@ -120,23 +137,23 @@ object RenderUtils {
     ) {
         val inlayModel = resEditor.inlayModel
 
-        inlayModel.addBlockElement(
-            resDocument.textLength,
-            inlayProperties,
-            TextEditorCustomElementRenderer(resEditor, "")
-        )
+        val emptyRenderer = TextEditorCustomElementRenderer(resEditor, "")
+
+        inlayModel.addBlockElement(resDocument.textLength, inlayProperties, emptyRenderer)
 
         val labelRenderer = TextEditorCustomElementRenderer(resEditor, cookieSavePair.first)
 
         inlayModel.addBlockElement(resDocument.textLength, inlayProperties, labelRenderer)
-        val cookieDisableInlay = inlayModel.addBlockElement(
+        val disableInlay = inlayModel.addBlockElement(
             resDocument.textLength, inlayProperties, HintRenderer("Disable")
         )
 
-        if (cookieDisableInlay != null) {
-            resEditor.addEditorMouseListener(DisableCookiesEditorMouseListener(cookieDisableInlay, requestBlock))
+        if (disableInlay != null) {
+            val listener = DisableDirectionEditorMouseListener(disableInlay, requestBlock, ParamEnum.NO_COOKIE_JAR)
 
-            resEditor.addEditorMouseMotionListener(ChangeCursorEditorMouseMotionListener(cookieDisableInlay, resEditor))
+            resEditor.addEditorMouseListener(listener)
+
+            resEditor.addEditorMouseMotionListener(ChangeCursorEditorMouseMotionListener(disableInlay, resEditor))
         }
 
         val cookiesFile = cookieSavePair.second

@@ -12,9 +12,10 @@ import org.javamaster.httpclient.psi.HttpRequestBlock
 /**
  * @author yudong
  */
-class DisableCookiesEditorMouseListener(
+class DisableDirectionEditorMouseListener(
     private val inlay: Inlay<out EditorCustomElementRenderer>,
     private val requestBlock: HttpRequestBlock,
+    private val paramEnum: ParamEnum,
 ) : EditorMouseListener {
 
     override fun mouseClicked(e: EditorMouseEvent) {
@@ -31,7 +32,7 @@ class DisableCookiesEditorMouseListener(
             val document = PsiDocumentManager.getInstance(project).getDocument(requestBlock.containingFile)
 
             if (document?.isWritable == true) {
-                HttpFile.insertReqDirectionComment(requestBlock, ParamEnum.NO_COOKIE_JAR, project)
+                HttpFile.insertReqDirectionComment(requestBlock, paramEnum, project)
             }
         }
     }

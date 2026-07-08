@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiBinaryFile
 import com.intellij.psi.PsiManager
 import org.javamaster.httpclient.renderer.FileEditorCustomElementRenderer
 import java.awt.Rectangle
@@ -34,19 +35,25 @@ class OpenFileEditorMouseListener(
 
         if (boundsCp.contains(point) && resBodyFile.isValid) {
             val editors = FileEditorManager.getInstance(project).openFile(resBodyFile)
-            if (editors.isEmpty()) {
-                val pathname = project.basePath
-                if (pathname != null && VfsUtil.isAncestor(File(pathname), resBodyFile.toNioPath().toFile(), true)) {
-                    val psiFile = PsiManager.getInstance(project).findFile(resBodyFile)
-                    if (psiFile != null) {
-                        psiFile.navigate(true)
-                    } else {
-                        val psiDirectory = PsiManager.getInstance(project).findDirectory(resBodyFile.parent)
-                        psiDirectory?.navigate(true)
-                    }
+
+            if (editors.isNotEmpty()) return
+
+            val psiFile = PsiManager.getInstance(project).findFile(resBodyFile)
+            if (psiFile is PsiBinaryFile) {
+                RevealFileAction.openFile(resBodyFile.toNioPath())
+                return
+            }
+
+            val pathname = project.basePath
+            if (pathname != null && VfsUtil.isAncestor(File(pathname), resBodyFile.toNioPath().toFile(), true)) {
+                if (psiFile != null) {
+                    psiFile.navigate(true)
                 } else {
-                    RevealFileAction.openFile(resBodyFile.toNioPath())
+                    val psiDirectory = PsiManager.getInstance(project).findDirectory(resBodyFile.parent)
+                    psiDirectory?.navigate(true)
                 }
+            } else {
+                RevealFileAction.openFile(resBodyFile.toNioPath())
             }
         }
     }
