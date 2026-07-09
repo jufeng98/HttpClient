@@ -6,6 +6,8 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.common.SettingsAwareBlock
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import org.javamaster.httpclient.psi.HttpTypes
 
 /**
@@ -31,6 +33,12 @@ class HttpRequestFileBlock(fileNode: ASTNode, private val mySettings: CodeStyleS
 
     override fun getSpacing(child1: Block?, child2: Block): Spacing? {
         if (child1 !is HttpRequestBlockBlock || child2 !is HttpRequestBlockBlock) {
+            return Spacing.getReadOnlySpacing()
+        }
+
+        val element = child1.node.psi
+        val lastChild = PsiTreeUtil.lastChild(element)
+        if (lastChild.elementType == HttpTypes.MESSAGE_BOUNDARY && lastChild.text.contains("--\n")) {
             return Spacing.getReadOnlySpacing()
         }
 

@@ -13,6 +13,7 @@ import com.intellij.openapi.editor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.text.Formats;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.JBSplitter;
@@ -61,6 +62,7 @@ public class HttpDashboardForm implements Disposable {
     private JBSplitter splitter;
     private JLabel labelLoading;
     private String labelLoadingTxt;
+    private String resContentLengthDesc;
     private JProgressBar progressBar;
 
     private final String tabName;
@@ -98,6 +100,8 @@ public class HttpDashboardForm implements Disposable {
 
     public void initProgress(int resContentLength) {
         if (resContentLength != -1) {
+            resContentLengthDesc = Formats.formatFileSize(resContentLength);
+
             progressBar.setMaximum(resContentLength);
         } else {
             progressBar.setIndeterminate(true);
@@ -113,7 +117,8 @@ public class HttpDashboardForm implements Disposable {
             int percent = (int) ((double) receivedByteLength / totalLength * 100.0);
 
             progressBar.setValue(byteLength);
-            str = NlsBundle.INSTANCE.nls("progress.hint.total", receivedByteLength, totalLength, percent);
+
+            str = NlsBundle.INSTANCE.nls("progress.hint.total", receivedByteLength, resContentLengthDesc, percent);
         } else {
             str = NlsBundle.INSTANCE.nls("progress.hint", receivedByteLength);
         }
