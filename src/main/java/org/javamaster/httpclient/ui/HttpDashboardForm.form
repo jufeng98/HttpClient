@@ -92,7 +92,6 @@
         </constraints>
         <properties>
           <font size="20"/>
-          <icon value="icons/loading.gif"/>
           <text value=""/>
         </properties>
       </component>

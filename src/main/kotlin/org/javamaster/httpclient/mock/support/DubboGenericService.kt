@@ -3,7 +3,7 @@ package org.javamaster.httpclient.mock.support
 import com.alibaba.dubbo.rpc.service.GenericService
 import org.javamaster.httpclient.dubbo.loader.ApiClassLoader
 import org.javamaster.httpclient.dubbo.support.DubboBridge
-import org.javamaster.httpclient.dubbo.support.PrimitiveMapper
+import org.javamaster.httpclient.utils.ClassUtils
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.nls.NlsBundle
@@ -54,7 +54,7 @@ class DubboGenericService(
         if (apiClz != null) {
             val classes = parameterTypes
                 .map {
-                    val clz = PrimitiveMapper.getPrimitiveClass(it)
+                    val clz = ClassUtils.getPrimitiveClass(it)
                     if (clz != null) {
                         return@map clz
                     }

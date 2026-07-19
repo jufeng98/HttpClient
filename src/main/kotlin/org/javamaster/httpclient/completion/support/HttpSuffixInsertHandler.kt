@@ -50,5 +50,6 @@ class HttpSuffixInsertHandler(private val mySuffix: String) : InsertHandler<Look
 
     companion object {
         val FIELD_SEPARATOR: HttpSuffixInsertHandler = HttpSuffixInsertHandler(": ")
+        val QUERY_SEPARATOR: HttpSuffixInsertHandler = HttpSuffixInsertHandler("=")
     }
 }

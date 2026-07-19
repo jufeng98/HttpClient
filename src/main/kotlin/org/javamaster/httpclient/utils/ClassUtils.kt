@@ -1,6 +1,6 @@
-package org.javamaster.httpclient.dubbo.support
+package org.javamaster.httpclient.utils
 
-object PrimitiveMapper {
+object ClassUtils {
     private val PRIMITIVE_MAP = HashMap<String?, Class<*>?>()
 
     init {
@@ -18,4 +18,5 @@ object PrimitiveMapper {
     fun getPrimitiveClass(name: String?): Class<*>? {
         return PRIMITIVE_MAP[name]
     }
+
 }

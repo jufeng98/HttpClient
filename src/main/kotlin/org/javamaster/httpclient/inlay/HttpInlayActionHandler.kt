@@ -14,14 +14,12 @@ import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiLiteralExpression
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiType
+import com.intellij.psi.*
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.testFramework.LightVirtualFile
+import org.apache.http.entity.ContentType
 import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.consts.HttpConsts.Companion.REQUEST_BODY_ANNO_NAME
 import org.javamaster.httpclient.enums.HttpMethod
@@ -86,45 +84,80 @@ class HttpInlayActionHandler : InlayActionHandler {
         val methodDesc = MyPsiUtils.getMethodDesc(psiMethod)
         val httpMethod = request.method
 
-        val pair = generateBody(psiMethod)
-
-        val contentType = pair.first
-        val body = pair.second
-
-        val contentStr = if (httpMethod == HttpMethod.POST || httpMethod == HttpMethod.PUT) {
-            """
+        if (httpMethod == HttpMethod.GET) {
+            val queryParams = generateQueryParams(psiMethod)
+            if (queryParams.size > 6) {
+                val longParams = queryParams.joinToString("&\n") { "    " + it.first + "=" + it.second }
+                val httpContent = """
 ### $methodDesc
-${httpMethod.name} {{baseUrl}}${request.path}
-Accept: application/json
-Content-Type: $contentType
-            
-$body
-            """.trimIndent()
-        } else {
-            val content = if (body.isEmpty()) "" else "?$body"
+GET {{baseUrl}}${request.path}?
+$longParams
+        """.trimIndent()
 
-            """
-### $methodDesc
-${httpMethod.name} {{baseUrl}}${request.path}$content
-Accept: application/json
-Content-Type: $contentType
-                                                   
-            """.trimIndent()
+                val lightVirtualFile = LightVirtualFile("TemporaryHttpFile.http", HttpFileType.INSTANCE, httpContent)
+
+                FileEditorManager.getInstance(project).openFile(lightVirtualFile, true)
+
+                return
+            }
         }
 
-        val lightVirtualFile = LightVirtualFile("TemporaryHttpFile.http", HttpFileType.INSTANCE, contentStr)
+        var contentType: String
+        var body: String
+        var pathParams: String
+
+
+        val jsonBody = generateJsonBody(psiMethod)
+        if (jsonBody != null) {
+            contentType = ContentType.APPLICATION_JSON.mimeType
+            body = jsonBody
+            val queryParams = generateQueryParams(psiMethod)
+            pathParams = if (queryParams.isNotEmpty()) {
+                "?" + queryParams.joinToString("&") { it.first + "=" + it.second }
+            } else {
+                ""
+            }
+        } else {
+            contentType = ContentType.APPLICATION_FORM_URLENCODED.mimeType
+            val queryParams = generateQueryParams(psiMethod)
+            val noBody = httpMethod == HttpMethod.GET || httpMethod == HttpMethod.HEAD
+                    || httpMethod == HttpMethod.OPTIONS
+            if (noBody) {
+                body = ""
+                pathParams = if (queryParams.isNotEmpty()) {
+                    "?" + queryParams.joinToString("&") { it.first + "=" + it.second }
+                } else {
+                    ""
+                }
+            } else {
+                body = if (queryParams.isNotEmpty()) {
+                    queryParams.joinToString(" &\n") { it.first + " = " + it.second }
+                } else {
+                    ""
+                }
+                pathParams = ""
+            }
+        }
+
+        val httpContent = """
+### $methodDesc
+${httpMethod.name} {{baseUrl}}${request.path}${pathParams}
+Accept: application/json
+Content-Type: $contentType
+
+$body
+        """.trimIndent()
+
+        val lightVirtualFile = LightVirtualFile("TemporaryHttpFile.http", HttpFileType.INSTANCE, httpContent)
 
         FileEditorManager.getInstance(project).openFile(lightVirtualFile, true)
     }
 
-    private fun generateBody(psiMethod: PsiMethod): Pair<String, String> {
-        var body = ""
-        var hasAnno = false
+    private fun generateJsonBody(psiMethod: PsiMethod): String? {
         for (parameter in psiMethod.parameterList.parameters) {
             parameter.getAnnotation(REQUEST_BODY_ANNO_NAME) ?: continue
 
-            hasAnno = true
-            val psiClass = PsiTypeUtils.resolvePsiType(parameter.type)!!
+            val psiClass = PsiTypeUtils.resolvePsiType(parameter.type) ?: continue
 
             val map = convertToMap(psiClass)
 
@@ -135,45 +168,56 @@ Content-Type: $contentType
                 map.putAll(superMap)
             }
 
-            body = gson.toJson(map)
-            break
+            return gson.toJson(map)
         }
 
-        if (hasAnno) {
-            return Pair("application/json", body)
-        }
+        return null
+    }
 
-        val list = mutableListOf<String>()
+    private fun generateQueryParams(psiMethod: PsiMethod): MutableList<Pair<String, Any>> {
+        val list = mutableListOf<Pair<String, Any>>()
         for (parameter in psiMethod.parameterList.parameters) {
+            val psiAnnotation = parameter.getAnnotation(REQUEST_BODY_ANNO_NAME)
+            if (psiAnnotation != null) {
+                continue
+            }
+
+            val psiType = parameter.type
+            if (psiType is PsiPrimitiveType) {
+                list.add(Pair(parameter.name, getUrlTypeDefault(psiType)))
+                continue
+            }
+
+            val psiClass = PsiTypeUtils.resolvePsiType(psiType) ?: continue
+
             val name = parameter.name
-            val psiClass = PsiTypeUtils.resolvePsiType(parameter.type)
-            if (psiClass?.qualifiedName?.startsWith("java") == true) {
-                list.add("$name = " + getUrlTypeDefault(parameter.type))
-            } else {
-                psiClass?.fields?.forEach {
+            if (psiClass.qualifiedName?.startsWith("java") == true) {
+                list.add(Pair(name, getUrlTypeDefault(psiType)))
+                continue
+            }
+
+            psiClass.fields.forEach {
+                if (it.modifierList?.hasModifierProperty("static") == true) {
+                    return@forEach
+                }
+
+                list.add(Pair(it.name, getUrlTypeDefault(it.type)))
+            }
+
+            val superClass = psiClass.superClass
+
+            if (superClass?.qualifiedName?.startsWith("java") == false) {
+                superClass.fields.forEach {
                     if (it.modifierList?.hasModifierProperty("static") == true) {
                         return@forEach
                     }
 
-                    list.add("${it.name} = " + getUrlTypeDefault(it.type))
-                }
-
-                val superClass = psiClass?.superClass
-                if (superClass?.qualifiedName?.startsWith("java") == false) {
-                    superClass.fields.forEach {
-                        if (it.modifierList?.hasModifierProperty("static") == true) {
-                            return@forEach
-                        }
-
-                        list.add("${it.name} = " + getUrlTypeDefault(it.type))
-                    }
+                    list.add(Pair(it.name, getUrlTypeDefault(it.type)))
                 }
             }
         }
 
-        body = if (list.isEmpty()) "" else list.joinToString(" &\n")
-
-        return Pair("application/x-www-form-urlencoded", body)
+        return list
     }
 
     private fun getTypeDefault(type: PsiType): Any {
@@ -188,11 +232,11 @@ Content-Type: $contentType
             val map = convertToMap(typePsiClass)
 
             return Lists.newArrayList<Any>(map)
-        } else if (name.contains("Boolean")) {
+        } else if (name.contains("Boolean") || name.contains("boolean")) {
             return false
         } else if (name.contains("Integer") || name.contains("int") || name.contains("Long") || name.contains("long")) {
             return 0
-        } else if (name.contains("Double") || name.contains("double")) {
+        } else if (name.contains("Double") || name.contains("double") || name.contains("Float") || name.contains("float")) {
             return 0.0
         } else if (name.contains("String")) {
             return ""
@@ -216,11 +260,11 @@ Content-Type: $contentType
         val isCollection = InheritanceUtil.isInheritor(type, "java.util.Collection")
         return if (isCollection) {
             ""
-        } else if (name.contains("Boolean")) {
+        } else if (name.contains("Boolean") || name.contains("boolean")) {
             false
         } else if (name.contains("Integer") || name.contains("int") || name.contains("Long") || name.contains("long")) {
             0
-        } else if (name.contains("Double") || name.contains("double")) {
+        } else if (name.contains("Double") || name.contains("double") || name.contains("Float") || name.contains("float")) {
             0.0
         } else {
             ""
