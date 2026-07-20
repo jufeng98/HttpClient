@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "org.javamaster"
-version = "8.3.3"
+version = "8.3.4"
 
 repositories {
     maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
@@ -36,7 +36,7 @@ dependencies {
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.modules.json")
         bundledModule("com.intellij.modules.json")
-        plugin("ris58h.webcalm", "0.12")
+        plugin("ris58h.webcalm", "0.12.1")
     }
 
     implementation("org.mozilla:rhino:1.7.15")
@@ -60,7 +60,7 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "230"
-            untilBuild = "261.*"
+            untilBuild = provider { null }
         }
     }
 }

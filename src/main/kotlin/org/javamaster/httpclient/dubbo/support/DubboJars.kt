@@ -1,6 +1,6 @@
 package org.javamaster.httpclient.dubbo.support
 
-import com.intellij.ide.plugins.PluginManagerCore.getPlugin
+import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -110,7 +110,8 @@ object DubboJars {
 
                     jarUrls.addAll(findPluginJarUrls())
 
-                    dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboRequestImpl::class.java.classLoader)
+                    dubboClassLoader =
+                        DubboClassLoader(jarUrls.toTypedArray(), DubboRequestImpl::class.java.classLoader)
 
                     NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("dubbo.downloaded"))
                 } catch (e: Exception) {
@@ -151,8 +152,9 @@ object DubboJars {
     }
 
     private fun getDubboLibPath(): File {
-        val pluginDescriptor = getPlugin(PluginId.findId("org.javamaster.HttpRequest"))
-        val pluginPath = pluginDescriptor!!.pluginPath.toFile()
+        val pluginId = PluginId.findId("org.javamaster.HttpRequest")!!
+        val pluginDescriptor = PluginManager.getInstance().findEnabledPlugin(pluginId)!!
+        val pluginPath = pluginDescriptor.pluginPath.toFile()
         return File(pluginPath, "lib/dubboLib")
     }
 }

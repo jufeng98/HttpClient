@@ -74,6 +74,10 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>8.3.4</b></li>
+                <ul>
+                    <li>支持262</li>
+                </ul>
                 <li><b>8.3.3</b></li>
                 <ul>
                     <li>新增请求耗时动态显示</li>

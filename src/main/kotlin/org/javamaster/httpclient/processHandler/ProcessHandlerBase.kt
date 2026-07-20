@@ -530,6 +530,9 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         internal val requestRunningSet = mutableSetOf<String>()
         internal val mockServerRunningSet = mutableSetOf<Int>()
 
+        @Volatile
+        var lastProcessHandler: ProcessHandlerBase? = null
+
         fun isRunning(tabName: String): Boolean {
             return requestRunningSet.contains(tabName)
         }
@@ -541,7 +544,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
         fun createProcessHandler(httpMethod: HttpMethod, selectedEnv: String?): ProcessHandlerBase {
             val requestEnum = HttpRequestEnum.getInstance(httpMethod.text)
 
-            return when (requestEnum) {
+            val processor = when (requestEnum) {
                 HttpRequestEnum.WEBSOCKET -> WebSocketProcessHandler(httpMethod, selectedEnv)
 
                 HttpRequestEnum.DUBBO -> DubboProcessHandler(httpMethod, selectedEnv)
@@ -566,6 +569,10 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val select
 
                 else -> HttpProcessHandler(httpMethod, selectedEnv)
             }
+
+            lastProcessHandler = processor
+
+            return processor
         }
     }
 }

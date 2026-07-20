@@ -1,6 +1,6 @@
 package org.javamaster.httpclient.utils
 
-import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.ide.plugins.PluginManager
 import com.intellij.json.psi.JsonFile
 import com.intellij.json.psi.JsonObject
 import com.intellij.json.psi.JsonStringLiteral
@@ -224,8 +224,9 @@ object NpmJsUtils {
     }
 
     private fun getJsLibPath(): File {
-        val pluginDescriptor = PluginManagerCore.getPlugin(PluginId.findId("org.javamaster.HttpRequest"))
-        val pluginPath = pluginDescriptor!!.pluginPath.toFile()
+        val pluginId = PluginId.findId("org.javamaster.HttpRequest")!!
+        val pluginDescriptor = PluginManager.getInstance().findEnabledPlugin(pluginId)!!
+        val pluginPath = pluginDescriptor.pluginPath.toFile()
         return File(pluginPath, "lib/jsLib")
     }
 }

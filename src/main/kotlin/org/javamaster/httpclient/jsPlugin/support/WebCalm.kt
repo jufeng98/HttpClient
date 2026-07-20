@@ -25,6 +25,21 @@ object WebCalm {
         return@lazy plugin == null
     }
 
+    private val pluginClassLoader by lazy {
+        val pluginId = PluginId.findId("ris58h.webcalm") ?: return@lazy null
+        val plugin = PluginManager.getInstance().findEnabledPlugin(pluginId) ?: return@lazy null
+        plugin.pluginClassLoader
+    }
+
+    val clzJavaScriptMemberDotExpression by lazy {
+        loadClass("ris58h.webcalm.javascript.psi.JavaScriptMemberDotExpression", pluginClassLoader!!)
+    }
+
+    private fun loadClass(@Suppress("SameParameterValue") clzName: String, loader: ClassLoader): Class<PsiElement> {
+        @Suppress("UNCHECKED_CAST")
+        return loader.loadClass(clzName) as Class<PsiElement>
+    }
+
     fun referenceToJsVariable(element: PsiElement): Boolean {
         return element is JavaScriptArgument
     }
@@ -64,7 +79,7 @@ object WebCalm {
     private fun resolveJsVariable(variableName: String, jsFile: JavaScriptFile): PsiElement? {
         val expressions = PsiTreeUtil.findChildrenOfType(jsFile, JavaScriptCallExpression::class.java)
         for (expression in expressions) {
-            val dotExpression = PsiTreeUtil.getChildOfType(expression, JavaScriptMemberDotExpression::class.java)
+            val dotExpression = PsiTreeUtil.getChildOfType(expression, clzJavaScriptMemberDotExpression)
                 ?: continue
 
             val arguments = PsiTreeUtil.getChildOfType(expression, JavaScriptArguments::class.java) ?: continue

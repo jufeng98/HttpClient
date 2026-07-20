@@ -4,7 +4,6 @@ import com.intellij.execution.RunnerAndConfigurationSettings
 import com.intellij.execution.dashboard.RunDashboardCustomizer
 import com.intellij.execution.dashboard.RunDashboardRunConfigurationNode
 import com.intellij.execution.ui.RunContentDescriptor
-import com.intellij.execution.ui.RunContentManager
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.psi.PsiElement
 import com.intellij.ui.SimpleTextAttributes
@@ -37,10 +36,7 @@ class HttpRunDashboardCustomizer : RunDashboardCustomizer() {
             return false
         }
 
-        val project = processHandler.project
-        val runContentManager = RunContentManager.getInstance(project)
-
-        val current = runContentManager.selectedContent?.processHandler == processHandler
+        val current = ProcessHandlerBase.lastProcessHandler == processHandler
 
         val hasError = processHandler.hasReqError || processHandler.jsScriptException != null
 

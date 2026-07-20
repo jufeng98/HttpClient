@@ -27,23 +27,24 @@ class HttpPostStartupActivity : ProjectActivity {
         project.messageBus.connect()
             .subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, HttpFileEditorManagerListener)
 
-        if (JavaScript.isAvailable()) {
-            if (JavaScript.isTsLibraryNotInstalled(project)) {
-                try {
-                    JavaScript.installTsLibrary(project)
-                } catch (t: Throwable) {
-                    logWarn("安装ts库错误", t)
+        try {
+            if (JavaScript.isAvailable()) {
+                if (JavaScript.isTsLibraryNotInstalled(project)) {
+                    try {
+                        JavaScript.installTsLibrary(project)
+                    } catch (t: Throwable) {
+                        logWarn("安装ts库错误", t)
+                    }
                 }
-            }
 
-            if (JavaScript.isElementScopeNoRegister()) {
-                try {
+                if (JavaScript.isElementScopeNoRegister()) {
                     JavaScript.registerElementScopeProvider()
-                } catch (t: Throwable) {
-                    logWarn("注册element scope provider错误", t)
                 }
             }
+        } catch (t: Throwable) {
+            logWarn("处理js错误", t)
         }
+
     }
 
 }
