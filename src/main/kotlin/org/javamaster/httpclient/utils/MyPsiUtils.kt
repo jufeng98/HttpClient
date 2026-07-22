@@ -12,7 +12,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.util.SmartList
 import org.javamaster.httpclient.HttpFileType
-import org.javamaster.httpclient.HttpIcons
 import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_MODEL_PROPERTY_ANNO_NAME
 import org.javamaster.httpclient.consts.HttpConsts.Companion.API_OPERATION_ANNO_NAME
@@ -205,13 +204,8 @@ class MyPsiUtils {
         }
 
         fun pickMethodIcon(method: String): Icon {
-            try {
-                val methodType = HttpRequestEnum.getInstance(method)
-
-                return methodType.icon
-            } catch (_: UnsupportedOperationException) {
-                return HttpIcons.FILE
-            }
+            val methodType = HttpRequestEnum.getInstance(method)
+            return methodType.icon
         }
 
         fun resolveUrlControllerTargetPsiClass(psiElement: PsiElement): PsiClass? {

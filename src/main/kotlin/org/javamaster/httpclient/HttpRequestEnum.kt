@@ -8,7 +8,6 @@ import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.handler.ProgressBodyHandler
 import org.javamaster.httpclient.map.MultiValueMap
-import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.MyPsiUtils.Companion.getVersionDesc
 import org.javamaster.httpclient.utils.ReqUtils
@@ -143,6 +142,22 @@ enum class HttpRequestEnum(val icon: Icon) {
             paramMap: MultiValueMap<String, String>,
         ): HttpRequest {
             return createBuilder(url, reqHeaderMap, version, paramMap).method(name, BodyPublishers.noBody()).build()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(httpList)
+        }
+    },
+    CUSTOM(HttpIcons.FILE) {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: MultiValueMap<String, String?>,
+            bodyPublisher: HttpRequest.BodyPublisher,
+            paramMap: MultiValueMap<String, String>,
+        ): HttpRequest {
+            val method = paramMap["METHOD"]!!.first()
+            return createBuilder(url, reqHeaderMap, version, paramMap).method(method, bodyPublisher).build()
         }
 
         override fun getVariants(): List<LookupElementBuilder> {
@@ -358,10 +373,10 @@ enum class HttpRequestEnum(val icon: Icon) {
         }
 
         fun getInstance(methodName: String): HttpRequestEnum {
-            try {
-                return HttpRequestEnum.valueOf(methodName)
-            } catch (e: Exception) {
-                throw UnsupportedOperationException(NlsBundle.nls("method.unsupported", methodName), e)
+            return try {
+                HttpRequestEnum.valueOf(methodName)
+            } catch (_: Exception) {
+                CUSTOM
             }
         }
 

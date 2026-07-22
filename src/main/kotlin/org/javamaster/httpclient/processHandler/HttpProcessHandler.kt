@@ -96,6 +96,10 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
     ) {
         val targetMethodType = if (redirectTimes > 0) HttpRequestEnum.GET else methodType
 
+        if (targetMethodType == HttpRequestEnum.CUSTOM) {
+            paramMap["METHOD"] = httpMethod.text
+        }
+
         val pair = targetMethodType.preExecute(url, version, reqHeaderMap, reqBody, httpReqDescList, tabName, paramMap)
 
         if (jsScriptException != null) {
@@ -198,7 +202,13 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}${CR_LF}")
                     }
 
-                    httpResDescList.add(methodType.name + " " + response.uri() + " " + versionDesc + CR_LF)
+                    val methodName = if (targetMethodType == HttpRequestEnum.CUSTOM) {
+                        httpMethod.text
+                    } else {
+                        targetMethodType.name
+                    }
+
+                    httpResDescList.add(methodName + " " + response.uri() + " " + versionDesc + CR_LF)
 
                     httpResDescList.addAll(resHeaderList)
 

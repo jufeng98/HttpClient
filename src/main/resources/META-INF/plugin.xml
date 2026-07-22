@@ -74,6 +74,10 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>8.3.5</b></li>
+                <ul>
+                    <li>支持执行自定义的 HTTP 方法</li>
+                </ul>
                 <li><b>8.3.4</b></li>
                 <ul>
                     <li>支持262</li>

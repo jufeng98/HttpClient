@@ -21,12 +21,7 @@ class HttpSchemaProvider : CompletionProvider<CompletionParameters>() {
         val position = parameters.position
         val method = position.parent?.parent?.prevSibling?.prevSibling?.text ?: return
 
-        val requestEnum: HttpRequestEnum
-        try {
-            requestEnum = HttpRequestEnum.getInstance(method)
-        } catch (_: Exception) {
-            return
-        }
+        val requestEnum = HttpRequestEnum.getInstance(method)
 
         val variants = requestEnum.getVariants()
 
