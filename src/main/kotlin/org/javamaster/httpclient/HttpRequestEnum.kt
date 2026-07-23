@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ex.ApplicationInfoEx
 import org.javamaster.httpclient.consts.HttpConsts.Companion.CONNECT_TIMEOUT
 import org.javamaster.httpclient.consts.HttpConsts.Companion.READ_TIMEOUT
 import org.javamaster.httpclient.enums.ParamEnum
+import org.javamaster.httpclient.function.BitIntConsumer
 import org.javamaster.httpclient.handler.ProgressBodyHandler
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
@@ -20,7 +21,9 @@ import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.function.IntConsumer
+import javax.net.ssl.SSLContext
 import javax.swing.Icon
+
 
 /**
  * Sending http request
@@ -327,20 +330,31 @@ enum class HttpRequestEnum(val icon: Icon) {
     fun execute(
         paramMap: MultiValueMap<String, String>,
         req: HttpRequest,
-        progressCallback: IntConsumer,
+        sslContext: SSLContext?,
+        contentLengthCallback: IntConsumer,
+        progressCallback: BitIntConsumer,
     ): CompletableFuture<HttpResponse<ByteArray>> {
         try {
             val connectTimeout = paramMap.getFirst(ParamEnum.CONNECT_TIMEOUT_NAME.param)?.toLong() ?: CONNECT_TIMEOUT
 
-            val client = HttpClient.newBuilder()
+            val builder = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeout))
-                .build()
 
-            val progressBodyHandler = ProgressBodyHandler.ofProgress(
-                1024, HttpResponse.BodyHandlers.ofByteArray(), progressCallback
-            )
+            if (sslContext != null) {
+                builder.sslContext(sslContext)
+            }
 
-            return client.sendAsync(req, progressBodyHandler)
+            val client = builder.build()
+
+            return client.sendAsync(req) {
+                val total = it.headers().firstValueAsLong(HttpHeaders.CONTENT_LENGTH).orElse(-1L).toInt()
+
+                contentLengthCallback.accept(total)
+
+                ProgressBodyHandler.ofProgress(
+                    10240, total, it, HttpResponse.BodyHandlers.ofByteArray(), progressCallback
+                )
+            }
         } catch (e: Throwable) {
             return CompletableFuture.failedFuture(e)
         }
