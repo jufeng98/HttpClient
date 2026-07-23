@@ -64,6 +64,8 @@ public class HttpDashboardForm implements Disposable {
     private String labelLoadingTxt;
     private String resContentLengthDesc;
     private JProgressBar progressBar;
+    private volatile int lastByteLength;
+    private volatile long lastTime;
 
     private final String tabName;
     private final Project project;
@@ -100,6 +102,9 @@ public class HttpDashboardForm implements Disposable {
 
     public void initProgress(int resContentLength) {
         if (resContentLength != -1) {
+            lastByteLength = 0;
+            lastTime = System.currentTimeMillis();
+
             resContentLengthDesc = Formats.formatFileSize(resContentLength);
 
             progressBar.setMaximum(resContentLength);
@@ -118,7 +123,15 @@ public class HttpDashboardForm implements Disposable {
 
             progressBar.setValue(byteLength);
 
-            str = NlsBundle.INSTANCE.nls("progress.hint.total", receivedByteLength, resContentLengthDesc, percent);
+            long time = System.currentTimeMillis();
+
+            int intervalLength = byteLength - lastByteLength;
+            long intervalTime = time - lastTime + 1;
+            long speed = intervalLength / intervalTime * 1000;
+            int remainLength = resContentLength - byteLength;
+            long remainSec = remainLength / speed;
+
+            str = NlsBundle.INSTANCE.nls("progress.hint.total", receivedByteLength, resContentLengthDesc, percent, remainSec);
         } else {
             str = NlsBundle.INSTANCE.nls("progress.hint", receivedByteLength);
         }

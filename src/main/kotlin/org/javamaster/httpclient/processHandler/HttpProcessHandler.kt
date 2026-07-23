@@ -1,17 +1,19 @@
 package org.javamaster.httpclient.processHandler
 
-import com.google.common.net.HttpHeaders
+import com.intellij.json.psi.JsonObject
 import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.application
 import org.javamaster.httpclient.HttpRequestEnum
+import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
+import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
-import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
@@ -19,8 +21,9 @@ import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.*
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.util.concurrent.TimeUnit
-import kotlin.jvm.optionals.getOrNull
+import javax.net.ssl.SSLContext
 
 
 /**
@@ -30,6 +33,10 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
     ProcessHandlerBase(httpMethod, selectedEnv) {
 
     private var redirectTimes = 0
+    private var sslObj: JsonObject? = null
+    private var verifyCert: Boolean = true
+    private var clientCertificatePath: String? = null
+    private var hasCertificatePassphrase: Boolean = false
 
     override fun startProcess() {
         requestRunningSet.add(tabName)
@@ -65,24 +72,50 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val httpReqDescList = mutableListOf<String>()
 
-        if (methodType == HttpRequestEnum.GET) {
-            val future = ReqUtils.getContentLength(url, version, reqHeaderMap, paramMap)
+        val envFileService = EnvFileService.getService(project)
 
-            this.future = future
+        HttpUtils.runReadAction {
+            sslObj = envFileService.getEnvObj(HttpConsts.SSL_CONFIGURATION, selectedEnv, parentPath)
+            verifyCert = JsonUtil.getBoolValue(sslObj, "verifyHostCertificate", true)
+            clientCertificatePath = JsonUtil.getStrValue(sslObj, "clientCertificate")
+            hasCertificatePassphrase = JsonUtil.getBoolValue(sslObj, "hasCertificatePassphrase", false)
+        }
 
-            future.whenCompleteAsync { response, throwable ->
-                var length = if (throwable != null) {
-                    logWarn("获取长度错误", throwable)
-                    -1
-                } else {
-                    val length = response.headers().firstValue(HttpHeaders.CONTENT_LENGTH).getOrNull()
-                    length?.toInt() ?: -1
+        if (verifyCert) {
+            if (clientCertificatePath == null) {
+                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, null)
+            } else {
+                val certPath = HttpUtils.constructFilePath(
+                    clientCertificatePath!!, computeReadAction { sslObj!!.containingFile.virtualFile.parent.path }
+                )
+
+                var pwd: String? = null
+                if (hasCertificatePassphrase) {
+                    pwd = SensitiveDataUtil.get(HttpConsts.CERT_PWD)
+                    if (pwd == null) {
+                        application.invokeAndWait {
+                            pwd = Messages.showPasswordDialog(
+                                NlsBundle.nls("cert.pwd.enter.hint"), "Http Request Secured Value"
+                            )
+                        }
+
+                        if (pwd == null) {
+                            throw IllegalArgumentException("请输入证书密码!")
+                        }
+
+                        // 先检查密码是否正确
+                        SslUtil.clientP12Cert(certPath, pwd)
+
+                        SensitiveDataUtil.save(HttpConsts.CERT_PWD, pwd!!)
+                    }
                 }
 
-                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, length)
+                val sSLContext = SslUtil.clientP12Cert(certPath, pwd)
+
+                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, sSLContext)
             }
         } else {
-            handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, -1)
+            handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, SslUtil.trustAllCert())
         }
     }
 
@@ -92,7 +125,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
         jsBeforeExecuteResult: JsExecuteResult?,
-        resContentLength: Int,
+        sslContext: SSLContext?,
     ) {
         val targetMethodType = if (redirectTimes > 0) HttpRequestEnum.GET else methodType
 
@@ -118,10 +151,10 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             runInEdt { httpDashboardForm.updateLabelLoading(++elapseTime) }
         }, 1, 1, TimeUnit.SECONDS)
 
-        runInEdt { httpDashboardForm.initProgress(resContentLength) }
-
-        val future = targetMethodType.execute(paramMap, req) {
-            runInEdt { httpDashboardForm.updateProgress(it, resContentLength) }
+        val future = targetMethodType.execute(
+            paramMap, req, sslContext, { runInEdt { httpDashboardForm.initProgress(it) } }
+        ) { it1, it2 ->
+            runInEdt { httpDashboardForm.updateProgress(it1, it2) }
         }
 
         this.future = future
@@ -144,7 +177,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
 
-                    handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList, null, -1)
+                    handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList, null, sslContext)
 
                     return@executeOnPooledThread
                 }

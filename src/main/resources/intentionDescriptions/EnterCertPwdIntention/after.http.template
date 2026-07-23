@@ -1,0 +1,4 @@
+###
+# Popup is appeared and 'dev' environment was selected.
+# <spot>'dev' environment is selected. Run Icon near request uses 'dev' environment for execution</spot>
+GET localhost:8080

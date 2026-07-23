@@ -77,6 +77,8 @@
                 <li><b>8.3.5</b></li>
                 <ul>
                     <li>支持执行自定义的 HTTP 方法</li>
+                    <li>支持禁用证书验证</li>
+                    <li>支持设置 PKCS12 格式的客户端证书</li>
                 </ul>
                 <li><b>8.3.4</b></li>
                 <ul>
@@ -505,6 +507,18 @@
         <intentionAction>
             <language>http</language>
             <className>org.javamaster.httpclient.intent.ConvertToCurlAndCpIntention</className>
+            <bundleName>messages.HttpClientBundle</bundleName>
+            <categoryKey>intention.http.category.name</categoryKey>
+        </intentionAction>
+        <intentionAction>
+            <language>JSON</language>
+            <className>org.javamaster.httpclient.intent.EnterCertPwdIntention</className>
+            <bundleName>messages.HttpClientBundle</bundleName>
+            <categoryKey>intention.http.category.name</categoryKey>
+        </intentionAction>
+        <intentionAction>
+            <language>JSON</language>
+            <className>org.javamaster.httpclient.intent.ClearCertPwdIntention</className>
             <bundleName>messages.HttpClientBundle</bundleName>
             <categoryKey>intention.http.category.name</categoryKey>
         </intentionAction>

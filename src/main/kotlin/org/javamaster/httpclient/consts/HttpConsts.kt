@@ -63,6 +63,8 @@ class HttpConsts {
         const val JS_DATE_PATTERN = "EEE, dd-MMM-yyyy HH:mm:ss 'GMT'"
         const val JAVA_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss"
         const val REQUEST_RAW = "requestRaw"
+        const val SSL_CONFIGURATION = "SSLConfiguration"
+        const val CERT_PWD = "cert.pwd"
 
     }
 

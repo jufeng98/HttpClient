@@ -4,27 +4,21 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import org.apache.http.entity.ContentType
 import org.intellij.markdown.html.urlEncode
-import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_END
 import org.javamaster.httpclient.consts.HttpConsts.Companion.VAR_BRACE_START
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.exception.BodyUnresolvedVariableException
 import org.javamaster.httpclient.js.JsExecutor
 import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
-import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.PreJsFile
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.resolve.VariableResolver
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
-import java.net.http.HttpClient
 import java.net.http.HttpRequest.BodyPublisher
 import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
-import java.time.Duration
-import java.util.concurrent.CompletableFuture
 
 /**
  * @author yudong
@@ -325,25 +319,5 @@ class ReqUtils {
             }
         }
 
-        fun getContentLength(
-            url: String,
-            version: HttpClient.Version,
-            reqHeaderMap: MultiValueMap<String, String?>,
-            paramMap: MultiValueMap<String, String>,
-        ): CompletableFuture<HttpResponse<ByteArray>> {
-            val client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(1))
-                .build()
-
-            val map = LinkedMultiValueMap<String, String>(paramMap)
-            map.remove(ParamEnum.READ_TIMEOUT_NAME.param)
-            map.add(ParamEnum.READ_TIMEOUT_NAME.param, "1")
-
-            val headRequest = HttpRequestEnum.HEAD.createRequest(
-                url, version, reqHeaderMap, BodyPublishers.noBody(), map
-            )
-
-            return client.sendAsync(headRequest, HttpResponse.BodyHandlers.ofByteArray())
-        }
     }
 }

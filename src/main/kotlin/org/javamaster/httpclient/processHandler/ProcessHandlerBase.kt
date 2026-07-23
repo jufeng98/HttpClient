@@ -56,7 +56,7 @@ import javax.swing.JPanel
 /**
  * @author yudong
  */
-abstract class ProcessHandlerBase(val httpMethod: HttpMethod, private val selectedEnv: String?) : ProcessHandler(),
+abstract class ProcessHandlerBase(val httpMethod: HttpMethod, val selectedEnv: String?) : ProcessHandler(),
     Disposable {
     var httpStatus: Int? = null
     var costTimes: Long? = null
