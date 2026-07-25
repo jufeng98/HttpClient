@@ -127,7 +127,7 @@ public class HttpDashboardForm implements Disposable {
 
             int intervalLength = byteLength - lastByteLength;
             long intervalTime = time - lastTime + 1;
-            long speed = intervalLength / intervalTime * 1000;
+            long speed = intervalLength / intervalTime * 1000 + 1;
             int remainLength = resContentLength - byteLength;
             long remainSec = remainLength / speed;
 
