@@ -86,7 +86,9 @@ class ApisGotoSEContributor(event: AnActionEvent) : AbstractGotoSEContributor(ev
                 .fetchRequests(searchScope) {
                     progressIndicator.checkCanceled()
 
-                    if (it.psiElement != null && filterMethods.contains(it.method) && matcher.matches(it.path)) {
+                    if (it.psiElement != null && it.psiElement.isValid
+                        && filterMethods.contains(it.method) && matcher.matches(it.path)
+                    ) {
                         consumer.process(FoundItemDescriptor(RequestNavigationItem(it), 100))
                     }
                 }

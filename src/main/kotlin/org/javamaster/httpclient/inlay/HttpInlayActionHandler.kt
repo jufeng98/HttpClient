@@ -81,6 +81,10 @@ class HttpInlayActionHandler : InlayActionHandler {
 
     private fun createRequest(project: Project, request: Request) {
         val psiMethod = request.psiElement!!
+        if (!psiMethod.isValid) {
+            return
+        }
+
         val methodDesc = MyPsiUtils.getMethodDesc(psiMethod)
         val httpMethod = request.method
 
