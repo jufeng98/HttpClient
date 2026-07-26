@@ -255,6 +255,10 @@ class MyPsiUtils {
         }
 
         fun getUrlControllerMethodParamType(psiElement: PsiElement, controllerMethod: PsiMethod): PsiType? {
+            if (!controllerMethod.isValid) {
+                return null
+            }
+
             val virtualFile = PsiUtil.getVirtualFile(psiElement)
 
             return if (virtualFile?.name?.endsWith("res.http") == true) {

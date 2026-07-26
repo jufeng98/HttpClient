@@ -21,9 +21,17 @@ class QueryNamePsiReference(
     override fun resolve(): PsiElement? {
         controllerMethod ?: return null
 
+        if (!controllerMethod.isValid) {
+            return null
+        }
+
         for (parameter in controllerMethod.parameterList.parameters) {
             if (parameter.name == queryName) {
                 return parameter
+            }
+
+            if (!parameter.isValid) {
+                continue
             }
 
             val paramPsiType = parameter.type
@@ -42,6 +50,10 @@ class QueryNamePsiReference(
     private fun collectVariants(psiMethod: PsiMethod?): Array<Any> {
         if (psiMethod == null) {
             return emptyArray()
+        }
+
+        if (!psiMethod.isValid) {
+            return arrayOf()
         }
 
         val list = mutableListOf<LookupElementBuilder>()
