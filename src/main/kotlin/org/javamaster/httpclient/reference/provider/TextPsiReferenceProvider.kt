@@ -5,7 +5,6 @@ import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.apache.http.entity.ContentType
-import org.javamaster.httpclient.logger.HttpRequestLogger.logWarn
 import org.javamaster.httpclient.psi.*
 import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import org.javamaster.httpclient.psi.impl.UrlEncodedLazyFileElement
@@ -31,13 +30,11 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
             return PsiReference.EMPTY_ARRAY
         }
 
-        val text: String?
-        try {
-            text = plainTextFile.text
-        } catch (e: Exception) {
-            logWarn("错误:" + e.message)
+        if (!plainTextFile.isValid) {
             return PsiReference.EMPTY_ARRAY
         }
+
+        val text = plainTextFile.text
         val delta = plainTextFile.textRange.startOffset
 
         val parent = (injectionHost as HttpMessageBody).parent.parent
