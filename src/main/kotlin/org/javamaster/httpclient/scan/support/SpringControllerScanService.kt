@@ -29,19 +29,19 @@ import java.util.function.Consumer
  * @author yudong
  */
 @Service(Service.Level.PROJECT)
-class SpringControllerScanService {
+class SpringControllerScanService(private val project: Project) {
 
-    fun findRequests(project: Project, searchScope: GlobalSearchScope): List<Request> {
+    fun findRequests(searchScope: GlobalSearchScope): List<Request> {
         val requests = mutableListOf<Request>()
 
-        fetchRequests(project, searchScope) {
+        fetchRequests(searchScope) {
             requests.add(it)
         }
 
         return requests
     }
 
-    fun fetchRequests(project: Project, scope: GlobalSearchScope, consumer: Consumer<Request>) {
+    fun fetchRequests(scope: GlobalSearchScope, consumer: Consumer<Request>) {
         val annotationIndex = JavaAnnotationIndex.getInstance()
 
         val filterScope = JavaSourceFilterScope(scope)

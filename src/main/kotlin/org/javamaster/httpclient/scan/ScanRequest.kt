@@ -135,7 +135,7 @@ class ScanRequest(private val project: Project) {
             }
 
             if (cacheRequestMap.containsKey(qualifiedName) || SpringUtils.isSpringController(javaFile)) {
-                val requestsNew = controllerScanService.findRequests(project, GlobalSearchScope.fileScope(javaFile))
+                val requestsNew = controllerScanService.findRequests(GlobalSearchScope.fileScope(javaFile))
 
                 val map = requestsNew.groupBy { it.controllerClassQualifiedName }
 
@@ -148,7 +148,7 @@ class ScanRequest(private val project: Project) {
 
     fun getCacheRequestMap(module: Module): ConcurrentMap<String, List<Request>> {
         return moduleControllerMap.computeIfAbsent(module.name) {
-            val requests = controllerScanService.findRequests(project, module.moduleWithLibrariesScope)
+            val requests = controllerScanService.findRequests(module.moduleWithLibrariesScope)
 
             val map = requests.groupBy { it.controllerClassQualifiedName }
 
