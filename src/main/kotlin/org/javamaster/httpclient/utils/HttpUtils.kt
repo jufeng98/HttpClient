@@ -120,6 +120,25 @@ object HttpUtils {
         return map
     }
 
+    fun resolveUrlAgain(
+        url: String,
+        variableResolver: VariableResolver,
+    ): String {
+        val content = variableResolver.resolve(url)
+
+        val idxStart = content.indexOf(VAR_BRACE_START)
+        if (idxStart != -1) {
+            val idxEnd = content.indexOf(VAR_BRACE_END, idxStart)
+            if (idxEnd != -1) {
+                throw HeaderUnresolvedVariableException(
+                    content.substring(idxStart + VAR_BRACE_START.length, idxEnd)
+                )
+            }
+        }
+
+        return content
+    }
+
     fun resolveReqHeaderMapAgain(
         reqHeaderMap: MultiValueMap<String, String?>,
         variableResolver: VariableResolver,

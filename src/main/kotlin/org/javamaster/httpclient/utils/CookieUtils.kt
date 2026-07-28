@@ -39,12 +39,16 @@ object CookieUtils {
     ) {
         val uri: URI
         try {
-            uri = URI(url)
+            uri = URI.create(url)
         } catch (e: URISyntaxException) {
             throw UrlUnresolvedVariableException(url, e)
         }
 
         val domain = uri.host
+        if (domain == null) {
+            return
+        }
+
         val path = StringUtils.defaultIfEmpty(uri.path, "/")
 
         val cookies = fileCookies

@@ -255,7 +255,12 @@ enum class HttpRequestEnum(val icon: Icon) {
         val builder = HttpRequest.newBuilder()
             .version(version)
             .timeout(Duration.ofSeconds(readTimeout))
-            .uri(URI.create(url))
+
+        try {
+            builder.uri(URI.create(url))
+        } catch (e: Exception) {
+            throw IllegalArgumentException(url + ", message: " + e.message)
+        }
 
         reqHeaderMap.forEach {
             val name = it.key

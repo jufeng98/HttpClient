@@ -23,16 +23,16 @@ class JsonKeyCompletionProvider : CompletionProvider<CompletionParameters>() {
         result: CompletionResultSet,
     ) {
         val psiElement = parameters.position
-        val currentJsonString = psiElement.parent as JsonStringLiteral
+        val stringLiteral = psiElement.parent as JsonStringLiteral
 
-        var targetPsiClass = resolveUrlControllerTargetPsiClass(currentJsonString)
+        var targetPsiClass = resolveUrlControllerTargetPsiClass(stringLiteral)
         if (targetPsiClass == null) {
-            val filled = fillTargetDubboMethodParams(currentJsonString, result, "")
+            val filled = fillTargetDubboMethodParams(stringLiteral, result, "")
             if (filled) {
                 return
             }
 
-            targetPsiClass = getTargetPsiFieldClass(currentJsonString, false)
+            targetPsiClass = getTargetPsiFieldClass(stringLiteral, false)
         }
 
         targetPsiClass ?: return

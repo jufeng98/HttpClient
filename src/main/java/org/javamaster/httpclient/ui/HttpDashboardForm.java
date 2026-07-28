@@ -66,6 +66,7 @@ public class HttpDashboardForm implements Disposable {
     private JProgressBar progressBar;
     private volatile int lastByteLength;
     private volatile long lastTime;
+    private volatile long lastSetStrTime;
 
     private final String tabName;
     private final Project project;
@@ -108,32 +109,43 @@ public class HttpDashboardForm implements Disposable {
             resContentLengthDesc = Formats.formatFileSize(resContentLength);
 
             progressBar.setMaximum(resContentLength);
+            progressBar.setIndeterminate(false);
         } else {
             progressBar.setIndeterminate(true);
         }
+
+        lastSetStrTime = System.currentTimeMillis();
     }
 
     public void updateProgress(int byteLength, int resContentLength) {
-        int receivedByteLength = byteLength / 1024;
+        if (resContentLength != -1) {
+            progressBar.setValue(byteLength);
+        }
+
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastSetStrTime < 500) {
+            progressBar.repaint();
+            return;
+        }
+
+        lastSetStrTime = currentTime;
+
+        String receiveByteLengthDesc = Formats.formatFileSize(byteLength);
 
         String str;
         if (resContentLength != -1) {
-            int totalLength = resContentLength / 1024;
-            int percent = (int) ((double) receivedByteLength / totalLength * 100.0);
-
-            progressBar.setValue(byteLength);
-
-            long time = System.currentTimeMillis();
+            int percent = (int) ((double) byteLength / resContentLength * 100.0);
 
             int intervalLength = byteLength - lastByteLength;
-            long intervalTime = time - lastTime + 1;
+            long intervalTime = currentTime - lastTime + 1;
             long speed = intervalLength / intervalTime * 1000 + 1;
             int remainLength = resContentLength - byteLength;
             long remainSec = remainLength / speed;
 
-            str = NlsBundle.INSTANCE.nls("progress.hint.total", receivedByteLength, resContentLengthDesc, percent, remainSec);
+            str = NlsBundle.INSTANCE.nls("progress.hint.total", receiveByteLengthDesc, resContentLengthDesc,
+                    percent, Formats.formatFileSize(speed), remainSec);
         } else {
-            str = NlsBundle.INSTANCE.nls("progress.hint", receivedByteLength);
+            str = NlsBundle.INSTANCE.nls("progress.hint", receiveByteLengthDesc);
         }
 
         progressBar.setString(str);

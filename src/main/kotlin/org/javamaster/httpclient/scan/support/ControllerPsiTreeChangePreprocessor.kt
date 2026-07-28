@@ -36,8 +36,8 @@ class ControllerPsiTreeChangePreprocessor : Thread("controllerPsiTreeChangePrepr
         val code = event.code
         if (code != PsiTreeChangeEventImpl.PsiEventType.CHILDREN_CHANGED) return
 
-        if (tasks.size() > 60) {
-            HttpRequestLogger.logWarn("任务堆积数量已超 60, 直接清除")
+        if (tasks.size() > 8) {
+            HttpRequestLogger.logWarn("任务堆积数量已超 8, 直接清除")
 
             tasks.clear()
 
@@ -55,7 +55,7 @@ class ControllerPsiTreeChangePreprocessor : Thread("controllerPsiTreeChangePrepr
 
     override fun run() {
         while (true) {
-            TimeUnit.SECONDS.sleep(2)
+            TimeUnit.SECONDS.sleep(1)
 
             val runnable = tasks.take()
 
