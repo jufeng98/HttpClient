@@ -140,7 +140,7 @@ public class HttpDashboardForm implements Disposable {
             long intervalTime = currentTime - lastTime + 1;
             long speed = intervalLength / intervalTime * 1000 + 1;
             int remainLength = resContentLength - byteLength;
-            long remainSec = remainLength / speed;
+            long remainSec = remainLength / speed + 1;
 
             str = NlsBundle.INSTANCE.nls("progress.hint.total", receiveByteLengthDesc, resContentLengthDesc,
                     percent, Formats.formatFileSize(speed), remainSec);

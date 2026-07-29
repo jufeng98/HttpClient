@@ -316,13 +316,13 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, val selectedEnv: S
     private fun urlActionNotify(url: String) {
         val idxStart = url.indexOf(VAR_BRACE_START)
         if (idxStart == -1) {
-            actionNotify("unknown", httpMethod)
+            actionNotify(url, httpMethod)
             return
         }
 
         val idxEnd = url.indexOf(VAR_BRACE_END, idxStart)
         if (idxEnd == -1) {
-            actionNotify("unknown", httpMethod)
+            actionNotify(url, httpMethod)
             return
         }
 

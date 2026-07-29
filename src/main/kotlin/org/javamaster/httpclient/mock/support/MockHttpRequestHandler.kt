@@ -4,7 +4,6 @@ import com.google.common.net.HttpHeaders
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import org.apache.http.HttpStatus
-import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.mock.support.MockServerHelper.computeResBody

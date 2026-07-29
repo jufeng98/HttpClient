@@ -19,11 +19,26 @@ object DecompressUtils {
         }
 
         return when (contentEncoding) {
-            "gzip", "x-gzip" -> GZIPInputStream(ByteArrayInputStream(bodyBytes)).use {
-                it.readAllBytes()
+            "gzip", "x-gzip" -> {
+                try {
+                    GZIPInputStream(ByteArrayInputStream(bodyBytes)).use {
+                        it.readAllBytes()
+                    }
+                } catch (e: Exception) {
+                    logWarn("解压失败了", e)
+                    bodyBytes
+                }
+
             }
 
-            "deflate" -> decompressDeflate(bodyBytes)
+            "deflate" -> {
+                try {
+                    decompressDeflate(bodyBytes)
+                } catch (e: Exception) {
+                    logWarn("解压失败了", e)
+                    bodyBytes
+                }
+            }
 
             else -> throw UnsupportedEncodingException("Unknown Content-Encoding: $contentEncoding, only support deflate, gzip, x-gzip")
         }
