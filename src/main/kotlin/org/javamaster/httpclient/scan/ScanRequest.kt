@@ -1,32 +1,30 @@
 package org.javamaster.httpclient.scan
 
-import com.google.common.collect.Maps
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiJavaFile
+import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.CachedValue
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
 import com.jetbrains.rd.util.concurrentMapOf
-import org.javamaster.httpclient.enums.HttpMethod
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
+import org.javamaster.httpclient.scan.support.ModuleFileModificationTracker
 import org.javamaster.httpclient.scan.support.Request
 import org.javamaster.httpclient.scan.support.SpringControllerScanService
 import org.javamaster.httpclient.utils.SpringUtils
-import java.util.concurrent.ConcurrentMap
 
 /**
  * @author yudong
  */
 @Service(Service.Level.PROJECT)
-class ScanRequest(private val project: Project) {
+class ScanRequest(project: Project) {
     private val controllerScanService = SpringControllerScanService.getService(project)
 
-    /**
-     * 模块名 -> 控制器类全限定名 -> 请求列表
-     */
-    private val moduleControllerMap = concurrentMapOf<String, ConcurrentMap<String, List<Request>>>()
+    private val keyMap = concurrentMapOf<String, Key<CachedValue<Map<String, List<Request>>>>>()
+
+    private val modificationTrackerMap = concurrentMapOf<String, ModuleFileModificationTracker>()
 
     /**
      * 查找 Spring MVC 控制器的方法
@@ -81,85 +79,29 @@ class ScanRequest(private val project: Project) {
         return null
     }
 
-    fun getCacheRequestList(filterMethods: MutableSet<HttpMethod>): MutableList<Request>? {
-        if (moduleControllerMap.isEmpty()) {
-            return null
-        }
-
-        val requests = mutableListOf<Request>()
-
-        for (concurrentMap in moduleControllerMap.values) {
-            for (entry in concurrentMap) {
-                for (request in entry.value) {
-                    if (request.psiElement == null || !request.psiElement.isValid || !filterMethods.contains(request.method)) continue
-
-                    requests.add(request)
-
-                    if (requests.size >= 30) {
-                        return requests
-                    }
-
-                }
-            }
-        }
-
-        return null
-    }
-
-    fun handleFileChange(javaFile: PsiJavaFile, module: Module) {
-        val dumbService = project.getService(DumbService::class.java)
-        if (dumbService.isDumb) {
-            return
-        }
-
-        if (!javaFile.isValid) {
-            return
-        }
-
-        val moduleName = module.name
-
-        var cacheRequestMap = moduleControllerMap[moduleName]
-        if (cacheRequestMap == null) {
-            // 初始化模块的请求并缓存
-            getCacheRequestMap(module)
-
-            return
-        }
-
-
-        for (psiClass in javaFile.classes) {
-            val qualifiedName = psiClass.qualifiedName ?: continue
-
-            if (dumbService.isDumb) {
-                return
-            }
-
-            if (cacheRequestMap.containsKey(qualifiedName) || SpringUtils.isSpringController(javaFile)) {
-                val requestsNew = controllerScanService.findRequests(GlobalSearchScope.fileScope(javaFile))
-
-                val map = requestsNew.groupBy { it.controllerClassQualifiedName }
-
-                cacheRequestMap.putAll(map)
-
-                break
-            }
+    fun getModificationTracker(module: Module): ModuleFileModificationTracker {
+        return modificationTrackerMap.computeIfAbsent(module.name) {
+            ModuleFileModificationTracker()
         }
     }
 
-    fun getCacheRequestMap(module: Module): ConcurrentMap<String, List<Request>> {
-        return moduleControllerMap.computeIfAbsent(module.name) {
-            val requests = controllerScanService.findRequests(module.moduleWithLibrariesScope)
-
-            val map = requests.groupBy { it.controllerClassQualifiedName }
-
-            logInfo("完成扫描模块 ${module.name} 的请求,共 ${map.size} 个控制器类,共 ${requests.size} 个请求")
-
-            val currentMap = Maps.newConcurrentMap<String, List<Request>>()
-
-            currentMap.putAll(map)
-
-            currentMap
+    fun getCacheRequestMap(module: Module): Map<String, List<Request>> {
+        val moduleKey = keyMap.computeIfAbsent(module.name) {
+            Key.create("httpClient.requestMap.$it")
         }
+
+        val modificationTracker = getModificationTracker(module)
+
+        return CachedValuesManager.getManager(module.project)
+            .getCachedValue(module, moduleKey, {
+                val requests = controllerScanService.findRequests(module.moduleWithLibrariesScope)
+
+                val requestMap = requests.groupBy { it.controllerClassQualifiedName }
+
+                logInfo("完成扫描模块 ${module.name} 的请求,共 ${requestMap.size} 个控制器类,共 ${requests.size} 个请求")
+
+                CachedValueProvider.Result.create(requestMap, modificationTracker)
+            }, false)
     }
 
     fun getCacheRequestList(module: Module): List<Request> {

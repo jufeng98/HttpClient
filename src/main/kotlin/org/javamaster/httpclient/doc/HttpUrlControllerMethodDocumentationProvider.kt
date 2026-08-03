@@ -40,6 +40,9 @@ class HttpUrlControllerMethodDocumentationProvider : DocumentationProvider {
         }
 
         val psiMethod = element.psiMethod
+        if (!psiMethod.isValid) {
+            return null
+        }
 
         val str = JavaDocumentationProvider.generateExternalJavadoc(psiMethod, null)
 
