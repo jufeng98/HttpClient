@@ -5,6 +5,7 @@ import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
+import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.CookieUtils
 import org.javamaster.httpclient.utils.HttpUtils
@@ -23,7 +24,8 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val reqInfo = createHttpReqInfo()
 
-        var reqHeaderMap = HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
+        var reqHeaderMap: MultiValueMap<String, String?> =
+            HttpUtils.convertToReqHeaderMap(request.header?.headerFieldList, variableResolver)
 
         if (!paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
             CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)

@@ -99,7 +99,7 @@ object HttpUtils {
         headerFields: List<HttpHeaderField>?,
         variableResolver: VariableResolver,
     ): MultiValueMap<String, String?> {
-        if (headerFields.isNullOrEmpty()) return LinkedMultiValueMap()
+        if (headerFields.isNullOrEmpty()) return LinkedMultiValueMap<String, String?>()
 
         val map = LinkedMultiValueMap<String, String?>()
 
