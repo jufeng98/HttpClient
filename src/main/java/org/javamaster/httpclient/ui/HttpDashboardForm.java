@@ -311,8 +311,8 @@ public class HttpDashboardForm implements Disposable {
         responsePanel.add(new JBScrollPane(jPanel), constraintsRes);
     }
 
-    public WsDashboardForm initWsForm() {
-        return new WsDashboardForm();
+    public WsDashboardForm initWsForm(String reqBody) {
+        return new WsDashboardForm(reqBody);
     }
 
     public void initMockServerForm(kotlin.Pair<VirtualFile, Document> pair) {
@@ -400,7 +400,7 @@ public class HttpDashboardForm implements Disposable {
         private int wsInputHistoryCurrentIndex = -1;
         private final Key<String> editorTextKey = Key.create("org.javamaster.ws.WsDashboardForm");
 
-        public WsDashboardForm() {
+        public WsDashboardForm(String reqBody) {
             wsReqPanel = new JPanel();
             wsReqPanel.setLayout(new BorderLayout());
 
@@ -411,7 +411,7 @@ public class HttpDashboardForm implements Disposable {
             reqPanel.remove(reqVerticalToolbarPanel);
             resPanel.remove(resVerticalToolbarPanel);
 
-            initWsReqPanel();
+            initWsReqPanel(reqBody);
 
             project.getMessageBus()
                     .connect(HttpDashboardForm.this)
@@ -436,8 +436,8 @@ public class HttpDashboardForm implements Disposable {
             DocUtils.INSTANCE.appendLog(resEditor, wsMsg);
         }
 
-        private void initWsReqPanel() {
-            EditorTextField reqEditor = createWsReqEditor("", JsonLanguage.INSTANCE);
+        private void initWsReqPanel(String reqBody) {
+            EditorTextField reqEditor = createWsReqEditor(reqBody, JsonLanguage.INSTANCE);
             wsReqPanel.add(reqEditor, BorderLayout.CENTER);
 
             JButton btnSend = new JButton(NlsBundle.INSTANCE.nls("ws.send"));

@@ -9,6 +9,7 @@ import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.CookieUtils
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.ReqUtils
 import org.javamaster.httpclient.ws.WsRequest
 
 /**
@@ -31,6 +32,8 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             CookieUtils.addFileCookieToReqHeader(url, reqHeaderMap, reqInfo.fileCookies)
         }
 
+        val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver, paramMap)
+
         reqHeaderMap.addAll(GlobalHeaders.dataHolder)
 
         httpDashboardForm.restoreInputHistoryList()
@@ -39,7 +42,12 @@ class WebSocketProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
             try {
                 loadingRemover?.run()
 
-                val wsDashboardForm = httpDashboardForm.initWsForm()
+                var body = ""
+                if (reqBody is Triple<*, *, *>) {
+                    body = reqBody.second?.toString() ?: ""
+                }
+
+                val wsDashboardForm = httpDashboardForm.initWsForm(body)
 
                 wsRequest = WsRequest(url, reqHeaderMap, this, paramMap, wsDashboardForm)
 
