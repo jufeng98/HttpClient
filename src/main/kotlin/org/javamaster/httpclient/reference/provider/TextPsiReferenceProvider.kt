@@ -34,7 +34,7 @@ class TextPsiReferenceProvider : PsiReferenceProvider() {
             return PsiReference.EMPTY_ARRAY
         }
 
-        val text = plainTextFile.text
+        val text = plainTextFile.viewProvider.document?.text ?: plainTextFile.text
         val delta = plainTextFile.textRange.startOffset
 
         val parent = (injectionHost as HttpMessageBody).parent.parent
