@@ -186,6 +186,7 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                     if (hasReqError) {
                         val httpInfo = HttpInfo(httpReqDescList, mutableListOf(), null, null, throwable)
                         httpInfo.reqContentLength = reqContentLength
+                        httpInfo.jsBeforeExecuteResult = jsBeforeExecuteResult
 
                         dealResponse(httpInfo)
 

@@ -203,7 +203,7 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, val selectedEnv: S
     fun createHttpReqInfo(): HttpReqInfo {
         var reqBody = HttpUtils.convertToReqBody(request, variableResolver)
 
-        val environment = getEnvMap(project, false)
+        val environment = getEnvMap(tabName, project)
 
         val fileCookies = CookieUtils.getValidFileCookieMap(project)
 

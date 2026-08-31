@@ -55,7 +55,12 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
 
         httpMethod.putUserData(HttpConsts.gutterIconLoadingKey, loadingRemover)
 
-        val selectedEnv = targetEnv ?: HttpEditorTopForm.getSelectedEnv(project)
+        val selectedEnv = if (targetEnv != null) {
+            targetEnv
+        } else {
+            val env = HttpEditorTopForm.getSelectedEnv(project)
+            env ?: ConfigUtils.getConfiguration(tabName, project)?.env
+        }
 
         val runnerAndConfigurationSettings = ConfigUtils.saveConfiguration(tabName, project, selectedEnv, httpMethod)
 

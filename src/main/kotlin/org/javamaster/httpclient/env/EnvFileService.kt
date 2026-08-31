@@ -22,6 +22,7 @@ import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.VARIABLE_PATTERN
 import org.javamaster.httpclient.resolve.VariableResolver.Companion.escapeRegexp
 import org.javamaster.httpclient.ui.HttpEditorTopForm
+import org.javamaster.httpclient.utils.ConfigUtils
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import java.io.File
 
@@ -289,20 +290,24 @@ class EnvFileService(val project: Project) {
             return map
         }
 
-        fun getEnvMap(project: Project, tryIndex: Boolean = true): MutableMap<String, String> {
-            val triple = HttpEditorTopForm.getTriple(project) ?: return mutableMapOf()
-
-            val selectedEnv = triple.first
-            val httpFileParentPath = triple.second.parent.path
-            val module = triple.third
-
-            if (tryIndex) {
-                val mapFromIndex = getEnvMapFromIndex(project, selectedEnv, httpFileParentPath, module)
-                if (mapFromIndex != null) {
-                    return mapFromIndex
-                }
+        fun getEnvMap(tabName: String, project: Project): MutableMap<String, String> {
+            val envMap = getEnvMap(project, false)
+            if (envMap.isNotEmpty()) {
+                return envMap
             }
 
+            val configuration = ConfigUtils.getConfiguration(tabName, project)
+            if (configuration != null) {
+                val selectedEnv = configuration.env
+                val httpFileParentPath = File(configuration.httpFilePath).parent
+
+                return getEnvMap(selectedEnv, httpFileParentPath, project)
+            }
+
+            return mutableMapOf()
+        }
+
+        fun getEnvMap(selectedEnv: String, httpFileParentPath: String, project: Project): MutableMap<String, String> {
             val map = linkedMapOf<String, String>()
 
             map.putAll(getEnvMap(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project))
@@ -314,6 +319,24 @@ class EnvFileService(val project: Project) {
             map.putAll(getEnvMap(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project))
 
             return map
+        }
+
+        fun getEnvMap(project: Project, tryIndex: Boolean = true): MutableMap<String, String> {
+            val triple = HttpEditorTopForm.getTriple(project) ?: return mutableMapOf()
+
+            val selectedEnv = triple.first
+            val httpFileParentPath = triple.second.parent.path
+
+            if (tryIndex) {
+                val module = triple.third
+
+                val mapFromIndex = getEnvMapFromIndex(project, selectedEnv, httpFileParentPath, module)
+                if (mapFromIndex != null) {
+                    return mapFromIndex
+                }
+            }
+
+            return getEnvMap(selectedEnv, httpFileParentPath, project)
         }
 
         private fun getEnvMap(

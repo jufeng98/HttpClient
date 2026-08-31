@@ -6,6 +6,7 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.util.system.OS
 import io.ktor.http.*
 import org.apache.commons.lang3.StringUtils
@@ -808,13 +809,26 @@ enum class InnerVariableEnum(val methodName: String) {
         }
 
         override fun exec(variableName: String, httpFileParentPath: String, vararg args: Any): String {
-            return exec("", ProjectUtil.getActiveProject() ?: return "") ?: return ""
+            return exec(httpFileParentPath, ProjectUtil.getActiveProject() ?: return "") ?: return ""
         }
 
         override fun exec(httpFileParentPath: String, project: Project): String? {
-            val triple = HttpEditorTopForm.getTriple(project) ?: return null
+            val triple = HttpEditorTopForm.getTriple(project)
 
-            val module = triple.third ?: return null
+            var module = if (triple != null) {
+                triple.third
+            } else {
+                val virtualFile = VfsUtil.findFileByIoFile(File(httpFileParentPath), false)
+                if (virtualFile != null) {
+                    ModuleUtil.findModuleForFile(virtualFile, project)
+                } else {
+                    null
+                }
+            }
+
+            if (module == null) {
+                return null
+            }
 
             val dirPath = ModuleUtil.getModuleDirPath(module)
 

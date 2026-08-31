@@ -29,6 +29,21 @@ class ConfigUtils {
             HttpRequestEnum.MOCK_SERVER.name, HttpRequestEnum.MOCK_DUBBO.name, HttpRequestEnum.MOCK_WS.name
         )
 
+        fun getConfiguration(tabName: String, project: Project): HttpRunConfiguration? {
+            val runManager = RunManager.getInstance(project)
+
+            val settings = runManager.allSettings
+                .firstOrNull {
+                    it.configuration is HttpRunConfiguration && it.configuration.name == tabName
+                }
+
+            if (settings != null) {
+                return settings.configuration as HttpRunConfiguration
+            }
+
+            return null
+        }
+
         fun saveConfiguration(
             tabName: String,
             project: Project,
