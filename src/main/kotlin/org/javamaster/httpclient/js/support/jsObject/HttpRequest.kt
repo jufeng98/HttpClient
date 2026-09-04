@@ -11,8 +11,8 @@ import org.mozilla.javascript.Function
  */
 @Suppress("unused")
 object HttpRequest {
-    val global: JsGlobalVariablesHolder = JsGlobalVariablesHolder
-    val variables: CommonVariables = CommonVariables
+    val global = JsGlobalVariablesHolder
+    val variables = CommonVariables
 
     fun log(first: Any?) {
         Console.log(first)

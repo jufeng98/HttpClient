@@ -3,15 +3,21 @@ package org.javamaster.httpclient.resolve
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
+import com.jayway.jsonpath.JsonPath
 import org.javamaster.httpclient.enums.InnerVariableEnum
 import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.js.JsExecutor
-import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder
 import org.javamaster.httpclient.js.support.jsObject.Console
-import org.javamaster.httpclient.psi.HttpGlobalLiteralValue
+import org.javamaster.httpclient.js.support.jsObject.JsGlobalVariablesHolder
+import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
+import org.javamaster.httpclient.processHandler.ProcessHandlerBase
+import org.javamaster.httpclient.processHandler.RepeatExecutor
 import org.javamaster.httpclient.psi.HttpFileVariable
+import org.javamaster.httpclient.psi.HttpGlobalLiteralValue
 import org.javamaster.httpclient.psi.HttpVariable
 import org.javamaster.httpclient.psi.impl.TextVariableLazyFileElement
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
+import org.mozilla.javascript.NativeArray
 import java.util.regex.Pattern
 
 /**
@@ -132,29 +138,75 @@ class VariableResolver(
                     return innerVariable
                 }
             }
-
-            return null
         }
 
         var innerVariable = jsExecutor?.getRequestVariable(variable)
         if (innerVariable != null) {
-            return innerVariable.toString()
+            return handleInnerVariable(innerVariable)
         }
 
         innerVariable = fileScopeVariableMap[variable]
         if (innerVariable != null) {
-            return innerVariable
+            return handleInnerVariable(innerVariable)
         }
 
         innerVariable = JsGlobalVariablesHolder.get(variable)
         if (innerVariable != null) {
-            return innerVariable.toString()
+            return handleInnerVariable(innerVariable)
+        }
+
+        innerVariable = resolveAsJsonPath(variable)
+        if (innerVariable != null) {
+            return handleInnerVariable(innerVariable)
         }
 
         val envFileService = EnvFileService.getService(project)
         val envValue = envFileService.getEnvValue(variable, selectedEnv, httpFileParentPath)
         if (envValue != null) {
             return envValue
+        }
+
+        return null
+    }
+
+    private fun resolveAsJsonPath(jsonPathExpression: String): Any? {
+        val root = mutableMapOf<String, Any?>()
+        root.putAll(JsGlobalVariablesHolder.dataHolder)
+
+        if (jsExecutor != null) {
+            root.putAll(jsExecutor.getRequestMap())
+        }
+
+        try {
+            var value = JsonPath.read<Any>(root, jsonPathExpression)
+
+            value = handleInnerVariable(value)
+
+            ProcessHandlerBase.templateValues.add(value)
+
+            return value
+        } catch (e: Exception) {
+            logInfo("执行动态变量jsonPath $jsonPathExpression 错误: ${e.message}")
+        }
+
+        val envFileService = EnvFileService.getService(project)
+        val envJsonObj = envFileService.getEnv(selectedEnv, httpFileParentPath)
+        if (envJsonObj == null) {
+            return null
+        }
+
+        try {
+            val envJsonText = computeReadAction { envJsonObj.text }
+
+            var value = JsonPath.read<Any>(envJsonText, jsonPathExpression)
+
+            value = handleInnerVariable(value)
+
+            ProcessHandlerBase.templateValues.add(value)
+
+            return value
+        } catch (e: Exception) {
+            logInfo("执行环境jsonPath $jsonPathExpression 错误: ${e.message}")
         }
 
         return null
@@ -167,6 +219,29 @@ class VariableResolver(
             variableEnum.exec(variable, httpFileParentPath, *args ?: emptyArray())
         } catch (_: UnsupportedOperationException) {
             variableEnum.exec(httpFileParentPath, project)
+        }
+    }
+
+    private fun handleInnerVariable(innerVariable: Any): String {
+        if (innerVariable is NativeArray) {
+            val httpRepeatExecutor = ProcessHandlerBase.repeatExecutor
+
+            if (httpRepeatExecutor == null) {
+                ProcessHandlerBase.repeatExecutor = RepeatExecutor(innerVariable, 0)
+            }
+
+            return innerVariable[ProcessHandlerBase.repeatExecutor!!.arrayIndex].toString()
+        } else {
+            return if (innerVariable is Double) {
+                if ((innerVariable.toInt().toDouble()) == innerVariable) {
+                    // 移除 .0 后缀
+                    innerVariable.toInt().toString()
+                } else {
+                    innerVariable.toString()
+                }
+            } else {
+                innerVariable.toString()
+            }
         }
     }
 

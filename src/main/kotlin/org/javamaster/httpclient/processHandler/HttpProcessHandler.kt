@@ -14,7 +14,6 @@ import org.javamaster.httpclient.env.EnvFileService
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.js.support.jsObject.GlobalHeaders
-import org.javamaster.httpclient.map.LinkedMultiValueMap
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.nls.NlsBundle
@@ -71,6 +70,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         val reqBody = ReqUtils.resolveReqBodyAgain(reqInfo.reqBody, variableResolver, paramMap)
 
         val httpReqDescList = mutableListOf<String>()
+        val httpResDescList = mutableListOf<String>()
+        val jsResList = mutableListOf<String>()
 
         val envFileService = EnvFileService.getService(project)
 
@@ -83,7 +84,11 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         if (verifyCert) {
             if (clientCertificatePath == null) {
-                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, null)
+                handleHttp(
+                    url, reqHeaderMap, reqBody,
+                    httpReqDescList, httpResDescList, jsResList,
+                    jsBeforeExecuteResult, null
+                )
             } else {
                 val certPath = HttpUtils.constructFilePath(
                     clientCertificatePath!!, computeReadAction { sslObj!!.containingFile.virtualFile.parent.path }
@@ -112,10 +117,18 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                 val sSLContext = SslUtil.clientP12Cert(certPath, pwd)
 
-                handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, sSLContext)
+                handleHttp(
+                    url, reqHeaderMap, reqBody,
+                    httpReqDescList, httpResDescList, jsResList,
+                    jsBeforeExecuteResult, sSLContext
+                )
             }
         } else {
-            handleHttp(url, reqHeaderMap, reqBody, httpReqDescList, jsBeforeExecuteResult, SslUtil.trustAllCert())
+            handleHttp(
+                url, reqHeaderMap, reqBody,
+                httpReqDescList, httpResDescList, jsResList,
+                jsBeforeExecuteResult, SslUtil.trustAllCert()
+            )
         }
     }
 
@@ -124,6 +137,8 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
         reqHeaderMap: MultiValueMap<String, String?>,
         reqBody: Any?,
         httpReqDescList: MutableList<String>,
+        httpResDescList: MutableList<String>,
+        jsResList: MutableList<String>,
         jsBeforeExecuteResult: JsExecuteResult?,
         sslContext: SSLContext?,
     ) {
@@ -177,9 +192,51 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
                     val locationUrl = ResUtils.resolveLocationUrl(url, response.headers())
 
-                    handleHttp(locationUrl, LinkedMultiValueMap(), null, httpReqDescList, null, sslContext)
+                    handleHttp(
+                        locationUrl, reqHeaderMap, null,
+                        httpReqDescList, httpResDescList, jsResList,
+                        null, sslContext
+                    )
 
                     return@executeOnPooledThread
+                }
+
+                if (repeatExecutor != null) {
+                    repeatExecutorLast = repeatExecutor
+
+                    val arrayIndex = repeatExecutor!!.arrayIndex
+                    if (arrayIndex > 0) {
+                        httpResDescList.add("${CR_LF}// 序号${arrayIndex}${CR_LF}")
+                    }
+
+                    repeatExecutor!!.arrayIndex += 1
+
+                    if (repeatExecutor!!.arrayIndex < repeatExecutor!!.paramNativeArray.size) {
+                        httpReqDescList.add("${CR_LF}// 序号${arrayIndex + 1}${CR_LF}")
+
+                        var url1 = resolveAndHandleUrl()
+
+                        var reqHeaderMap1 = HttpUtils.convertToReqHeaderMap(
+                            request.header?.headerFieldList, variableResolver
+                        )
+
+                        val reqInfo1 = createHttpReqInfo()
+
+                        ResUtils.handleResponse(
+                            url1, response, httpReqDescList, httpResDescList, this, targetMethodType,
+                            reqInfo1.reqBody, jsResList
+                        )
+
+                        handleHttp(
+                            url1, reqHeaderMap1, reqInfo1.reqBody,
+                            httpReqDescList, httpResDescList, jsResList,
+                            null, sslContext
+                        )
+
+                        return@executeOnPooledThread
+                    } else {
+                        repeatExecutor = null
+                    }
                 }
 
                 try {
@@ -223,9 +280,9 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
                         resList = e.list
                     }
 
-                    val jsAfterExecuteResult = JsExecuteResult(resList, jsScriptException)
+                    jsResList.addAll(resList)
 
-                    val httpResDescList = mutableListOf<String>()
+                    val jsAfterExecuteResult = JsExecuteResult(jsResList, jsScriptException)
 
                     val versionDesc = MyPsiUtils.Companion.getVersionDesc(response.version())
 
@@ -285,4 +342,5 @@ class HttpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         super.destroyProcessImpl()
     }
+
 }

@@ -87,6 +87,14 @@ interface CommonVariables {
      * 返回变量“varName”的值。
      */
     get(varName: string): any;
+
+    global: GlobalVariables;
+
+    environment: RequestEnvironment;
+
+    file: FileVariables;
+
+    request: RequestVariables;
 }
 
 /**
@@ -118,9 +126,9 @@ interface HttpClientRequest {
      */
     method: string
 
-    // iteration(): number
+    iteration(): number
 
-    // templateValue(expressionNumber: number): string | boolean | number
+    templateValue(expressionNumber: number): string | boolean | number
 }
 
 /**
@@ -181,6 +189,14 @@ interface RequestEnvironment {
  * 用于构造当前请求的变量。可以在前置js处理器中更新。
  */
 interface RequestVariables {
+    /**
+     * 按名称检索请求变量值。如果没有这样的变量，则返回null
+     * @param name 请求变量名称
+     */
+    get(name: string): object | null
+}
+
+interface FileVariables {
     /**
      * 按名称检索请求变量值。如果没有这样的变量，则返回null
      * @param name 请求变量名称

@@ -66,11 +66,11 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, val selectedEnv: S
 
     var tabName = HttpUtils.getTabName(httpMethod)
     var project = httpMethod.project
-    protected val httpFile = httpMethod.containingFile as HttpFile
-    protected val httpDocument = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
+    val httpFile = httpMethod.containingFile as HttpFile
+    val httpDocument = PsiDocumentManager.getInstance(project).getDocument(httpFile)!!
 
     protected lateinit var parentPath: String
-    protected lateinit var jsExecutor: JsExecutor
+    lateinit var jsExecutor: JsExecutor
     protected lateinit var variableResolver: VariableResolver
     protected lateinit var requestTarget: HttpRequestTarget
     protected lateinit var rawUrl: String
@@ -80,14 +80,14 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, val selectedEnv: S
     protected lateinit var version: Version
     protected lateinit var preJsFiles: List<PreJsFile>
     protected lateinit var jsListBeforeReq: List<HttpScriptBody>
-    protected lateinit var paramMap: MultiValueMap<String, String>
+    lateinit var paramMap: MultiValueMap<String, String>
 
     protected var loadingRemover: Runnable? = null
     protected var requestFinished: Consumer<Int>? = null
     protected var responseHandler: HttpResponseHandler? = null
     protected var rawBody: String? = null
     protected var outPutFilePath: String? = null
-    protected var jsAfterReq: HttpScriptBody? = null
+    var jsAfterReq: HttpScriptBody? = null
     protected var elapseTimeFuture: ScheduledFuture<*>? = null
 
     protected val httpDashboardForm by lazy {
@@ -119,6 +119,8 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, val selectedEnv: S
 
                     return@executeOnPooledThread
                 }
+
+                templateValues.clear()
 
                 startProcess()
             } catch (e: Exception) {
@@ -529,6 +531,10 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, val selectedEnv: S
     companion object {
         internal val requestRunningSet = mutableSetOf<String>()
         internal val mockServerRunningSet = mutableSetOf<Int>()
+
+        internal var repeatExecutor: RepeatExecutor? = null
+        internal var repeatExecutorLast: RepeatExecutor? = null
+        internal var templateValues = mutableListOf<Any?>()
 
         @Volatile
         var lastProcessHandler: ProcessHandlerBase? = null

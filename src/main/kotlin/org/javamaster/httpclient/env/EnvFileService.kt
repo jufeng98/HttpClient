@@ -109,6 +109,25 @@ class EnvFileService(val project: Project) {
         return getEnvEleObj(key, COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project)
     }
 
+    fun getEnv(selectedEnv: String?, httpFileParentPath: String): JsonObject? {
+        var env = getEnvEle(selectedEnv, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+        if (env != null) {
+            return env
+        }
+
+        env = getEnvEle(selectedEnv, httpFileParentPath, ENV_FILE_NAME, project)
+        if (env != null) {
+            return env
+        }
+
+        env = getEnvEle(COMMON_ENV_NAME, httpFileParentPath, PRIVATE_ENV_FILE_NAME, project)
+        if (env != null) {
+            return env
+        }
+
+        return getEnvEle(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project)
+    }
+
     fun createEnvValue(key: String, selectedEnv: String, httpFileParentPath: String, envFileName: String) {
         val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return
 
@@ -507,6 +526,25 @@ class EnvFileService(val project: Project) {
             }
 
             return null
+        }
+
+        private fun getEnvEle(
+            selectedEnv: String?,
+            httpFileParentPath: String,
+            envFileName: String,
+            project: Project,
+        ): JsonObject? {
+            val jsonFile = getEnvJsonFile(envFileName, httpFileParentPath, project) ?: return null
+
+            val envProperty = getEnvJsonProperty(selectedEnv, httpFileParentPath, envFileName, project) ?: return null
+
+            val jsonValue = envProperty.value
+            if (jsonValue !is JsonObject) {
+                System.err.println("The environment file: ${jsonFile.virtualFile.path} inner format does not conform to the specification!")
+                return null
+            }
+
+            return jsonValue
         }
 
         fun getEnvJsonProperty(

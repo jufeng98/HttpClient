@@ -191,6 +191,8 @@ interface RandomVariables {
      */
     integer(): string
 
+    pick<T>(...args: T[]): T
+
     /**
      * <div class="content">This dynamic variable generates a new UUID-v4</div><table class="sections"><tr><td class="section" valign="top"><p>Sample value:</p></td><td valign="top"><b>e9e87c05-82eb-4522-bc47-f0fcfdde4cab</b></td></tr></table>
      */

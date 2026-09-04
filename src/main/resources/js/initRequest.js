@@ -29,6 +29,12 @@ var $random = {
     integer(from, to) {
         return javaBridge.callJava('$random.integer', from, to);
     },
+    pick() {
+        const min = Math.ceil(0);
+        const max = Math.floor(arguments.length);
+        const idx = Math.floor(Math.random() * (max - min)) + min;
+        return arguments[idx];
+    },
     address: {}, ancient: {}, beer: {}, bool: {}, book: {}, business: {},
     chuckNorris: {}, code: {}, color: {}, commerce: {}, company: {}, crypto: {}, dateAndTime: {},
     educator: {}, finance: {}, hacker: {}, idNumber: {}, lorem: {}, name: {}, number: {},

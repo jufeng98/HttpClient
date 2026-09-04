@@ -11,6 +11,7 @@ import org.javamaster.httpclient.exception.JsFileException
 import org.javamaster.httpclient.exception.JsScriptException
 import org.javamaster.httpclient.js.factory.HttpContextFactory
 import org.javamaster.httpclient.js.support.*
+import org.javamaster.httpclient.js.support.jsObject.CommonVariables
 import org.javamaster.httpclient.js.support.jsObject.Cookie
 import org.javamaster.httpclient.js.support.req.*
 import org.javamaster.httpclient.js.support.res.HttpClientRequestRes
@@ -81,12 +82,19 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
         val reqBodyInJs = ReqUtils.convertReqBody(reqInfo.reqBody)
 
+        CommonVariables.environment = environment
+        CommonVariables.file = fileScopeVariableMap
+
+        val requestVariables = RequestVariables()
+
+        CommonVariables.request = requestVariables
+
         request = HttpClientRequest(
             environment,
             RequestUrl(url, rawUrl),
             RequestBody(reqBodyInJs, rawBody),
             method.name,
-            RequestVariables(),
+            requestVariables,
             fileScopeVariableMap,
             RequestHeaders(reqHeaderMap),
         )
@@ -188,7 +196,13 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
             val response = HttpClientResponse(statusCode, ResponseHeaders(headerMap), body, cookies)
 
-            ScriptableObject.putProperty(reqScriptableObject, "request", HttpClientRequestRes(url, reqBodyInJs))
+            val request = ScriptableObject.getProperty(reqScriptableObject, REQUEST_RAW) as HttpClientRequest
+
+            val requestRes = HttpClientRequestRes(
+                url, reqBodyInJs, request.method, request.environment,
+                request.variables, request.fileVariables, request.headers
+            )
+            ScriptableObject.putProperty(reqScriptableObject, "request", requestRes)
 
             ScriptableObject.putProperty(reqScriptableObject, "response", response)
 
@@ -302,6 +316,10 @@ class JsExecutor(val project: Project, val parentPath: String, val tabName: Stri
 
     fun getRequestVariable(key: String): Any? {
         return request?.variables?.get(key)
+    }
+
+    fun getRequestMap(): MutableMap<String, Any?> {
+        return request?.variables?.dataHolder ?: mutableMapOf<String, Any?>()
     }
 
     companion object {

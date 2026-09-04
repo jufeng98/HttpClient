@@ -3,6 +3,7 @@ package org.javamaster.httpclient.utils
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.text.Formats
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -11,13 +12,18 @@ import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.http.HttpHeaders.CONTENT_TYPE
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.HttpRequestEnum
 import org.javamaster.httpclient.consts.HttpConsts.Companion.RES_SIZE_LIMIT
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
+import org.javamaster.httpclient.exception.JsScriptException
+import org.javamaster.httpclient.js.support.JsExecuteResult
 import org.javamaster.httpclient.logger.HttpRequestLogger.logInfo
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.model.HttpInfo
 import org.javamaster.httpclient.model.HttpResInfo
+import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.processHandler.HttpProcessHandler
 import org.javamaster.httpclient.utils.DecompressUtils.decompressBodyBytes
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
@@ -29,6 +35,7 @@ import java.io.File
 import java.net.URI
 import java.net.URLDecoder
 import java.net.http.HttpHeaders
+import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -195,7 +202,7 @@ object ResUtils {
         val statusCode = httpInfo.statusCode
         val statusStr = if (statusCode != null) "$statusCode." else ""
 
-        return DateFormatUtils.format(Date(), "yyyy-MM-dd'T'HHmmss") + ".$statusStr" + suffix
+        return DateFormatUtils.format(Date(), "yyyy-MM-dd'T'HHmmssSSS") + ".$statusStr" + suffix
     }
 
     fun getDocument(virtualFile: VirtualFile): Document {
@@ -233,6 +240,98 @@ object ResUtils {
         logInfo("响应体已保存到文件: $file")
 
         return LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)!!
+    }
+
+    fun handleResponse(
+        url: String,
+        response: HttpResponse<ByteArray>?,
+        httpReqDescList: MutableList<String>,
+        httpResDescList: MutableList<String>,
+        handler: HttpProcessHandler,
+        targetMethodType: HttpRequestEnum,
+        reqBody: Any?,
+        jsResList: MutableList<String>,
+    ) {
+        if (response == null) {
+            return
+        }
+
+        val resHeaders = response.headers()
+
+        val cookies = CookieUtils.parseAll(url, resHeaders)
+
+        var cookieSavePair: Pair<String, VirtualFile>? = null
+        if (!handler.paramMap.containsKey(ParamEnum.NO_COOKIE_JAR.param)) {
+            cookieSavePair = CookieUtils.saveCookiesToFile(cookies, handler.project)
+        }
+
+        val resHeaderList = convertResponseHeaders(resHeaders)
+
+        val resBody = response.body()
+        val httpResInfo = convertResponseBody(resBody, resHeaders)
+
+        val statusCode = response.statusCode()
+
+        var resList: List<String>
+        try {
+            resList = handler.jsExecutor.evalJsAfterRequest(
+                url, reqBody, handler.jsAfterReq, httpResInfo, statusCode,
+                resHeaders.map(), cookies, handler.httpFile.name, handler.httpDocument
+            )
+        } catch (e: JsScriptException) {
+            handler.jsScriptException = e
+
+            resList = e.list
+        }
+
+        jsResList.addAll(resList)
+
+        val jsAfterExecuteResult = JsExecuteResult(jsResList, handler.jsScriptException)
+
+        val versionDesc = MyPsiUtils.Companion.getVersionDesc(response.version())
+
+        val commentTabName = "### ${handler.tabName}${CR_LF}"
+        httpResDescList.add(commentTabName)
+
+        if (handler.paramMap.containsKey(ParamEnum.VISUALIZE_TIMESTAMP.param)) {
+            httpResDescList.add("# @${ParamEnum.VISUALIZE_TIMESTAMP.param}${CR_LF}")
+        }
+
+        val methodName = if (targetMethodType == HttpRequestEnum.CUSTOM) {
+            handler.httpMethod.text
+        } else {
+            targetMethodType.name
+        }
+
+        httpResDescList.add(methodName + " " + response.uri() + " " + versionDesc + CR_LF)
+
+        httpResDescList.addAll(resHeaderList)
+
+        val simpleTypeEnum = httpResInfo.simpleTypeEnum
+        val bodyBytes = httpResInfo.bodyBytes
+        val bodyStr = httpResInfo.bodyStr
+        val contentType = httpResInfo.contentType
+
+        if (simpleTypeEnum.binary) {
+            val size = Formats.formatFileSize(resBody.size.toLong())
+            httpResDescList.add(NlsBundle.nls("res.binary.data", size))
+        } else {
+            if (bodyStr!!.length > RES_SIZE_LIMIT) {
+                httpResDescList.add("")
+            } else {
+                httpResDescList.add(bodyStr)
+            }
+        }
+
+        val httpInfo = HttpInfo(
+            httpReqDescList, httpResDescList, simpleTypeEnum, bodyBytes,
+            null, contentType, resHeaders, handler.resolveOutputFilePath(), cookieSavePair, statusCode,
+            0, resBody.size, null, jsAfterExecuteResult, null
+        )
+
+        saveResBodyToFile(
+            httpInfo, handler.tabName, handler.paramMap.containsKey(ParamEnum.NO_LOG.param), handler.project
+        )
     }
 
 }

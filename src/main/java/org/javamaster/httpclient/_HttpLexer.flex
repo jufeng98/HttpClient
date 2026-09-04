@@ -69,7 +69,7 @@ FIELD_NAME=[a-zA-Z0-9_\-]+
 FIELD_VALUE=[^\r\n{ ]+
 FILE_PATH_PART=[^\r\n<>{}]+
 MESSAGE_BOUNDARY=--[a-zA-Z0-9\-]+
-VARIABLE_NAME=[[a-zA-Z0-9_\-.]--[$}= ]]+
+VARIABLE_NAME=[[\[\]a-zA-Z0-9_\-.]--[$}= ]]+
 FILE_VARIABLE_NAME=[^\r\n={} ]+
 DIRECTION_NAME_PART=[^\r\n ]+
 DIRECTION_VALUE_PART=[^\r\n{]+
