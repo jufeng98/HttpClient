@@ -1,6 +1,5 @@
 package org.javamaster.httpclient.dashboard
 
-import com.intellij.execution.ExecutionBundle
 import com.intellij.execution.Executor
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
@@ -41,7 +40,7 @@ class HttpExecutor : Executor() {
     }
 
     override fun getStartActionText(): String {
-        return ExecutionBundle.message("default.runner.start.action.text")
+        return "R&un"
     }
 
     override fun getContextActionId(): String {
