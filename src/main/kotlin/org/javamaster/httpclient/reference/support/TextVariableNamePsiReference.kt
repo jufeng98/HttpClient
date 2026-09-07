@@ -1,10 +1,12 @@
 package org.javamaster.httpclient.reference.support
 
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementResolveResult
 import com.intellij.psi.PsiPolyVariantReferenceBase
 import com.intellij.psi.ResolveResult
+import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.HttpMessageBody
 import org.javamaster.httpclient.psi.HttpVariable
 
@@ -17,6 +19,7 @@ class TextVariableNamePsiReference(
     val textRange: TextRange,
     private val messageBody: HttpMessageBody?,
 ) : PsiPolyVariantReferenceBase<PsiElement>(psiElement, textRange.shiftLeft(psiElement.textRange.startOffset), true) {
+    private val httpFile = InjectedLanguageManager.getInstance(element.project).getTopLevelFile(element) as HttpFile
 
     override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
         val psiElement = messageBody ?: psiElement
@@ -31,7 +34,7 @@ class TextVariableNamePsiReference(
     }
 
     override fun getVariants(): Array<Any> {
-        return HttpVariableNamePsiReference.getVariableVariants(element)
+        return HttpVariableNamePsiReference.getVariableVariants(element, httpFile)
     }
 
 }

@@ -2,6 +2,7 @@ package org.javamaster.httpclient.reference.support
 
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.json.psi.JsonProperty
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
@@ -32,6 +33,7 @@ import javax.swing.Icon
  */
 class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: TextRange) :
     PsiPolyVariantReferenceBase<HttpVariableName>(element, textRange) {
+    private val httpFile = InjectedLanguageManager.getInstance(element.project).getTopLevelFile(element) as HttpFile
 
     override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
         val elements = tryResolveVariable(element.name, element.isBuiltin, element, true)
@@ -40,11 +42,11 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
     }
 
     override fun getVariants(): Array<Any> {
-        return getVariableVariants(element)
+        return getVariableVariants(element, httpFile)
     }
 
     companion object {
-        fun getVariableVariants(element: PsiElement): Array<Any> {
+        fun getVariableVariants(element: PsiElement, httpFile: HttpFile): Array<Any> {
             val allList = mutableListOf<Any>()
 
             if (element.parent?.parent is HttpFilePath) {
@@ -67,6 +69,17 @@ class HttpVariableNamePsiReference(element: HttpVariableName, val textRange: Tex
                 )
 
                 return allList.toTypedArray()
+            }
+
+            val fileVariables = httpFile.getFileVariables()
+            fileVariables.forEach {
+                val fileVariableName = it.fileVariableName
+                val fileVariableValue = it.fileVariableValue
+                if (fileVariableName != null && fileVariableValue != null) {
+                    allList.add(
+                        LookupElementBuilder.create(fileVariableName).withTypeText(fileVariableValue.text, true)
+                    )
+                }
             }
 
             val envVariables = EnvFileService.getEnvMap(element.project)
