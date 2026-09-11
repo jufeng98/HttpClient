@@ -3,6 +3,7 @@ package org.javamaster.httpclient.ftp
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.util.lang.UrlClassLoader
 import org.javamaster.httpclient.consts.HttpConsts.Companion.REPOSITORY_URL
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.NotifyUtil
@@ -11,35 +12,42 @@ import org.javamaster.httpclient.utils.RandomStringUtils
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
 import java.io.InputStream
+import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
 import java.net.URL
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
+
 
 /**
  * @author yudong
  */
 @Suppress("DEPRECATION")
 object FtpJars {
-    var ftpClassLoader: FtpClassLoader
-
     @Volatile
     private var downloading = false
 
-    private val jarUrls = mutableListOf<URL>()
+    private val jarUrls = mutableListOf<File>()
     private val jarMap = mutableMapOf<String, URL>()
 
     init {
-        jarUrls.addAll(findPluginJarUrls())
-
         val ftpLibPath = getFtpLibPath()
 
         val listFiles = ftpLibPath.listFiles()
 
         listFiles?.forEach {
-            jarUrls.add(it.toURI().toURL())
+            jarUrls.add(it)
         }
 
-        ftpClassLoader = FtpClassLoader(jarUrls.toTypedArray(), FtpJars::class.java.classLoader)
+        val classLoader = javaClass.getClassLoader()
+        val addFiles = MethodHandles.lookup().findVirtual(
+            classLoader.javaClass, "addFiles",
+            MethodType.methodType(Void.TYPE, MutableList::class.java)
+        )
+
+        if (jarUrls.isNotEmpty()) {
+            addFiles.invoke(classLoader, jarUrls.map { it.toPath() }.toList())
+        }
 
         jarMap["ftpserver-core-1.2.1.jar"] =
             URL("$REPOSITORY_URL/org/apache/ftpserver/ftpserver-core/1.2.1/ftpserver-core-1.2.1.jar")
@@ -50,7 +58,7 @@ object FtpJars {
     }
 
     fun jarsDownloaded(): Boolean {
-        return jarUrls.size == jarMap.size + 1
+        return jarUrls.size == jarMap.size
     }
 
     fun downloadAsync(project: Project) {
@@ -88,7 +96,7 @@ object FtpJars {
 
                                 val file = saveToFile(it, name, ftpLibPath)
 
-                                jarUrls.add(file.toURI().toURL())
+                                jarUrls.add(file)
 
                                 indicator.fraction = (index + 1) * faction
 
@@ -98,11 +106,15 @@ object FtpJars {
                             }
                     }
 
-                    ftpClassLoader.close()
+                    val classLoader = javaClass.getClassLoader()
+                    val addFiles = MethodHandles.lookup().findVirtual(
+                        classLoader.javaClass, "addFiles",
+                        MethodType.methodType(Void.TYPE, MutableList::class.java)
+                    )
 
-                    jarUrls.addAll(findPluginJarUrls())
-
-                    ftpClassLoader = FtpClassLoader(jarUrls.toTypedArray(), FtpJars::class.java.classLoader)
+                    if (classLoader is UrlClassLoader) {
+                        addFiles.invoke(classLoader, jarUrls.map { it.toPath() }.toList())
+                    }
 
                     NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("ftp.downloaded"))
                 } catch (e: Exception) {
@@ -132,14 +144,6 @@ object FtpJars {
         println("Downloaded ftp jar $name : $file")
 
         return file
-    }
-
-    private fun findPluginJarUrls(): List<URL> {
-        val ftpLibPath = getFtpLibPath()
-        val libPath = ftpLibPath.parentFile
-        return libPath.listFiles()!!
-            .filter { it.name.contains(PluginUtils.NAME) && Files.size(it.toPath()) > 800000 }
-            .map { it.toURI().toURL() }
     }
 
     private fun getFtpLibPath(): File {

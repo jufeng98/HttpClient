@@ -3,6 +3,7 @@ package org.javamaster.httpclient.processHandler
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
+import org.javamaster.httpclient.mock.MockSshServerImpl
 import org.javamaster.httpclient.mock.support.MockSshServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
@@ -26,17 +27,14 @@ class MockSshProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, privat
         runInEdt {
             val oldClassLoader = Thread.currentThread().contextClassLoader
 
-            Thread.currentThread().contextClassLoader = SftpJars.sftpClassLoader
+            Thread.currentThread().contextClassLoader = this.javaClass.classLoader
 
             try {
                 loadingRemover?.run()
 
                 httpDashboardForm.initMockServerForm(pair)
 
-                val clz = SftpJars.sftpClassLoader.loadClass("org.javamaster.httpclient.mock.MockSshServerImpl")
-                val constructor = clz.declaredConstructors[0]
-                constructor.isAccessible = true
-                mockSshServer = constructor.newInstance(port, httpDashboardForm) as MockSshServer
+                mockSshServer = MockSshServerImpl(port, httpDashboardForm)
 
                 mockSshServer!!.startServer(paramMap)
 

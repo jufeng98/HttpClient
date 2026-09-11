@@ -4,6 +4,7 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.ftp.FtpJars
+import org.javamaster.httpclient.mock.MockFtpServerImpl
 import org.javamaster.httpclient.mock.support.MockFtpServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
@@ -26,17 +27,14 @@ class MockFtpProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, privat
         runInEdt {
             val oldClassLoader = Thread.currentThread().contextClassLoader
 
-            Thread.currentThread().contextClassLoader = FtpJars.ftpClassLoader
+            Thread.currentThread().contextClassLoader = this.javaClass.classLoader
 
             try {
                 loadingRemover?.run()
 
                 httpDashboardForm.initMockServerForm(pair)
 
-                val clz = FtpJars.ftpClassLoader.loadClass("org.javamaster.httpclient.mock.MockFtpServerImpl")
-                val constructor = clz.declaredConstructors[0]
-                constructor.isAccessible = true
-                mockFtpServer = constructor.newInstance(port, httpDashboardForm) as MockFtpServer
+                mockFtpServer = MockFtpServerImpl(port, httpDashboardForm)
 
                 mockFtpServer!!.startServer(paramMap)
 
