@@ -3,6 +3,7 @@ package org.javamaster.httpclient.dubbo.support
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import org.javamaster.httpclient.consts.HttpConsts.Companion.REPOSITORY_URL
 import org.javamaster.httpclient.dubbo.DubboRequestImpl
 import org.javamaster.httpclient.dubbo.loader.DubboClassLoader
 import org.javamaster.httpclient.nls.NlsBundle
@@ -25,8 +26,6 @@ object DubboJars {
 
     @Volatile
     private var downloading = false
-
-    private const val REPOSITORY_URL = "https://maven.aliyun.com/nexus/content/groups/public"
 
     private val jarUrls = mutableListOf<URL>()
     private val jarMap = mutableMapOf<String, URL>()
@@ -148,7 +147,7 @@ object DubboJars {
         val dubboLibPath = getDubboLibPath()
         val libPath = dubboLibPath.parentFile
         return libPath.listFiles()!!
-            .filter { (it.name.contains("HttpRequest") && Files.size(it.toPath()) > 800000) }
+            .filter { (it.name.contains(PluginUtils.NAME) && Files.size(it.toPath()) > 800000) }
             .map { it.toURI().toURL() }
     }
 

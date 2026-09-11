@@ -3,6 +3,7 @@ package org.javamaster.httpclient.sftp
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import org.javamaster.httpclient.consts.HttpConsts.Companion.REPOSITORY_URL
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.PluginUtils
@@ -23,8 +24,6 @@ object SftpJars {
 
     @Volatile
     private var downloading = false
-
-    private const val REPOSITORY_URL = "https://maven.aliyun.com/nexus/content/groups/public"
 
     private val jarUrls = mutableListOf<URL>()
     private val jarMap = mutableMapOf<String, URL>()
@@ -139,7 +138,7 @@ object SftpJars {
         val ftpLibPath = getFtpLibPath()
         val libPath = ftpLibPath.parentFile
         return libPath.listFiles()!!
-            .filter { it.name.contains("HttpRequest") && Files.size(it.toPath()) > 800000 }
+            .filter { it.name.contains(PluginUtils.NAME) && Files.size(it.toPath()) > 800000 }
             .map { it.toURI().toURL() }
     }
 

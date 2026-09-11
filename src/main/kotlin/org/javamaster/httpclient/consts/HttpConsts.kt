@@ -66,6 +66,7 @@ class HttpConsts {
         const val SSL_CONFIGURATION = "SSLConfiguration"
         const val CERT_PWD = "cert.pwd"
 
+        const val REPOSITORY_URL = "https://maven.aliyun.com/nexus/content/groups/public"
     }
 
 }

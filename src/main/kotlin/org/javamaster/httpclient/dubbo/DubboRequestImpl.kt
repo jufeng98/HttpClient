@@ -17,6 +17,7 @@ import org.javamaster.httpclient.utils.DubboUtils
 import org.javamaster.httpclient.utils.DubboUtils.findTargetMethod
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.JsonUtils.gson
+import org.javamaster.httpclient.utils.PluginUtils
 import org.javamaster.httpclient.utils.PsiTypeUtils
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
@@ -273,7 +274,7 @@ class DubboRequestImpl(
         val application = ApplicationConfig()
 
         init {
-            application.name = "HttpRequest"
+            application.name = PluginUtils.NAME
             application.qosEnable = false
             application.logger = "slf4j"
         }

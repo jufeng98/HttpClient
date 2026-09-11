@@ -22,7 +22,7 @@ object SensitiveDataUtil {
     }
 
     private fun createCredentialAttributes(key: String): CredentialAttributes {
-        return CredentialAttributes(generateServiceName("HttpRequest", key))
+        return CredentialAttributes(generateServiceName(PluginUtils.NAME, key))
     }
 
 }

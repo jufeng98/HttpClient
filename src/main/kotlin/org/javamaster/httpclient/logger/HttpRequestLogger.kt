@@ -1,12 +1,13 @@
 package org.javamaster.httpclient.logger
 
 import com.intellij.openapi.diagnostic.Logger
+import org.javamaster.httpclient.utils.PluginUtils
 
 /**
  * @author yudong
  */
 object HttpRequestLogger {
-    private val log = Logger.getInstance("HttpRequest")
+    private val log = Logger.getInstance(PluginUtils.NAME)
 
     fun logWarn(msg: String, t: Throwable? = null) {
         val currentThread = Thread.currentThread()

@@ -1,10 +1,8 @@
 package org.javamaster.httpclient.utils
 
-import com.intellij.ide.plugins.PluginManager
 import com.intellij.json.psi.JsonFile
 import com.intellij.json.psi.JsonObject
 import com.intellij.json.psi.JsonStringLiteral
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
@@ -224,9 +222,7 @@ object NpmJsUtils {
     }
 
     private fun getJsLibPath(): File {
-        val pluginId = PluginId.findId("org.javamaster.HttpRequest")!!
-        val pluginDescriptor = PluginManager.getInstance().findEnabledPlugin(pluginId)!!
-        val pluginPath = pluginDescriptor.pluginPath.toFile()
+        val pluginPath = PluginUtils.getPluginPath()
         return File(pluginPath, "lib/jsLib")
     }
 }
