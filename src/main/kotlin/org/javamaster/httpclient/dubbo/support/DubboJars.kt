@@ -1,7 +1,5 @@
 package org.javamaster.httpclient.dubbo.support
 
-import com.intellij.ide.plugins.PluginManager
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
@@ -9,6 +7,7 @@ import org.javamaster.httpclient.dubbo.DubboRequestImpl
 import org.javamaster.httpclient.dubbo.loader.DubboClassLoader
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.NotifyUtil
+import org.javamaster.httpclient.utils.PluginUtils
 import org.javamaster.httpclient.utils.RandomStringUtils
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
@@ -55,10 +54,12 @@ object DubboJars {
             URL("$REPOSITORY_URL/io/netty/netty/3.10.5.Final/netty-3.10.5.Final.jar")
         jarMap["zookeeper-3.5.3-beta.jar"] =
             URL("$REPOSITORY_URL/org/apache/zookeeper/zookeeper/3.5.3-beta/zookeeper-3.5.3-beta.jar")
+        jarMap["dubbo-2.6.12.jar"] =
+            URL("$REPOSITORY_URL/com/alibaba/dubbo/2.6.12/dubbo-2.6.12.jar")
     }
 
     fun jarsDownloaded(): Boolean {
-        return jarUrls.size == jarMap.size + 2
+        return jarUrls.size == jarMap.size + 1
     }
 
     fun downloadAsync(project: Project) {
@@ -147,14 +148,12 @@ object DubboJars {
         val dubboLibPath = getDubboLibPath()
         val libPath = dubboLibPath.parentFile
         return libPath.listFiles()!!
-            .filter { (it.name.contains("HttpRequest") && Files.size(it.toPath()) > 800000) || it.name == "dubbo-2.6.12.jar" }
+            .filter { (it.name.contains("HttpRequest") && Files.size(it.toPath()) > 800000) }
             .map { it.toURI().toURL() }
     }
 
     private fun getDubboLibPath(): File {
-        val pluginId = PluginId.findId("org.javamaster.HttpRequest")!!
-        val pluginDescriptor = PluginManager.getInstance().findEnabledPlugin(pluginId)!!
-        val pluginPath = pluginDescriptor.pluginPath.toFile()
+        val pluginPath = PluginUtils.getPluginPath()
         return File(pluginPath, "lib/dubboLib")
     }
 }

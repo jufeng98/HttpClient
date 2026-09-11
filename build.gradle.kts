@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "org.javamaster"
-version = "8.5.0"
+version = "8.5.1"
 
 repositories {
     maven { url = URI("https://maven.aliyun.com/nexus/content/groups/public/") }
@@ -43,11 +43,12 @@ dependencies {
     implementation("com.github.javafaker:javafaker:1.0.2")
     implementation("com.jayway.jsonpath:json-path:2.9.0")
 
-    implementation("com.alibaba:dubbo:2.6.12") {
-        exclude(group = "org.springframework", module = "spring-context")
-        exclude(group = "org.javassist", module = "javassist")
-        exclude(group = "org.jboss.netty", module = "netty")
-    }
+    compileOnly("com.alibaba:dubbo:2.6.12")
+
+    compileOnly("org.apache.ftpserver:ftpserver-core:1.2.1")
+
+    compileOnly("org.apache.sshd:sshd-core:2.12.0")
+    compileOnly("org.apache.sshd:sshd-sftp:2.12.0")
 
     testImplementation("junit:junit:4.13.1")
 }
@@ -88,16 +89,38 @@ tasks {
         into(layout.buildDirectory.dir("idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/dubboLib"))
     }
 
+    register<Copy>("copyFtpLibToSandbox") {
+        dependsOn("prepareSandbox")
+        from("ftpLib")
+        include("**/*.jar")
+        into(layout.buildDirectory.dir("idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/ftpLib"))
+    }
+
+    register<Copy>("copySftpLibToSandbox") {
+        dependsOn("prepareSandbox")
+        from("sftpLib")
+        include("**/*.jar")
+        into(layout.buildDirectory.dir("idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/sftpLib"))
+    }
+
     register<Delete>("deleteDubboLibOfSandbox") {
         delete(layout.buildDirectory.dir("idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/dubboLib"))
     }
 
+    register<Delete>("deleteFtpLibOfSandbox") {
+        delete(layout.buildDirectory.dir("idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/ftpLib"))
+    }
+
+    register<Delete>("deleteSftpLibOfSandbox") {
+        delete(layout.buildDirectory.dir("idea-sandbox/IC-$ideaVersion/plugins/${project.name}/lib/sftpLib"))
+    }
+
     named("runIde") {
-        dependsOn("copyDubboLibToSandbox")
+        dependsOn("copyDubboLibToSandbox", "copyFtpLibToSandbox", "copySftpLibToSandbox")
     }
 
     named("buildPlugin") {
-        dependsOn("deleteDubboLibOfSandbox")
+        dependsOn("deleteDubboLibOfSandbox", "deleteFtpLibOfSandbox", "deleteSftpLibOfSandbox")
     }
 
     jar {
