@@ -1,0 +1,43 @@
+package org.javamaster.httpclient.sftp
+
+import java.net.URL
+import java.net.URLClassLoader
+
+/**
+ * @author yudong
+ */
+class SftpClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(urls, parent) {
+    private val needParentLoad = setOf(
+        "org.javamaster.httpclient.mock.support.MockSshServer",
+        "org.javamaster.httpclient.map.MultiValueMap",
+        "org.javamaster.httpclient.ui.HttpDashboardForm",
+        "org.javamaster.httpclient.enums.ParamEnum",
+        "org.javamaster.httpclient.nls.NlsBundle",
+        "org.javamaster.httpclient.utils.KeyUtil",
+    )
+
+    override fun loadClass(name: String): Class<*> {
+        synchronized(getClassLoadingLock(name)) {
+            var c = findLoadedClass(name)
+
+            if (c != null) return c
+
+            c = if (needParentLoad.contains(name)) {
+                try {
+                    parent.loadClass(name)
+                } catch (_: ClassNotFoundException) {
+                    findClass(name)
+                }
+            } else {
+                try {
+                    findClass(name)
+                } catch (_: ClassNotFoundException) {
+                    parent.loadClass(name)
+                }
+            }
+
+            return c
+        }
+    }
+
+}
