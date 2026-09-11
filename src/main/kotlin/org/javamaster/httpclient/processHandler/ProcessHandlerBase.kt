@@ -573,6 +573,20 @@ abstract class ProcessHandlerBase(val httpMethod: HttpMethod, val selectedEnv: S
                     MockDubboProcessHandler(httpMethod, selectedEnv, port)
                 }
 
+                HttpRequestEnum.MOCK_FTP -> {
+                    val port = MockServerHelper.resolvePort(httpMethod)
+
+                    MockFtpProcessHandler(httpMethod, selectedEnv, port)
+                }
+
+                HttpRequestEnum.MOCK_SSH,
+                HttpRequestEnum.MOCK_SFTP,
+                    -> {
+                    val port = MockServerHelper.resolvePort(httpMethod)
+
+                    MockSshProcessHandler(httpMethod, selectedEnv, port)
+                }
+
                 else -> HttpProcessHandler(httpMethod, selectedEnv)
             }
 

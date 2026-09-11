@@ -74,6 +74,12 @@
     <change-notes>
         <![CDATA[
             <ul>
+                <li><b>8.5.1</b></li>
+                <ul>
+                    <li>新增功能: Mock ftp 服务</li>
+                    <li>新增功能: Mock sftp 服务</li>
+                    <li>插件优化: 减小插件大小</li>
+                </ul>
                 <li><b>8.5.0</b></li>
                 <ul>
                     <li>新增功能: 支持在变量中使用 JSONPath 表达式, 如 {{$.client.host.url}}, JSONPath 表达式支持访问 js 变量和环境文件变量</li>

@@ -241,7 +241,52 @@ enum class HttpRequestEnum(val icon: Icon) {
         override fun getVariants(): List<LookupElementBuilder> {
             return getVariants(dubboList)
         }
-    }
+    },
+    MOCK_FTP(HttpIcons.FILE) {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: MultiValueMap<String, String?>,
+            bodyPublisher: HttpRequest.BodyPublisher,
+            paramMap: MultiValueMap<String, String>,
+        ): HttpRequest {
+            throw UnsupportedOperationException()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(ftpList)
+        }
+    },
+    MOCK_SFTP(HttpIcons.FILE) {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: MultiValueMap<String, String?>,
+            bodyPublisher: HttpRequest.BodyPublisher,
+            paramMap: MultiValueMap<String, String>,
+        ): HttpRequest {
+            throw UnsupportedOperationException()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(sftpList)
+        }
+    },
+    MOCK_SSH(HttpIcons.FILE) {
+        override fun createRequest(
+            url: String,
+            version: Version,
+            reqHeaderMap: MultiValueMap<String, String?>,
+            bodyPublisher: HttpRequest.BodyPublisher,
+            paramMap: MultiValueMap<String, String>,
+        ): HttpRequest {
+            throw UnsupportedOperationException()
+        }
+
+        override fun getVariants(): List<LookupElementBuilder> {
+            return getVariants(sshList)
+        }
+    },
     ;
 
     internal fun createBuilder(
@@ -380,6 +425,9 @@ enum class HttpRequestEnum(val icon: Icon) {
         private val httpList = listOf("http://", "https://")
         private val wsList = listOf("ws://", "wss://")
         private val dubboList = listOf("dubbo://")
+        private val ftpList = listOf("ftp://")
+        private val sftpList = listOf("sftp://")
+        private val sshList = listOf("ssh://")
 
         private fun getVariants(schemaList: List<String>): List<LookupElementBuilder> {
             val list = mutableListOf<LookupElementBuilder>()
