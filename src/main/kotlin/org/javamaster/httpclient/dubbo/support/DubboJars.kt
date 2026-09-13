@@ -3,9 +3,8 @@ package org.javamaster.httpclient.dubbo.support
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.util.lang.UrlClassLoader
 import org.javamaster.httpclient.consts.HttpConsts.Companion.REPOSITORY_URL
-import org.javamaster.httpclient.dubbo.DubboRequestImpl
-import org.javamaster.httpclient.dubbo.loader.DubboClassLoader
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.NotifyUtil
 import org.javamaster.httpclient.utils.PluginUtils
@@ -13,6 +12,8 @@ import org.javamaster.httpclient.utils.RandomStringUtils
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
 import java.io.InputStream
+import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
 import java.net.URL
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -22,26 +23,30 @@ import java.util.concurrent.TimeUnit
  */
 @Suppress("DEPRECATION")
 object DubboJars {
-    var dubboClassLoader: DubboClassLoader
-
     @Volatile
     private var downloading = false
 
-    private val jarUrls = mutableListOf<URL>()
+    private val jarUrls = mutableListOf<File>()
     private val jarMap = mutableMapOf<String, URL>()
 
     init {
-        jarUrls.addAll(findPluginJarUrls())
-
         val dubboLibPath = getDubboLibPath()
 
         val listFiles = dubboLibPath.listFiles()
 
         listFiles?.forEach {
-            jarUrls.add(it.toURI().toURL())
+            jarUrls.add(it)
         }
 
-        dubboClassLoader = DubboClassLoader(jarUrls.toTypedArray(), DubboJars::class.java.classLoader)
+        val classLoader = javaClass.getClassLoader()
+        val addFiles = MethodHandles.lookup().findVirtual(
+            classLoader.javaClass, "addFiles",
+            MethodType.methodType(Void.TYPE, MutableList::class.java)
+        )
+
+        if (jarUrls.isNotEmpty()) {
+            addFiles.invoke(classLoader, jarUrls.map { it.toPath() }.toList())
+        }
 
         jarMap["javassist-3.30.2-GA.jar"] =
             URL("$REPOSITORY_URL/org/javassist/javassist/3.30.2-GA/javassist-3.30.2-GA.jar")
@@ -58,7 +63,7 @@ object DubboJars {
     }
 
     fun jarsDownloaded(): Boolean {
-        return jarUrls.size == jarMap.size + 1
+        return jarUrls.size == jarMap.size
     }
 
     fun downloadAsync(project: Project) {
@@ -96,7 +101,7 @@ object DubboJars {
 
                                 val file = saveToFile(it, name, dubboLibPath)
 
-                                jarUrls.add(file.toURI().toURL())
+                                jarUrls.add(file)
 
                                 indicator.fraction = (index + 1) * faction
 
@@ -106,12 +111,15 @@ object DubboJars {
                             }
                     }
 
-                    dubboClassLoader.close()
+                    val classLoader = javaClass.getClassLoader()
+                    val addFiles = MethodHandles.lookup().findVirtual(
+                        classLoader.javaClass, "addFiles",
+                        MethodType.methodType(Void.TYPE, MutableList::class.java)
+                    )
 
-                    jarUrls.addAll(findPluginJarUrls())
-
-                    dubboClassLoader =
-                        DubboClassLoader(jarUrls.toTypedArray(), DubboRequestImpl::class.java.classLoader)
+                    if (classLoader is UrlClassLoader) {
+                        addFiles.invoke(classLoader, jarUrls.map { it.toPath() }.toList())
+                    }
 
                     NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("dubbo.downloaded"))
                 } catch (e: Exception) {
@@ -141,14 +149,6 @@ object DubboJars {
         println("Downloaded dubbo jar $name : $file")
 
         return file
-    }
-
-    private fun findPluginJarUrls(): List<URL> {
-        val dubboLibPath = getDubboLibPath()
-        val libPath = dubboLibPath.parentFile
-        return libPath.listFiles()!!
-            .filter { (it.name.contains(PluginUtils.NAME) && Files.size(it.toPath()) > 800000) }
-            .map { it.toURI().toURL() }
     }
 
     private fun getDubboLibPath(): File {

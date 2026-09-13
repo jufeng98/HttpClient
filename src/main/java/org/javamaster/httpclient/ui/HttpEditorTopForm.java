@@ -95,7 +95,7 @@ public class HttpEditorTopForm extends JComponent {
         return httpEditorTopForm.getSelectedEnv();
     }
 
-    public static @Nullable Triple<String, VirtualFile, @Nullable Module> getTriple(Project project) {
+    public static @Nullable Triple<@Nullable String, VirtualFile, @Nullable Module> getTriple(Project project) {
         HttpEditorTopForm topForm = getSelectedEditorTopForm(project);
         if (topForm == null) {
             return null;

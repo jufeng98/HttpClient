@@ -5,8 +5,8 @@ import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.util.application
 import org.apache.http.entity.ContentType
+import org.javamaster.httpclient.dubbo.DubboRequestImpl
 import org.javamaster.httpclient.dubbo.support.DubboJars
-import org.javamaster.httpclient.dubbo.support.DubboRequest
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.enums.SimpleTypeEnum
 import org.javamaster.httpclient.exception.JsScriptException
@@ -20,7 +20,6 @@ import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.CR_LF
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.ReqUtils
-import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -71,21 +70,10 @@ class DubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?) :
 
         val module = computeReadAction { ModuleUtil.findModuleForPsiElement(httpFile) }
 
-        val clsName = "org.javamaster.httpclient.dubbo.DubboRequestImpl"
-        val dubboRequestClazz = DubboJars.dubboClassLoader.loadClass(clsName)
-
-        val constructor = dubboRequestClazz.declaredConstructors[0]
-        constructor.isAccessible = true
-
-        val dubboRequest: DubboRequest
-        try {
-            dubboRequest = computeReadAction {
-                constructor.newInstance(
-                    tabName, url, reqHeaderMap, reqBody, httpReqDescList, module, project, paramMap
-                ) as DubboRequest
-            }
-        } catch (e: InvocationTargetException) {
-            throw e.targetException
+        val dubboRequest = computeReadAction {
+            DubboRequestImpl(
+                tabName, url, reqHeaderMap, reqBody, httpReqDescList, module, project, paramMap
+            )
         }
 
         if (jsScriptException != null) {

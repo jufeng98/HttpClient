@@ -326,7 +326,7 @@ class EnvFileService(val project: Project) {
             return mutableMapOf()
         }
 
-        fun getEnvMap(selectedEnv: String, httpFileParentPath: String, project: Project): MutableMap<String, String> {
+        fun getEnvMap(selectedEnv: String?, httpFileParentPath: String, project: Project): MutableMap<String, String> {
             val map = linkedMapOf<String, String>()
 
             map.putAll(getEnvMap(COMMON_ENV_NAME, httpFileParentPath, ENV_FILE_NAME, project))
