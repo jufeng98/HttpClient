@@ -319,5 +319,9 @@ class ReqUtils {
             }
         }
 
+        fun isDisableAutoActiveContent(httpFile: HttpFile): Boolean {
+            return httpFile.getDirectionComments()
+                .any { it.directionName?.text == ParamEnum.DISABLE_AUTO_ACTIVE_CONTENT.param }
+        }
     }
 }

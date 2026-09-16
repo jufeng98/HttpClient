@@ -42,6 +42,7 @@ enum class ParamEnum(val param: String, val desc: String) {
             return AddSpaceInsertHandler.INSTANCE_WITH_AUTO_POPUP
         }
     },
+    DISABLE_AUTO_ACTIVE_CONTENT("disableAutoActiveContent", "禁用自动激活内容"),
     RESPONSE_STATUS("responseStatus", NlsBundle.nls("response.status.desc")) {
         override fun insertHandler(): InsertHandler<LookupElement> {
             return Number2InsertHandler
@@ -95,7 +96,8 @@ enum class ParamEnum(val param: String, val desc: String) {
 
         fun getGlobalParams(): List<ParamEnum> {
             return listOf(
-                IMPORT
+                IMPORT,
+                DISABLE_AUTO_ACTIVE_CONTENT,
             )
         }
 

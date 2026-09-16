@@ -26,7 +26,8 @@ class ConfigUtils {
 
     companion object {
         private val mockSet = setOf(
-            HttpRequestEnum.MOCK_SERVER.name, HttpRequestEnum.MOCK_DUBBO.name, HttpRequestEnum.MOCK_WS.name
+            HttpRequestEnum.MOCK_SERVER.name, HttpRequestEnum.MOCK_DUBBO.name, HttpRequestEnum.MOCK_WS.name,
+            HttpRequestEnum.MOCK_FTP.name, HttpRequestEnum.MOCK_SFTP.name, HttpRequestEnum.MOCK_SSH.name,
         )
 
         fun getConfiguration(tabName: String, project: Project): HttpRunConfiguration? {

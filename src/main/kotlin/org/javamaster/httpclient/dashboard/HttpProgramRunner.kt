@@ -12,7 +12,10 @@ import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.execution.ui.RunContentManager
 import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.wm.ToolWindowId
+import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.consts.HttpConsts
 import org.javamaster.httpclient.dashboard.HttpExecutor.Companion.HTTP_EXECUTOR_ID
 import org.javamaster.httpclient.processHandler.ProcessHandlerBase
@@ -23,6 +26,7 @@ import org.javamaster.httpclient.ui.HttpEditorTopForm
 import org.javamaster.httpclient.utils.ConfigUtils
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
+import org.javamaster.httpclient.utils.ReqUtils
 
 
 /**
@@ -87,27 +91,51 @@ class HttpProgramRunner : GenericProgramRunner<RunnerSettings>() {
         val executionResult = state.execute(environment.executor, this) ?: return null
 
         val handler = executionResult.processHandler as ProcessHandlerBase
+        val httpFile = handler.httpFile
+        var disableAutoActiveContent = ReqUtils.isDisableAutoActiveContent(httpFile)
 
         if (environment.executor !is HttpExecutor) {
             handler.httpMethod.putUserData(HttpConsts.runFileRequestIdxKey, null)
         }
 
+        val tabName = handler.tabName
         val oldDescriptor = RunContentManager.getInstance(project).allDescriptors
             .firstOrNull {
-                it.processHandler is ProcessHandlerBase && it.displayName == handler.tabName
+                it.processHandler is ProcessHandlerBase && it.displayName == tabName
             }
 
         if (oldDescriptor != null) {
-            oldDescriptor.isSelectContentWhenAdded = false
+            handleDescriptor(oldDescriptor, disableAutoActiveContent, project)
+
             Disposer.dispose(oldDescriptor.processHandler as ProcessHandlerBase)
         }
 
         environment.contentToReuse = oldDescriptor
 
         val descriptor = RunContentBuilder(executionResult, environment).showRunContent(oldDescriptor)
-        descriptor.isSelectContentWhenAdded = false
+
+        handleDescriptor(descriptor, disableAutoActiveContent, project)
 
         return descriptor
+    }
+
+    private fun handleDescriptor(
+        descriptor: RunContentDescriptor,
+        disableAutoActiveContent: Boolean,
+        project: Project,
+    ) {
+        val active = !disableAutoActiveContent
+
+        descriptor.isSelectContentWhenAdded = active
+        descriptor.isActivateToolWindowWhenAdded = active
+        descriptor.isAutoFocusContent = active
+
+        if (active) {
+            runInEdt {
+                ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
+                RunContentManager.getInstance(project).selectRunContent(descriptor)
+            }
+        }
     }
 
     companion object {
