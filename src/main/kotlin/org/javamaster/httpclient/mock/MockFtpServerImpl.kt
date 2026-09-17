@@ -1,20 +1,14 @@
 package org.javamaster.httpclient.mock
 
 import org.apache.commons.lang3.StringUtils
-import org.apache.ftpserver.ConnectionConfigFactory
-import org.apache.ftpserver.FtpServer
-import org.apache.ftpserver.FtpServerFactory
-import org.apache.ftpserver.listener.ListenerFactory
-import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory
-import org.apache.ftpserver.usermanager.impl.BaseUser
-import org.apache.ftpserver.usermanager.impl.WritePermission
 import org.javamaster.httpclient.enums.ParamEnum
+import org.javamaster.httpclient.ftp.FtpJars
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.mock.support.MockFtpServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.ui.HttpDashboardForm
+import org.javamaster.httpclient.utils.ReflectionUtils
 import java.io.File
-
 
 /**
  * @author yudong
@@ -24,7 +18,8 @@ class MockFtpServerImpl(
     private val port: Int,
     private val httpDashboardForm: HttpDashboardForm,
 ) : MockFtpServer {
-    private var ftpServer: FtpServer? = null
+    // 因为不能直接引用 FtpServer 类，这里改为 Any
+    private var ftpServer: Any? = null
 
     override fun startServer(paramMap: MultiValueMap<String, String>) {
         val staticFolder = checkStaticFolder(paramMap.getFirst(ParamEnum.STATIC_FOLDER.param))
@@ -32,50 +27,118 @@ class MockFtpServerImpl(
         val password = paramMap["password"]?.firstOrNull()
         val anonymousEnable = paramMap["enableAnonymous"] != null
 
-        val connectionConfigFactory = ConnectionConfigFactory()
+        val classLoader = FtpJars.ftpLibClassLoader
 
-        if (anonymousEnable) {
-            connectionConfigFactory.isAnonymousLoginEnabled = true
+        try {
+            // 1. ConnectionConfigFactory
+            val connectionConfigFactoryClass = classLoader.loadClass("org.apache.ftpserver.ConnectionConfigFactory")
+            val connectionConfigFactory = connectionConfigFactoryClass.getDeclaredConstructor().newInstance()
+
+            if (anonymousEnable) {
+                val setAnonymousLoginEnabledMethod = ReflectionUtils.findMethod(
+                    connectionConfigFactoryClass, "setAnonymousLoginEnabled", Boolean::class.javaPrimitiveType
+                )
+                setAnonymousLoginEnabledMethod?.invoke(connectionConfigFactory, true)
+            }
+
+            val createConnectionConfigMethod =
+                ReflectionUtils.findMethod(connectionConfigFactoryClass, "createConnectionConfig")
+            val connectionConfig = createConnectionConfigMethod?.invoke(connectionConfigFactory)
+
+            // 2. FtpServerFactory
+            val ftpServerFactoryClass = classLoader.loadClass("org.apache.ftpserver.FtpServerFactory")
+            val ftpServerFactory = ftpServerFactoryClass.getDeclaredConstructor().newInstance()
+
+            val connectionConfigInterface = classLoader.loadClass("org.apache.ftpserver.ConnectionConfig")
+            val setConnectionConfigMethod = ReflectionUtils.findMethod(
+                ftpServerFactoryClass, "setConnectionConfig", connectionConfigInterface
+            )
+            setConnectionConfigMethod?.invoke(ftpServerFactory, connectionConfig)
+
+            // 3. ListenerFactory
+            val listenerFactoryClass = classLoader.loadClass("org.apache.ftpserver.listener.ListenerFactory")
+            val listenerFactory = listenerFactoryClass.getDeclaredConstructor().newInstance()
+
+            val setPortMethod =
+                ReflectionUtils.findMethod(listenerFactoryClass, "setPort", Int::class.javaPrimitiveType)
+            setPortMethod?.invoke(listenerFactory, port)
+
+            val createListenerMethod = ReflectionUtils.findMethod(listenerFactoryClass, "createListener")
+            val listener = createListenerMethod?.invoke(listenerFactory)
+
+            val listenerInterface = classLoader.loadClass("org.apache.ftpserver.listener.Listener")
+            val addListenerMethod = ReflectionUtils.findMethod(
+                ftpServerFactoryClass, "addListener", String::class.java, listenerInterface
+            )
+            addListenerMethod?.invoke(ftpServerFactory, "default", listener)
+
+            // 4. PropertiesUserManagerFactory
+            val userManagerFactoryClass =
+                classLoader.loadClass("org.apache.ftpserver.usermanager.PropertiesUserManagerFactory")
+            val userManagerFactory = userManagerFactoryClass.getDeclaredConstructor().newInstance()
+            val createUserManagerMethod = ReflectionUtils.findMethod(userManagerFactoryClass, "createUserManager")
+            val userManager = createUserManagerMethod?.invoke(userManagerFactory)
+
+            // 5. BaseUser & WritePermission
+            val baseUserClass = classLoader.loadClass("org.apache.ftpserver.usermanager.impl.BaseUser")
+            val writePermissionClass = classLoader.loadClass("org.apache.ftpserver.usermanager.impl.WritePermission")
+            val userInterface = classLoader.loadClass("org.apache.ftpserver.ftplet.User")
+
+            val saveMethod = ReflectionUtils.findMethod(userManager?.javaClass, "save", userInterface)
+
+            // 5.1 匿名用户
+            if (anonymousEnable) {
+                val anonymousUser = baseUserClass.getDeclaredConstructor().newInstance()
+                ReflectionUtils.findMethod(baseUserClass, "setName", String::class.java)
+                    ?.invoke(anonymousUser, "anonymous")
+                ReflectionUtils.findMethod(baseUserClass, "setHomeDirectory", String::class.java)
+                    ?.invoke(anonymousUser, staticFolder.absolutePath)
+                saveMethod?.invoke(userManager, anonymousUser)
+            }
+
+            // 5.2 具名用户
+            if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+                val user = baseUserClass.getDeclaredConstructor().newInstance()
+                ReflectionUtils.findMethod(baseUserClass, "setName", String::class.java)?.invoke(user, username)
+                ReflectionUtils.findMethod(baseUserClass, "setPassword", String::class.java)?.invoke(user, password)
+                ReflectionUtils.findMethod(baseUserClass, "setHomeDirectory", String::class.java)
+                    ?.invoke(user, staticFolder.absolutePath)
+
+                val writePermission = writePermissionClass.getDeclaredConstructor().newInstance()
+                val authoritiesList = arrayListOf(writePermission)
+                ReflectionUtils.findMethod(baseUserClass, "setAuthorities", List::class.java)
+                    ?.invoke(user, authoritiesList)
+
+                saveMethod?.invoke(userManager, user)
+            }
+
+            // 6. 设置 UserManager 并启动
+            val userManagerInterface = classLoader.loadClass("org.apache.ftpserver.ftplet.UserManager")
+            val setUserManagerMethod =
+                ReflectionUtils.findMethod(ftpServerFactoryClass, "setUserManager", userManagerInterface)
+            setUserManagerMethod?.invoke(ftpServerFactory, userManager)
+
+            val createServerMethod = ReflectionUtils.findMethod(ftpServerFactoryClass, "createServer")
+            val server = createServerMethod?.invoke(ftpServerFactory)
+            ftpServer = server
+
+            val startMethod = ReflectionUtils.findMethod(server?.javaClass, "start")
+            startMethod?.invoke(server)
+
+            httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.ftp.server.start", port) + "\n")
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            httpDashboardForm.showMockServerLog("FTP Server start failed: ${e.message}\n")
         }
-
-        val ftpServerFactory = FtpServerFactory()
-        ftpServerFactory.connectionConfig = connectionConfigFactory.createConnectionConfig()
-
-        val factory = ListenerFactory()
-        factory.port = port
-        ftpServerFactory.addListener("default", factory.createListener())
-
-        val userManagerFactory = PropertiesUserManagerFactory()
-        val userManager = userManagerFactory.createUserManager()
-
-        if (anonymousEnable) {
-            val anonymousUser = BaseUser()
-            anonymousUser.name = "anonymous"
-            anonymousUser.homeDirectory = staticFolder.absolutePath
-            userManager.save(anonymousUser)
-        }
-
-        if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
-            val user = BaseUser()
-            user.name = username
-            user.password = password
-            user.homeDirectory = staticFolder.absolutePath
-            user.authorities = listOf(WritePermission())
-            userManager.save(user)
-        }
-
-        ftpServerFactory.userManager = userManager
-
-        val server = ftpServerFactory.createServer()
-        ftpServer = server
-        server.start()
-
-        httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.ftp.server.start", port) + "\n")
     }
 
     override fun stopServer() {
-        ftpServer?.stop()
-
+        if (ftpServer != null) {
+            val stopMethod = ReflectionUtils.findMethod(ftpServer!!.javaClass, "stop")
+            stopMethod?.invoke(ftpServer)
+            ftpServer = null
+        }
         httpDashboardForm.showMockServerLog("Ftp Server stopped\n")
     }
 
