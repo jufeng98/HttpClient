@@ -43,7 +43,11 @@ dependencies {
     implementation("com.github.javafaker:javafaker:1.0.2")
     implementation("com.jayway.jsonpath:json-path:2.9.0")
 
-    compileOnly("com.alibaba:dubbo:2.6.12")
+    implementation("com.alibaba:dubbo:2.6.12") {
+        exclude(group = "org.springframework", module = "spring-context")
+        exclude(group = "org.javassist", module = "javassist")
+        exclude(group = "org.jboss.netty", module = "netty")
+    }
 
     compileOnly("org.apache.ftpserver:ftpserver-core:1.2.1")
 

@@ -5,13 +5,14 @@ import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.openapi.wm.ToolWindowManager
 import org.javamaster.httpclient.dubbo.support.DubboBridge
 import org.javamaster.httpclient.dubbo.support.DubboJars
-import org.javamaster.httpclient.mock.MockDubboServerImpl
 import org.javamaster.httpclient.mock.support.MockDubboServer
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.psi.HttpMethod
 import org.javamaster.httpclient.utils.DocUtils
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.HttpUtils.computeReadAction
 import org.javamaster.httpclient.utils.NotifyUtil
+import java.lang.reflect.InvocationTargetException
 
 /**
  * @author yudong
@@ -33,14 +34,25 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, priv
 
                 httpDashboardForm.initMockServerForm(pair)
 
-                mockDubboServer = MockDubboServerImpl(
-                    port, requestTarget.schema?.text, reqHeaderMap, DubboBridge(httpDashboardForm)
-                )
+                val clsName = "org.javamaster.httpclient.mock.MockDubboServerImpl"
+                val mockDubboServerImpl = DubboJars.dubboClassLoader.loadClass(clsName)
 
-                val oldClassLoader = Thread.currentThread().contextClassLoader
+                val constructor = mockDubboServerImpl.declaredConstructors[0]
+                constructor.isAccessible = true
 
                 try {
-                    Thread.currentThread().contextClassLoader = javaClass.classLoader
+                    mockDubboServer = computeReadAction {
+                        constructor.newInstance(
+                            port, requestTarget.schema?.text, reqHeaderMap, DubboBridge(httpDashboardForm)
+                        ) as MockDubboServer
+                    }
+                } catch (e: InvocationTargetException) {
+                    throw e.targetException
+                }
+
+                val classLoader = Thread.currentThread().contextClassLoader
+                try {
+                    Thread.currentThread().contextClassLoader = DubboJars.dubboClassLoader
 
                     mockDubboServer!!.startServerAsync(request, variableResolver, paramMap)
                         .whenCompleteAsync { _, throwable ->
@@ -52,7 +64,7 @@ class MockDubboProcessHandler(httpMethod: HttpMethod, selectedEnv: String?, priv
                             NotifyUtil.notifyInfo(project, NlsBundle.nls("mock.dubbo.server.start", port))
                         }
                 } finally {
-                    Thread.currentThread().contextClassLoader = oldClassLoader
+                    Thread.currentThread().contextClassLoader = classLoader
                 }
 
                 ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.SERVICES)?.show()
