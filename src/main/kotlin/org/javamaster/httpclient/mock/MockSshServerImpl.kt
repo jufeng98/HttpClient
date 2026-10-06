@@ -1,36 +1,22 @@
 package org.javamaster.httpclient.mock
 
 import com.intellij.util.system.OS
-import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory
-import org.apache.sshd.common.keyprovider.KeyPairProvider
-import org.apache.sshd.common.session.SessionContext
-import org.apache.sshd.common.util.GenericUtils
-import org.apache.sshd.common.util.io.IoUtils
-import org.apache.sshd.server.SshServer
-import org.apache.sshd.server.auth.password.PasswordAuthenticator
-import org.apache.sshd.server.channel.ChannelSession
-import org.apache.sshd.server.command.Command
-import org.apache.sshd.server.command.CommandFactory
-import org.apache.sshd.server.session.ServerSession
-import org.apache.sshd.server.shell.InteractiveProcessShellFactory
-import org.apache.sshd.server.shell.ProcessShellFactory
-import org.apache.sshd.sftp.server.FileHandle
-import org.apache.sshd.sftp.server.Handle
-import org.apache.sshd.sftp.server.SftpEventListener
-import org.apache.sshd.sftp.server.SftpSubsystemFactory
 import org.javamaster.httpclient.enums.ParamEnum
 import org.javamaster.httpclient.map.MultiValueMap
 import org.javamaster.httpclient.mock.support.MockSshServer
 import org.javamaster.httpclient.nls.NlsBundle
+import org.javamaster.httpclient.sftp.SftpJars
 import org.javamaster.httpclient.ui.HttpDashboardForm
 import org.javamaster.httpclient.utils.KeyUtils
 import org.javamaster.httpclient.utils.PluginUtils
+import org.javamaster.httpclient.utils.ReflectionUtils
 import java.io.*
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 import java.security.KeyPair
 import java.security.SecureRandom
-
 
 /**
  * @author yudong
@@ -40,116 +26,206 @@ class MockSshServerImpl(
     private val port: Int,
     private val httpDashboardForm: HttpDashboardForm,
 ) : MockSshServer {
-    private var sshServer: SshServer? = null
+    private var sshServer: Any? = null
 
     override fun startServer(paramMap: MultiValueMap<String, String>) {
         val staticFolder = checkStaticFolder(paramMap.getFirst(ParamEnum.STATIC_FOLDER.param))
         val user = paramMap["username"]?.firstOrNull()
         val pwd = paramMap["password"]?.firstOrNull()
 
-        val sshServer = SshServer.setUpDefaultServer()
-        sshServer.setPort(port)
+        val classLoader = SftpJars.sftpLibClassLoader
 
-        sshServer.keyPairProvider = object : KeyPairProvider {
-            override fun loadKeys(sessionContext: SessionContext): Iterable<KeyPair> {
-                val file = File(PluginUtils.getPluginPath(), "lib/keyPair.dat")
-                if (file.exists()) {
-                    val keyPair = ObjectInputStream(FileInputStream(file)).use {
-                        it.readObject() as KeyPair
-                    }
+        val sshServerClass = classLoader.loadClass("org.apache.sshd.server.SshServer")
+        val setUpDefaultServerMethod = sshServerClass.getMethod("setUpDefaultServer")
+        val sshServerInstance = setUpDefaultServerMethod.invoke(null)
 
-                    return listOf(keyPair)
-                }
+        ReflectionUtils.findMethod(sshServerClass, "setPort", Int::class.javaPrimitiveType)
+            .invoke(sshServerInstance, port)
 
-                val keyPair = KeyUtils.generateKeyPair("RSA", 2048, SecureRandom())
-
-                ObjectOutputStream(FileOutputStream(file)).use {
-                    it.writeObject(keyPair)
-                }
-
-                return listOf(keyPair)
-            }
-        }
-
-        sshServer.passwordAuthenticator = object : PasswordAuthenticator {
-            override fun authenticate(username: String, password: String, session: ServerSession): Boolean {
-                return user == username && pwd == password
-            }
-        }
-
-        val fsFactory = VirtualFileSystemFactory()
-        fsFactory.setUserHomeDir(user, staticFolder.toPath())
-        sshServer.setFileSystemFactory(fsFactory)
-
-        sshServer.shellFactory = InteractiveProcessShellFactory.INSTANCE
-
-        sshServer.commandFactory = object : CommandFactory {
-            override fun createCommand(channel: ChannelSession, command: String): Command {
-                return if (OS.CURRENT == OS.Windows) {
-                    ProcessShellFactory("cmd.exe", "/c", command).createShell(channel)
-                } else {
-                    ProcessShellFactory("/bin/sh", "-c", command).createShell(channel)
-                }
-            }
-        }
-
-        val sftpFactory = SftpSubsystemFactory()
-        sftpFactory.addSftpEventListener(object : SftpEventListener {
-            override fun opening(session: ServerSession?, remoteHandle: String?, localHandle: Handle) {
-                if (localHandle is FileHandle) {
-                    // 检查是否为写入操作
-                    if (GenericUtils.containsAny<StandardOpenOption?>(
-                            localHandle.openOptions,
-                            IoUtils.WRITEABLE_OPEN_OPTIONS
-                        )
-                    ) {
-                        val file = localHandle.file
-                        val parent = file.parent
-                        if (parent != null && !Files.exists(parent)) {
-                            Files.createDirectories(parent)
-                            httpDashboardForm.showMockServerLog("完成创建目录: ${parent}\n")
+        val keyPairProviderClass = classLoader.loadClass("org.apache.sshd.common.keyprovider.KeyPairProvider")
+        val keyPairProviderProxy =
+            Proxy.newProxyInstance(classLoader, arrayOf(keyPairProviderClass)) { proxy, method, args ->
+                if (method.name == "loadKeys") {
+                    val file = File(PluginUtils.getPluginPath(), "lib/keyPair.dat")
+                    if (file.exists()) {
+                        val keyPair = ObjectInputStream(FileInputStream(file)).use {
+                            it.readObject() as KeyPair
                         }
+                        return@newProxyInstance listOf(keyPair)
                     }
+
+                    val keyPair = KeyUtils.generateKeyPair("RSA", 2048, SecureRandom())
+                    ObjectOutputStream(FileOutputStream(file)).use {
+                        it.writeObject(keyPair)
+                    }
+
+                    return@newProxyInstance listOf(keyPair)
+                }
+
+                handleDefaultProxyMethod(proxy, method, args, keyPairProviderClass)
+            }
+        ReflectionUtils.findMethod(sshServerClass, "setKeyPairProvider", keyPairProviderClass)
+            .invoke(sshServerInstance, keyPairProviderProxy)
+
+        val passwordAuthenticatorClass =
+            classLoader.loadClass("org.apache.sshd.server.auth.password.PasswordAuthenticator")
+        val passwordAuthenticatorProxy =
+            Proxy.newProxyInstance(classLoader, arrayOf(passwordAuthenticatorClass)) { proxy, method, args ->
+                if (method.name == "authenticate") {
+                    val username = args[0] as String
+                    val password = args[1] as String
+                    return@newProxyInstance user == username && pwd == password
+                }
+                handleDefaultProxyMethod(proxy, method, args, passwordAuthenticatorClass)
+            }
+        ReflectionUtils.findMethod(sshServerClass, "setPasswordAuthenticator", passwordAuthenticatorClass)
+            .invoke(sshServerInstance, passwordAuthenticatorProxy)
+
+        val virtualFileSystemFactoryClass =
+            classLoader.loadClass("org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory")
+        val fsFactory = virtualFileSystemFactoryClass.getDeclaredConstructor().newInstance()
+        ReflectionUtils.findMethod(
+            virtualFileSystemFactoryClass,
+            "setUserHomeDir",
+            String::class.java,
+            java.nio.file.Path::class.java
+        ).invoke(fsFactory, user, staticFolder.toPath())
+
+        val fileSystemFactoryClass = classLoader.loadClass("org.apache.sshd.common.file.FileSystemFactory")
+        ReflectionUtils.findMethod(sshServerClass, "setFileSystemFactory", fileSystemFactoryClass)
+            .invoke(sshServerInstance, fsFactory)
+
+        val interactiveProcessShellFactoryClass =
+            classLoader.loadClass("org.apache.sshd.server.shell.InteractiveProcessShellFactory")
+        val shellFactoryInstance = interactiveProcessShellFactoryClass.getField("INSTANCE").get(null)
+        val shellFactoryClass = classLoader.loadClass("org.apache.sshd.server.shell.ShellFactory")
+        ReflectionUtils.findMethod(sshServerClass, "setShellFactory", shellFactoryClass)
+            .invoke(sshServerInstance, shellFactoryInstance)
+
+        val commandFactoryClass = classLoader.loadClass("org.apache.sshd.server.command.CommandFactory")
+        val commandFactoryProxy =
+            Proxy.newProxyInstance(classLoader, arrayOf(commandFactoryClass)) { proxy, method, args ->
+                if (method.name == "createCommand") {
+                    val channel = args[0]
+                    val command = args[1] as String
+                    val processShellFactoryClass =
+                        classLoader.loadClass("org.apache.sshd.server.shell.ProcessShellFactory")
+                    val factory = if (OS.CURRENT == OS.Windows) {
+                        processShellFactoryClass.getConstructor(String::class.java, Array<String>::class.java)
+                            .newInstance("cmd.exe", arrayOf("/c", command))
+                    } else {
+                        processShellFactoryClass.getConstructor(String::class.java, Array<String>::class.java)
+                            .newInstance("/bin/sh", arrayOf("-c", command))
+                    }
+                    val channelSessionClass = classLoader.loadClass("org.apache.sshd.server.channel.ChannelSession")
+                    val createShellMethod =
+                        ReflectionUtils.findMethod(processShellFactoryClass, "createShell", channelSessionClass)
+                    return@newProxyInstance createShellMethod.invoke(factory, channel)
+                }
+                handleDefaultProxyMethod(proxy, method, args, commandFactoryClass)
+            }
+        ReflectionUtils.findMethod(sshServerClass, "setCommandFactory", commandFactoryClass)
+            .invoke(sshServerInstance, commandFactoryProxy)
+
+        val sftpSubsystemFactoryClass = classLoader.loadClass("org.apache.sshd.sftp.server.SftpSubsystemFactory")
+        val sftpFactory = sftpSubsystemFactoryClass.getDeclaredConstructor().newInstance()
+
+        val sftpEventListenerClass = classLoader.loadClass("org.apache.sshd.sftp.server.SftpEventListener")
+        val sftpEventListenerProxy =
+            Proxy.newProxyInstance(classLoader, arrayOf(sftpEventListenerClass)) { proxy, method, args ->
+                when (method.name) {
+                    "opening" -> {
+                        val localHandle = args[2]
+                        val fileHandleClass = classLoader.loadClass("org.apache.sshd.sftp.server.FileHandle")
+                        if (fileHandleClass.isInstance(localHandle)) {
+                            val openOptions = ReflectionUtils.findMethod(fileHandleClass, "getOpenOptions")
+                                .invoke(localHandle) as? Collection<*>
+
+                            val ioUtilsClass = classLoader.loadClass("org.apache.sshd.common.util.io.IoUtils")
+                            val writeableOptions =
+                                ioUtilsClass.getField("WRITEABLE_OPEN_OPTIONS").get(null) as? Collection<*>
+
+                            if (openOptions != null && writeableOptions != null && openOptions.any { it in writeableOptions }) {
+                                val file = ReflectionUtils.findMethod(fileHandleClass, "getFile")
+                                    .invoke(localHandle) as? java.nio.file.Path
+                                if (file != null) {
+                                    val parent = file.parent
+                                    if (parent != null && !Files.exists(parent)) {
+                                        Files.createDirectories(parent)
+                                        httpDashboardForm.showMockServerLog("完成创建目录: ${parent}\n")
+                                    }
+                                }
+                            }
+                        }
+                        null
+                    }
+
+                    "closed" -> {
+                        val localHandle = args[2]
+                        val fileHandleClass = classLoader.loadClass("org.apache.sshd.sftp.server.FileHandle")
+                        if (fileHandleClass.isInstance(localHandle)) {
+                            val file = ReflectionUtils.findMethod(fileHandleClass, "getFile")
+                                .invoke(localHandle) as? java.nio.file.Path
+                            if (file != null) {
+                                httpDashboardForm.showMockServerLog("完成处理: ${file}\n")
+                            }
+                        }
+                        null
+                    }
+
+                    else -> handleDefaultProxyMethod(proxy, method, args, sftpEventListenerClass)
                 }
             }
 
-            override fun closed(
-                session: ServerSession?,
-                remoteHandle: String?,
-                localHandle: Handle,
-                thrown: Throwable?,
-            ) {
-                val file = localHandle.file
-                httpDashboardForm.showMockServerLog("完成处理: ${file}\n")
-            }
-        })
-        sshServer.subsystemFactories = listOf(sftpFactory)
+        ReflectionUtils.findMethod(sftpSubsystemFactoryClass, "addSftpEventListener", sftpEventListenerClass)
+            .invoke(sftpFactory, sftpEventListenerProxy)
 
-        this.sshServer = sshServer
+        ReflectionUtils.findMethod(sshServerClass, "setSubsystemFactories", List::class.java)
+            .invoke(sshServerInstance, listOf(sftpFactory))
 
-        sshServer.start()
+        this.sshServer = sshServerInstance
+
+        ReflectionUtils.findMethod(sshServerClass, "start").invoke(sshServerInstance)
 
         httpDashboardForm.showMockServerLog(NlsBundle.nls("mock.sftp.server.start", port) + "\n")
     }
 
     override fun stopServer() {
-        sshServer?.stop()
-
+        if (sshServer != null) {
+            ReflectionUtils.findMethod(sshServer!!.javaClass, "stop").invoke(sshServer)
+        }
         httpDashboardForm.showMockServerLog("Sftp Server stopped\n")
     }
 
     private fun checkStaticFolder(staticFolder: String?): File {
         staticFolder ?: throw RuntimeException("Must have staticFolder param")
-
         val file = File(staticFolder)
         if (!file.exists()) {
             throw RuntimeException(NlsBundle.nls("folder.not.exist", file.absolutePath))
         }
-
         if (!file.isDirectory) {
             throw RuntimeException(NlsBundle.nls("not.folder", file.absolutePath))
         }
-
         return file
+    }
+
+    private fun handleDefaultProxyMethod(
+        proxy: Any,
+        method: Method,
+        args: Array<Any>?,
+        actualClz: Class<*>,
+    ): Any? {
+        return when (method.name) {
+            "toString" -> "${actualClz.name}Proxy"
+            "hashCode" -> System.identityHashCode(proxy)
+            "equals" -> proxy === args?.get(0)
+            else -> {
+                if (method.isDefault) {
+                    InvocationHandler.invokeDefault(proxy, method, *(args ?: emptyArray<Any?>()))
+                } else {
+                    null
+                }
+            }
+        }
     }
 }

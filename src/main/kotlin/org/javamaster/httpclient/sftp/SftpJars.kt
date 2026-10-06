@@ -3,7 +3,6 @@ package org.javamaster.httpclient.sftp
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.util.lang.UrlClassLoader
 import org.javamaster.httpclient.consts.HttpConsts.Companion.REPOSITORY_URL
 import org.javamaster.httpclient.nls.NlsBundle
 import org.javamaster.httpclient.utils.NotifyUtil
@@ -12,8 +11,6 @@ import org.javamaster.httpclient.utils.RandomStringUtils
 import org.javamaster.httpclient.utils.StreamUtils
 import java.io.File
 import java.io.InputStream
-import java.lang.invoke.MethodHandles
-import java.lang.invoke.MethodType
 import java.net.URL
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -23,10 +20,12 @@ import java.util.concurrent.TimeUnit
  */
 @Suppress("DEPRECATION")
 object SftpJars {
+    var sftpLibClassLoader: SftpLibClassLoader
+
     @Volatile
     private var downloading = false
 
-    private val jarUrls = mutableListOf<File>()
+    private val jarUrls = mutableListOf<URL>()
     private val jarMap = mutableMapOf<String, URL>()
 
     init {
@@ -35,18 +34,10 @@ object SftpJars {
         val listFiles = ftpLibPath.listFiles()
 
         listFiles?.forEach {
-            jarUrls.add(it)
+            jarUrls.add(it.toURI().toURL())
         }
 
-        val classLoader = javaClass.getClassLoader()
-        val addFiles = MethodHandles.lookup().findVirtual(
-            classLoader.javaClass, "addFiles",
-            MethodType.methodType(Void.TYPE, MutableList::class.java)
-        )
-
-        if (jarUrls.isNotEmpty()) {
-            addFiles.invoke(classLoader, jarUrls.map { it.toPath() }.toList())
-        }
+        sftpLibClassLoader = SftpLibClassLoader(jarUrls.toTypedArray(), javaClass.getClassLoader())
 
         jarMap["sshd-core-2.12.0.jar"] =
             URL("${REPOSITORY_URL}/org/apache/sshd/sshd-core/2.12.0/sshd-core-2.12.0.jar")
@@ -95,7 +86,7 @@ object SftpJars {
 
                                 val file = saveToFile(it, name, ftpLibPath)
 
-                                jarUrls.add(file)
+                                jarUrls.add(file.toURI().toURL())
 
                                 indicator.fraction = (index + 1) * faction
 
@@ -105,15 +96,7 @@ object SftpJars {
                             }
                     }
 
-                    val classLoader = javaClass.getClassLoader()
-                    val addFiles = MethodHandles.lookup().findVirtual(
-                        classLoader.javaClass, "addFiles",
-                        MethodType.methodType(Void.TYPE, MutableList::class.java)
-                    )
-
-                    if (classLoader is UrlClassLoader) {
-                        addFiles.invoke(classLoader, jarUrls.map { it.toPath() }.toList())
-                    }
+                    sftpLibClassLoader = SftpLibClassLoader(jarUrls.toTypedArray(), javaClass.getClassLoader())
 
                     NotifyUtil.notifyCornerSuccess(project, NlsBundle.nls("sftp.downloaded"))
                 } catch (e: Exception) {

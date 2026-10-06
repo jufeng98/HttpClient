@@ -1,15 +1,15 @@
-package org.javamaster.httpclient.ftp
+package org.javamaster.httpclient.sftp
 
 import java.net.URL
 import java.net.URLClassLoader
 
-class FtpLibClassLoader(
+class SftpLibClassLoader(
     urls: Array<URL>,
     parent: ClassLoader,
 ) : URLClassLoader(urls, parent) {
 
     private val childFirstPrefixes = listOf(
-        "org.apache.ftpserver",
+        "org.apache.sshd",
     )
 
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
@@ -17,6 +17,10 @@ class FtpLibClassLoader(
         if (c != null) {
             if (resolve) resolveClass(c)
             return c
+        }
+
+        if (name == "org.apache.sshd.common.util.ValidateUtils") {
+            return super.loadClass(name, resolve)
         }
 
         val isChildFirst = childFirstPrefixes.any { name.startsWith(it) }
