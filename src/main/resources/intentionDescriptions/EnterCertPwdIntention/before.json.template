@@ -1,0 +1,7 @@
+{
+  "dev": {
+    "SSLConfiguration": {
+      <spot>"hasCertificatePassphrase": true</spot>
+    }
+  }
+}

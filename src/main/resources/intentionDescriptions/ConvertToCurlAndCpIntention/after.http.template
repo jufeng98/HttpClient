@@ -1,0 +1,13 @@
+# clipboard: [
+# curl -X POST --location "http://localhost:8080?q=10&b=12" \
+#     -H "Content-Type: application/json" \
+#     -d "{
+#           \"a\": 12
+#         }"
+# ]
+POST http://localhost:8080/?q=10&b=12
+Content-Type: application/json
+
+{
+  "a": 12
+}

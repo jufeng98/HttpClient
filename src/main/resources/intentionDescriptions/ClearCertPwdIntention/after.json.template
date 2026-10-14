@@ -1,0 +1,7 @@
+{
+  "dev": {
+    "SSLConfiguration": {
+      "hasCertificatePassphrase": true
+    }
+  }
+}
