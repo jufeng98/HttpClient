@@ -21,7 +21,6 @@ import java.security.SecureRandom
 /**
  * @author yudong
  */
-@Suppress("unused")
 class MockSshServerImpl(
     private val port: Int,
     private val httpDashboardForm: HttpDashboardForm,

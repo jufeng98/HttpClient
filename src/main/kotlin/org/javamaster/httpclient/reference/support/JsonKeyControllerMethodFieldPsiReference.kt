@@ -6,8 +6,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.impl.source.PsiClassReferenceType
-import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.HttpUtils
+import org.javamaster.httpclient.utils.MyPsiUtils
 import org.javamaster.httpclient.utils.PsiTypeUtils
 
 /**

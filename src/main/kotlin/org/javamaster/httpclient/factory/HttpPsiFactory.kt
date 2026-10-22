@@ -7,7 +7,6 @@ import org.javamaster.httpclient.HttpFileType
 import org.javamaster.httpclient.HttpLanguage
 import org.javamaster.httpclient.parser.HttpFile
 import org.javamaster.httpclient.psi.*
-import kotlin.jvm.java
 
 /**
  * @author yudong

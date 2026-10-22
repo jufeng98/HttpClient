@@ -1,11 +1,11 @@
 package org.javamaster.httpclient.crypto
 
-import io.ktor.util.hex
-import io.ktor.utils.io.charsets.name
+import io.ktor.util.*
+import io.ktor.utils.io.charsets.*
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
-import java.util.Base64
+import java.util.*
 
 /**
  * @author yudong

@@ -6,7 +6,6 @@ import org.javamaster.httpclient.js.support.req.HttpClientRequest
 import org.javamaster.httpclient.js.support.req.RequestVariables
 import org.mozilla.javascript.ScriptableObject
 
-@Suppress("unused")
 object CommonVariables {
     lateinit var environment: MutableMap<String, String>
     var global = JsGlobalVariablesHolder

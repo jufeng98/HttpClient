@@ -9,7 +9,6 @@ import org.mozilla.javascript.NativeObject
 /**
  * @author yudong
  */
-@Suppress("unused")
 object Console {
     fun log(first: Any?) {
         GlobalLog.log(convertParam(first))

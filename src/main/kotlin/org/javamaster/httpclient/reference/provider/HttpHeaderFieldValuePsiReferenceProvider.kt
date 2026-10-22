@@ -1,6 +1,8 @@
 package org.javamaster.httpclient.reference.provider
 
-import com.intellij.psi.*
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
+import com.intellij.psi.PsiReferenceProvider
 import com.intellij.util.ProcessingContext
 import org.javamaster.httpclient.psi.HttpHeaderFieldValue
 import org.javamaster.httpclient.reference.support.HttpHeaderFieldValuePsiReference

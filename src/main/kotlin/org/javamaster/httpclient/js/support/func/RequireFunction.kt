@@ -1,7 +1,6 @@
 package org.javamaster.httpclient.js.support.func
 
 import org.javamaster.httpclient.js.JsExecutor
-import org.javamaster.httpclient.js.factory.HttpWrapFactory
 import org.javamaster.httpclient.utils.HttpUtils
 import org.javamaster.httpclient.utils.VirtualFileUtils
 import org.mozilla.javascript.Context

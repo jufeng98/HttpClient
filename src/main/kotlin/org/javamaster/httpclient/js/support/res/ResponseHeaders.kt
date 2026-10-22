@@ -3,7 +3,6 @@ package org.javamaster.httpclient.js.support.res
 /**
  * @author yudong
  */
-@Suppress("unused")
 class ResponseHeaders(private val headers: MutableMap<String, MutableList<String>>) {
 
     fun valueOf(name: String): String? {

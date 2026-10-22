@@ -3,7 +3,7 @@ package org.javamaster.httpclient.crypto
 import org.apache.commons.codec.binary.Hex
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
-import java.util.Base64
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 

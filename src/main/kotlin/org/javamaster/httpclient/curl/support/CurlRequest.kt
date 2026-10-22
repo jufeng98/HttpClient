@@ -118,5 +118,5 @@ class CurlRequest {
 
     class KeyValuePair(var key: String, var value: String)
 
-    class Biscuit(var name: String?, var value: String?, @Suppress("unused") var domain: String?, var path: String?, var date: Long)
+    class Biscuit(var name: String?, var value: String?, var domain: String?, var path: String?, var date: Long)
 }

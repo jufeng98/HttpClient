@@ -13,7 +13,6 @@ import java.io.File
 /**
  * @author yudong
  */
-@Suppress("unused")
 class MockFtpServerImpl(
     private val port: Int,
     private val httpDashboardForm: HttpDashboardForm,

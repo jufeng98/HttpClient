@@ -1,7 +1,7 @@
 package org.javamaster.httpclient.crypto
 
 import io.ktor.util.*
-import java.util.Base64
+import java.util.*
 
 /**
  * @author yudong
