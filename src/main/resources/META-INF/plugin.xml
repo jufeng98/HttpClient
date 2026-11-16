@@ -509,6 +509,7 @@
         <lang.formatter language="http"
                         implementationClass="org.javamaster.httpclient.formatter.HttpFormattingModelBuilder"/>
         <!--  <postFormatProcessor implementation="org.javamaster.httpclient.formatter.HttpPostFormatProcessor"/>  -->
+        <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
         <intentionAction>
             <language>http</language>
             <className>org.javamaster.httpclient.intent.HttpSwitchEnvironmentIntention</className>
